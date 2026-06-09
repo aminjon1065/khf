@@ -1,0 +1,227 @@
+@import 'tailwindcss';
+
+@import 'tw-animate-css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    --font-sans:
+        'Inter', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    /* КЧС signal colour (oranjevyi) — used sparingly for primary calls to action (ТЗ §11.2) */
+    --color-signal: var(--signal);
+    --color-signal-foreground: var(--signal-foreground);
+
+    /* Hazard-level scale (ТЗ Приложение Г) — always paired with text + icon */
+    --color-hazard-normal: var(--hazard-normal);
+    --color-hazard-normal-foreground: var(--hazard-normal-foreground);
+    --color-hazard-elevated: var(--hazard-elevated);
+    --color-hazard-elevated-foreground: var(--hazard-elevated-foreground);
+    --color-hazard-danger: var(--hazard-danger);
+    --color-hazard-danger-foreground: var(--hazard-danger-foreground);
+    --color-hazard-critical: var(--hazard-critical);
+    --color-hazard-critical-foreground: var(--hazard-critical-foreground);
+
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+ * КЧС design tokens (ТЗ Приложение В — light theme).
+ * Primary = deep blue (надёжность/государственность); signal = orange (службы спасения, дозированно);
+ * destructive = red. Hazard scale per Приложение Г. Colour is never the sole carrier of meaning.
+ */
+:root {
+    --background: #ffffff;
+    --foreground: #0f172a;
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
+    --primary: #1f4e8c;
+    --primary-foreground: #ffffff;
+    --secondary: #e8eef6;
+    --secondary-foreground: #1f4e8c;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #e8eef6;
+    --accent-foreground: #1f4e8c;
+    --signal: #ea6a1e;
+    --signal-foreground: #ffffff;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #1f4e8c;
+    --chart-1: #1f4e8c;
+    --chart-2: #ea6a1e;
+    --chart-3: #16a34a;
+    --chart-4: #eab308;
+    --chart-5: #dc2626;
+    --radius: 0.5rem;
+    --sidebar: #f7f9fc;
+    --sidebar-foreground: #0f172a;
+    --sidebar-primary: #1f4e8c;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #e8eef6;
+    --sidebar-accent-foreground: #1f4e8c;
+    --sidebar-border: #e2e8f0;
+    --sidebar-ring: #1f4e8c;
+
+    /* Hazard levels (ТЗ Приложение Г). Kept identical across themes for instant recognition. */
+    --hazard-normal: #16a34a;
+    --hazard-normal-foreground: #ffffff;
+    --hazard-elevated: #eab308;
+    --hazard-elevated-foreground: #0f172a;
+    --hazard-danger: #ea580c;
+    --hazard-danger-foreground: #ffffff;
+    --hazard-critical: #dc2626;
+    --hazard-critical-foreground: #ffffff;
+}
+
+/* Dark theme derived from the КЧС palette (ТЗ Приложение В: «тёмная тема выводится из этих токенов»). */
+.dark {
+    --background: #0b1220;
+    --foreground: #e2e8f0;
+    --card: #0f172a;
+    --card-foreground: #e2e8f0;
+    --popover: #0f172a;
+    --popover-foreground: #e2e8f0;
+    --primary: #5b8ac9;
+    --primary-foreground: #0b1220;
+    --secondary: #1e293b;
+    --secondary-foreground: #e2e8f0;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+    --accent: #1e293b;
+    --accent-foreground: #e2e8f0;
+    --signal: #f2884b;
+    --signal-foreground: #0b1220;
+    --destructive: #ef4444;
+    --destructive-foreground: #0b1220;
+    --border: #1e293b;
+    --input: #1e293b;
+    --ring: #5b8ac9;
+    --chart-1: #5b8ac9;
+    --chart-2: #f2884b;
+    --chart-3: #22c55e;
+    --chart-4: #eab308;
+    --chart-5: #ef4444;
+    --sidebar: #0f172a;
+    --sidebar-foreground: #e2e8f0;
+    --sidebar-primary: #5b8ac9;
+    --sidebar-primary-foreground: #0b1220;
+    --sidebar-accent: #1e293b;
+    --sidebar-accent-foreground: #e2e8f0;
+    --sidebar-border: #1e293b;
+    --sidebar-ring: #5b8ac9;
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/*
+ * Rich-text content (TipTap editor body + rendered articles). Tailwind's preflight resets headings
+ * and lists, so restore typographic defaults within `.rte-content` (ТЗ §7.2).
+ */
+.rte-content :where(h2) {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 1rem 0 0.5rem;
+}
+
+.rte-content :where(h3) {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0.875rem 0 0.5rem;
+}
+
+.rte-content :where(p) {
+    margin: 0.5rem 0;
+}
+
+.rte-content :where(ul) {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+}
+
+.rte-content :where(ol) {
+    list-style: decimal;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+}
+
+.rte-content :where(a) {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.rte-content :where(blockquote) {
+    border-left: 3px solid var(--border);
+    padding-left: 1rem;
+    margin: 0.75rem 0;
+    color: var(--muted-foreground);
+}
+
+.rte-content :where(code) {
+    font-family: ui-monospace, monospace;
+    font-size: 0.875em;
+}
