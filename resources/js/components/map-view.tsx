@@ -43,42 +43,22 @@ export function MapView({ markers = [], center = [69.0, 38.8], zoom = 6, classNa
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<maplibregl.Map | null>(null);
     const pickMarkerRef = useRef<maplibregl.Marker | null>(null);
-    const onPickRef = useRef(onPick);
-    onPickRef.current = onPick;
 
     useEffect(() => {
-        if (!containerRef.current) {
+        const container = containerRef.current;
+
+        if (!container) {
             return;
         }
 
-        const map = new maplibregl.Map({
-            container: containerRef.current,
-            style: mapStyle,
-            center,
-            zoom,
-        });
+        const map = new maplibregl.Map({ container, style: mapStyle, center, zoom });
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
         mapRef.current = map;
 
-        const handleClick = (event: maplibregl.MapMouseEvent) => {
-            if (!onPickRef.current) {
-                return;
-            }
-
-            const { lng, lat } = event.lngLat;
-
-            if (pickMarkerRef.current) {
-                pickMarkerRef.current.setLngLat([lng, lat]);
-            } else {
-                pickMarkerRef.current = new maplibregl.Marker({ color: '#1f4e8c' }).setLngLat([lng, lat]).addTo(map);
-            }
-
-            onPickRef.current({ lat, lng });
+        return () => {
+            map.remove();
+            mapRef.current = null;
         };
-
-        map.on('click', handleClick);
-
-        return () => map.remove();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -118,6 +98,34 @@ export function MapView({ markers = [], center = [69.0, 38.8], zoom = 6, classNa
 
         return () => created.forEach((marker) => marker.remove());
     }, [markers]);
+
+    useEffect(() => {
+        const map = mapRef.current;
+
+        if (!map || !onPick) {
+            return;
+        }
+
+        const handler = (event: maplibregl.MapMouseEvent) => {
+            const { lng, lat } = event.lngLat;
+
+            if (pickMarkerRef.current) {
+                pickMarkerRef.current.setLngLat([lng, lat]);
+            } else {
+                pickMarkerRef.current = new maplibregl.Marker({ color: '#1f4e8c' })
+                    .setLngLat([lng, lat])
+                    .addTo(map);
+            }
+
+            onPick({ lat, lng });
+        };
+
+        map.on('click', handler);
+
+        return () => {
+            map.off('click', handler);
+        };
+    }, [onPick]);
 
     return <div ref={containerRef} className={cn('h-full w-full', className)} />;
 }

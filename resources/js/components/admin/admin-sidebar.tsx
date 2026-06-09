@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Bell, ExternalLink, FileText, FolderTree, Languages, LayoutDashboard, Newspaper, TriangleAlert, Users } from 'lucide-react';
+import { Bell, ExternalLink, FileText, FolderTree, Inbox, Languages, LayoutDashboard, Newspaper, TriangleAlert, Users } from 'lucide-react';
 import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
@@ -17,7 +17,9 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { home } from '@/routes';
 import { dashboard as adminDashboard } from '@/routes/admin';
 import { index as alertsIndex } from '@/routes/admin/alerts';
+import { index as appealsIndex } from '@/routes/admin/appeals';
 import { index as categoriesIndex } from '@/routes/admin/categories';
+import { index as documentsIndex } from '@/routes/admin/documents';
 import { index as incidentsIndex } from '@/routes/admin/incidents';
 import { index as languagesIndex } from '@/routes/admin/languages';
 import { index as pagesIndex } from '@/routes/admin/pages';
@@ -60,6 +62,12 @@ const navGroups: AdminNavGroup[] = [
                 icon: FolderTree,
                 permission: 'categories.manage',
             },
+            {
+                title: 'Документы',
+                href: documentsIndex(),
+                icon: FileText,
+                permission: 'documents.manage',
+            },
         ],
     },
     {
@@ -76,6 +84,17 @@ const navGroups: AdminNavGroup[] = [
                 href: alertsIndex(),
                 icon: Bell,
                 permission: 'alerts.manage',
+            },
+        ],
+    },
+    {
+        label: 'Сервисы',
+        items: [
+            {
+                title: 'Обращения',
+                href: appealsIndex(),
+                icon: Inbox,
+                permission: 'appeals.manage',
             },
         ],
     },

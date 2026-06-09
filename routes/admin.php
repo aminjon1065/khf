@@ -2,8 +2,10 @@
 
 use App\Enums\Permission;
 use App\Http\Controllers\Admin\AlertController;
+use App\Http\Controllers\Admin\AppealController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\IncidentController;
 use App\Http\Controllers\Admin\LanguageController;
 use App\Http\Controllers\Admin\PageController;
@@ -82,6 +84,27 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::delete('alerts/{alert}', [AlertController::class, 'destroy'])->name('alerts.destroy');
             Route::patch('alerts/{alert}/restore', [AlertController::class, 'restore'])->name('alerts.restore')->withTrashed();
             Route::delete('alerts/{alert}/force', [AlertController::class, 'forceDelete'])->name('alerts.force-delete')->withTrashed();
+        });
+
+        // Content — documents registry (documents.manage).
+        Route::middleware('can:'.Permission::ManageDocuments->value)->group(function () {
+            Route::get('documents', [DocumentController::class, 'index'])->name('documents.index');
+            Route::get('documents/trash', [DocumentController::class, 'trash'])->name('documents.trash');
+            Route::get('documents/create', [DocumentController::class, 'create'])->name('documents.create');
+            Route::post('documents', [DocumentController::class, 'store'])->name('documents.store');
+            Route::get('documents/{document}/edit', [DocumentController::class, 'edit'])->name('documents.edit');
+            Route::put('documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
+            Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+            Route::patch('documents/{document}/restore', [DocumentController::class, 'restore'])->name('documents.restore')->withTrashed();
+            Route::delete('documents/{document}/force', [DocumentController::class, 'forceDelete'])->name('documents.force-delete')->withTrashed();
+        });
+
+        // Services — citizen appeals moderation queue (appeals.manage).
+        Route::middleware('can:'.Permission::ManageAppeals->value)->group(function () {
+            Route::get('appeals', [AppealController::class, 'index'])->name('appeals.index');
+            Route::get('appeals/{appeal}', [AppealController::class, 'show'])->name('appeals.show');
+            Route::put('appeals/{appeal}', [AppealController::class, 'update'])->name('appeals.update');
+            Route::delete('appeals/{appeal}', [AppealController::class, 'destroy'])->name('appeals.destroy');
         });
 
         // System settings — languages (super-admin only via settings.manage).

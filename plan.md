@@ -40,15 +40,15 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 ## Progress Summary
 
 - **Total Tasks:** 196
-- **Completed:** 67
+- **Completed:** 82
 - **In Progress:** 0
 - **Blocked:** 0 (Redis blocker removed — D-10: no Redis on shared hosting, DB drivers in use)
-- **Remaining:** 129
-- **Completion:** ~34%
+- **Remaining:** 114
+- **Completion:** ~42%
 
-> Phases 0–6 substantially done; Phase 8 public (home/news/incidents + alert banner) live. The
-> emergency core (incidents + alerts + site banner via polling) is working end-to-end. Next:
-> Phase 7 MapLibre interactive map plotting incidents (+ incident-form location picker).
+> Phases 0–10 substantially done; public portal (home/news/incidents/map/documents/appeals + alert
+> banner) live. Remaining: tourist registration (11), notifications/subscriptions (12), search (14),
+> analytics/SEO (15), security hardening (16), perf (17), testing/a11y/API (18), deploy (19).
 
 > Completed = starter-kit functionality already satisfying ТЗ (auth, 2FA, passkeys, settings, SSR,
 > shadcn base) + Phase 0 (audit, decisions D-1…D-9) + Phase 1 design tokens (Приложение В/Г).
@@ -168,15 +168,15 @@ management — before content modules (Phase 4) build on them.
 
 ## Phase 7 — Interactive GIS Map
 
-- [ ] Public full-screen map page + homepage map widget (§6.1, §6.3)
-- [ ] Incident markers with color by type + hazard level; clustering at scale/zoom-out (§6.3)
-- [ ] Click popup card: type, status, hazard level, district, summary, datetime, link to news (§6.3)
+- [x] Public map page (`/{locale}/map`, MapLibre + OSM raster) + reusable `MapView`; homepage map widget pending (§6.1, §6.3)
+- [~] Incident markers coloured by hazard level + popups; clustering at large counts pending (§6.3)
+- [x] Click popup card: title, type, hazard level, status, region, datetime (XSS-safe DOM) (§6.3)
 - [ ] Toggleable layers: incident types, risk zones, КЧС units/points (§6.3)
 - [ ] Filters: type, hazard level, region/district, time period; "active only" mode (§6.3)
-- [ ] Admin-territorial binding for filtering and targeted selection (§6.3)
-- [ ] Fullscreen mode, opt-in geolocation, mobile/touch adaptation (§6.3)
-- [ ] Tile-server outage handling (fallback layer/message, non-blocking) (§6.3)
-- [ ] Tests: map data endpoint (filters), clustering data, fallback behavior
+- [~] Admin-territorial binding (region FK) present; map filtering by region pending (§6.3)
+- [~] `MapView` supports point-pick (`onPick`) for the incident form; geolocation + fullscreen pending (§6.3)
+- [~] Tile source is configurable (own tile server per §10.8); graceful WebGL/offline fallback message pending (§6.3)
+- [x] Tests: map data (active + with-coords only) — clustering/fallback tests later
 
 ## Phase 8 — Public Portal
 
@@ -196,23 +196,23 @@ management — before content modules (Phase 4) build on them.
 
 ## Phase 9 — Documents Registry
 
-- [ ] `documents` + `document_translations` (type, date, source, files, name, description) (§6.8)
-- [ ] Document categories (laws, regulations, departmental, plans/reports, forms) (§6.8)
-- [ ] Document CMS CRUD with multi-file upload, type/size validation, secure storage (§6.8, §12.4)
-- [ ] Public registry: search + filter by type/date/keywords; show file size/format (§6.8)
-- [ ] Controlled file download routes (storage outside public root) (§12.4)
-- [ ] Tests: document CRUD, download authorization, filters
+- [x] `documents` + `document_translations` (type, date, source, name/description per locale, soft-delete) + medialibrary `files` collection on the private `local` disk (§6.8)
+- [x] Document categories via `DocumentType` enum (laws, regulations, departmental, plans, reports, forms) (§6.8)
+- [x] Document CMS CRUD + trash with multi-file upload, mime/size validation (no executables), private storage (§6.8, §12.4)
+- [~] Public registry: search + type filter + file size/name — done; date-range filter pending (§6.8)
+- [x] Controlled file download route (files on private disk, streamed via route, 404 for draft) (§12.4)
+- [x] Tests: document CRUD, upload, executable rejection, controlled download + draft 404, soft-delete
 
 ## Phase 10 — Appeals
 
-- [ ] `appeals` table (topic, text, contacts, attachments, status, assignee, reg. number) (§6.7)
-- [ ] Public appeal form: category classifier, attachments, anti-spam/captcha, rate limiting (§6.7, §12.4)
-- [ ] Confirmation + registration number for status tracking (§6.7)
-- [ ] CMS moderation queue: assignee, statuses, internal comments, deadline tracking (§6.7, §7.6)
-- [ ] Status-tracking lookup for citizens by reg. number
-- [ ] Personal-data access restricted to authorized roles (§12.5)
+- [x] `appeals` table (reference, category, contacts, subject, message, status, assignee, internal_note, soft-delete) (§6.7)
+- [~] Public appeal form: category classifier, **honeypot anti-spam + `throttle:6,1`** rate limiting — done; file attachments pending (§6.7, §12.4)
+- [x] Confirmation + registration number (`OBR-YYYY-XXXXXX`) shown on submit (§6.7)
+- [~] CMS moderation queue: assignee, statuses, internal comments — done; deadline tracking later (§6.7, §7.6)
+- [x] Public status-tracking lookup by reference number (§6.7)
+- [x] Personal-data access restricted to `appeals.manage` role (§12.5)
 - [ ] Register export for a period (§7.6)
-- [ ] Tests: appeal submission, anti-spam/rate limit, moderation workflow, authorization
+- [x] Tests: submission, honeypot, validation, tracking, moderation update, authorization
 
 ## Phase 11 — Tourist Registration
 
@@ -392,6 +392,26 @@ management — before content modules (Phase 4) build on them.
 
 ## Change Log
 
+- **2026-06-09** — Phase 10 Appeals (electronic reception): `AppealCategory` + `AppealStatus` enums;
+  `appeals` table (reference, contacts, subject/message, status, assignee, internal_note,
+  soft-delete). Public form (`Public\AppealController`) with **honeypot + `throttle:6,1`**, a
+  unique `OBR-YYYY-XXXXXX` reference + confirmation screen, and reference-based status tracking. CMS
+  moderation queue (`Admin\AppealController`, `can:appeals.manage`): list+filter, detail with full
+  personal data, assign/status/internal-note update. Nav: «Обращения» (CMS) + «Приёмная» (public).
+  8 feature tests (159 total). types/build/lint/Pint clean. (Attachments + register export deferred.)
+- **2026-06-09** — Phase 9 Documents registry: `DocumentType` enum; `documents` +
+  `document_translations` (type/source/date/status, name+description per locale, soft-delete) +
+  medialibrary `files` collection on the **private `local` disk** (§12.4). CMS CRUD + trash
+  (`Admin\DocumentController`, `can:documents.manage`) with multi-file upload (mime allowlist, ≤20 MB,
+  no executables) + per-file removal. Public registry (`Public\DocumentController`) with search +
+  type filter, and a **controlled download route** (streams from private disk, 404 for drafts).
+  CMS «Документы» nav + public «Документы» link. 7 feature tests (152 total). types/build/lint/Pint
+  clean.
+- **2026-06-09** — Phase 7 GIS map (D-5): installed `maplibre-gl` v5. Reusable `MapView` (OSM raster
+  tiles, navigation control, colour-coded markers with XSS-safe DOM popups, optional `onPick` point
+  picker). `Public\MapController` → `public/map` at `/{locale}/map` plotting active incidents with
+  coordinates; «Карта» nav link. Map bundle is a lazy 1 MB chunk (map page only). 1 feature test
+  (145 total). types/build/lint/Pint clean; live `/tj/map` & `/ru/map` → 200.
 - **2026-06-09** — Phase 6 Alerts + site banner: `AlertStatus` enum; `alerts` + `alert_translations`
   (hazard_level, region FK [null=national], status, is_dismissible, start/end window, soft-delete).
   CMS CRUD + trash (`Admin\AlertController`, `can:alerts.manage`). `Alert::scopeActive` (published +
@@ -567,11 +587,11 @@ Phase 2 RBAC: roles (super-admin + moderator), 30 permissions, super-admin gate,
 enforcement middleware ✅ (64 tests). Login throttling is already provided by Fortify; detailed
 failed-attempt **audit logging** is deferred until the audit-log infra lands (Phase 16 / D-4).
 
-Alerts + polling site banner ✅. Next: **Phase 7 — Interactive GIS map (MapLibre GL JS, D-5)**.
-Install `maplibre-gl`, build a reusable `MapView` (OSM raster tiles + offline fallback message),
-plot active incidents as colour-coded markers (by hazard level) with click popups, add a public
-full-screen map page + homepage map widget, and a **location picker** in the incident form (click
-to set lat/lng). This needs the `maplibre-gl` npm dependency (mapped in D-5).
+Appeals ✅. Next: **Phase 11 — Tourist-group registration** — `tourist_groups` table (leader,
+participants count, contacts, route geography + start/end dates, equipment, status, assignee), a
+public application form (route → region/coords, anti-spam/throttle) with acknowledgement + tracking,
+and a CMS processing queue reusing the appeals moderation pattern; personal-data access limited to
+the moderator role (§6.6, §12.5). Then subscriptions/notifications (12).
 
 ---
 

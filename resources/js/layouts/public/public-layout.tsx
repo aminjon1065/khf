@@ -2,7 +2,10 @@ import { Link, usePage } from '@inertiajs/react';
 import { AlertBanner } from '@/components/alert-banner';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { login, welcome } from '@/routes';
+import { create as appealsCreate } from '@/routes/appeals';
+import { index as documentsIndex } from '@/routes/documents';
 import { index as incidentsIndex } from '@/routes/incidents';
+import { index as mapIndex } from '@/routes/map';
 import { index as newsIndex } from '@/routes/news';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -34,6 +37,24 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                             className="rounded px-2 py-1 hover:bg-primary-foreground/10"
                         >
                             Обстановка
+                        </Link>
+                        <Link
+                            href={mapIndex({ locale }).url}
+                            className="rounded px-2 py-1 hover:bg-primary-foreground/10"
+                        >
+                            Карта
+                        </Link>
+                        <Link
+                            href={documentsIndex({ locale }).url}
+                            className="rounded px-2 py-1 hover:bg-primary-foreground/10"
+                        >
+                            Документы
+                        </Link>
+                        <Link
+                            href={appealsCreate({ locale }).url}
+                            className="rounded px-2 py-1 hover:bg-primary-foreground/10"
+                        >
+                            Приёмная
                         </Link>
                         <LanguageSwitcher className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" />
                         {!auth.user && (

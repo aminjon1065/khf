@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Public\AppealController;
+use App\Http\Controllers\Public\DocumentController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\IncidentController;
 use App\Http\Controllers\Public\MapController;
@@ -24,6 +26,14 @@ Route::prefix('{locale}')
         Route::get('news', [PostController::class, 'index'])->name('news.index');
         Route::get('news/{slug}', [PostController::class, 'show'])->name('news.show');
         Route::get('incidents', [IncidentController::class, 'index'])->name('incidents.index');
+        Route::get('map', [MapController::class, 'index'])->name('map.index');
+        Route::get('documents', [DocumentController::class, 'index'])->name('documents.index');
+        Route::get('documents/{document}/files/{media}', [DocumentController::class, 'download'])->name('documents.download');
+
+        // Citizen appeals (electronic reception) — public form is rate-limited (ТЗ §12.4).
+        Route::get('appeals', [AppealController::class, 'create'])->name('appeals.create');
+        Route::post('appeals', [AppealController::class, 'store'])->middleware('throttle:6,1')->name('appeals.store');
+        Route::get('appeals/track', [AppealController::class, 'track'])->name('appeals.track');
     });
 
 /*
