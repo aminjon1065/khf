@@ -53,7 +53,7 @@ class SubscriptionController extends Controller
             ],
         );
 
-        Mail::to($subscriber->email)->send(new SubscriptionConfirmation(
+        Mail::to($subscriber->email)->locale($locale)->send(new SubscriptionConfirmation(
             $subscriber,
             route('subscriptions.confirm', ['locale' => $locale, 'token' => $subscriber->token]),
         ));

@@ -161,6 +161,7 @@ class AlertController extends Controller
         return [
             'id' => $alert->id,
             'title' => $alert->translation($locale)?->title ?? '—',
+            'locales' => $alert->translatedLocales(),
             'hazard_level' => $alert->hazard_level->value,
             'hazard_label' => $alert->hazard_level->label(),
             'hazard_color' => $alert->hazard_level->color(),

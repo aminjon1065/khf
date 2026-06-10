@@ -144,7 +144,7 @@ class PageController extends Controller
             'title' => $page->translation($locale)?->title ?? '—',
             'status' => $page->status->value,
             'status_label' => $page->status->label(),
-            'translated_locales' => $page->translatedLocales(),
+            'locales' => $page->translatedLocales(),
             'updated_at' => $page->updated_at?->toDateString(),
             'deleted_at' => $page->deleted_at?->toDateString(),
         ];

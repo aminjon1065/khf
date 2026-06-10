@@ -17,12 +17,7 @@ enum PostType: string
      */
     public function label(): string
     {
-        return match ($this) {
-            self::News => 'Новость',
-            self::PressRelease => 'Пресс-релиз',
-            self::Announcement => 'Объявление',
-            self::Summary => 'Оперативная сводка',
-        };
+        return __('enums.post_type.'.$this->value);
     }
 
     /**

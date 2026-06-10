@@ -28,6 +28,7 @@ type DocumentRow = {
     type_label: string;
     status: string;
     status_label: string;
+    locales: string[];
     document_date: string | null;
     files_count: number;
 };
@@ -44,11 +45,30 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
     archived: 'outline',
 };
 
+const portalLocales = ['tj', 'ru', 'en'] as const;
+
 export default function DocumentsIndex({ documents, filters, trashedCount }: PageProps) {
     const [deleting, setDeleting] = useState<DocumentRow | null>(null);
 
     const columns: DataTableColumn<DocumentRow>[] = [
         { key: 'name', label: 'Наименование' },
+        {
+            key: 'locales',
+            label: 'Языки',
+            render: (document) => (
+                <div className="flex gap-1">
+                    {portalLocales.map((locale) => (
+                        <Badge
+                            key={locale}
+                            variant={document.locales.includes(locale) ? 'default' : 'outline'}
+                            className={`uppercase ${document.locales.includes(locale) ? '' : 'text-muted-foreground'}`}
+                        >
+                            {locale}
+                        </Badge>
+                    ))}
+                </div>
+            ),
+        },
         { key: 'type_label', label: 'Тип', className: 'hidden md:table-cell' },
         {
             key: 'status',

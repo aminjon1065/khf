@@ -68,7 +68,10 @@ it('renders the list, create and trash screens', function () {
 
     $this->actingAs($this->operator)->get(route('admin.alerts.index'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/alerts/index')->has('alerts.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/alerts/index')
+            ->has('alerts.data', 1)
+            ->where('alerts.data.0.locales', ['tj']));
 
     $this->actingAs($this->operator)->get(route('admin.alerts.create'))
         ->assertOk()

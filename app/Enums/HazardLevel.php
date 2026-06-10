@@ -19,12 +19,7 @@ enum HazardLevel: string
      */
     public function label(): string
     {
-        return match ($this) {
-            self::Normal => 'Норма',
-            self::Elevated => 'Повышенная готовность',
-            self::Danger => 'Опасно',
-            self::Critical => 'Чрезвычайная опасность',
-        };
+        return __('enums.hazard_level.'.$this->value);
     }
 
     /**

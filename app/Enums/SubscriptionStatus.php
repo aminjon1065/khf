@@ -13,11 +13,7 @@ enum SubscriptionStatus: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Pending => 'Ожидает подтверждения',
-            self::Confirmed => 'Подтверждён',
-            self::Unsubscribed => 'Отписан',
-        };
+        return __('enums.subscription_status.'.$this->value);
     }
 
     /**

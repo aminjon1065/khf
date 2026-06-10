@@ -21,10 +21,12 @@ import {
 import { dashboard } from '@/routes/admin';
 import { create, destroy, edit, index } from '@/routes/admin/categories';
 
+const supportedLocales = ['tj', 'ru', 'en'];
+
 type CategoryRow = {
     id: number;
     name: string;
-    translated_locales: string[];
+    locales: string[];
     sort_order: number;
 };
 
@@ -39,15 +41,23 @@ export default function CategoriesIndex({ categories, filters }: PageProps) {
     const columns: DataTableColumn<CategoryRow>[] = [
         { key: 'name', label: 'Название' },
         {
-            key: 'translated_locales',
-            label: 'Переводы',
+            key: 'locales',
+            label: 'Языки',
             render: (category) => (
                 <div className="flex gap-1">
-                    {category.translated_locales.map((locale) => (
-                        <Badge key={locale} variant="outline" className="uppercase">
-                            {locale}
-                        </Badge>
-                    ))}
+                    {supportedLocales.map((locale) => {
+                        const hasTranslation = category.locales.includes(locale);
+
+                        return (
+                            <Badge
+                                key={locale}
+                                variant={hasTranslation ? 'default' : 'outline'}
+                                className={hasTranslation ? 'uppercase' : 'uppercase text-muted-foreground'}
+                            >
+                                {locale}
+                            </Badge>
+                        );
+                    })}
                 </div>
             ),
         },

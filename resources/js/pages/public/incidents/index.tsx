@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type {Paginator} from '@/components/admin/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from '@/hooks/use-translations';
 
 type IncidentItem = {
     title: string | null;
@@ -21,15 +22,17 @@ type PageProps = {
 };
 
 export default function IncidentsArchive({ incidents }: PageProps) {
+    const { t } = useTranslations();
+
     return (
         <>
-            <Head title="Оперативная обстановка" />
+            <Head title={t('common.operational_situation')} />
 
-            <h1 className="mb-2 text-3xl font-semibold">Оперативная обстановка</h1>
-            <p className="mb-6 text-muted-foreground">События и чрезвычайные ситуации</p>
+            <h1 className="mb-2 text-3xl font-semibold">{t('common.operational_situation')}</h1>
+            <p className="mb-6 text-muted-foreground">{t('incidents.subtitle')}</p>
 
             {incidents.data.length === 0 ? (
-                <p className="text-muted-foreground">Зарегистрированных событий нет.</p>
+                <p className="text-muted-foreground">{t('incidents.empty')}</p>
             ) : (
                 <div className="space-y-4">
                     {incidents.data.map((incident, idx) => (
@@ -68,7 +71,7 @@ export default function IncidentsArchive({ incidents }: PageProps) {
                         onClick={() => incidents.prev_page_url && router.get(incidents.prev_page_url)}
                     >
                         <ChevronLeft className="size-4" />
-                        Назад
+                        {t('common.back')}
                     </Button>
                     <Button
                         variant="outline"
@@ -76,7 +79,7 @@ export default function IncidentsArchive({ incidents }: PageProps) {
                         disabled={!incidents.next_page_url}
                         onClick={() => incidents.next_page_url && router.get(incidents.next_page_url)}
                     >
-                        Вперёд
+                        {t('common.next')}
                         <ChevronRight className="size-4" />
                     </Button>
                 </div>

@@ -1,8 +1,20 @@
+@php
+    $localeUrls = app(\App\Support\LocaleUrls::class);
+    $seoAlternates = $localeUrls->alternates(request());
+@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html lang="{{ $localeUrls->hreflang(app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        @if ($seoAlternates !== [])
+            <link rel="canonical" href="{{ collect($seoAlternates)->firstWhere('code', app()->getLocale())['url'] ?? request()->url() }}">
+            @foreach ($seoAlternates as $alternate)
+                <link rel="alternate" hreflang="{{ $alternate['hreflang'] }}" href="{{ $alternate['url'] }}">
+            @endforeach
+            <link rel="alternate" hreflang="x-default" href="{{ collect($seoAlternates)->firstWhere('code', $localeUrls->defaultCode())['url'] ?? url($localeUrls->defaultCode()) }}">
+        @endif
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>

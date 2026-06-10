@@ -35,7 +35,7 @@ class CategoryController extends Controller
             ->through(fn (Category $category) => [
                 'id' => $category->id,
                 'name' => $category->translation($locale)?->name ?? '—',
-                'translated_locales' => $category->translatedLocales(),
+                'locales' => $category->translatedLocales(),
                 'sort_order' => $category->sort_order,
             ]);
 

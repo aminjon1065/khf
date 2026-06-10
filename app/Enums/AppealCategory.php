@@ -14,12 +14,7 @@ enum AppealCategory: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::General => 'Общий вопрос',
-            self::Complaint => 'Жалоба',
-            self::Proposal => 'Предложение',
-            self::Gratitude => 'Благодарность',
-        };
+        return __('enums.appeal_category.'.$this->value);
     }
 
     /**

@@ -1,6 +1,7 @@
 import { usePage, usePoll } from '@inertiajs/react';
 import { TriangleAlert, X } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslations } from '@/hooks/use-translations';
 
 const STORAGE_KEY = 'kchs-dismissed-alerts';
 
@@ -18,6 +19,7 @@ function loadDismissed(): number[] {
  * localStorage so they stay closed across navigation.
  */
 export function AlertBanner() {
+    const { t } = useTranslations();
     const { activeAlerts } = usePage().props;
     usePoll(60000, { only: ['activeAlerts'] });
 
@@ -57,7 +59,7 @@ export function AlertBanner() {
                             <button
                                 type="button"
                                 onClick={() => dismiss(alert.id)}
-                                aria-label="Закрыть"
+                                aria-label={t('common.close')}
                                 className="shrink-0 rounded p-1 hover:bg-white/20"
                             >
                                 <X className="size-4" />

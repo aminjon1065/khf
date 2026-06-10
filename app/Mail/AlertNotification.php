@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Enums\HazardLevel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -11,7 +12,8 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Emergency-alert email to a subscriber (ТЗ §6.4.3). Title/body are pre-resolved to the
- * subscriber's locale by the dispatch job. Queued — sent via the cron-driven queue (D-10).
+ * subscriber's locale by the dispatch job; the hazard label and template chrome resolve via the
+ * mailable locale set per subscriber. Queued — sent via the cron-driven queue (D-10).
  */
 class AlertNotification extends Mailable implements ShouldQueue
 {
@@ -20,14 +22,14 @@ class AlertNotification extends Mailable implements ShouldQueue
     public function __construct(
         public string $title,
         public string $body,
-        public string $levelLabel,
+        public HazardLevel $level,
         public string $unsubscribeUrl,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '['.$this->levelLabel.'] '.$this->title,
+            subject: '['.$this->level->label().'] '.$this->title,
         );
     }
 
@@ -38,7 +40,7 @@ class AlertNotification extends Mailable implements ShouldQueue
             with: [
                 'title' => $this->title,
                 'body' => $this->body,
-                'levelLabel' => $this->levelLabel,
+                'levelLabel' => $this->level->label(),
                 'unsubscribeUrl' => $this->unsubscribeUrl,
             ],
         );

@@ -149,6 +149,7 @@ class IncidentController extends Controller
         return [
             'id' => $incident->id,
             'title' => $incident->translation($locale)?->title ?? '—',
+            'locales' => $incident->translatedLocales(),
             'type' => $incident->type->value,
             'type_label' => $incident->type->label(),
             'hazard_level' => $incident->hazard_level->value,

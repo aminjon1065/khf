@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { useTranslations } from '@/hooks/use-translations';
 import { index as newsIndex, show } from '@/routes/news';
 
 type Article = {
@@ -25,6 +26,7 @@ type PageProps = {
 
 export default function NewsShow({ post, recent }: PageProps) {
     const { locale } = usePage().props;
+    const { t } = useTranslations();
 
     return (
         <>
@@ -33,7 +35,7 @@ export default function NewsShow({ post, recent }: PageProps) {
             <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
                 <article className="min-w-0">
                     <Link href={newsIndex({ locale }).url} className="text-sm text-primary hover:underline">
-                        ← К списку новостей
+                        {t('news.back_to_list')}
                     </Link>
 
                     <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
@@ -58,12 +60,12 @@ export default function NewsShow({ post, recent }: PageProps) {
                     )}
 
                     {post.author && (
-                        <p className="mt-8 text-sm text-muted-foreground">Автор: {post.author}</p>
+                        <p className="mt-8 text-sm text-muted-foreground">{t('news.author', { author: post.author })}</p>
                     )}
                 </article>
 
                 <aside className="space-y-4">
-                    <h2 className="text-lg font-semibold">Последние новости</h2>
+                    <h2 className="text-lg font-semibold">{t('common.latest_news')}</h2>
                     <ul className="space-y-3">
                         {recent.map((item) => (
                             <li key={item.slug}>

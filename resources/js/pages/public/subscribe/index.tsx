@@ -12,6 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useTranslations } from '@/hooks/use-translations';
 import { store } from '@/routes/subscriptions';
 
 type Option = { value: string; label: string };
@@ -23,15 +24,16 @@ type PageProps = {
     status: 'pending' | 'confirmed' | 'unsubscribed' | 'invalid' | null;
 };
 
-const statusMessages: Record<string, { title: string; tone: 'success' | 'info' | 'error' }> = {
-    pending: { title: 'Проверьте почту и подтвердите подписку.', tone: 'info' },
-    confirmed: { title: 'Подписка подтверждена. Спасибо!', tone: 'success' },
-    unsubscribed: { title: 'Вы отписались от уведомлений.', tone: 'info' },
-    invalid: { title: 'Ссылка недействительна или устарела.', tone: 'error' },
-};
-
 export default function Subscribe({ topics, regions, status }: PageProps) {
     const { locale } = usePage().props;
+    const { t } = useTranslations();
+
+    const statusMessages: Record<string, { title: string; tone: 'success' | 'info' | 'error' }> = {
+        pending: { title: t('subscribe.status.pending'), tone: 'info' },
+        confirmed: { title: t('subscribe.status.confirmed'), tone: 'success' },
+        unsubscribed: { title: t('subscribe.status.unsubscribed'), tone: 'info' },
+        invalid: { title: t('subscribe.status.invalid'), tone: 'error' },
+    };
 
     const form = useForm({
         email: '',
@@ -56,12 +58,12 @@ export default function Subscribe({ topics, regions, status }: PageProps) {
 
     return (
         <>
-            <Head title="Подписка на уведомления" />
+            <Head title={t('subscribe.title')} />
 
             <div className="mx-auto max-w-xl">
-                <h1 className="text-3xl font-semibold">Подписка на уведомления</h1>
+                <h1 className="text-3xl font-semibold">{t('subscribe.title')}</h1>
                 <p className="mt-1 text-muted-foreground">
-                    Получайте оповещения о ЧС и новости на электронную почту
+                    {t('subscribe.subtitle')}
                 </p>
 
                 {banner && (
@@ -81,13 +83,13 @@ export default function Subscribe({ topics, regions, status }: PageProps) {
 
                 <form onSubmit={submit} className="mt-6 space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="email">E-mail</Label>
+                        <Label htmlFor="email">{t('common.email')}</Label>
                         <Input id="email" type="email" value={form.data.email} onChange={(e) => form.setData('email', e.target.value)} />
                         <InputError message={errors.email} />
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Темы</Label>
+                        <Label>{t('subscribe.form.topics')}</Label>
                         <div className="space-y-2">
                             {topics.map((topic) => (
                                 <label key={topic.value} className="flex items-center gap-2 text-sm">
@@ -103,16 +105,16 @@ export default function Subscribe({ topics, regions, status }: PageProps) {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="region">Регион (необязательно)</Label>
+                        <Label htmlFor="region">{t('subscribe.form.region_optional')}</Label>
                         <Select
                             value={form.data.region_id ? String(form.data.region_id) : 'none'}
                             onValueChange={(value) => form.setData('region_id', value === 'none' ? null : Number(value))}
                         >
                             <SelectTrigger id="region">
-                                <SelectValue placeholder="Все регионы" />
+                                <SelectValue placeholder={t('subscribe.form.all_regions')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="none">Все регионы</SelectItem>
+                                <SelectItem value="none">{t('subscribe.form.all_regions')}</SelectItem>
                                 {regions.map((region) => (
                                     <SelectItem key={region.id} value={String(region.id)}>
                                         {region.name}
@@ -127,7 +129,7 @@ export default function Subscribe({ topics, regions, status }: PageProps) {
                             checked={form.data.consent}
                             onCheckedChange={(checked) => form.setData('consent', checked === true)}
                         />
-                        <span>Я согласен на обработку персональных данных и получение рассылки.</span>
+                        <span>{t('subscribe.form.consent')}</span>
                     </label>
                     <InputError message={errors.consent} />
 
@@ -142,7 +144,7 @@ export default function Subscribe({ topics, regions, status }: PageProps) {
                     />
 
                     <Button type="submit" disabled={form.processing}>
-                        Подписаться
+                        {t('subscribe.form.submit')}
                     </Button>
                 </form>
             </div>

@@ -1,15 +1,15 @@
 <x-mail::message>
 # {{ $title }}
 
-**Уровень опасности:** {{ $levelLabel }}
+**{{ __('mail.alert.level') }}:** {{ $levelLabel }}
 
 @if ($body)
 {{ $body }}
 @endif
 
-Это автоматическое оповещение Комитета по чрезвычайным ситуациям и гражданской обороне Республики Таджикистан.
+{{ __('mail.alert.auto_notice') }}
 
 <x-mail::subcopy>
-Чтобы отписаться от уведомлений, перейдите по [ссылке]({{ $unsubscribeUrl }}).
+{{ __('mail.alert.unsubscribe', ['url' => $unsubscribeUrl]) }}
 </x-mail::subcopy>
 </x-mail::message>

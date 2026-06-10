@@ -40,19 +40,18 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 ## Progress Summary
 
 - **Total Tasks:** 196
-- **Completed:** 101
-- **In Progress:** 0
+- **Completed:** 105
+- **In Progress:** 1
 - **Blocked:** 0 (Redis blocker removed — D-10: no Redis on shared hosting, DB drivers in use)
-- **Remaining:** 95
-- **Completion:** ~52%
+- **Remaining:** 90
+- **Completion:** ~54%
 
-> Phases 0–12 substantially done; public portal (home/news/incidents/map/documents/appeals/tourism/
-> subscribe + alert banner) live; alert→subscriber email dispatch closed (queued job, per-locale
-> template, idempotent via `notified_at`, delivery logging); i18n foundation in place (server lang
-> files + client `useTranslations`, chrome converted); 182 tests. Remaining: web push (12 tail),
-> per-page string extraction + hreflang/canonical/CMS translation-status (13), search (14),
-> SEO/analytics (15), security hardening + audit log (16), perf (17), testing/a11y/API (18),
-> deploy (19).
+> Phases 0–13 substantially done; public portal fully trilingual (tj/ru/en): all 11 public pages +
+> chrome on `useTranslations` dictionaries, enum labels + e-mails localized server-side, hreflang/
+> canonical/x-default server-rendered, CMS «Языки» translation-status badges in 6 modules; alert→
+> subscriber dispatch closed; 188 tests. Remaining: web push (12 tail), locale dates + «available
+> in other language» note (13 tail), search (14), SEO/analytics (15), security hardening + audit
+> log (16), perf (17), testing/a11y/API (18), deploy (19).
 
 > Completed = starter-kit functionality already satisfying ТЗ (auth, 2FA, passkeys, settings, SSR,
 > shadcn base) + Phase 0 (audit, decisions D-1…D-9) + Phase 1 design tokens (Приложение В/Г).
@@ -246,14 +245,14 @@ management — before content modules (Phase 4) build on them.
 
 ## Phase 13 — Multilingual System
 
-- [x] Interface translation dictionaries (tg/ru/en) — `lang/{locale}/ui.php` shared as `translations` prop + client `useTranslations` (`t()`, dot-keys, `:placeholder`, key fallback); chrome (public layout nav/footer/brand + language switcher) converted; per-page string extraction ongoing (§14)
+- [x] Interface translation dictionaries (tg/ru/en) — `lang/{locale}/{ui,enums,mail}.php`: `ui` shared as `translations` prop + client `useTranslations` (`t()`, dot-keys, `:placeholder`, key fallback) — ALL 11 public pages + chrome + alert banner converted (~90 keys, zero hard-coded Cyrillic left); `enums` powers all 12 enum `label()` via `__()`; `mail` localizes both e-mail templates + subjects with per-subscriber `->locale()` (§14)
 - [x] Language switcher on all pages; persist selection (session via SetLocale); first-visit browser detection (tg→tj) (§14)
-- [ ] Locale URL prefix + hreflang + canonical generation (§14, §15.1)
-- [ ] Missing-translation handling: show available version w/ note or fallback by setting (§14)
-- [ ] Per-material independent language publishing + translation-status indicator in CMS (§7.9)
+- [x] Locale URL prefix + hreflang + canonical generation — `App\Support\LocaleUrls` (shared with switcher), server-rendered in app.blade.php (canonical + alternates + x-default, valid BCP-47 `<html lang>`); admin/auth routes emit none (§14, §15.1)
+- [~] Missing-translation handling — `HasTranslations::translation()` fallback chain (locale→fallback→first) live everywhere; public lists filter by current-locale translation; «available in other language» UI note pending (§14)
+- [x] Per-material independent language publishing (translations optional per locale) + translation-status indicator in CMS — `locales` row field + tj/ru/en badge column («Языки») in all 6 module indexes (§7.9)
 - [ ] Locale-aware date/number formatting (§14)
 - [ ] Full Tajik Cyrillic support in fonts, search, forms, URLs/slugs (§14)
-- [ ] Tests: locale resolution, fallback, hreflang, slug per language
+- [x] Tests: locale resolution (SetLocale), fallback (RegionTest), hreflang/canonical (SeoAlternatesTest), per-locale dictionaries + key parity ×3 groups, enum label locales, slug per language (content tests)
 
 ## Phase 14 — Search Engine
 
@@ -396,6 +395,18 @@ management — before content modules (Phase 4) build on them.
 
 ## Change Log
 
+- **2026-06-10** — Phase 13 multilingual completion: (1) all 11 public pages + alert banner
+  converted to `t()` — ~90 dictionary keys ×3 locales in `lang/*/ui.php`, shared strings unified
+  under `common.*`, zero hard-coded Cyrillic left in public React code; (2) `lang/*/enums.php` —
+  all 12 enum `label()` now `__('enums.<group>.'.$this->value)` (public/CMS enum labels follow
+  locale); (3) `lang/*/mail.php` — alert + subscription-confirmation templates/subjects localized,
+  mailables sent with `->locale($subscriber->locale)`, `AlertNotification` takes the `HazardLevel`
+  enum so the label resolves in the recipient locale; (4) `App\Support\LocaleUrls` + server-rendered
+  canonical/hreflang/x-default in app.blade.php, `<html lang>` now valid BCP-47 (tj→tg);
+  (5) CMS translation-status: `locales` row field + «Языки» tj/ru/en badge column in all 6 module
+  indexes (field name unified). 9 new tests (SeoAlternates, enum locale, key-parity ×{ui,enums,mail});
+  188 total, 955 assertions. types/build/lint/Pint clean. Orchestrated via 2 workflows (30 agents:
+  12 string-inventory + merge/translate, 12 page conversions, 6 CMS badge modules).
 - **2026-06-10** — Phase 13 i18n foundation: `lang/{tj,ru,en}/ui.php` interface dictionaries
   (site/nav/footer/lang keys, identical across locales); `HandleInertiaRequests` shares the active
   locale's `ui` array as the `translations` prop; client `useTranslations` hook (`t()` with
@@ -613,12 +624,13 @@ management — before content modules (Phase 4) build on them.
 
 ## Next Action
 
-i18n foundation in place ✅ (lang files + `useTranslations` hook, public chrome converted, 182
-tests). Next options: (a) **finish Phase 13** — extract remaining hard-coded strings across public
-pages/CMS into the `ui` dictionary + add `hreflang`/canonical meta and a CMS translation-status
-indicator; (b) **Phase 14 search** (MySQL full-text over posts/documents/pages, locale-aware); (c)
-**Phase 15 SEO** (sitemap, meta tags, Matomo). Recommend (a) to land the multilingual UI fully,
-then (b) so content is findable. Web push (12 tail) stays deferred — lowest ROI on shared hosting.
+Phase 13 effectively closed ✅ (trilingual public portal: dictionaries + enum/mail localization +
+hreflang/canonical + CMS translation badges, 188 tests). Next options: (a) **Phase 14 search** —
+MySQL full-text over posts/pages/documents translations, locale-aware, public search page +
+header search box; (b) **Phase 13 tail** — locale-aware date formatting + «available in another
+language» fallback note; (c) **Phase 15 SEO** (sitemap.xml, meta descriptions, Matomo). Recommend
+(a): search is a ТЗ §6.5 core feature and the last big public-facing gap; (b) and (c) are small
+follow-ups. Web push (12 tail) stays deferred — lowest ROI on shared hosting.
 
 ---
 

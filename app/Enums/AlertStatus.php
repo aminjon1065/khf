@@ -16,11 +16,7 @@ enum AlertStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
-            self::Draft => 'Черновик',
-            self::Published => 'Опубликовано',
-            self::Cancelled => 'Отменено',
-        };
+        return __('enums.alert_status.'.$this->value);
     }
 
     /**

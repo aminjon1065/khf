@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from '@/hooks/use-translations';
 import { track } from '@/routes/tourist-groups';
 
 type TrackResult =
@@ -24,15 +25,16 @@ type PageProps = {
 
 export default function TouristGroupTrack({ reference, result }: PageProps) {
     const { locale } = usePage().props;
+    const { t } = useTranslations();
     const [value, setValue] = useState(reference ?? '');
 
     return (
         <>
-            <Head title="Отслеживание заявки" />
+            <Head title={t('tourism.track.title')} />
 
             <div className="mx-auto max-w-xl">
-                <h1 className="text-3xl font-semibold">Отслеживание заявки</h1>
-                <p className="mt-1 text-muted-foreground">Введите регистрационный номер заявки тургруппы</p>
+                <h1 className="text-3xl font-semibold">{t('tourism.track.title')}</h1>
+                <p className="mt-1 text-muted-foreground">{t('tourism.track.hint')}</p>
 
                 <form
                     className="mt-6 flex gap-3"
@@ -42,20 +44,20 @@ export default function TouristGroupTrack({ reference, result }: PageProps) {
                     }}
                 >
                     <Label htmlFor="reference" className="sr-only">
-                        Регистрационный номер
+                        {t('common.reference_number')}
                     </Label>
                     <Input
                         id="reference"
                         value={value}
                         onChange={(event) => setValue(event.target.value)}
-                        placeholder="TUR-2026-XXXXXX"
+                        placeholder={t('tourism.form.reference_placeholder')}
                     />
-                    <Button type="submit">Проверить</Button>
+                    <Button type="submit">{t('common.check')}</Button>
                 </form>
 
                 {result && !result.found && (
                     <p className="mt-6 rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm">
-                        Заявка с таким номером не найдена.
+                        {t('tourism.track.not_found')}
                     </p>
                 )}
 
@@ -65,7 +67,7 @@ export default function TouristGroupTrack({ reference, result }: PageProps) {
                             <span className="font-mono font-semibold">{result.reference}</span>
                             <Badge>{result.status}</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">Маршрут: {result.route}</p>
+                        <p className="text-sm text-muted-foreground">{t('tourism.track.route', { route: result.route })}</p>
                         <p className="text-sm text-muted-foreground">
                             {result.start_date} — {result.end_date}
                         </p>

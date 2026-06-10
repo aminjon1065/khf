@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\HazardLevel;
 use Database\Seeders\LanguageSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -23,7 +24,7 @@ it('localizes the dictionary per requested locale', function () {
         ->assertInertia(fn (Assert $page) => $page->where('translations.nav.news', 'News'));
 });
 
-it('keeps the dictionary keys identical across all locales', function () {
+it('keeps the dictionary keys identical across all locales', function (string $group) {
     $flatten = function (array $messages, string $prefix = '') use (&$flatten): array {
         $keys = [];
 
@@ -35,13 +36,26 @@ it('keeps the dictionary keys identical across all locales', function () {
         return $keys;
     };
 
-    $tj = $flatten(trans('ui', [], 'tj'));
+    $tj = $flatten(trans($group, [], 'tj'));
     sort($tj);
 
+    expect($tj)->not->toBeEmpty();
+
     foreach (['ru', 'en'] as $locale) {
-        $other = $flatten(trans('ui', [], $locale));
+        $other = $flatten(trans($group, [], $locale));
         sort($other);
 
-        expect($other)->toBe($tj, "Locale [{$locale}] dictionary keys diverge from tj.");
+        expect($other)->toBe($tj, "Locale [{$locale}] [{$group}] dictionary keys diverge from tj.");
     }
+})->with(['ui', 'enums', 'mail']);
+
+it('localizes enum labels through the active locale', function () {
+    app()->setLocale('tj');
+    expect(HazardLevel::Critical->label())->toBe('Хатари фавқулодда');
+
+    app()->setLocale('en');
+    expect(HazardLevel::Critical->label())->toBe('Critical danger');
+
+    app()->setLocale('ru');
+    expect(HazardLevel::Critical->label())->toBe('Чрезвычайная опасность');
 });

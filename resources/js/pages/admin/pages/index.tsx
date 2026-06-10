@@ -26,7 +26,7 @@ type PageRow = {
     title: string;
     status: string;
     status_label: string;
-    translated_locales: string[];
+    locales: string[];
     updated_at: string | null;
 };
 
@@ -49,23 +49,35 @@ export default function PagesIndex({ pages, filters, trashedCount }: PageProps) 
     const columns: DataTableColumn<PageRow>[] = [
         { key: 'title', label: 'Заголовок' },
         {
+            key: 'locales',
+            label: 'Языки',
+            render: (page) => (
+                <div className="flex gap-1">
+                    {['tj', 'ru', 'en'].map((locale) => {
+                        const hasTranslation = page.locales.includes(locale);
+
+                        return (
+                            <Badge
+                                key={locale}
+                                variant={hasTranslation ? 'default' : 'outline'}
+                                className={
+                                    hasTranslation
+                                        ? 'px-1.5 text-[10px] uppercase'
+                                        : 'px-1.5 text-[10px] uppercase text-muted-foreground'
+                                }
+                            >
+                                {locale}
+                            </Badge>
+                        );
+                    })}
+                </div>
+            ),
+        },
+        {
             key: 'status',
             label: 'Статус',
             render: (page) => (
                 <Badge variant={statusVariant[page.status] ?? 'secondary'}>{page.status_label}</Badge>
-            ),
-        },
-        {
-            key: 'translated_locales',
-            label: 'Переводы',
-            render: (page) => (
-                <div className="flex gap-1">
-                    {page.translated_locales.map((locale) => (
-                        <Badge key={locale} variant="outline" className="uppercase">
-                            {locale}
-                        </Badge>
-                    ))}
-                </div>
             ),
         },
         { key: 'updated_at', label: 'Изменена', sortable: false, className: 'hidden sm:table-cell' },

@@ -36,6 +36,8 @@ it('falls back to the fallback locale for a missing region translation', functio
 });
 
 it('exposes incident types with colour and icon', function () {
+    app()->setLocale('ru');
+
     expect(IncidentType::values())->toHaveCount(7)
         ->and(IncidentType::Fire->label())->toBe('Пожар')
         ->and(IncidentType::Fire->icon())->toBe('flame');
@@ -46,6 +48,8 @@ it('exposes incident types with colour and icon', function () {
 });
 
 it('exposes hazard levels matching the design tokens', function () {
+    app()->setLocale('ru');
+
     expect(HazardLevel::values())->toBe(['normal', 'elevated', 'danger', 'critical'])
         ->and(HazardLevel::Critical->color())->toBe('#DC2626')
         ->and(HazardLevel::Critical->label())->toBe('Чрезвычайная опасность');

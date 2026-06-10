@@ -13,11 +13,7 @@ enum SubscriptionTopic: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Alerts => 'Оповещения о ЧС',
-            self::News => 'Новости',
-            self::Announcements => 'Объявления',
-        };
+        return __('enums.subscription_topic.'.$this->value);
     }
 
     /**

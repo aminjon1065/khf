@@ -41,10 +41,10 @@ class SendAlertNotifications implements ShouldQueue
                 foreach ($subscribers as $subscriber) {
                     $translation = $alert->translation($subscriber->locale);
 
-                    Mail::to($subscriber->email)->queue(new AlertNotification(
+                    Mail::to($subscriber->email)->locale($subscriber->locale)->queue(new AlertNotification(
                         $translation?->title ?? '',
                         $translation?->body ?? '',
-                        $alert->hazard_level->label(),
+                        $alert->hazard_level,
                         route('subscriptions.unsubscribe', ['locale' => $subscriber->locale, 'token' => $subscriber->token]),
                     ));
 

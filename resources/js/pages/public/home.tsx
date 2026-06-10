@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Bell, Map, Phone, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from '@/hooks/use-translations';
 import { index as newsIndex, show } from '@/routes/news';
 
 type NewsCard = {
@@ -16,38 +17,34 @@ type PageProps = {
     latestPosts: NewsCard[];
 };
 
-const quickLinks = [
-    { icon: Phone, label: 'Экстренный телефон', value: '112' },
-    { icon: ShieldAlert, label: 'Памятки по безопасности', value: 'Как действовать при ЧС' },
-    { icon: Map, label: 'Карта ЧС', value: 'Оперативная обстановка' },
-    { icon: Bell, label: 'Подписка', value: 'Уведомления об угрозах' },
-];
-
 export default function Home({ latestPosts }: PageProps) {
     const { locale } = usePage().props;
+    const { t } = useTranslations();
+
+    const quickLinks = [
+        { icon: Phone, label: t('home.quick_links.emergency_phone'), value: '112' },
+        { icon: ShieldAlert, label: t('home.quick_links.safety_guides_label'), value: t('home.quick_links.safety_guides_hint') },
+        { icon: Map, label: t('common.emergency_map'), value: t('common.operational_situation') },
+        { icon: Bell, label: t('home.quick_links.subscribe_label'), value: t('home.quick_links.subscribe_hint') },
+    ];
 
     return (
         <>
-            <Head title="Главная" />
+            <Head title={t('home.meta_title')} />
 
             <section className="rounded-xl bg-primary px-6 py-12 text-primary-foreground sm:px-10">
-                <h1 className="max-w-3xl text-3xl font-semibold sm:text-4xl">
-                    Комитет по чрезвычайным ситуациям и гражданской обороне
-                </h1>
-                <p className="mt-3 max-w-2xl text-primary-foreground/80">
-                    Оперативная информация об угрозах и чрезвычайных ситуациях, памятки по безопасности
-                    и оповещения населения Республики Таджикистан.
-                </p>
+                <h1 className="max-w-3xl text-3xl font-semibold sm:text-4xl">{t('home.hero.title')}</h1>
+                <p className="mt-3 max-w-2xl text-primary-foreground/80">{t('home.hero.subtitle')}</p>
                 <div className="mt-6 flex flex-wrap gap-3">
                     <Button variant="signal" asChild>
-                        <Link href={newsIndex({ locale }).url}>Последние новости</Link>
+                        <Link href={newsIndex({ locale }).url}>{t('common.latest_news')}</Link>
                     </Button>
                     <a
                         href="tel:112"
                         className="inline-flex items-center gap-2 rounded-md border border-primary-foreground/30 px-4 py-2 text-sm font-medium"
                     >
                         <Phone className="size-4" />
-                        Экстренный вызов: 112
+                        {t('home.hero.emergency_call')}
                     </a>
                 </div>
             </section>
@@ -66,14 +63,14 @@ export default function Home({ latestPosts }: PageProps) {
 
             <section className="mt-12">
                 <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-2xl font-semibold">Последние новости</h2>
+                    <h2 className="text-2xl font-semibold">{t('common.latest_news')}</h2>
                     <Link href={newsIndex({ locale }).url} className="text-sm text-primary hover:underline">
-                        Все новости →
+                        {t('home.news.view_all')}
                     </Link>
                 </div>
 
                 {latestPosts.length === 0 ? (
-                    <p className="text-muted-foreground">Публикаций пока нет.</p>
+                    <p className="text-muted-foreground">{t('common.no_publications')}</p>
                 ) : (
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {latestPosts.map((post) => (

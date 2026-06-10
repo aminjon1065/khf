@@ -24,6 +24,7 @@ import { create, destroy, edit, index, trash } from '@/routes/admin/alerts';
 type AlertRow = {
     id: number;
     title: string;
+    locales: string[];
     hazard_label: string;
     hazard_color: string;
     status: string;
@@ -45,11 +46,30 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
     cancelled: 'outline',
 };
 
+const contentLocales = ['tj', 'ru', 'en'];
+
 export default function AlertsIndex({ alerts, filters, trashedCount }: PageProps) {
     const [deleting, setDeleting] = useState<AlertRow | null>(null);
 
     const columns: DataTableColumn<AlertRow>[] = [
         { key: 'title', label: 'Оповещение' },
+        {
+            key: 'locales',
+            label: 'Языки',
+            render: (alert) => (
+                <div className="flex gap-1">
+                    {contentLocales.map((locale) => (
+                        <Badge
+                            key={locale}
+                            variant={alert.locales.includes(locale) ? 'default' : 'outline'}
+                            className={alert.locales.includes(locale) ? 'uppercase' : 'uppercase text-muted-foreground'}
+                        >
+                            {locale}
+                        </Badge>
+                    ))}
+                </div>
+            ),
+        },
         {
             key: 'hazard_level',
             label: 'Уровень',

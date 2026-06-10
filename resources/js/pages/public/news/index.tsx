@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type {Paginator} from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from '@/hooks/use-translations';
 import { show } from '@/routes/news';
 
 type NewsCard = {
@@ -19,15 +20,16 @@ type PageProps = {
 
 export default function NewsIndex({ posts }: PageProps) {
     const { locale } = usePage().props;
+    const { t } = useTranslations();
 
     return (
         <>
-            <Head title="Новости" />
+            <Head title={t('news.title')} />
 
-            <h1 className="mb-6 text-3xl font-semibold">Новости и материалы</h1>
+            <h1 className="mb-6 text-3xl font-semibold">{t('news.heading')}</h1>
 
             {posts.data.length === 0 ? (
-                <p className="text-muted-foreground">Публикаций пока нет.</p>
+                <p className="text-muted-foreground">{t('common.no_publications')}</p>
             ) : (
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {posts.data.map((post) => (
@@ -69,7 +71,7 @@ export default function NewsIndex({ posts }: PageProps) {
                         onClick={() => posts.prev_page_url && router.get(posts.prev_page_url)}
                     >
                         <ChevronLeft className="size-4" />
-                        Назад
+                        {t('common.back')}
                     </Button>
                     <Button
                         variant="outline"
@@ -77,7 +79,7 @@ export default function NewsIndex({ posts }: PageProps) {
                         disabled={!posts.next_page_url}
                         onClick={() => posts.next_page_url && router.get(posts.next_page_url)}
                     >
-                        Вперёд
+                        {t('common.next')}
                         <ChevronRight className="size-4" />
                     </Button>
                 </div>

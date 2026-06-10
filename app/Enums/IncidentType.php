@@ -22,15 +22,7 @@ enum IncidentType: string
      */
     public function label(): string
     {
-        return match ($this) {
-            self::Earthquake => 'Землетрясение',
-            self::Mudflow => 'Сель и паводок',
-            self::Flood => 'Наводнение',
-            self::Avalanche => 'Лавина',
-            self::Landslide => 'Оползень',
-            self::Fire => 'Пожар',
-            self::Glof => 'Прорыв ледниковых озёр',
-        };
+        return __('enums.incident_type.'.$this->value);
     }
 
     /**

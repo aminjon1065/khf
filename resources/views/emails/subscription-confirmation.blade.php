@@ -1,16 +1,16 @@
 <x-mail::message>
-# Подтверждение подписки
+# {{ __('mail.subscription.heading') }}
 
-Здравствуйте! Вы оформили подписку на уведомления Комитета по чрезвычайным ситуациям и гражданской обороне Республики Таджикистан.
+{{ __('mail.subscription.greeting') }}
 
-Чтобы активировать подписку, подтвердите свой адрес электронной почты:
+{{ __('mail.subscription.action_intro') }}
 
 <x-mail::button :url="$confirmUrl">
-Подтвердить подписку
+{{ __('mail.subscription.action') }}
 </x-mail::button>
 
-Если вы не оформляли подписку, просто проигнорируйте это письмо.
+{{ __('mail.subscription.ignore') }}
 
-Спасибо,<br>
+{{ __('mail.subscription.thanks') }}<br>
 {{ config('app.name') }}
 </x-mail::message>

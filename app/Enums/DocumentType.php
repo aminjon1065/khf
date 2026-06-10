@@ -19,14 +19,7 @@ enum DocumentType: string
      */
     public function label(): string
     {
-        return match ($this) {
-            self::Law => 'Законодательство',
-            self::Regulation => 'Нормативные акты',
-            self::Departmental => 'Ведомственные документы',
-            self::Plan => 'Планы',
-            self::Report => 'Отчёты',
-            self::Form => 'Формы и бланки',
-        };
+        return __('enums.document_type.'.$this->value);
     }
 
     /**

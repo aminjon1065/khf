@@ -155,7 +155,7 @@ class PostController extends Controller
             'status' => $post->status->value,
             'status_label' => $post->status->label(),
             'cover_url' => $post->getFirstMediaUrl(Post::COVER_COLLECTION, 'thumb') ?: null,
-            'translated_locales' => $post->translatedLocales(),
+            'locales' => $post->translatedLocales(),
             'published_at' => $post->published_at?->toDateString(),
             'deleted_at' => $post->deleted_at?->toDateString(),
         ];

@@ -18,12 +18,7 @@ enum ContentStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
-            self::Draft => 'Черновик',
-            self::Moderation => 'На модерации',
-            self::Published => 'Опубликовано',
-            self::Archived => 'В архиве',
-        };
+        return __('enums.content_status.'.$this->value);
     }
 
     /**

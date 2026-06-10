@@ -24,6 +24,7 @@ import { create, destroy, edit, index, trash } from '@/routes/admin/incidents';
 type IncidentRow = {
     id: number;
     title: string;
+    locales: string[];
     type_label: string;
     hazard_label: string;
     hazard_color: string;
@@ -45,11 +46,30 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
     resolved: 'secondary',
 };
 
+const localeCodes = ['tj', 'ru', 'en'];
+
 export default function IncidentsIndex({ incidents, filters, trashedCount }: PageProps) {
     const [deleting, setDeleting] = useState<IncidentRow | null>(null);
 
     const columns: DataTableColumn<IncidentRow>[] = [
         { key: 'title', label: 'Событие' },
+        {
+            key: 'locales',
+            label: 'Языки',
+            render: (incident) => (
+                <div className="flex gap-1">
+                    {localeCodes.map((code) => (
+                        <Badge
+                            key={code}
+                            variant={incident.locales.includes(code) ? 'default' : 'outline'}
+                            className="px-1.5 text-[10px] uppercase"
+                        >
+                            {code}
+                        </Badge>
+                    ))}
+                </div>
+            ),
+        },
         { key: 'type_label', label: 'Тип', className: 'hidden md:table-cell' },
         {
             key: 'hazard_level',

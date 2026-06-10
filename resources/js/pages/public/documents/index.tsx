@@ -12,6 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useTranslations } from '@/hooks/use-translations';
 import { index as documentsIndex } from '@/routes/documents';
 
 type DocFile = { id: number; name: string; size: string; url: string };
@@ -35,6 +36,7 @@ type PageProps = {
 
 export default function DocumentsRegistry({ documents, filters, types }: PageProps) {
     const { locale } = usePage().props;
+    const { t } = useTranslations();
     const [search, setSearch] = useState(filters.search ?? '');
 
     const apply = (params: Record<string, string | undefined>) => {
@@ -47,9 +49,9 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
 
     return (
         <>
-            <Head title="Документы" />
+            <Head title={t('documents.title')} />
 
-            <h1 className="mb-6 text-3xl font-semibold">Документы</h1>
+            <h1 className="mb-6 text-3xl font-semibold">{t('documents.title')}</h1>
 
             <form
                 className="mb-6 flex flex-col gap-3 sm:flex-row"
@@ -61,7 +63,7 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
                 <Input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Поиск по наименованию…"
+                    placeholder={t('documents.form.search_placeholder')}
                     className="sm:max-w-xs"
                 />
                 <Select
@@ -69,10 +71,10 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
                     onValueChange={(value) => apply({ type: value === 'all' ? undefined : value })}
                 >
                     <SelectTrigger className="sm:max-w-xs">
-                        <SelectValue placeholder="Тип" />
+                        <SelectValue placeholder={t('documents.form.type_placeholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">Все типы</SelectItem>
+                        <SelectItem value="all">{t('documents.form.all_types')}</SelectItem>
                         {types.map((type) => (
                             <SelectItem key={type.value} value={type.value}>
                                 {type.label}
@@ -80,11 +82,11 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
                         ))}
                     </SelectContent>
                 </Select>
-                <Button type="submit">Найти</Button>
+                <Button type="submit">{t('common.find')}</Button>
             </form>
 
             {documents.data.length === 0 ? (
-                <p className="text-muted-foreground">Документы не найдены.</p>
+                <p className="text-muted-foreground">{t('documents.empty')}</p>
             ) : (
                 <div className="space-y-4">
                     {documents.data.map((document) => (
@@ -129,7 +131,7 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
                         disabled={!documents.prev_page_url}
                         onClick={() => documents.prev_page_url && router.get(documents.prev_page_url)}
                     >
-                        Назад
+                        {t('common.back')}
                     </Button>
                     <Button
                         variant="outline"
@@ -137,7 +139,7 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
                         disabled={!documents.next_page_url}
                         onClick={() => documents.next_page_url && router.get(documents.next_page_url)}
                     >
-                        Вперёд
+                        {t('common.next')}
                     </Button>
                 </div>
             )}

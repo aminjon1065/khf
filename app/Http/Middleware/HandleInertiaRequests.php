@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Alert;
 use App\Models\Language;
 use App\Models\User;
+use App\Support\LocaleUrls;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -167,53 +168,12 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Map of locale code → URL for the language switcher. On a localized public route the
-     * locale segment is swapped while preserving the rest of the path and query; elsewhere it
-     * points to that locale's homepage.
+     * Map of locale code → URL for the language switcher (shared logic with the SEO tags).
      *
      * @return array<string, string>
      */
     private function localeSwitch(Request $request): array
     {
-        $codes = $this->supportedCodes();
-
-        $segments = explode('/', trim($request->path(), '/'));
-        $hasLocalePrefix = in_array($segments[0] ?? '', $codes, true);
-
-        $queryString = $request->getQueryString();
-        $query = $queryString !== null ? '?'.$queryString : '';
-
-        $map = [];
-
-        foreach ($codes as $code) {
-            if ($hasLocalePrefix) {
-                $segments[0] = $code;
-                $path = implode('/', $segments);
-            } else {
-                $path = $code;
-            }
-
-            $map[$code] = url($path).$query;
-        }
-
-        return $map;
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function supportedCodes(): array
-    {
-        try {
-            $codes = Language::codes();
-
-            if ($codes !== []) {
-                return $codes;
-            }
-        } catch (\Throwable) {
-            // Fall back to the static config allow-list below.
-        }
-
-        return config('app.locales');
+        return app(LocaleUrls::class)->switchMap($request);
     }
 }

@@ -17,11 +17,7 @@ enum IncidentStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
-            self::Active => 'Активно',
-            self::Controlled => 'Под контролем',
-            self::Resolved => 'Завершено',
-        };
+        return __('enums.incident_status.'.$this->value);
     }
 
     /**

@@ -167,6 +167,7 @@ class DocumentController extends Controller
             'type_label' => $document->type->label(),
             'status' => $document->status->value,
             'status_label' => $document->status->label(),
+            'locales' => $document->translatedLocales(),
             'document_date' => $document->document_date?->format('d.m.Y'),
             'files_count' => $document->relationLoaded('media') ? $document->getMedia(Document::FILES_COLLECTION)->count() : 0,
             'deleted_at' => $document->deleted_at?->toDateString(),

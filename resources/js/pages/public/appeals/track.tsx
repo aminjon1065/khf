@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from '@/hooks/use-translations';
 import { track } from '@/routes/appeals';
 
 type TrackResult =
@@ -25,15 +26,16 @@ type PageProps = {
 
 export default function AppealTrack({ reference, result }: PageProps) {
     const { locale } = usePage().props;
+    const { t } = useTranslations();
     const [value, setValue] = useState(reference ?? '');
 
     return (
         <>
-            <Head title="Отслеживание обращения" />
+            <Head title={t('appeals.track.title')} />
 
             <div className="mx-auto max-w-xl">
-                <h1 className="text-3xl font-semibold">Отслеживание обращения</h1>
-                <p className="mt-1 text-muted-foreground">Введите регистрационный номер обращения</p>
+                <h1 className="text-3xl font-semibold">{t('appeals.track.title')}</h1>
+                <p className="mt-1 text-muted-foreground">{t('appeals.track.hint')}</p>
 
                 <form
                     className="mt-6 flex gap-3"
@@ -43,20 +45,20 @@ export default function AppealTrack({ reference, result }: PageProps) {
                     }}
                 >
                     <Label htmlFor="reference" className="sr-only">
-                        Регистрационный номер
+                        {t('common.reference_number')}
                     </Label>
                     <Input
                         id="reference"
                         value={value}
                         onChange={(event) => setValue(event.target.value)}
-                        placeholder="OBR-2026-XXXXXX"
+                        placeholder={t('appeals.track.reference_placeholder')}
                     />
-                    <Button type="submit">Проверить</Button>
+                    <Button type="submit">{t('common.check')}</Button>
                 </form>
 
                 {result && !result.found && (
                     <p className="mt-6 rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm">
-                        Обращение с таким номером не найдено.
+                        {t('appeals.track.not_found')}
                     </p>
                 )}
 
@@ -67,9 +69,9 @@ export default function AppealTrack({ reference, result }: PageProps) {
                             <Badge>{result.status}</Badge>
                         </div>
                         <p className="font-medium">{result.subject}</p>
-                        <p className="text-sm text-muted-foreground">Категория: {result.category}</p>
-                        <p className="text-sm text-muted-foreground">Подано: {result.created_at}</p>
-                        <p className="text-sm text-muted-foreground">Обновлено: {result.updated_at}</p>
+                        <p className="text-sm text-muted-foreground">{t('appeals.track.category_label', { category: result.category })}</p>
+                        <p className="text-sm text-muted-foreground">{t('appeals.track.submitted_label', { created_at: result.created_at ?? '' })}</p>
+                        <p className="text-sm text-muted-foreground">{t('appeals.track.updated_label', { updated_at: result.updated_at ?? '' })}</p>
                     </div>
                 )}
             </div>

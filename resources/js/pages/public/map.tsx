@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import { useMemo } from 'react';
 import { MapView  } from '@/components/map-view';
 import type {MapMarker} from '@/components/map-view';
+import { useTranslations } from '@/hooks/use-translations';
 
 type IncidentMarker = {
     id: number;
@@ -21,6 +22,7 @@ type PageProps = {
 };
 
 export default function PublicMap({ incidents }: PageProps) {
+    const { t } = useTranslations();
     const markers = useMemo<MapMarker[]>(
         () =>
             incidents.map((incident) => ({
@@ -42,11 +44,11 @@ export default function PublicMap({ incidents }: PageProps) {
 
     return (
         <>
-            <Head title="Карта ЧС" />
+            <Head title={t('common.emergency_map')} />
 
             <div className="mb-4">
-                <h1 className="text-3xl font-semibold">Интерактивная карта ЧС</h1>
-                <p className="text-muted-foreground">Активные события на территории Республики Таджикистан</p>
+                <h1 className="text-3xl font-semibold">{t('map.heading')}</h1>
+                <p className="text-muted-foreground">{t('map.subtitle')}</p>
             </div>
 
             <div className="h-[70vh] overflow-hidden rounded-lg border">

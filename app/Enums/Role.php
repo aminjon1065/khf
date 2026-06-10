@@ -17,10 +17,7 @@ enum Role: string
      */
     public function label(): string
     {
-        return match ($this) {
-            self::SuperAdmin => 'Суперадминистратор',
-            self::Moderator => 'Модератор',
-        };
+        return __('enums.role.'.$this->value);
     }
 
     /**

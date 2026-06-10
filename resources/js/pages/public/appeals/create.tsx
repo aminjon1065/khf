@@ -13,6 +13,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useTranslations } from '@/hooks/use-translations';
 import { create, store, track } from '@/routes/appeals';
 
 type Option = { value: string; label: string };
@@ -24,6 +25,7 @@ type PageProps = {
 
 export default function AppealCreate({ categories, submittedReference }: PageProps) {
     const { locale } = usePage().props;
+    const { t } = useTranslations();
 
     const form = useForm({
         category: categories[0]?.value ?? '',
@@ -45,20 +47,20 @@ export default function AppealCreate({ categories, submittedReference }: PagePro
     if (submittedReference) {
         return (
             <>
-                <Head title="Обращение принято" />
+                <Head title={t('appeals.success.title')} />
                 <div className="mx-auto max-w-xl rounded-lg border p-8 text-center">
                     <CheckCircle2 className="mx-auto size-12 text-green-600" />
-                    <h1 className="mt-4 text-2xl font-semibold">Обращение принято</h1>
+                    <h1 className="mt-4 text-2xl font-semibold">{t('appeals.success.title')}</h1>
                     <p className="mt-2 text-muted-foreground">
-                        Ваш регистрационный номер для отслеживания статуса:
+                        {t('appeals.success.reference_hint')}
                     </p>
                     <p className="mt-2 text-xl font-mono font-semibold">{submittedReference}</p>
                     <div className="mt-6 flex justify-center gap-3">
                         <Button variant="outline" asChild>
-                            <Link href={track({ locale }).url}>Отследить статус</Link>
+                            <Link href={track({ locale }).url}>{t('common.track_status')}</Link>
                         </Button>
                         <Button asChild>
-                            <Link href={create({ locale }).url}>Новое обращение</Link>
+                            <Link href={create({ locale }).url}>{t('appeals.success.new_appeal')}</Link>
                         </Button>
                     </div>
                 </div>
@@ -68,17 +70,17 @@ export default function AppealCreate({ categories, submittedReference }: PagePro
 
     return (
         <>
-            <Head title="Электронная приёмная" />
+            <Head title={t('appeals.title')} />
 
             <div className="mx-auto max-w-2xl">
-                <h1 className="text-3xl font-semibold">Электронная приёмная</h1>
+                <h1 className="text-3xl font-semibold">{t('appeals.title')}</h1>
                 <p className="mt-1 text-muted-foreground">
-                    Обращения граждан в Комитет по чрезвычайным ситуациям
+                    {t('appeals.subtitle')}
                 </p>
 
                 <form onSubmit={submit} className="mt-6 space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="category">Категория</Label>
+                        <Label htmlFor="category">{t('appeals.form.category')}</Label>
                         <Select value={form.data.category} onValueChange={(value) => form.setData('category', value)}>
                             <SelectTrigger id="category">
                                 <SelectValue />
@@ -96,31 +98,31 @@ export default function AppealCreate({ categories, submittedReference }: PagePro
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="name">Ваше имя</Label>
+                            <Label htmlFor="name">{t('appeals.form.name')}</Label>
                             <Input id="name" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />
                             <InputError message={errors.name} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="email">E-mail</Label>
+                            <Label htmlFor="email">{t('common.email')}</Label>
                             <Input id="email" type="email" value={form.data.email} onChange={(e) => form.setData('email', e.target.value)} />
                             <InputError message={errors.email} />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="phone">Телефон (необязательно)</Label>
+                        <Label htmlFor="phone">{t('appeals.form.phone_optional')}</Label>
                         <Input id="phone" value={form.data.phone} onChange={(e) => form.setData('phone', e.target.value)} />
                         <InputError message={errors.phone} />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="subject">Тема</Label>
+                        <Label htmlFor="subject">{t('appeals.form.subject')}</Label>
                         <Input id="subject" value={form.data.subject} onChange={(e) => form.setData('subject', e.target.value)} />
                         <InputError message={errors.subject} />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="message">Сообщение</Label>
+                        <Label htmlFor="message">{t('appeals.form.message')}</Label>
                         <Textarea id="message" rows={6} value={form.data.message} onChange={(e) => form.setData('message', e.target.value)} />
                         <InputError message={errors.message} />
                     </div>
@@ -138,10 +140,10 @@ export default function AppealCreate({ categories, submittedReference }: PagePro
 
                     <div className="flex items-center gap-3">
                         <Button type="submit" disabled={form.processing}>
-                            Отправить обращение
+                            {t('appeals.form.submit')}
                         </Button>
                         <Link href={track({ locale }).url} className="text-sm text-primary hover:underline">
-                            Отследить ранее поданное обращение
+                            {t('appeals.track_existing')}
                         </Link>
                     </div>
                 </form>

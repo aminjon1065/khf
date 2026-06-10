@@ -14,12 +14,7 @@ enum AppealStatus: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::New => 'Новое',
-            self::InProgress => 'В работе',
-            self::Answered => 'Отвечено',
-            self::Closed => 'Закрыто',
-        };
+        return __('enums.appeal_status.'.$this->value);
     }
 
     /**

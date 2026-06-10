@@ -30,7 +30,7 @@ type PostRow = {
     status: string;
     status_label: string;
     cover_url: string | null;
-    translated_locales: string[];
+    locales: string[];
     published_at: string | null;
 };
 
@@ -62,6 +62,31 @@ export default function PostsIndex({ posts, filters, trashedCount }: PageProps) 
                         <div className="h-10 w-16 rounded bg-muted" />
                     )}
                     <span>{post.title}</span>
+                </div>
+            ),
+        },
+        {
+            key: 'locales',
+            label: 'Языки',
+            render: (post) => (
+                <div className="flex gap-1">
+                    {['tj', 'ru', 'en'].map((locale) => {
+                        const hasTranslation = post.locales.includes(locale);
+
+                        return (
+                            <Badge
+                                key={locale}
+                                variant={hasTranslation ? 'default' : 'outline'}
+                                className={
+                                    hasTranslation
+                                        ? 'px-1.5 text-[10px] uppercase'
+                                        : 'px-1.5 text-[10px] uppercase text-muted-foreground'
+                                }
+                            >
+                                {locale}
+                            </Badge>
+                        );
+                    })}
                 </div>
             ),
         },

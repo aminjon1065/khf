@@ -26,7 +26,7 @@ class SubscriptionConfirmation extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Подтверждение подписки — КЧС',
+            subject: __('mail.subscription.subject'),
         );
     }
 
