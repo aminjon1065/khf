@@ -40,17 +40,18 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 ## Progress Summary
 
 - **Total Tasks:** 196
-- **Completed:** 105
+- **Completed:** 109
 - **In Progress:** 1
 - **Blocked:** 0 (Redis blocker removed — D-10: no Redis on shared hosting, DB drivers in use)
-- **Remaining:** 90
-- **Completion:** ~54%
+- **Remaining:** 86
+- **Completion:** ~56%
 
-> Phases 0–13 substantially done; public portal fully trilingual (tj/ru/en): all 11 public pages +
-> chrome on `useTranslations` dictionaries, enum labels + e-mails localized server-side, hreflang/
-> canonical/x-default server-rendered, CMS «Языки» translation-status badges in 6 modules; alert→
-> subscriber dispatch closed; 188 tests. Remaining: web push (12 tail), locale dates + «available
-> in other language» note (13 tail), search (14), SEO/analytics (15), security hardening + audit
+> Phases 0–13 substantially done; public portal fully trilingual (tj/ru/en); Phase 8 progressed:
+> generic CMS page renderer (About/Activities/Contacts as content pages + footer section nav),
+> news RSS feed, server-rendered Open Graph/Twitter meta, branded localized error pages; seeders
+> (admin + trilingual demo) in place; 197 tests. Remaining: structured About/Activities/Operational
+> sub-sections + safety guides + print styles (8 tail), web push (12 tail), locale dates (13 tail),
+> search (14), SEO/sitemap/analytics (15), security hardening + audit
 > log (16), perf (17), testing/a11y/API (18), deploy (19).
 
 > Completed = starter-kit functionality already satisfying ТЗ (auth, 2FA, passkeys, settings, SSR,
@@ -183,19 +184,20 @@ management — before content modules (Phase 4) build on them.
 
 ## Phase 8 — Public Portal
 
-- [~] Public layout: `PublicLayout` with header (logo, nav, lang switcher) + footer (trust line, committee). Search, a11y button, alert area pending (§5)
+- [~] Public layout: `PublicLayout` (header emblem+brand+nav+lang switcher; footer trust line + dynamic `navPages` section links). Search, a11y button pending (§5)
 - [~] Homepage: `public/home` (hero + signal CTA, quick-access tiles, latest-news grid) replacing the starter welcome — done; alert area, operational-situation counters, map widget, subscription form pending (§6.1)
 - [~] News/press-center: public listing (cards, cover thumb, pagination) + single article (recent sidebar) at `/{locale}/news[/{slug}]` — done; related-by-category, gallery, attachments, filters pending (§6.2)
-- [ ] RSS feed for news (§6.2, §15.3)
-- [ ] "About the Committee" section pages (leadership, structure, regional offices, history, partners, anti-corruption, vacancies) (§5)
-- [ ] "Activities" section pages (§5)
+- [x] Generic public page renderer: `Public\PageController@show` at `/{locale}/pages/{slug}` (current-locale slug, sanitised content, SEO meta, 404) + `navPages` shared prop → footer section links; CMS-managed content backbone for the static sections below (§5, §7.2)
+- [x] RSS feed for news — `Public\FeedController@news` at `/{locale}/news/rss` (RSS 2.0, per-locale, discovery `<link>` in head) (§6.2, §15.3)
+- [~] "About the Committee" section — content page live via the page renderer (seeded); structured sub-pages (leadership, structure, regional offices, history, partners, anti-corruption, vacancies) pending (§5)
+- [~] "Activities" section — content page live via the page renderer (seeded); detailed sub-pages pending (§5)
 - [ ] "Operational situation" section (summaries, active warnings, map, archive) (§5)
 - [ ] Safety guides catalog by hazard type + guide page (illustrations, steps, downloads, print) (§6.5)
 - [ ] Educational / children materials sub-section (§6.5)
-- [ ] Contacts section (general, trust line/emergency numbers, regional offices, directions map, feedback) (§6.9)
-- [ ] Open Graph / social preview meta + print stylesheets for guides/documents (§6.12)
-- [ ] Branded error pages (404, 5xx) with nav + emergency phones (§6.12)
-- [ ] Tests: public pages render, locale switching, RSS, error pages
+- [~] Contacts section — content page live via the page renderer (seeded, 112 + helpline); regional offices, directions map, feedback widget pending (§6.9)
+- [~] Open Graph / social preview meta (server-rendered og:* + Twitter card + per-locale og:locale, emblem image) — done; print stylesheets for guides/documents pending (§6.12)
+- [x] Branded error pages (403/404/419/429/500/503) via Inertia `respond()` → `public/error` with nav + emergency phone; localized, skipped locally for the debug page (§6.12)
+- [x] Tests: page renderer render/404/locale-slug, navPages shared, RSS feed valid + excludes drafts/other-locale, branded error page, API errors stay JSON
 
 ## Phase 9 — Documents Registry
 
@@ -395,6 +397,35 @@ management — before content modules (Phase 4) build on them.
 
 ## Change Log
 
+- **2026-06-10** — Phase 8 increment (content backbone, RSS, SEO, error pages): (1) generic public
+  page renderer `Public\PageController@show` at `/{locale}/pages/{slug}` + `public/pages/show.tsx`
+  (current-locale slug lookup, sanitised content, SEO prop, 404) — turns About/Activities/Contacts
+  into CMS-managed content; `navPages` shared prop drives a footer «Разделы» link column.
+  (2) `Public\FeedController@news` RSS 2.0 feed at `/{locale}/news/rss` (per-locale, `feeds.news`
+  blade, discovery `<link>`). (3) Server-rendered Open Graph + Twitter card + `<meta description>`
+  in app.blade.php from a `seo` page prop (emblem og:image, per-locale og:locale), title now from
+  seo. (4) Branded error pages via `withExceptions(respond())` → `public/error.tsx` for
+  403/404/419/429/500/503 (localized, nav + 112; skipped in `local` env for the debug page);
+  `PublicLayout` hardened with defensive shared-prop defaults. New `ui.errors.*` + `footer.sections`
+  keys ×3 locales. 8 new tests (Pages, NewsFeed, ErrorPage) → 197 total. types/build/lint/Pint clean.
+- **2026-06-10** — Seeders: `AdminUserSeeder` (super-admin `aminjon1065@gmail.com` / `password10`
+  + a moderator `moderator@khf.test`, idempotent via `updateOrCreate`; privileged roles still set
+  up 2FA on first CMS visit per D-16) and `DemoContentSeeder` (trilingual demo: 3 categories,
+  6 published posts, 2 pages, 4 incidents across hazard levels, 1 active alert, 4 documents with
+  attached PDFs, 7 appeals, 3 tourist groups, 11 subscribers — each section guarded against
+  re-seed duplication). `DatabaseSeeder` now chains reference → staff → demo. Verified on the dev
+  MySQL; 189 tests still green.
+- **2026-06-10** — Claude Design handoff implementation (`КЧС / КҲФ Design System`, derived from
+  this codebase — tokens already matched, lifted verbatim). Implemented the genuinely-new pieces:
+  (1) official locale-matched КЧС emblems made web-servable (`public/images/emblem-{tj,ru,en}.webp`,
+  byte-identical to `resources/static/logo`) + `AppEmblem` component (locale-aware, falls back to tj);
+  wired into the public header, admin sidebar, auth layout, and `AppLogo` — replacing the leftover
+  default Laravel star/«Laravel Starter Kit» branding everywhere. (2) `HazardBadge` accessible
+  component (colour + icon + text, never colour alone — fixes the a11y violation where the incidents
+  pill forced white text on the yellow `elevated` level); public IncidentController now exposes
+  `hazard_level` value; incidents archive uses it. 1 new test (incidents hazard payload); 189 total.
+  types/build/lint/Pint clean. NB: live HTTP asset check deferred — Herd was unreachable at the time
+  (transient); files are in the docroot so they serve once it's up.
 - **2026-06-10** — Phase 13 multilingual completion: (1) all 11 public pages + alert banner
   converted to `t()` — ~90 dictionary keys ×3 locales in `lang/*/ui.php`, shared strings unified
   under `common.*`, zero hard-coded Cyrillic left in public React code; (2) `lang/*/enums.php` —
@@ -624,13 +655,13 @@ management — before content modules (Phase 4) build on them.
 
 ## Next Action
 
-Phase 13 effectively closed ✅ (trilingual public portal: dictionaries + enum/mail localization +
-hreflang/canonical + CMS translation badges, 188 tests). Next options: (a) **Phase 14 search** —
-MySQL full-text over posts/pages/documents translations, locale-aware, public search page +
-header search box; (b) **Phase 13 tail** — locale-aware date formatting + «available in another
-language» fallback note; (c) **Phase 15 SEO** (sitemap.xml, meta descriptions, Matomo). Recommend
-(a): search is a ТЗ §6.5 core feature and the last big public-facing gap; (b) and (c) are small
-follow-ups. Web push (12 tail) stays deferred — lowest ROI on shared hosting.
+Phase 8 increment landed ✅ (page renderer + footer nav, RSS, OG meta, branded error pages,
+197 tests). Next options: (a) **Phase 8 tail** — «Operational situation» landing (active warnings
++ counters + map embed + archive), safety-guides catalog by hazard type, print stylesheets;
+(b) **Phase 14 search** — MySQL full-text over posts/pages/documents, locale-aware, results page +
+header search box; (c) **Phase 15 SEO** — sitemap.xml (per-locale) + robots.txt + schema.org (now
+that OG meta + RSS exist). Recommend (b): search is a ТЗ §6.5 core feature and the last big
+public-facing gap; then (c) builds naturally on the SEO work just done. Web push (12 tail) deferred.
 
 ---
 

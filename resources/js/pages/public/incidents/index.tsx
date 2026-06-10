@@ -1,6 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type {Paginator} from '@/components/admin/data-table';
+import { HazardBadge  } from '@/components/hazard-badge';
+import type {HazardLevel} from '@/components/hazard-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/hooks/use-translations';
@@ -9,8 +11,8 @@ type IncidentItem = {
     title: string | null;
     description: string | null;
     type_label: string;
+    hazard_level: HazardLevel;
     hazard_label: string;
-    hazard_color: string;
     status: string;
     status_label: string;
     region: string | null;
@@ -38,12 +40,7 @@ export default function IncidentsArchive({ incidents }: PageProps) {
                     {incidents.data.map((incident, idx) => (
                         <div key={idx} className="rounded-lg border p-4">
                             <div className="flex flex-wrap items-center gap-2">
-                                <span
-                                    className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                                    style={{ backgroundColor: incident.hazard_color }}
-                                >
-                                    {incident.hazard_label}
-                                </span>
+                                <HazardBadge level={incident.hazard_level} label={incident.hazard_label} size="sm" />
                                 <Badge variant="secondary">{incident.type_label}</Badge>
                                 <Badge variant="outline">{incident.status_label}</Badge>
                                 {incident.region && (

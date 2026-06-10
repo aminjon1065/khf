@@ -10,9 +10,11 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -45,4 +47,20 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        // Branded Inertia error pages with nav + emergency phone (ТЗ §5). Skipped locally so
+        // developers keep the debug page, and for API requests (JSON errors).
+        $exceptions->respond(function (Response $response, Throwable $exception, Request $request): Response {
+            if (app()->environment('local') || $request->is('api/*')) {
+                return $response;
+            }
+
+            if (in_array($response->getStatusCode(), [403, 404, 419, 429, 500, 503], true)) {
+                return Inertia::render('public/error', ['status' => $response->getStatusCode()])
+                    ->toResponse($request)
+                    ->setStatusCode($response->getStatusCode());
+            }
+
+            return $response;
+        });
     })->create();

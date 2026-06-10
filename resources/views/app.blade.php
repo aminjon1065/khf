@@ -1,19 +1,42 @@
 @php
     $localeUrls = app(\App\Support\LocaleUrls::class);
     $seoAlternates = $localeUrls->alternates(request());
+
+    $locale = app()->getLocale();
+    $seo = $page['props']['seo'] ?? [];
+    $seoTitle = $seo['title'] ?? config('app.name', 'КЧС');
+    $seoDescription = $seo['description'] ?? trans('ui.site.full_name');
+    $canonicalUrl = collect($seoAlternates)->firstWhere('code', $locale)['url'] ?? request()->url();
+    $ogImage = url('/images/emblem-'.(in_array($locale, ['tj', 'ru', 'en'], true) ? $locale : 'tj').'.webp');
 @endphp
 <!DOCTYPE html>
-<html lang="{{ $localeUrls->hreflang(app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html lang="{{ $localeUrls->hreflang($locale) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        <meta name="description" content="{{ $seoDescription }}">
+
+        {{-- Open Graph / Twitter card — server-rendered for crawlers since SSR is off (ТЗ §15) --}}
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="{{ trans('ui.site.short_name') }}">
+        <meta property="og:title" content="{{ $seoTitle }}">
+        <meta property="og:description" content="{{ $seoDescription }}">
+        <meta property="og:url" content="{{ $canonicalUrl }}">
+        <meta property="og:image" content="{{ $ogImage }}">
+        <meta property="og:locale" content="{{ $localeUrls->hreflang($locale) }}">
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:title" content="{{ $seoTitle }}">
+        <meta name="twitter:description" content="{{ $seoDescription }}">
+        <meta name="twitter:image" content="{{ $ogImage }}">
+
         @if ($seoAlternates !== [])
-            <link rel="canonical" href="{{ collect($seoAlternates)->firstWhere('code', app()->getLocale())['url'] ?? request()->url() }}">
+            <link rel="canonical" href="{{ $canonicalUrl }}">
             @foreach ($seoAlternates as $alternate)
                 <link rel="alternate" hreflang="{{ $alternate['hreflang'] }}" href="{{ $alternate['url'] }}">
             @endforeach
             <link rel="alternate" hreflang="x-default" href="{{ collect($seoAlternates)->firstWhere('code', $localeUrls->defaultCode())['url'] ?? url($localeUrls->defaultCode()) }}">
+            <link rel="alternate" type="application/rss+xml" title="{{ trans('ui.news.heading') }}" href="{{ route('news.rss', ['locale' => $locale]) }}">
         @endif
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
@@ -51,7 +74,7 @@
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         <x-inertia::head>
-            <title>{{ config('app.name', 'Laravel') }}</title>
+            <title>{{ $seoTitle }}</title>
         </x-inertia::head>
     </head>
     <body class="font-sans antialiased">

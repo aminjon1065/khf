@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Alert;
 use App\Models\Language;
+use App\Models\Page;
 use App\Models\User;
 use App\Support\LocaleUrls;
 use Illuminate\Http\Request;
@@ -51,6 +52,7 @@ class HandleInertiaRequests extends Middleware
             'locales' => $this->locales(),
             'localeSwitch' => $this->localeSwitch($request),
             'translations' => $this->translations(),
+            'navPages' => $this->navPages(),
             'activeAlerts' => $this->activeAlerts(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
@@ -165,6 +167,38 @@ class HandleInertiaRequests extends Middleware
         $messages = trans('ui');
 
         return is_array($messages) ? $messages : [];
+    }
+
+    /**
+     * Published top-level static pages that have a translation in the active locale, for the footer
+     * section navigation (ТЗ §5). Only current-locale-translated pages are listed, so every link
+     * resolves (the public page renderer looks up by current-locale slug).
+     *
+     * @return list<array{title: string, slug: string}>
+     */
+    private function navPages(): array
+    {
+        try {
+            $locale = app()->getLocale();
+
+            return Page::published()
+                ->whereNull('parent_id')
+                ->with('translations')
+                ->orderBy('sort_order')
+                ->get()
+                ->map(function (Page $page) use ($locale): ?array {
+                    $translation = $page->translations->firstWhere('locale', $locale);
+
+                    return $translation === null
+                        ? null
+                        : ['title' => $translation->title, 'slug' => $translation->slug];
+                })
+                ->filter()
+                ->values()
+                ->all();
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     /**

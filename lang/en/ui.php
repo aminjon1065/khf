@@ -26,9 +26,18 @@ return [
     ],
     'footer' => [
         'hotline' => 'Unified helpline',
+        'sections' => 'Sections',
     ],
     'lang' => [
         'switch' => 'Change language',
+    ],
+    'errors' => [
+        '403' => ['title' => 'Access denied', 'message' => 'You do not have permission to view this page.'],
+        '404' => ['title' => 'Page not found', 'message' => 'The requested page does not exist or has been moved.'],
+        '419' => ['title' => 'Session expired', 'message' => 'Please refresh the page and try again.'],
+        '429' => ['title' => 'Too many requests', 'message' => 'Please wait a moment and try again.'],
+        '500' => ['title' => 'Internal server error', 'message' => 'Something went wrong. We are already working on it.'],
+        '503' => ['title' => 'Under maintenance', 'message' => 'The site is temporarily unavailable. Please check back later.'],
     ],
     'common' => [
         'back' => 'Back',

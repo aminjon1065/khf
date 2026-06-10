@@ -17,6 +17,7 @@ declare module '@inertiajs/core' {
             locales: AppLanguage[];
             localeSwitch: Record<string, string>;
             translations: Translations;
+            navPages: { title: string; slug: string }[];
             activeAlerts: ActiveAlert[];
             sidebarOpen: boolean;
             [key: string]: unknown;

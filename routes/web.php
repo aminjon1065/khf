@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Public\AppealController;
 use App\Http\Controllers\Public\DocumentController;
+use App\Http\Controllers\Public\FeedController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\IncidentController;
 use App\Http\Controllers\Public\MapController;
+use App\Http\Controllers\Public\PageController;
 use App\Http\Controllers\Public\PostController;
 use App\Http\Controllers\Public\SubscriptionController;
 use App\Http\Controllers\Public\TouristGroupController;
@@ -26,6 +28,7 @@ Route::prefix('{locale}')
     ->group(function () {
         Route::get('/', [HomeController::class, 'index'])->name('welcome');
         Route::get('news', [PostController::class, 'index'])->name('news.index');
+        Route::get('news/rss', [FeedController::class, 'news'])->name('news.rss');
         Route::get('news/{slug}', [PostController::class, 'show'])->name('news.show');
         Route::get('incidents', [IncidentController::class, 'index'])->name('incidents.index');
         Route::get('map', [MapController::class, 'index'])->name('map.index');
@@ -47,6 +50,9 @@ Route::prefix('{locale}')
         Route::post('subscribe', [SubscriptionController::class, 'store'])->middleware('throttle:6,1')->name('subscriptions.store');
         Route::get('subscribe/confirm/{token}', [SubscriptionController::class, 'confirm'])->name('subscriptions.confirm');
         Route::get('subscribe/unsubscribe/{token}', [SubscriptionController::class, 'unsubscribe'])->name('subscriptions.unsubscribe');
+
+        // CMS-managed static content pages (About / Activities / Contacts …) by current-locale slug.
+        Route::get('pages/{slug}', [PageController::class, 'show'])->name('pages.show');
     });
 
 /*

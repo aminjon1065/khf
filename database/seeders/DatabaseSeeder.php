@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\Role;
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,7 +10,8 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Seed the application's database: reference data (languages, roles/permissions, regions),
+     * staff accounts, then demo content for local/staging.
      */
     public function run(): void
     {
@@ -20,11 +19,8 @@ class DatabaseSeeder extends Seeder
             LanguageSeeder::class,
             RolePermissionSeeder::class,
             RegionSeeder::class,
+            AdminUserSeeder::class,
+            DemoContentSeeder::class,
         ]);
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ])->assignRole(Role::SuperAdmin->value);
     }
 }

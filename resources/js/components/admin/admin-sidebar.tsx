@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Bell, ExternalLink, FileText, FolderTree, Inbox, Languages, LayoutDashboard, Mail, Mountain, Newspaper, TriangleAlert, Users } from 'lucide-react';
+import { AppEmblem } from '@/components/app-emblem';
 import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
@@ -142,6 +143,7 @@ export function AdminSidebar() {
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href={adminDashboard()} prefetch>
+                                <AppEmblem className="size-8 shrink-0" />
                                 <span className="flex flex-col text-left leading-tight">
                                     <span className="font-semibold">КЧС · CMS</span>
                                     <span className="text-xs text-muted-foreground">Панель управления</span>
