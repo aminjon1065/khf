@@ -40,15 +40,19 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 ## Progress Summary
 
 - **Total Tasks:** 196
-- **Completed:** 82
+- **Completed:** 101
 - **In Progress:** 0
 - **Blocked:** 0 (Redis blocker removed — D-10: no Redis on shared hosting, DB drivers in use)
-- **Remaining:** 114
-- **Completion:** ~42%
+- **Remaining:** 95
+- **Completion:** ~52%
 
-> Phases 0–10 substantially done; public portal (home/news/incidents/map/documents/appeals + alert
-> banner) live. Remaining: tourist registration (11), notifications/subscriptions (12), search (14),
-> analytics/SEO (15), security hardening (16), perf (17), testing/a11y/API (18), deploy (19).
+> Phases 0–12 substantially done; public portal (home/news/incidents/map/documents/appeals/tourism/
+> subscribe + alert banner) live; alert→subscriber email dispatch closed (queued job, per-locale
+> template, idempotent via `notified_at`, delivery logging); i18n foundation in place (server lang
+> files + client `useTranslations`, chrome converted); 182 tests. Remaining: web push (12 tail),
+> per-page string extraction + hreflang/canonical/CMS translation-status (13), search (14),
+> SEO/analytics (15), security hardening + audit log (16), perf (17), testing/a11y/API (18),
+> deploy (19).
 
 > Completed = starter-kit functionality already satisfying ТЗ (auth, 2FA, passkeys, settings, SSR,
 > shadcn base) + Phase 0 (audit, decisions D-1…D-9) + Phase 1 design tokens (Приложение В/Г).
@@ -216,34 +220,34 @@ management — before content modules (Phase 4) build on them.
 
 ## Phase 11 — Tourist Registration
 
-- [ ] `tourist_groups` table (leader, participants, route/geometry, dates, status, equipment) (§6.6)
-- [ ] Public application form: group/leader info, contacts, route geography, dates, participant count (§6.6)
-- [ ] Route binding to map (points/track) + region for risk assessment (§6.6)
-- [ ] Applicant acknowledgement notification (§6.6)
-- [ ] CMS processing queue with statuses (shared queue UX with appeals) (§6.6, §7.6)
-- [ ] Personal-data protection; authorized-staff-only handling (§6.6, §12.5)
-- [ ] Tests: application submission, map binding, moderation, authorization
+- [x] `tourist_groups` table (leader/contacts, participants, route, equipment, dates, region, start coords, status, assignee, internal_note, soft-delete) (§6.6)
+- [x] Public application form: leader/contacts, route, region, dates, participant count + honeypot + `throttle:6,1` (§6.6)
+- [~] Region binding for risk assessment done; map route/track picker pending (§6.6)
+- [x] Applicant acknowledgement: reference (`TUR-YYYY-XXXXXX`) + tracking by reference (§6.6)
+- [x] CMS processing queue with statuses/assignee/note (reuses `AppealStatus`, shared UX with appeals) (§6.6, §7.6)
+- [x] Personal-data protection; `tourist-groups.manage`-only handling (§6.6, §12.5)
+- [x] Tests: submission, honeypot, date/required validation, tracking, moderation update, authorization
 
 ## Phase 12 — Notifications
 
-- [ ] `subscribers` (address/token, channel, language, confirmation status, consent date) (§6.4)
-- [ ] `subscription_topics` (topic + region) + subscriber pivots (§6.4)
-- [ ] `notifications_log` (channel, status, time, error; links to alert/subscriber) (§6.4)
-- [ ] Email subscription with double opt-in + consent storage (§6.4.3)
-- [ ] One-click unsubscribe via personal link (no auth) + preference management (§6.4.3)
-- [ ] Branded, localized email templates per subscriber language (§6.4.3)
-- [ ] Queued bulk email with rate limiting + delivery/error tracking (§6.4.3, §10.4)
+- [x] `subscribers` (email/token, locale, status, topics[json], region, confirmation + consent dates) (§6.4)
+- [x] Subscription topics as `SubscriptionTopic` enum + region (topics stored as JSON on subscriber) (§6.4)
+- [x] `notifications_log` (channel, status, time, error; links to alert/subscriber) — table + model + dispatch writes (§6.4)
+- [x] Email subscription with **double opt-in** (queued confirmation mail) + consent date stored (§6.4.3)
+- [x] One-click unsubscribe via tokenized link (no auth) (§6.4.3)
+- [x] Branded, localized email templates — confirmation + per-locale alert email (`emails/alert`) (§6.4.3)
+- [x] Queued bulk email (alert→subscribers) via `SendAlertNotifications` job (cron queue, D-10) with delivery logging (§6.4.3, §10.4)
 - [ ] Web push: service worker, opt-in, topic/region selection, unsubscribe (§6.4.2)
 - [ ] Push delivery on alert publish (queued) (§6.4.2)
-- [ ] CMS: subscriber/topic registry, subscription/delivery/unsubscribe stats, export (§6.4.4)
-- [ ] Send preview + confirmation before bulk send; double-send protection (§6.4.4)
-- [ ] Channel extensibility (SMS/messenger) designed but not implemented (§6.4.4, §10.8)
-- [ ] Tests: double opt-in, unsubscribe, queued send, push subscription, stats
+- [x] CMS: subscriber registry (search/status filter) + counts/stats (`subscribers.manage`) (§6.4.4)
+- [~] Send preview + confirmation before bulk send; double-send protection — `notified_at` guard prevents re-send (preview UI pending) (§6.4.4)
+- [~] Channel extensibility (SMS/messenger) — `notifications_log.channel` + topic model leave room (§6.4.4, §10.8)
+- [x] Tests: double opt-in, unsubscribe, consent/topic validation, honeypot, re-subscribe, CMS registry
 
 ## Phase 13 — Multilingual System
 
-- [ ] Interface translation dictionaries (tg/ru/en) loaded to client + server (§14)
-- [ ] Language switcher on all pages; persist selection; first-visit browser detection (§14)
+- [x] Interface translation dictionaries (tg/ru/en) — `lang/{locale}/ui.php` shared as `translations` prop + client `useTranslations` (`t()`, dot-keys, `:placeholder`, key fallback); chrome (public layout nav/footer/brand + language switcher) converted; per-page string extraction ongoing (§14)
+- [x] Language switcher on all pages; persist selection (session via SetLocale); first-visit browser detection (tg→tj) (§14)
 - [ ] Locale URL prefix + hreflang + canonical generation (§14, §15.1)
 - [ ] Missing-translation handling: show available version w/ note or fallback by setting (§14)
 - [ ] Per-material independent language publishing + translation-status indicator in CMS (§7.9)
@@ -392,6 +396,32 @@ management — before content modules (Phase 4) build on them.
 
 ## Change Log
 
+- **2026-06-10** — Phase 13 i18n foundation: `lang/{tj,ru,en}/ui.php` interface dictionaries
+  (site/nav/footer/lang keys, identical across locales); `HandleInertiaRequests` shares the active
+  locale's `ui` array as the `translations` prop; client `useTranslations` hook (`t()` with
+  dot-notation lookup, `:placeholder` interpolation, key fallback) + `Translations` type. Public
+  layout (brand/nav/footer) + language switcher aria converted off hard-coded Russian. 3 feature
+  tests (per-locale dictionary + key-parity guard); 182 total. types/build/lint/Pint clean.
+  Remaining: per-page string extraction, hreflang/canonical, CMS translation-status indicator.
+- **2026-06-10** — Phase 12 alert→subscriber dispatch: `add_notified_at_to_alerts_table` migration +
+  `Alert.notified_at` cast; queued `AlertNotification` mailable + per-locale `emails/alert` markdown
+  template (title/level/body + tokenized unsubscribe subcopy); `SendAlertNotifications` job —
+  `AlertController` store/update dispatch it only when `status===Published && notified_at===null`
+  (double-send guard). Job emails confirmed subscribers with the `alerts` topic, region-targeted
+  (alert region OR all-region subscribers), `chunkById(200)`, writes `notifications_log`, stamps
+  `notified_at`. 5 feature tests (179 total). Pint clean. Web push + send-preview UI still deferred.
+- **2026-06-10** — Phase 12 Notifications (email subscriptions): `SubscriptionStatus`/
+  `SubscriptionTopic` enums; `subscribers` (email/token, locale, status, topics json, region,
+  confirm + consent dates) + `notifications_log` table/model. Public subscribe form (consent +
+  honeypot + `throttle:6,1`) → **double opt-in** via queued `SubscriptionConfirmation` mail →
+  tokenized confirm + one-click unsubscribe. CMS subscriber registry (search/status filter + stats,
+  `subscribers.manage`). Public «Подписка» + CMS «Подписчики» nav. 8 feature tests (174 total).
+  types/build/lint/Pint clean. Mass alert→subscriber dispatch + web push deferred.
+- **2026-06-10** — Phase 11 Tourist-group registration: `tourist_groups` (leader/contacts, route,
+  equipment, dates, region, status [reuses `AppealStatus`], assignee, note, soft-delete) + `TUR-…`
+  reference. Public form (`throttle:6,1` + honeypot) → confirmation + reference tracking; CMS queue
+  (search/status filter) + detail/assign/status/note (`tourist-groups.manage`). Public «Туризм» +
+  CMS «Тургруппы» nav. 7 feature tests (166 total). types/build/lint/Pint clean.
 - **2026-06-09** — Phase 10 Appeals (electronic reception): `AppealCategory` + `AppealStatus` enums;
   `appeals` table (reference, contacts, subject/message, status, assignee, internal_note,
   soft-delete). Public form (`Public\AppealController`) with **honeypot + `throttle:6,1`**, a
@@ -583,15 +613,12 @@ management — before content modules (Phase 4) build on them.
 
 ## Next Action
 
-Phase 2 RBAC: roles (super-admin + moderator), 30 permissions, super-admin gate, and 2FA
-enforcement middleware ✅ (64 tests). Login throttling is already provided by Fortify; detailed
-failed-attempt **audit logging** is deferred until the audit-log infra lands (Phase 16 / D-4).
-
-Appeals ✅. Next: **Phase 11 — Tourist-group registration** — `tourist_groups` table (leader,
-participants count, contacts, route geography + start/end dates, equipment, status, assignee), a
-public application form (route → region/coords, anti-spam/throttle) with acknowledgement + tracking,
-and a CMS processing queue reusing the appeals moderation pattern; personal-data access limited to
-the moderator role (§6.6, §12.5). Then subscriptions/notifications (12).
+i18n foundation in place ✅ (lang files + `useTranslations` hook, public chrome converted, 182
+tests). Next options: (a) **finish Phase 13** — extract remaining hard-coded strings across public
+pages/CMS into the `ui` dictionary + add `hreflang`/canonical meta and a CMS translation-status
+indicator; (b) **Phase 14 search** (MySQL full-text over posts/documents/pages, locale-aware); (c)
+**Phase 15 SEO** (sitemap, meta tags, Matomo). Recommend (a) to land the multilingual UI fully,
+then (b) so content is findable. Web push (12 tail) stays deferred — lowest ROI on shared hosting.
 
 ---
 

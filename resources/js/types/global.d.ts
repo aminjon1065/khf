@@ -1,5 +1,5 @@
 import type { Auth } from '@/types/auth';
-import type { ActiveAlert, AppLanguage } from '@/types/locale';
+import type { ActiveAlert, AppLanguage, Translations } from '@/types/locale';
 
 declare module 'react' {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -16,6 +16,7 @@ declare module '@inertiajs/core' {
             locale: string;
             locales: AppLanguage[];
             localeSwitch: Record<string, string>;
+            translations: Translations;
             activeAlerts: ActiveAlert[];
             sidebarOpen: boolean;
             [key: string]: unknown;

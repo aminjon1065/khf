@@ -40,6 +40,7 @@ class Alert extends Model
         'is_dismissible',
         'starts_at',
         'ends_at',
+        'notified_at',
     ];
 
     /**
@@ -53,6 +54,7 @@ class Alert extends Model
             'is_dismissible' => 'boolean',
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'notified_at' => 'datetime',
         ];
     }
 

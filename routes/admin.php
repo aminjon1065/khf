@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\IncidentController;
 use App\Http\Controllers\Admin\LanguageController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\SubscriberController;
+use App\Http\Controllers\Admin\TouristGroupController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -105,6 +107,20 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::get('appeals/{appeal}', [AppealController::class, 'show'])->name('appeals.show');
             Route::put('appeals/{appeal}', [AppealController::class, 'update'])->name('appeals.update');
             Route::delete('appeals/{appeal}', [AppealController::class, 'destroy'])->name('appeals.destroy');
+        });
+
+        // Services — tourist-group applications moderation (tourist-groups.manage).
+        Route::middleware('can:'.Permission::ManageTouristGroups->value)->group(function () {
+            Route::get('tourist-groups', [TouristGroupController::class, 'index'])->name('tourist-groups.index');
+            Route::get('tourist-groups/{touristGroup}', [TouristGroupController::class, 'show'])->name('tourist-groups.show');
+            Route::put('tourist-groups/{touristGroup}', [TouristGroupController::class, 'update'])->name('tourist-groups.update');
+            Route::delete('tourist-groups/{touristGroup}', [TouristGroupController::class, 'destroy'])->name('tourist-groups.destroy');
+        });
+
+        // Notifications — subscriber registry (subscribers.manage).
+        Route::middleware('can:'.Permission::ManageSubscribers->value)->group(function () {
+            Route::get('subscribers', [SubscriberController::class, 'index'])->name('subscribers.index');
+            Route::delete('subscribers/{subscriber}', [SubscriberController::class, 'destroy'])->name('subscribers.destroy');
         });
 
         // System settings — languages (super-admin only via settings.manage).

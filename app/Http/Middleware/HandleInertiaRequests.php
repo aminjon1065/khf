@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
             'locale' => app()->getLocale(),
             'locales' => $this->locales(),
             'localeSwitch' => $this->localeSwitch($request),
+            'translations' => $this->translations(),
             'activeAlerts' => $this->activeAlerts(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
@@ -149,6 +150,20 @@ class HandleInertiaRequests extends Middleware
         } catch (\Throwable) {
             return [];
         }
+    }
+
+    /**
+     * Interface dictionary for the active locale, consumed by the client `useTranslations` hook
+     * (ТЗ §14). Mirrors lang/{locale}/ui.php; an empty map keeps the front end resilient if the
+     * file is missing (the client falls back to the translation key).
+     *
+     * @return array<string, mixed>
+     */
+    private function translations(): array
+    {
+        $messages = trans('ui');
+
+        return is_array($messages) ? $messages : [];
     }
 
     /**

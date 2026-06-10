@@ -7,6 +7,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useTranslations } from '@/hooks/use-translations';
 import { cn } from '@/lib/utils';
 
 /**
@@ -15,6 +16,7 @@ import { cn } from '@/lib/utils';
  */
 export function LanguageSwitcher({ className }: { className?: string }) {
     const { locale, locales, localeSwitch } = usePage().props;
+    const { t } = useTranslations();
 
     if (!locales || locales.length <= 1) {
         return null;
@@ -25,7 +27,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className={cn('gap-2', className)} aria-label="Сменить язык">
+                <Button variant="ghost" size="sm" className={cn('gap-2', className)} aria-label={t('lang.switch')}>
                     <Languages className="size-4" />
                     <span className="uppercase">{current?.code}</span>
                 </Button>

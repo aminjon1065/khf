@@ -6,6 +6,8 @@ use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\IncidentController;
 use App\Http\Controllers\Public\MapController;
 use App\Http\Controllers\Public\PostController;
+use App\Http\Controllers\Public\SubscriptionController;
+use App\Http\Controllers\Public\TouristGroupController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,6 +36,17 @@ Route::prefix('{locale}')
         Route::get('appeals', [AppealController::class, 'create'])->name('appeals.create');
         Route::post('appeals', [AppealController::class, 'store'])->middleware('throttle:6,1')->name('appeals.store');
         Route::get('appeals/track', [AppealController::class, 'track'])->name('appeals.track');
+
+        // Tourist-group registration — public form is rate-limited (ТЗ §12.4).
+        Route::get('tourist-groups', [TouristGroupController::class, 'create'])->name('tourist-groups.create');
+        Route::post('tourist-groups', [TouristGroupController::class, 'store'])->middleware('throttle:6,1')->name('tourist-groups.store');
+        Route::get('tourist-groups/track', [TouristGroupController::class, 'track'])->name('tourist-groups.track');
+
+        // Notification subscriptions (double opt-in) — public form is rate-limited (ТЗ §6.4.3).
+        Route::get('subscribe', [SubscriptionController::class, 'create'])->name('subscriptions.create');
+        Route::post('subscribe', [SubscriptionController::class, 'store'])->middleware('throttle:6,1')->name('subscriptions.store');
+        Route::get('subscribe/confirm/{token}', [SubscriptionController::class, 'confirm'])->name('subscriptions.confirm');
+        Route::get('subscribe/unsubscribe/{token}', [SubscriptionController::class, 'unsubscribe'])->name('subscriptions.unsubscribe');
     });
 
 /*

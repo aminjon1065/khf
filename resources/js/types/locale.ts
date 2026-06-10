@@ -5,6 +5,14 @@ export interface AppLanguage {
     is_default: boolean;
 }
 
+/**
+ * Nested interface dictionary for the active locale (mirrors lang/{locale}/ui.php). Looked up by
+ * dot-notation key via the `useTranslations` hook.
+ */
+export interface Translations {
+    [key: string]: string | Translations;
+}
+
 export interface ActiveAlert {
     id: number;
     level: string;

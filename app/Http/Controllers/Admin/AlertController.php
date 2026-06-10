@@ -7,6 +7,7 @@ use App\Enums\HazardLevel;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreAlertRequest;
 use App\Http\Requests\Admin\UpdateAlertRequest;
+use App\Jobs\SendAlertNotifications;
 use App\Models\Alert;
 use App\Models\Language;
 use App\Models\Region;
@@ -72,6 +73,7 @@ class AlertController extends Controller
 
         $alert = Alert::create($this->attributes($data));
         $alert->upsertTranslations($this->translationsPayload($data));
+        $this->dispatchNotifications($alert);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Alert created.')]);
 
@@ -91,6 +93,7 @@ class AlertController extends Controller
 
         $alert->update($this->attributes($data));
         $alert->upsertTranslations($this->translationsPayload($data));
+        $this->dispatchNotifications($alert);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Alert updated.')]);
 
@@ -122,6 +125,16 @@ class AlertController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Alert permanently deleted.')]);
 
         return to_route('admin.alerts.trash');
+    }
+
+    /**
+     * Fan out notifications once, when a published alert has not been sent yet (ТЗ §6.4.4).
+     */
+    private function dispatchNotifications(Alert $alert): void
+    {
+        if ($alert->status === AlertStatus::Published && $alert->notified_at === null) {
+            SendAlertNotifications::dispatch($alert->id);
+        }
     }
 
     /**

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Bell, ExternalLink, FileText, FolderTree, Inbox, Languages, LayoutDashboard, Newspaper, TriangleAlert, Users } from 'lucide-react';
+import { Bell, ExternalLink, FileText, FolderTree, Inbox, Languages, LayoutDashboard, Mail, Mountain, Newspaper, TriangleAlert, Users } from 'lucide-react';
 import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
@@ -24,6 +24,8 @@ import { index as incidentsIndex } from '@/routes/admin/incidents';
 import { index as languagesIndex } from '@/routes/admin/languages';
 import { index as pagesIndex } from '@/routes/admin/pages';
 import { index as postsIndex } from '@/routes/admin/posts';
+import { index as subscribersIndex } from '@/routes/admin/subscribers';
+import { index as touristGroupsIndex } from '@/routes/admin/tourist-groups';
 import { index as usersIndex } from '@/routes/admin/users';
 import type { NavItem } from '@/types';
 
@@ -95,6 +97,18 @@ const navGroups: AdminNavGroup[] = [
                 href: appealsIndex(),
                 icon: Inbox,
                 permission: 'appeals.manage',
+            },
+            {
+                title: 'Тургруппы',
+                href: touristGroupsIndex(),
+                icon: Mountain,
+                permission: 'tourist-groups.manage',
+            },
+            {
+                title: 'Подписчики',
+                href: subscribersIndex(),
+                icon: Mail,
+                permission: 'subscribers.manage',
             },
         ],
     },
