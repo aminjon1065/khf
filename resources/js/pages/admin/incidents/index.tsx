@@ -1,13 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import {
-    DataTable
-    
-    
-    
+import { DataTable } from '@/components/admin/data-table';
+import type {
+    DataTableColumn,
+    DataTableFilters,
+    Paginator,
 } from '@/components/admin/data-table';
-import type {DataTableColumn, DataTableFilters, Paginator} from '@/components/admin/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,7 +47,11 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
 
 const localeCodes = ['tj', 'ru', 'en'];
 
-export default function IncidentsIndex({ incidents, filters, trashedCount }: PageProps) {
+export default function IncidentsIndex({
+    incidents,
+    filters,
+    trashedCount,
+}: PageProps) {
     const [deleting, setDeleting] = useState<IncidentRow | null>(null);
 
     const columns: DataTableColumn<IncidentRow>[] = [
@@ -61,7 +64,11 @@ export default function IncidentsIndex({ incidents, filters, trashedCount }: Pag
                     {localeCodes.map((code) => (
                         <Badge
                             key={code}
-                            variant={incident.locales.includes(code) ? 'default' : 'outline'}
+                            variant={
+                                incident.locales.includes(code)
+                                    ? 'default'
+                                    : 'outline'
+                            }
                             className="px-1.5 text-[10px] uppercase"
                         >
                             {code}
@@ -88,11 +95,23 @@ export default function IncidentsIndex({ incidents, filters, trashedCount }: Pag
             label: 'Статус',
             sortable: true,
             render: (incident) => (
-                <Badge variant={statusVariant[incident.status] ?? 'secondary'}>{incident.status_label}</Badge>
+                <Badge variant={statusVariant[incident.status] ?? 'secondary'}>
+                    {incident.status_label}
+                </Badge>
             ),
         },
-        { key: 'region', label: 'Регион', className: 'hidden lg:table-cell', render: (incident) => incident.region ?? '—' },
-        { key: 'occurred_at', label: 'Дата', sortable: true, className: 'hidden sm:table-cell' },
+        {
+            key: 'region',
+            label: 'Регион',
+            className: 'hidden lg:table-cell',
+            render: (incident) => incident.region ?? '—',
+        },
+        {
+            key: 'occurred_at',
+            label: 'Дата',
+            sortable: true,
+            className: 'hidden sm:table-cell',
+        },
     ];
 
     return (
@@ -103,7 +122,9 @@ export default function IncidentsIndex({ incidents, filters, trashedCount }: Pag
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold">События ЧС</h1>
-                        <p className="text-sm text-muted-foreground">Чрезвычайные ситуации и происшествия</p>
+                        <p className="text-sm text-muted-foreground">
+                            Чрезвычайные ситуации и происшествия
+                        </p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
                         <Link href={trash().url}>
@@ -130,7 +151,12 @@ export default function IncidentsIndex({ incidents, filters, trashedCount }: Pag
                     }
                     actions={(incident) => (
                         <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="icon" aria-label="Изменить" asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Изменить"
+                                asChild
+                            >
                                 <Link href={edit(incident.id).url}>
                                     <Pencil className="size-4" />
                                 </Link>
@@ -148,14 +174,22 @@ export default function IncidentsIndex({ incidents, filters, trashedCount }: Pag
                 />
             </div>
 
-            <Dialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)}>
+            <Dialog
+                open={Boolean(deleting)}
+                onOpenChange={(open) => !open && setDeleting(null)}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Удалить событие?</DialogTitle>
-                        <DialogDescription>«{deleting?.title}» будет перемещено в корзину.</DialogDescription>
+                        <DialogDescription>
+                            «{deleting?.title}» будет перемещено в корзину.
+                        </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleting(null)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleting(null)}
+                        >
                             Отмена
                         </Button>
                         <Button

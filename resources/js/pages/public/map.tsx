@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useMemo } from 'react';
-import { MapView  } from '@/components/map-view';
-import type {MapMarker} from '@/components/map-view';
+import { MapView } from '@/components/map-view';
+import type { MapMarker } from '@/components/map-view';
 import { useTranslations } from '@/hooks/use-translations';
 
 type IncidentMarker = {

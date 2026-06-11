@@ -1,7 +1,7 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { Download, FileText } from 'lucide-react';
 import { useState } from 'react';
-import type {Paginator} from '@/components/admin/data-table';
+import type { Paginator } from '@/components/admin/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,12 +29,19 @@ type DocumentItem = {
 type Option = { value: string; label: string };
 
 type PageProps = {
-    documents: Paginator<DocumentItem> & { prev_page_url: string | null; next_page_url: string | null };
+    documents: Paginator<DocumentItem> & {
+        prev_page_url: string | null;
+        next_page_url: string | null;
+    };
     filters: { search: string; type: string | null };
     types: Option[];
 };
 
-export default function DocumentsRegistry({ documents, filters, types }: PageProps) {
+export default function DocumentsRegistry({
+    documents,
+    filters,
+    types,
+}: PageProps) {
     const { locale } = usePage().props;
     const { t } = useTranslations();
     const [search, setSearch] = useState(filters.search ?? '');
@@ -42,7 +49,11 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
     const apply = (params: Record<string, string | undefined>) => {
         router.get(
             documentsIndex({ locale }).url,
-            { search: filters.search || undefined, type: filters.type || undefined, ...params },
+            {
+                search: filters.search || undefined,
+                type: filters.type || undefined,
+                ...params,
+            },
             { preserveState: true, preserveScroll: true, replace: true },
         );
     };
@@ -51,7 +62,9 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
         <>
             <Head title={t('documents.title')} />
 
-            <h1 className="mb-6 text-3xl font-semibold">{t('documents.title')}</h1>
+            <h1 className="mb-6 text-3xl font-semibold">
+                {t('documents.title')}
+            </h1>
 
             <form
                 className="mb-6 flex flex-col gap-3 sm:flex-row"
@@ -68,13 +81,19 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
                 />
                 <Select
                     value={filters.type ?? 'all'}
-                    onValueChange={(value) => apply({ type: value === 'all' ? undefined : value })}
+                    onValueChange={(value) =>
+                        apply({ type: value === 'all' ? undefined : value })
+                    }
                 >
                     <SelectTrigger className="sm:max-w-xs">
-                        <SelectValue placeholder={t('documents.form.type_placeholder')} />
+                        <SelectValue
+                            placeholder={t('documents.form.type_placeholder')}
+                        />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">{t('documents.form.all_types')}</SelectItem>
+                        <SelectItem value="all">
+                            {t('documents.form.all_types')}
+                        </SelectItem>
                         {types.map((type) => (
                             <SelectItem key={type.value} value={type.value}>
                                 {type.label}
@@ -90,16 +109,27 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
             ) : (
                 <div className="space-y-4">
                     {documents.data.map((document) => (
-                        <div key={document.id} className="rounded-lg border p-4">
+                        <div
+                            key={document.id}
+                            className="rounded-lg border p-4"
+                        >
                             <div className="flex items-center gap-2">
-                                <Badge variant="secondary">{document.type_label}</Badge>
+                                <Badge variant="secondary">
+                                    {document.type_label}
+                                </Badge>
                                 {document.document_date && (
-                                    <span className="text-sm text-muted-foreground">{document.document_date}</span>
+                                    <span className="text-sm text-muted-foreground">
+                                        {document.document_date}
+                                    </span>
                                 )}
                             </div>
-                            <h2 className="mt-2 font-semibold">{document.name}</h2>
+                            <h2 className="mt-2 font-semibold">
+                                {document.name}
+                            </h2>
                             {document.description && (
-                                <p className="mt-1 text-sm text-muted-foreground">{document.description}</p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    {document.description}
+                                </p>
                             )}
                             {document.files.length > 0 && (
                                 <ul className="mt-3 space-y-1">
@@ -111,7 +141,9 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
                                             >
                                                 <FileText className="size-4" />
                                                 {file.name}
-                                                <span className="text-muted-foreground">({file.size})</span>
+                                                <span className="text-muted-foreground">
+                                                    ({file.size})
+                                                </span>
                                                 <Download className="size-3.5" />
                                             </a>
                                         </li>
@@ -129,7 +161,10 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
                         variant="outline"
                         size="sm"
                         disabled={!documents.prev_page_url}
-                        onClick={() => documents.prev_page_url && router.get(documents.prev_page_url)}
+                        onClick={() =>
+                            documents.prev_page_url &&
+                            router.get(documents.prev_page_url)
+                        }
                     >
                         {t('common.back')}
                     </Button>
@@ -137,7 +172,10 @@ export default function DocumentsRegistry({ documents, filters, types }: PagePro
                         variant="outline"
                         size="sm"
                         disabled={!documents.next_page_url}
-                        onClick={() => documents.next_page_url && router.get(documents.next_page_url)}
+                        onClick={() =>
+                            documents.next_page_url &&
+                            router.get(documents.next_page_url)
+                        }
                     >
                         {t('common.next')}
                     </Button>

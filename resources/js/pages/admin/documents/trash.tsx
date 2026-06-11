@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ArchiveRestore, ArrowLeft, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import type {Paginator} from '@/components/admin/data-table';
+import type { Paginator } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -44,12 +44,13 @@ export default function DocumentsTrash({ documents }: PageProps) {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold">Корзина</h1>
-                        <p className="text-sm text-muted-foreground">Удалённые документы можно восстановить</p>
+                        <p className="text-sm text-muted-foreground">
+                            Удалённые документы можно восстановить
+                        </p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
                         <Link href={index().url}>
-                            <ArrowLeft className="size-4" />
-                            К документам
+                            <ArrowLeft className="size-4" />К документам
                         </Link>
                     </Button>
                 </div>
@@ -60,14 +61,21 @@ export default function DocumentsTrash({ documents }: PageProps) {
                             <TableRow>
                                 <TableHead>Наименование</TableHead>
                                 <TableHead>Тип</TableHead>
-                                <TableHead className="hidden sm:table-cell">Удалён</TableHead>
-                                <TableHead className="w-0 text-right">Действия</TableHead>
+                                <TableHead className="hidden sm:table-cell">
+                                    Удалён
+                                </TableHead>
+                                <TableHead className="w-0 text-right">
+                                    Действия
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {documents.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                                    <TableCell
+                                        colSpan={4}
+                                        className="h-24 text-center text-muted-foreground"
+                                    >
                                         Корзина пуста
                                     </TableCell>
                                 </TableRow>
@@ -75,8 +83,12 @@ export default function DocumentsTrash({ documents }: PageProps) {
                                 documents.data.map((document) => (
                                     <TableRow key={document.id}>
                                         <TableCell>{document.name}</TableCell>
-                                        <TableCell>{document.type_label}</TableCell>
-                                        <TableCell className="hidden sm:table-cell">{document.deleted_at}</TableCell>
+                                        <TableCell>
+                                            {document.type_label}
+                                        </TableCell>
+                                        <TableCell className="hidden sm:table-cell">
+                                            {document.deleted_at}
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
                                                 <Button
@@ -84,7 +96,14 @@ export default function DocumentsTrash({ documents }: PageProps) {
                                                     size="icon"
                                                     aria-label="Восстановить"
                                                     onClick={() =>
-                                                        router.patch(restore(document.id).url, {}, { preserveScroll: true })
+                                                        router.patch(
+                                                            restore(document.id)
+                                                                .url,
+                                                            {},
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
+                                                        )
                                                     }
                                                 >
                                                     <ArchiveRestore className="size-4" />
@@ -93,7 +112,9 @@ export default function DocumentsTrash({ documents }: PageProps) {
                                                     variant="ghost"
                                                     size="icon"
                                                     aria-label="Удалить навсегда"
-                                                    onClick={() => setPurging(document)}
+                                                    onClick={() =>
+                                                        setPurging(document)
+                                                    }
                                                 >
                                                     <Trash2 className="size-4 text-destructive" />
                                                 </Button>
@@ -107,14 +128,22 @@ export default function DocumentsTrash({ documents }: PageProps) {
                 </div>
             </div>
 
-            <Dialog open={Boolean(purging)} onOpenChange={(open) => !open && setPurging(null)}>
+            <Dialog
+                open={Boolean(purging)}
+                onOpenChange={(open) => !open && setPurging(null)}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Удалить навсегда?</DialogTitle>
-                        <DialogDescription>«{purging?.name}» будет удалён безвозвратно.</DialogDescription>
+                        <DialogDescription>
+                            «{purging?.name}» будет удалён безвозвратно.
+                        </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setPurging(null)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setPurging(null)}
+                        >
                             Отмена
                         </Button>
                         <Button

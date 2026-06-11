@@ -1,5 +1,5 @@
-import { Flame, OctagonAlert, ShieldCheck, TriangleAlert  } from 'lucide-react';
-import type {LucideIcon} from 'lucide-react';
+import { Flame, OctagonAlert, ShieldCheck, TriangleAlert } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type HazardLevel = 'normal' | 'elevated' | 'danger' | 'critical';
@@ -12,10 +12,22 @@ export type HazardLevel = 'normal' | 'elevated' | 'danger' | 'critical';
  * text supplied by the server.
  */
 const LEVELS: Record<HazardLevel, { icon: LucideIcon; tone: string }> = {
-    normal: { icon: ShieldCheck, tone: 'bg-hazard-normal text-hazard-normal-foreground' },
-    elevated: { icon: TriangleAlert, tone: 'bg-hazard-elevated text-hazard-elevated-foreground' },
-    danger: { icon: Flame, tone: 'bg-hazard-danger text-hazard-danger-foreground' },
-    critical: { icon: OctagonAlert, tone: 'bg-hazard-critical text-hazard-critical-foreground' },
+    normal: {
+        icon: ShieldCheck,
+        tone: 'bg-hazard-normal text-hazard-normal-foreground',
+    },
+    elevated: {
+        icon: TriangleAlert,
+        tone: 'bg-hazard-elevated text-hazard-elevated-foreground',
+    },
+    danger: {
+        icon: Flame,
+        tone: 'bg-hazard-danger text-hazard-danger-foreground',
+    },
+    critical: {
+        icon: OctagonAlert,
+        tone: 'bg-hazard-critical text-hazard-critical-foreground',
+    },
 };
 
 export function HazardBadge({
@@ -41,7 +53,13 @@ export function HazardBadge({
                 className,
             )}
         >
-            <Icon className={cn('shrink-0', size === 'sm' ? 'size-3' : 'size-3.5')} aria-hidden />
+            <Icon
+                className={cn(
+                    'shrink-0',
+                    size === 'sm' ? 'size-3' : 'size-3.5',
+                )}
+                aria-hidden
+            />
             {label}
         </span>
     );

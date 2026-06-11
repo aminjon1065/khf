@@ -17,6 +17,8 @@ enum Permission: string
     case ManageCategories = 'categories.manage';
     case ViewDocuments = 'documents.view';
     case ManageDocuments = 'documents.manage';
+    case ViewGuides = 'guides.view';
+    case ManageGuides = 'guides.manage';
     case ManageMedia = 'media.manage';
     case ManageBlocks = 'blocks.manage';
     case ManageMenus = 'menus.manage';

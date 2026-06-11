@@ -1,7 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Check } from 'lucide-react';
-import { useState  } from 'react';
-import type {FormEvent} from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { Button } from '@/components/ui/button';
@@ -51,7 +51,14 @@ type PageProps = {
     defaultLocale: string;
 };
 
-export default function PostForm({ post, locales, types, statuses, categories, defaultLocale }: PageProps) {
+export default function PostForm({
+    post,
+    locales,
+    types,
+    statuses,
+    categories,
+    defaultLocale,
+}: PageProps) {
     const isEdit = Boolean(post);
 
     const initialTranslations: Record<string, Translation> = {};
@@ -80,7 +87,11 @@ export default function PostForm({ post, locales, types, statuses, categories, d
     const [activeLocale, setActiveLocale] = useState(defaultLocale);
     const errors = form.errors as Record<string, string>;
 
-    const setTranslation = (locale: string, field: keyof Translation, value: string) => {
+    const setTranslation = (
+        locale: string,
+        field: keyof Translation,
+        value: string,
+    ) => {
         form.setData('translations', {
             ...form.data.translations,
             [locale]: { ...form.data.translations[locale], [field]: value },
@@ -101,9 +112,14 @@ export default function PostForm({ post, locales, types, statuses, categories, d
 
     return (
         <>
-            <Head title={isEdit ? 'Редактирование материала' : 'Новый материал'} />
+            <Head
+                title={isEdit ? 'Редактирование материала' : 'Новый материал'}
+            />
 
-            <form onSubmit={submit} className="flex h-full flex-1 flex-col gap-6 p-4">
+            <form
+                onSubmit={submit}
+                className="flex h-full flex-1 flex-col gap-6 p-4"
+            >
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">
                         {isEdit ? 'Редактирование материала' : 'Новый материал'}
@@ -121,13 +137,21 @@ export default function PostForm({ post, locales, types, statuses, categories, d
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="space-y-2">
                         <Label htmlFor="type">Тип</Label>
-                        <Select value={form.data.type} onValueChange={(value) => form.setData('type', value)}>
+                        <Select
+                            value={form.data.type}
+                            onValueChange={(value) =>
+                                form.setData('type', value)
+                            }
+                        >
                             <SelectTrigger id="type">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 {types.map((type) => (
-                                    <SelectItem key={type.value} value={type.value}>
+                                    <SelectItem
+                                        key={type.value}
+                                        value={type.value}
+                                    >
                                         {type.label}
                                     </SelectItem>
                                 ))}
@@ -138,8 +162,17 @@ export default function PostForm({ post, locales, types, statuses, categories, d
                     <div className="space-y-2">
                         <Label htmlFor="category">Рубрика</Label>
                         <Select
-                            value={form.data.category_id ? String(form.data.category_id) : 'none'}
-                            onValueChange={(value) => form.setData('category_id', value === 'none' ? null : Number(value))}
+                            value={
+                                form.data.category_id
+                                    ? String(form.data.category_id)
+                                    : 'none'
+                            }
+                            onValueChange={(value) =>
+                                form.setData(
+                                    'category_id',
+                                    value === 'none' ? null : Number(value),
+                                )
+                            }
                         >
                             <SelectTrigger id="category">
                                 <SelectValue />
@@ -147,7 +180,10 @@ export default function PostForm({ post, locales, types, statuses, categories, d
                             <SelectContent>
                                 <SelectItem value="none">— Нет —</SelectItem>
                                 {categories.map((category) => (
-                                    <SelectItem key={category.id} value={String(category.id)}>
+                                    <SelectItem
+                                        key={category.id}
+                                        value={String(category.id)}
+                                    >
                                         {category.name}
                                     </SelectItem>
                                 ))}
@@ -157,13 +193,21 @@ export default function PostForm({ post, locales, types, statuses, categories, d
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="status">Статус</Label>
-                        <Select value={form.data.status} onValueChange={(value) => form.setData('status', value)}>
+                        <Select
+                            value={form.data.status}
+                            onValueChange={(value) =>
+                                form.setData('status', value)
+                            }
+                        >
                             <SelectTrigger id="status">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 {statuses.map((status) => (
-                                    <SelectItem key={status.value} value={status.value}>
+                                    <SelectItem
+                                        key={status.value}
+                                        value={status.value}
+                                    >
                                         {status.label}
                                     </SelectItem>
                                 ))}
@@ -177,7 +221,9 @@ export default function PostForm({ post, locales, types, statuses, categories, d
                             id="published_at"
                             type="datetime-local"
                             value={form.data.published_at}
-                            onChange={(event) => form.setData('published_at', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('published_at', event.target.value)
+                            }
                         />
                         <InputError message={errors.published_at} />
                     </div>
@@ -197,14 +243,24 @@ export default function PostForm({ post, locales, types, statuses, categories, d
                         type="file"
                         accept="image/*"
                         className="max-w-sm"
-                        onChange={(event) => form.setData('cover', event.target.files?.[0] ?? null)}
+                        onChange={(event) =>
+                            form.setData(
+                                'cover',
+                                event.target.files?.[0] ?? null,
+                            )
+                        }
                     />
                     <InputError message={errors.cover} />
                     {post?.cover_url && (
                         <label className="flex items-center gap-2 text-sm">
                             <Checkbox
                                 checked={form.data.remove_cover}
-                                onCheckedChange={(checked) => form.setData('remove_cover', checked === true)}
+                                onCheckedChange={(checked) =>
+                                    form.setData(
+                                        'remove_cover',
+                                        checked === true,
+                                    )
+                                }
                             />
                             Удалить текущую обложку
                         </label>
@@ -216,15 +272,19 @@ export default function PostForm({ post, locales, types, statuses, categories, d
                         <Button
                             key={locale.code}
                             type="button"
-                            variant={activeLocale === locale.code ? 'default' : 'ghost'}
+                            variant={
+                                activeLocale === locale.code
+                                    ? 'default'
+                                    : 'ghost'
+                            }
                             size="sm"
                             className="gap-2"
                             onClick={() => setActiveLocale(locale.code)}
                         >
                             {locale.native_name}
-                            {Boolean(form.data.translations[locale.code]?.title) && (
-                                <Check className="size-3.5 text-green-600" />
-                            )}
+                            {Boolean(
+                                form.data.translations[locale.code]?.title,
+                            ) && <Check className="size-3.5 text-green-600" />}
                         </Button>
                     ))}
                 </div>
@@ -236,18 +296,38 @@ export default function PostForm({ post, locales, types, statuses, categories, d
                             <Input
                                 id="title"
                                 value={active.title}
-                                onChange={(event) => setTranslation(activeLocale, 'title', event.target.value)}
+                                onChange={(event) =>
+                                    setTranslation(
+                                        activeLocale,
+                                        'title',
+                                        event.target.value,
+                                    )
+                                }
                             />
-                            <InputError message={errors[`translations.${activeLocale}.title`]} />
+                            <InputError
+                                message={
+                                    errors[`translations.${activeLocale}.title`]
+                                }
+                            />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="slug">ЧПУ (slug)</Label>
                             <Input
                                 id="slug"
                                 value={active.slug}
-                                onChange={(event) => setTranslation(activeLocale, 'slug', event.target.value)}
+                                onChange={(event) =>
+                                    setTranslation(
+                                        activeLocale,
+                                        'slug',
+                                        event.target.value,
+                                    )
+                                }
                             />
-                            <InputError message={errors[`translations.${activeLocale}.slug`]} />
+                            <InputError
+                                message={
+                                    errors[`translations.${activeLocale}.slug`]
+                                }
+                            />
                         </div>
                     </div>
 
@@ -257,9 +337,19 @@ export default function PostForm({ post, locales, types, statuses, categories, d
                             id="excerpt"
                             rows={2}
                             value={active.excerpt}
-                            onChange={(event) => setTranslation(activeLocale, 'excerpt', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'excerpt',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.excerpt`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.excerpt`]
+                            }
+                        />
                     </div>
 
                     <div className="space-y-2">
@@ -267,9 +357,15 @@ export default function PostForm({ post, locales, types, statuses, categories, d
                         <RichTextEditor
                             key={activeLocale}
                             value={active.body}
-                            onChange={(html) => setTranslation(activeLocale, 'body', html)}
+                            onChange={(html) =>
+                                setTranslation(activeLocale, 'body', html)
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.body`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.body`]
+                            }
+                        />
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
@@ -278,15 +374,29 @@ export default function PostForm({ post, locales, types, statuses, categories, d
                             <Input
                                 id="seo_title"
                                 value={active.seo_title}
-                                onChange={(event) => setTranslation(activeLocale, 'seo_title', event.target.value)}
+                                onChange={(event) =>
+                                    setTranslation(
+                                        activeLocale,
+                                        'seo_title',
+                                        event.target.value,
+                                    )
+                                }
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="seo_description">SEO описание</Label>
+                            <Label htmlFor="seo_description">
+                                SEO описание
+                            </Label>
                             <Input
                                 id="seo_description"
                                 value={active.seo_description}
-                                onChange={(event) => setTranslation(activeLocale, 'seo_description', event.target.value)}
+                                onChange={(event) =>
+                                    setTranslation(
+                                        activeLocale,
+                                        'seo_description',
+                                        event.target.value,
+                                    )
+                                }
                             />
                         </div>
                     </div>

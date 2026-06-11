@@ -1,7 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Check } from 'lucide-react';
-import { useState  } from 'react';
-import type {FormEvent} from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,13 @@ type PageProps = {
     defaultLocale: string;
 };
 
-export default function PageForm({ page, locales, statuses, parents, defaultLocale }: PageProps) {
+export default function PageForm({
+    page,
+    locales,
+    statuses,
+    parents,
+    defaultLocale,
+}: PageProps) {
     const isEdit = Boolean(page);
 
     const initialTranslations: Record<string, Translation> = {};
@@ -70,7 +76,11 @@ export default function PageForm({ page, locales, statuses, parents, defaultLoca
     const [activeLocale, setActiveLocale] = useState(defaultLocale);
     const errors = form.errors as Record<string, string>;
 
-    const setTranslation = (locale: string, field: keyof Translation, value: string) => {
+    const setTranslation = (
+        locale: string,
+        field: keyof Translation,
+        value: string,
+    ) => {
         form.setData('translations', {
             ...form.data.translations,
             [locale]: { ...form.data.translations[locale], [field]: value },
@@ -91,9 +101,14 @@ export default function PageForm({ page, locales, statuses, parents, defaultLoca
 
     return (
         <>
-            <Head title={isEdit ? 'Редактирование страницы' : 'Новая страница'} />
+            <Head
+                title={isEdit ? 'Редактирование страницы' : 'Новая страница'}
+            />
 
-            <form onSubmit={submit} className="flex h-full flex-1 flex-col gap-6 p-4">
+            <form
+                onSubmit={submit}
+                className="flex h-full flex-1 flex-col gap-6 p-4"
+            >
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">
                         {isEdit ? 'Редактирование страницы' : 'Новая страница'}
@@ -111,13 +126,21 @@ export default function PageForm({ page, locales, statuses, parents, defaultLoca
                 <div className="grid gap-4 sm:grid-cols-3">
                     <div className="space-y-2">
                         <Label htmlFor="status">Статус</Label>
-                        <Select value={form.data.status} onValueChange={(value) => form.setData('status', value)}>
+                        <Select
+                            value={form.data.status}
+                            onValueChange={(value) =>
+                                form.setData('status', value)
+                            }
+                        >
                             <SelectTrigger id="status">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 {statuses.map((status) => (
-                                    <SelectItem key={status.value} value={status.value}>
+                                    <SelectItem
+                                        key={status.value}
+                                        value={status.value}
+                                    >
                                         {status.label}
                                     </SelectItem>
                                 ))}
@@ -128,8 +151,17 @@ export default function PageForm({ page, locales, statuses, parents, defaultLoca
                     <div className="space-y-2">
                         <Label htmlFor="parent">Родительская страница</Label>
                         <Select
-                            value={form.data.parent_id ? String(form.data.parent_id) : 'none'}
-                            onValueChange={(value) => form.setData('parent_id', value === 'none' ? null : Number(value))}
+                            value={
+                                form.data.parent_id
+                                    ? String(form.data.parent_id)
+                                    : 'none'
+                            }
+                            onValueChange={(value) =>
+                                form.setData(
+                                    'parent_id',
+                                    value === 'none' ? null : Number(value),
+                                )
+                            }
                         >
                             <SelectTrigger id="parent">
                                 <SelectValue />
@@ -137,7 +169,10 @@ export default function PageForm({ page, locales, statuses, parents, defaultLoca
                             <SelectContent>
                                 <SelectItem value="none">— Нет —</SelectItem>
                                 {parents.map((parent) => (
-                                    <SelectItem key={parent.id} value={String(parent.id)}>
+                                    <SelectItem
+                                        key={parent.id}
+                                        value={String(parent.id)}
+                                    >
                                         {parent.title}
                                     </SelectItem>
                                 ))}
@@ -152,7 +187,12 @@ export default function PageForm({ page, locales, statuses, parents, defaultLoca
                             type="number"
                             min={0}
                             value={form.data.sort_order}
-                            onChange={(event) => form.setData('sort_order', Number(event.target.value))}
+                            onChange={(event) =>
+                                form.setData(
+                                    'sort_order',
+                                    Number(event.target.value),
+                                )
+                            }
                         />
                         <InputError message={errors.sort_order} />
                     </div>
@@ -163,15 +203,19 @@ export default function PageForm({ page, locales, statuses, parents, defaultLoca
                         <Button
                             key={locale.code}
                             type="button"
-                            variant={activeLocale === locale.code ? 'default' : 'ghost'}
+                            variant={
+                                activeLocale === locale.code
+                                    ? 'default'
+                                    : 'ghost'
+                            }
                             size="sm"
                             className="gap-2"
                             onClick={() => setActiveLocale(locale.code)}
                         >
                             {locale.native_name}
-                            {Boolean(form.data.translations[locale.code]?.title) && (
-                                <Check className="size-3.5 text-green-600" />
-                            )}
+                            {Boolean(
+                                form.data.translations[locale.code]?.title,
+                            ) && <Check className="size-3.5 text-green-600" />}
                         </Button>
                     ))}
                 </div>
@@ -183,18 +227,38 @@ export default function PageForm({ page, locales, statuses, parents, defaultLoca
                             <Input
                                 id="title"
                                 value={active.title}
-                                onChange={(event) => setTranslation(activeLocale, 'title', event.target.value)}
+                                onChange={(event) =>
+                                    setTranslation(
+                                        activeLocale,
+                                        'title',
+                                        event.target.value,
+                                    )
+                                }
                             />
-                            <InputError message={errors[`translations.${activeLocale}.title`]} />
+                            <InputError
+                                message={
+                                    errors[`translations.${activeLocale}.title`]
+                                }
+                            />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="slug">ЧПУ (slug)</Label>
                             <Input
                                 id="slug"
                                 value={active.slug}
-                                onChange={(event) => setTranslation(activeLocale, 'slug', event.target.value)}
+                                onChange={(event) =>
+                                    setTranslation(
+                                        activeLocale,
+                                        'slug',
+                                        event.target.value,
+                                    )
+                                }
                             />
-                            <InputError message={errors[`translations.${activeLocale}.slug`]} />
+                            <InputError
+                                message={
+                                    errors[`translations.${activeLocale}.slug`]
+                                }
+                            />
                         </div>
                     </div>
 
@@ -203,9 +267,15 @@ export default function PageForm({ page, locales, statuses, parents, defaultLoca
                         <RichTextEditor
                             key={activeLocale}
                             value={active.content}
-                            onChange={(html) => setTranslation(activeLocale, 'content', html)}
+                            onChange={(html) =>
+                                setTranslation(activeLocale, 'content', html)
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.content`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.content`]
+                            }
+                        />
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
@@ -214,15 +284,29 @@ export default function PageForm({ page, locales, statuses, parents, defaultLoca
                             <Input
                                 id="seo_title"
                                 value={active.seo_title}
-                                onChange={(event) => setTranslation(activeLocale, 'seo_title', event.target.value)}
+                                onChange={(event) =>
+                                    setTranslation(
+                                        activeLocale,
+                                        'seo_title',
+                                        event.target.value,
+                                    )
+                                }
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="seo_description">SEO описание</Label>
+                            <Label htmlFor="seo_description">
+                                SEO описание
+                            </Label>
                             <Input
                                 id="seo_description"
                                 value={active.seo_description}
-                                onChange={(event) => setTranslation(activeLocale, 'seo_description', event.target.value)}
+                                onChange={(event) =>
+                                    setTranslation(
+                                        activeLocale,
+                                        'seo_description',
+                                        event.target.value,
+                                    )
+                                }
                             />
                         </div>
                     </div>

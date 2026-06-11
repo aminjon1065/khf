@@ -31,6 +31,10 @@ return [
         'published' => 'Опубликовано',
         'archived' => 'В архиве',
     ],
+    'guide_audience' => [
+        'general' => 'Для населения',
+        'children' => 'Для детей',
+    ],
     'document_type' => [
         'law' => 'Законодательство',
         'regulation' => 'Нормативные акты',

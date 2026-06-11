@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Enums\IncidentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Incident;
 use Inertia\Inertia;
@@ -10,15 +11,28 @@ use Inertia\Response;
 class IncidentController extends Controller
 {
     /**
-     * Public incidents archive / operational situation (ТЗ §5, §6.3): active events first.
+     * Public incidents archive / operational situation (ТЗ §5, §6.3): a summary of the current
+     * situation (counts by status) above the archive, active events first.
      */
     public function index(): Response
     {
         $locale = app()->getLocale();
 
+        $counts = Incident::query()
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $summary = [
+            'active' => (int) ($counts[IncidentStatus::Active->value] ?? 0),
+            'controlled' => (int) ($counts[IncidentStatus::Controlled->value] ?? 0),
+            'resolved' => (int) ($counts[IncidentStatus::Resolved->value] ?? 0),
+        ];
+
+        // No locale filter here: active incidents must never be hidden from a locale, and this keeps
+        // the list consistent with the unfiltered summary counts above (translation() falls back).
         $incidents = Incident::query()
             ->with(['translations', 'region.translations'])
-            ->whereHas('translations', fn ($query) => $query->where('locale', $locale))
             ->orderByRaw("CASE status WHEN 'active' THEN 0 WHEN 'controlled' THEN 1 ELSE 2 END")
             ->orderByDesc('occurred_at')
             ->paginate(20)
@@ -40,6 +54,7 @@ class IncidentController extends Controller
 
         return Inertia::render('public/incidents/index', [
             'incidents' => $incidents,
+            'summary' => $summary,
         ]);
     }
 }

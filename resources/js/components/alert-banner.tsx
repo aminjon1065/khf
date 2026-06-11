@@ -7,7 +7,9 @@ const STORAGE_KEY = 'kchs-dismissed-alerts';
 
 function loadDismissed(): number[] {
     try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as number[];
+        return JSON.parse(
+            localStorage.getItem(STORAGE_KEY) ?? '[]',
+        ) as number[];
     } catch {
         return [];
     }
@@ -45,15 +47,25 @@ export function AlertBanner() {
     };
 
     return (
-        <div role="alert">
+        <div role="alert" className="print:hidden">
             {visible.map((alert) => (
-                <div key={alert.id} style={{ backgroundColor: alert.color }} className="text-white">
+                <div
+                    key={alert.id}
+                    style={{ backgroundColor: alert.color }}
+                    className="text-white"
+                >
                     <div className="mx-auto flex max-w-6xl items-start gap-3 px-4 py-3">
                         <TriangleAlert className="mt-0.5 size-5 shrink-0" />
                         <div className="flex-1">
-                            <p className="text-xs font-semibold uppercase opacity-90">{alert.level_label}</p>
+                            <p className="text-xs font-semibold uppercase opacity-90">
+                                {alert.level_label}
+                            </p>
                             <p className="font-semibold">{alert.title}</p>
-                            {alert.body && <p className="text-sm opacity-90">{alert.body}</p>}
+                            {alert.body && (
+                                <p className="text-sm opacity-90">
+                                    {alert.body}
+                                </p>
+                            )}
                         </div>
                         {alert.dismissible && (
                             <button

@@ -70,6 +70,7 @@ enum Role: string
                 Permission::ViewPosts, Permission::ManagePosts, Permission::PublishPosts,
                 Permission::ManageCategories,
                 Permission::ViewDocuments, Permission::ManageDocuments,
+                Permission::ViewGuides, Permission::ManageGuides,
                 Permission::ManageMedia, Permission::ManageBlocks, Permission::ManageMenus,
                 Permission::ManageTranslations,
                 // Emergencies, map & alerts

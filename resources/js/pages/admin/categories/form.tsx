@@ -1,7 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Check } from 'lucide-react';
-import { useState  } from 'react';
-import type {FormEvent} from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +24,11 @@ type PageProps = {
     defaultLocale: string;
 };
 
-export default function CategoryForm({ category, locales, defaultLocale }: PageProps) {
+export default function CategoryForm({
+    category,
+    locales,
+    defaultLocale,
+}: PageProps) {
     const isEdit = Boolean(category);
 
     const initialTranslations: Record<string, Translation> = {};
@@ -44,7 +48,11 @@ export default function CategoryForm({ category, locales, defaultLocale }: PageP
     const [activeLocale, setActiveLocale] = useState(defaultLocale);
     const errors = form.errors as Record<string, string>;
 
-    const setTranslation = (locale: string, field: keyof Translation, value: string) => {
+    const setTranslation = (
+        locale: string,
+        field: keyof Translation,
+        value: string,
+    ) => {
         form.setData('translations', {
             ...form.data.translations,
             [locale]: { ...form.data.translations[locale], [field]: value },
@@ -67,7 +75,10 @@ export default function CategoryForm({ category, locales, defaultLocale }: PageP
         <>
             <Head title={isEdit ? 'Редактирование рубрики' : 'Новая рубрика'} />
 
-            <form onSubmit={submit} className="flex h-full flex-1 flex-col gap-6 p-4">
+            <form
+                onSubmit={submit}
+                className="flex h-full flex-1 flex-col gap-6 p-4"
+            >
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">
                         {isEdit ? 'Редактирование рубрики' : 'Новая рубрика'}
@@ -89,7 +100,12 @@ export default function CategoryForm({ category, locales, defaultLocale }: PageP
                         type="number"
                         min={0}
                         value={form.data.sort_order}
-                        onChange={(event) => form.setData('sort_order', Number(event.target.value))}
+                        onChange={(event) =>
+                            form.setData(
+                                'sort_order',
+                                Number(event.target.value),
+                            )
+                        }
                     />
                     <InputError message={errors.sort_order} />
                 </div>
@@ -99,15 +115,19 @@ export default function CategoryForm({ category, locales, defaultLocale }: PageP
                         <Button
                             key={locale.code}
                             type="button"
-                            variant={activeLocale === locale.code ? 'default' : 'ghost'}
+                            variant={
+                                activeLocale === locale.code
+                                    ? 'default'
+                                    : 'ghost'
+                            }
                             size="sm"
                             className="gap-2"
                             onClick={() => setActiveLocale(locale.code)}
                         >
                             {locale.native_name}
-                            {Boolean(form.data.translations[locale.code]?.name) && (
-                                <Check className="size-3.5 text-green-600" />
-                            )}
+                            {Boolean(
+                                form.data.translations[locale.code]?.name,
+                            ) && <Check className="size-3.5 text-green-600" />}
                         </Button>
                     ))}
                 </div>
@@ -118,18 +138,38 @@ export default function CategoryForm({ category, locales, defaultLocale }: PageP
                         <Input
                             id="name"
                             value={active.name}
-                            onChange={(event) => setTranslation(activeLocale, 'name', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'name',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.name`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.name`]
+                            }
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="slug">ЧПУ (slug)</Label>
                         <Input
                             id="slug"
                             value={active.slug}
-                            onChange={(event) => setTranslation(activeLocale, 'slug', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'slug',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.slug`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.slug`]
+                            }
+                        />
                     </div>
                 </div>
             </form>

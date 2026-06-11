@@ -1,13 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import {
-    DataTable
-    
-    
-    
+import { DataTable } from '@/components/admin/data-table';
+import type {
+    DataTableColumn,
+    DataTableFilters,
+    Paginator,
 } from '@/components/admin/data-table';
-import type {DataTableColumn, DataTableFilters, Paginator} from '@/components/admin/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,7 +46,11 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
 
 const portalLocales = ['tj', 'ru', 'en'] as const;
 
-export default function DocumentsIndex({ documents, filters, trashedCount }: PageProps) {
+export default function DocumentsIndex({
+    documents,
+    filters,
+    trashedCount,
+}: PageProps) {
     const [deleting, setDeleting] = useState<DocumentRow | null>(null);
 
     const columns: DataTableColumn<DocumentRow>[] = [
@@ -60,7 +63,11 @@ export default function DocumentsIndex({ documents, filters, trashedCount }: Pag
                     {portalLocales.map((locale) => (
                         <Badge
                             key={locale}
-                            variant={document.locales.includes(locale) ? 'default' : 'outline'}
+                            variant={
+                                document.locales.includes(locale)
+                                    ? 'default'
+                                    : 'outline'
+                            }
                             className={`uppercase ${document.locales.includes(locale) ? '' : 'text-muted-foreground'}`}
                         >
                             {locale}
@@ -74,10 +81,23 @@ export default function DocumentsIndex({ documents, filters, trashedCount }: Pag
             key: 'status',
             label: 'Статус',
             sortable: true,
-            render: (document) => <Badge variant={statusVariant[document.status] ?? 'secondary'}>{document.status_label}</Badge>,
+            render: (document) => (
+                <Badge variant={statusVariant[document.status] ?? 'secondary'}>
+                    {document.status_label}
+                </Badge>
+            ),
         },
-        { key: 'files_count', label: 'Файлы', render: (document) => String(document.files_count) },
-        { key: 'document_date', label: 'Дата', sortable: true, className: 'hidden sm:table-cell' },
+        {
+            key: 'files_count',
+            label: 'Файлы',
+            render: (document) => String(document.files_count),
+        },
+        {
+            key: 'document_date',
+            label: 'Дата',
+            sortable: true,
+            className: 'hidden sm:table-cell',
+        },
     ];
 
     return (
@@ -88,7 +108,9 @@ export default function DocumentsIndex({ documents, filters, trashedCount }: Pag
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold">Документы</h1>
-                        <p className="text-sm text-muted-foreground">Реестр нормативных и ведомственных документов</p>
+                        <p className="text-sm text-muted-foreground">
+                            Реестр нормативных и ведомственных документов
+                        </p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
                         <Link href={trash().url}>
@@ -115,12 +137,22 @@ export default function DocumentsIndex({ documents, filters, trashedCount }: Pag
                     }
                     actions={(document) => (
                         <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="icon" aria-label="Изменить" asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Изменить"
+                                asChild
+                            >
                                 <Link href={edit(document.id).url}>
                                     <Pencil className="size-4" />
                                 </Link>
                             </Button>
-                            <Button variant="ghost" size="icon" aria-label="Удалить" onClick={() => setDeleting(document)}>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Удалить"
+                                onClick={() => setDeleting(document)}
+                            >
                                 <Trash2 className="size-4" />
                             </Button>
                         </div>
@@ -128,14 +160,22 @@ export default function DocumentsIndex({ documents, filters, trashedCount }: Pag
                 />
             </div>
 
-            <Dialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)}>
+            <Dialog
+                open={Boolean(deleting)}
+                onOpenChange={(open) => !open && setDeleting(null)}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Удалить документ?</DialogTitle>
-                        <DialogDescription>«{deleting?.name}» будет перемещён в корзину.</DialogDescription>
+                        <DialogDescription>
+                            «{deleting?.name}» будет перемещён в корзину.
+                        </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleting(null)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleting(null)}
+                        >
                             Отмена
                         </Button>
                         <Button

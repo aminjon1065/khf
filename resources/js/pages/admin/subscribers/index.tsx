@@ -1,7 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import type {Paginator} from '@/components/admin/data-table';
+import type { Paginator } from '@/components/admin/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,7 +43,10 @@ type SubscriberRow = {
 type Option = { value: string; label: string };
 
 type PageProps = {
-    subscribers: Paginator<SubscriberRow> & { prev_page_url: string | null; next_page_url: string | null };
+    subscribers: Paginator<SubscriberRow> & {
+        prev_page_url: string | null;
+        next_page_url: string | null;
+    };
     filters: { search: string; status: string | null };
     statuses: Option[];
     stats: { total: number; confirmed: number; pending: number };
@@ -55,14 +58,23 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
     unsubscribed: 'secondary',
 };
 
-export default function SubscribersIndex({ subscribers, filters, statuses, stats }: PageProps) {
+export default function SubscribersIndex({
+    subscribers,
+    filters,
+    statuses,
+    stats,
+}: PageProps) {
     const [search, setSearch] = useState(filters.search ?? '');
     const [deleting, setDeleting] = useState<SubscriberRow | null>(null);
 
     const apply = (params: Record<string, string | undefined>) => {
         router.get(
             index().url,
-            { search: filters.search || undefined, status: filters.status || undefined, ...params },
+            {
+                search: filters.search || undefined,
+                status: filters.status || undefined,
+                ...params,
+            },
             { preserveState: true, preserveScroll: true, replace: true },
         );
     };
@@ -75,7 +87,8 @@ export default function SubscribersIndex({ subscribers, filters, statuses, stats
                 <div>
                     <h1 className="text-2xl font-semibold">Подписчики</h1>
                     <p className="text-sm text-muted-foreground">
-                        Всего: {stats.total} · Подтверждённых: {stats.confirmed} · Ожидают: {stats.pending}
+                        Всего: {stats.total} · Подтверждённых: {stats.confirmed}{' '}
+                        · Ожидают: {stats.pending}
                     </p>
                 </div>
 
@@ -99,7 +112,11 @@ export default function SubscribersIndex({ subscribers, filters, statuses, stats
                     </form>
                     <Select
                         value={filters.status ?? 'all'}
-                        onValueChange={(value) => apply({ status: value === 'all' ? undefined : value })}
+                        onValueChange={(value) =>
+                            apply({
+                                status: value === 'all' ? undefined : value,
+                            })
+                        }
                     >
                         <SelectTrigger className="sm:max-w-[220px]">
                             <SelectValue placeholder="Статус" />
@@ -107,7 +124,10 @@ export default function SubscribersIndex({ subscribers, filters, statuses, stats
                         <SelectContent>
                             <SelectItem value="all">Все статусы</SelectItem>
                             {statuses.map((status) => (
-                                <SelectItem key={status.value} value={status.value}>
+                                <SelectItem
+                                    key={status.value}
+                                    value={status.value}
+                                >
                                     {status.label}
                                 </SelectItem>
                             ))}
@@ -121,37 +141,56 @@ export default function SubscribersIndex({ subscribers, filters, statuses, stats
                             <TableRow>
                                 <TableHead>E-mail</TableHead>
                                 <TableHead>Статус</TableHead>
-                                <TableHead className="hidden md:table-cell">Темы</TableHead>
-                                <TableHead className="hidden sm:table-cell">Дата</TableHead>
+                                <TableHead className="hidden md:table-cell">
+                                    Темы
+                                </TableHead>
+                                <TableHead className="hidden sm:table-cell">
+                                    Дата
+                                </TableHead>
                                 <TableHead className="w-0" />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {subscribers.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                    <TableCell
+                                        colSpan={5}
+                                        className="h-24 text-center text-muted-foreground"
+                                    >
                                         Подписчиков нет
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 subscribers.data.map((subscriber) => (
                                     <TableRow key={subscriber.id}>
-                                        <TableCell>{subscriber.email}</TableCell>
                                         <TableCell>
-                                            <Badge variant={statusVariant[subscriber.status] ?? 'secondary'}>
+                                            {subscriber.email}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                variant={
+                                                    statusVariant[
+                                                        subscriber.status
+                                                    ] ?? 'secondary'
+                                                }
+                                            >
                                                 {subscriber.status_label}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="hidden md:table-cell">
                                             {subscriber.topics.join(', ')}
                                         </TableCell>
-                                        <TableCell className="hidden sm:table-cell">{subscriber.created_at}</TableCell>
+                                        <TableCell className="hidden sm:table-cell">
+                                            {subscriber.created_at}
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 aria-label="Удалить"
-                                                onClick={() => setDeleting(subscriber)}
+                                                onClick={() =>
+                                                    setDeleting(subscriber)
+                                                }
                                             >
                                                 <Trash2 className="size-4" />
                                             </Button>
@@ -169,7 +208,10 @@ export default function SubscribersIndex({ subscribers, filters, statuses, stats
                             variant="outline"
                             size="sm"
                             disabled={!subscribers.prev_page_url}
-                            onClick={() => subscribers.prev_page_url && router.get(subscribers.prev_page_url)}
+                            onClick={() =>
+                                subscribers.prev_page_url &&
+                                router.get(subscribers.prev_page_url)
+                            }
                         >
                             Назад
                         </Button>
@@ -177,7 +219,10 @@ export default function SubscribersIndex({ subscribers, filters, statuses, stats
                             variant="outline"
                             size="sm"
                             disabled={!subscribers.next_page_url}
-                            onClick={() => subscribers.next_page_url && router.get(subscribers.next_page_url)}
+                            onClick={() =>
+                                subscribers.next_page_url &&
+                                router.get(subscribers.next_page_url)
+                            }
                         >
                             Вперёд
                         </Button>
@@ -185,14 +230,22 @@ export default function SubscribersIndex({ subscribers, filters, statuses, stats
                 )}
             </div>
 
-            <Dialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)}>
+            <Dialog
+                open={Boolean(deleting)}
+                onOpenChange={(open) => !open && setDeleting(null)}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Удалить подписчика?</DialogTitle>
-                        <DialogDescription>«{deleting?.email}» будет удалён из базы подписок.</DialogDescription>
+                        <DialogDescription>
+                            «{deleting?.email}» будет удалён из базы подписок.
+                        </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleting(null)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleting(null)}
+                        >
                             Отмена
                         </Button>
                         <Button

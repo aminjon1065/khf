@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Page;
 use App\Models\PageTranslation;
+use App\Support\LocaleUrls;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,9 +26,14 @@ class PageController extends Controller
 
         abort_if($translation === null, 404);
 
-        $page = Page::published()->whereKey($translation->page_id)->first();
+        $page = Page::published()->with('translations')->whereKey($translation->page_id)->first();
 
         abort_if($page === null, 404);
+
+        $urls = app(LocaleUrls::class)->contentUrls(
+            'pages.show',
+            $page->translations->pluck('slug', 'locale')->all(),
+        );
 
         return Inertia::render('public/pages/show', [
             'page' => [
@@ -39,6 +45,8 @@ class PageController extends Controller
                 'title' => $translation->seo_title ?: $translation->title,
                 'description' => $translation->seo_description,
             ],
+            'localeSwitch' => $urls['switch'],
+            'seoAlternates' => $urls['alternates'],
         ]);
     }
 }

@@ -40,18 +40,19 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 ## Progress Summary
 
 - **Total Tasks:** 196
-- **Completed:** 109
-- **In Progress:** 1
+- **Completed:** 116
+- **In Progress:** 0
 - **Blocked:** 0 (Redis blocker removed — D-10: no Redis on shared hosting, DB drivers in use)
-- **Remaining:** 86
-- **Completion:** ~56%
+- **Remaining:** 80
+- **Completion:** ~59%
 
-> Phases 0–13 substantially done; public portal fully trilingual (tj/ru/en); Phase 8 progressed:
-> generic CMS page renderer (About/Activities/Contacts as content pages + footer section nav),
-> news RSS feed, server-rendered Open Graph/Twitter meta, branded localized error pages; seeders
-> (admin + trilingual demo) in place; 197 tests. Remaining: structured About/Activities/Operational
-> sub-sections + safety guides + print styles (8 tail), web push (12 tail), locale dates (13 tail),
-> search (14), SEO/sitemap/analytics (15), security hardening + audit
+> Phases 0–13 substantially done; **Phase 8 essentially closed**: page renderer + RSS + OG meta +
+> branded error pages, plus a full **Safety Guides** module (CMS + public catalogue/guide page,
+> hazard-type + audience incl. children, downloads, print), **Contacts** page (emergency numbers +
+> regional map + feedback), and an **operational-situation** summary on the incidents archive;
+> public portal fully trilingual (tj/ru/en); seeders (admin + trilingual demo incl. guides) in
+> place; 209 tests. Remaining: web push (12 tail), locale dates (13 tail), search (14),
+> SEO/sitemap/analytics (15), security hardening + audit
 > log (16), perf (17), testing/a11y/API (18), deploy (19).
 
 > Completed = starter-kit functionality already satisfying ТЗ (auth, 2FA, passkeys, settings, SSR,
@@ -191,13 +192,13 @@ management — before content modules (Phase 4) build on them.
 - [x] RSS feed for news — `Public\FeedController@news` at `/{locale}/news/rss` (RSS 2.0, per-locale, discovery `<link>` in head) (§6.2, §15.3)
 - [~] "About the Committee" section — content page live via the page renderer (seeded); structured sub-pages (leadership, structure, regional offices, history, partners, anti-corruption, vacancies) pending (§5)
 - [~] "Activities" section — content page live via the page renderer (seeded); detailed sub-pages pending (§5)
-- [ ] "Operational situation" section (summaries, active warnings, map, archive) (§5)
-- [ ] Safety guides catalog by hazard type + guide page (illustrations, steps, downloads, print) (§6.5)
-- [ ] Educational / children materials sub-section (§6.5)
-- [~] Contacts section — content page live via the page renderer (seeded, 112 + helpline); regional offices, directions map, feedback widget pending (§6.9)
-- [~] Open Graph / social preview meta (server-rendered og:* + Twitter card + per-locale og:locale, emblem image) — done; print stylesheets for guides/documents pending (§6.12)
+- [x] "Operational situation" section — incidents archive headed by a status summary (active / controlled / resolved counts) + «Открыть карту» link; active warnings via the site alert banner (§5, §6.3)
+- [x] Safety guides catalog by hazard type + guide page — full `Guide`/`GuideTranslation` module: CMS CRUD (`guides.manage`, RichText content, downloadable files on private disk, trash, tj/ru/en badges) + public catalogue `/{locale}/guides` (audience filter) and guide page with downloads + print (§6.5)
+- [x] Educational / children materials sub-section — `GuideAudience` (general / children); catalogue audience filter surfaces children's guides (§6.5)
+- [x] Contacts section — dedicated `Public\ContactController` at `/{locale}/contacts`: emergency-numbers grid (112/101/102/103), regional offices on a MapLibre map, feedback CTA → e-приёмная (§6.9)
+- [x] Open Graph / social preview meta (server-rendered og:* + Twitter card + per-locale og:locale, emblem image) + print stylesheets (`@media print` + `print:hidden` chrome, guide print button) (§6.12)
 - [x] Branded error pages (403/404/419/429/500/503) via Inertia `respond()` → `public/error` with nav + emergency phone; localized, skipped locally for the debug page (§6.12)
-- [x] Tests: page renderer render/404/locale-slug, navPages shared, RSS feed valid + excludes drafts/other-locale, branded error page, API errors stay JSON
+- [x] Tests: page renderer, RSS, error pages, guides (CMS authz/validation/XSS-strip/trash + public catalogue/audience-filter/show/404), contacts regions, operational-situation summary
 
 ## Phase 9 — Documents Registry
 
@@ -397,6 +398,27 @@ management — before content modules (Phase 4) build on them.
 
 ## Change Log
 
+- **2026-06-11** — Phase 8 closed out (orchestrated via 2 workflows: 6-agent page build + 3-dim
+  adversarial review). **Safety Guides** module (§6.5): `guides`/`guide_translations` migrations,
+  `Guide`/`GuideTranslation` models, `GuideAudience` enum (general/children), `guides.view|manage`
+  permissions (moderator + super-admin), admin CRUD (`GuideController` + Store/Update requests,
+  RichText content sanitised on save, private-disk downloads, trash, tj/ru/en badges) and public
+  `GuideController` (catalogue `/{locale}/guides` with audience filter; guide page `/{locale}/guides/{slug}`
+  with downloads + print; controlled download). **Contacts** (§6.9): `ContactController` →
+  `/{locale}/contacts` with emergency numbers, regional offices on a MapLibre map, feedback CTA.
+  **Operational situation** (§5): status-count summary + map link on the incidents archive.
+  **Print** (§6.12): `@media print` block + `print:hidden` chrome + guide print button. Dictionaries
+  extended (ui.guides/contacts/incidents.summary + nav.guides/contacts ×3, enums.guide_audience ×3).
+  Admin sidebar + public footer wired. Demo seeder seeds 4 guides. Adversarial review surfaced 5
+  real issues, all fixed: (1) per-locale unique slug on `guide_translations` + `uniqueSlug()`
+  dedup (Tajik titles that `Str::slug` empties no longer collide → no unreachable guide);
+  (2) **hreflang + language switcher** now use each locale's OWN slug on slug detail pages
+  (guides/pages/news .show) via `LocaleUrls::contentUrls()` → `localeSwitch`/`seoAlternates` props
+  (previously swapped only the locale prefix → 404 on switch — also fixed the pre-existing news.show
+  case); (3) incidents summary now matches the list (dropped the locale filter so active incidents
+  are never hidden); (4) contacts feedback copy (`contacts.feedback_text`); (5) page «last updated»
+  now rendered (`common.updated`). 14 new tests → 211 total. types/build/lint/Pint clean; live smoke
+  (guides/contacts/incidents/pages 200, per-locale hreflang verified in HTML).
 - **2026-06-10** — Phase 8 increment (content backbone, RSS, SEO, error pages): (1) generic public
   page renderer `Public\PageController@show` at `/{locale}/pages/{slug}` + `public/pages/show.tsx`
   (current-locale slug lookup, sanitised content, SEO prop, 404) — turns About/Activities/Contacts
@@ -655,13 +677,13 @@ management — before content modules (Phase 4) build on them.
 
 ## Next Action
 
-Phase 8 increment landed ✅ (page renderer + footer nav, RSS, OG meta, branded error pages,
-197 tests). Next options: (a) **Phase 8 tail** — «Operational situation» landing (active warnings
-+ counters + map embed + archive), safety-guides catalog by hazard type, print stylesheets;
-(b) **Phase 14 search** — MySQL full-text over posts/pages/documents, locale-aware, results page +
-header search box; (c) **Phase 15 SEO** — sitemap.xml (per-locale) + robots.txt + schema.org (now
-that OG meta + RSS exist). Recommend (b): search is a ТЗ §6.5 core feature and the last big
-public-facing gap; then (c) builds naturally on the SEO work just done. Web push (12 tail) deferred.
+**Phase 8 closed** ✅ (page renderer, RSS, OG meta, error pages, Safety Guides module, Contacts,
+operational-situation summary, print styles — 211 tests; adversarial review run, 5 findings fixed).
+Next options: (a) **Phase 14 search** — MySQL full-text over posts/pages/documents/guides,
+locale-aware, results page + header search box (last big public-facing gap, §6.5); (b) **Phase 15
+SEO** — sitemap.xml (per-locale) + robots.txt + schema.org (builds on the OG meta + RSS just done);
+(c) **Phase 16 security** — audit log + password policy + OWASP pass. Recommend (a) then (b). Web
+push (12 tail), locale date formatting (13 tail), structured About/Activities sub-pages remain.
 
 ---
 

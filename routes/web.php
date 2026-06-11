@@ -1,13 +1,16 @@
 <?php
 
 use App\Http\Controllers\Public\AppealController;
+use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Public\DocumentController;
 use App\Http\Controllers\Public\FeedController;
+use App\Http\Controllers\Public\GuideController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\IncidentController;
 use App\Http\Controllers\Public\MapController;
 use App\Http\Controllers\Public\PageController;
 use App\Http\Controllers\Public\PostController;
+use App\Http\Controllers\Public\SearchController;
 use App\Http\Controllers\Public\SubscriptionController;
 use App\Http\Controllers\Public\TouristGroupController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +30,8 @@ Route::prefix('{locale}')
     ->whereIn('locale', config('app.locales'))
     ->group(function () {
         Route::get('/', [HomeController::class, 'index'])->name('welcome');
+        Route::get('search', [SearchController::class, 'index'])->name('search.index');
+        Route::get('search/api', [SearchController::class, 'api'])->name('search.api');
         Route::get('news', [PostController::class, 'index'])->name('news.index');
         Route::get('news/rss', [FeedController::class, 'news'])->name('news.rss');
         Route::get('news/{slug}', [PostController::class, 'show'])->name('news.show');
@@ -34,6 +39,14 @@ Route::prefix('{locale}')
         Route::get('map', [MapController::class, 'index'])->name('map.index');
         Route::get('documents', [DocumentController::class, 'index'])->name('documents.index');
         Route::get('documents/{document}/files/{media}', [DocumentController::class, 'download'])->name('documents.download');
+
+        // Safety guides catalogue + guide page (ТЗ §6.5). Download is controlled (private disk).
+        Route::get('guides', [GuideController::class, 'index'])->name('guides.index');
+        Route::get('guides/{guide}/files/{media}', [GuideController::class, 'download'])->name('guides.download');
+        Route::get('guides/{slug}', [GuideController::class, 'show'])->name('guides.show');
+
+        // Contacts: emergency numbers, regional offices, map + feedback (ТЗ §6.9).
+        Route::get('contacts', [ContactController::class, 'index'])->name('contacts.index');
 
         // Citizen appeals (electronic reception) — public form is rate-limited (ТЗ §12.4).
         Route::get('appeals', [AppealController::class, 'create'])->name('appeals.create');

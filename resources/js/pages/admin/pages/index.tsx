@@ -1,13 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import {
-    DataTable
-    
-    
-    
+import { DataTable } from '@/components/admin/data-table';
+import type {
+    DataTableColumn,
+    DataTableFilters,
+    Paginator,
 } from '@/components/admin/data-table';
-import type {DataTableColumn, DataTableFilters, Paginator} from '@/components/admin/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,14 +35,21 @@ type PageProps = {
     trashedCount: number;
 };
 
-const statusVariant: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+const statusVariant: Record<
+    string,
+    'default' | 'secondary' | 'outline' | 'destructive'
+> = {
     published: 'default',
     draft: 'secondary',
     moderation: 'outline',
     archived: 'destructive',
 };
 
-export default function PagesIndex({ pages, filters, trashedCount }: PageProps) {
+export default function PagesIndex({
+    pages,
+    filters,
+    trashedCount,
+}: PageProps) {
     const [deleting, setDeleting] = useState<PageRow | null>(null);
 
     const columns: DataTableColumn<PageRow>[] = [
@@ -63,7 +69,7 @@ export default function PagesIndex({ pages, filters, trashedCount }: PageProps) 
                                 className={
                                     hasTranslation
                                         ? 'px-1.5 text-[10px] uppercase'
-                                        : 'px-1.5 text-[10px] uppercase text-muted-foreground'
+                                        : 'px-1.5 text-[10px] text-muted-foreground uppercase'
                                 }
                             >
                                 {locale}
@@ -77,10 +83,17 @@ export default function PagesIndex({ pages, filters, trashedCount }: PageProps) 
             key: 'status',
             label: 'Статус',
             render: (page) => (
-                <Badge variant={statusVariant[page.status] ?? 'secondary'}>{page.status_label}</Badge>
+                <Badge variant={statusVariant[page.status] ?? 'secondary'}>
+                    {page.status_label}
+                </Badge>
             ),
         },
-        { key: 'updated_at', label: 'Изменена', sortable: false, className: 'hidden sm:table-cell' },
+        {
+            key: 'updated_at',
+            label: 'Изменена',
+            sortable: false,
+            className: 'hidden sm:table-cell',
+        },
     ];
 
     return (
@@ -91,7 +104,9 @@ export default function PagesIndex({ pages, filters, trashedCount }: PageProps) 
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold">Страницы</h1>
-                        <p className="text-sm text-muted-foreground">Статические страницы портала</p>
+                        <p className="text-sm text-muted-foreground">
+                            Статические страницы портала
+                        </p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
                         <Link href={trash().url}>
@@ -118,7 +133,12 @@ export default function PagesIndex({ pages, filters, trashedCount }: PageProps) 
                     }
                     actions={(page) => (
                         <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="icon" aria-label="Изменить" asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Изменить"
+                                asChild
+                            >
                                 <Link href={edit(page.id).url}>
                                     <Pencil className="size-4" />
                                 </Link>
@@ -136,16 +156,23 @@ export default function PagesIndex({ pages, filters, trashedCount }: PageProps) 
                 />
             </div>
 
-            <Dialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)}>
+            <Dialog
+                open={Boolean(deleting)}
+                onOpenChange={(open) => !open && setDeleting(null)}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Удалить страницу?</DialogTitle>
                         <DialogDescription>
-                            Страница «{deleting?.title}» будет перемещена в корзину.
+                            Страница «{deleting?.title}» будет перемещена в
+                            корзину.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleting(null)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleting(null)}
+                        >
                             Отмена
                         </Button>
                         <Button

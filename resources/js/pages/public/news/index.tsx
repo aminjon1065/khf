@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type {Paginator} from '@/components/admin/data-table';
+import type { Paginator } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/hooks/use-translations';
 import { show } from '@/routes/news';
@@ -15,7 +15,10 @@ type NewsCard = {
 };
 
 type PageProps = {
-    posts: Paginator<NewsCard> & { prev_page_url: string | null; next_page_url: string | null };
+    posts: Paginator<NewsCard> & {
+        prev_page_url: string | null;
+        next_page_url: string | null;
+    };
 };
 
 export default function NewsIndex({ posts }: PageProps) {
@@ -29,7 +32,9 @@ export default function NewsIndex({ posts }: PageProps) {
             <h1 className="mb-6 text-3xl font-semibold">{t('news.heading')}</h1>
 
             {posts.data.length === 0 ? (
-                <p className="text-muted-foreground">{t('common.no_publications')}</p>
+                <p className="text-muted-foreground">
+                    {t('common.no_publications')}
+                </p>
             ) : (
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {posts.data.map((post) => (
@@ -49,12 +54,22 @@ export default function NewsIndex({ posts }: PageProps) {
                             </div>
                             <div className="flex flex-1 flex-col gap-2 p-4">
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    {post.category && <span className="text-primary">{post.category}</span>}
-                                    {post.published_at && <span>{post.published_at}</span>}
+                                    {post.category && (
+                                        <span className="text-primary">
+                                            {post.category}
+                                        </span>
+                                    )}
+                                    {post.published_at && (
+                                        <span>{post.published_at}</span>
+                                    )}
                                 </div>
-                                <h2 className="font-semibold leading-snug group-hover:text-primary">{post.title}</h2>
+                                <h2 className="leading-snug font-semibold group-hover:text-primary">
+                                    {post.title}
+                                </h2>
                                 {post.excerpt && (
-                                    <p className="line-clamp-3 text-sm text-muted-foreground">{post.excerpt}</p>
+                                    <p className="line-clamp-3 text-sm text-muted-foreground">
+                                        {post.excerpt}
+                                    </p>
                                 )}
                             </div>
                         </Link>
@@ -68,7 +83,10 @@ export default function NewsIndex({ posts }: PageProps) {
                         variant="outline"
                         size="sm"
                         disabled={!posts.prev_page_url}
-                        onClick={() => posts.prev_page_url && router.get(posts.prev_page_url)}
+                        onClick={() =>
+                            posts.prev_page_url &&
+                            router.get(posts.prev_page_url)
+                        }
                     >
                         <ChevronLeft className="size-4" />
                         {t('common.back')}
@@ -77,7 +95,10 @@ export default function NewsIndex({ posts }: PageProps) {
                         variant="outline"
                         size="sm"
                         disabled={!posts.next_page_url}
-                        onClick={() => posts.next_page_url && router.get(posts.next_page_url)}
+                        onClick={() =>
+                            posts.next_page_url &&
+                            router.get(posts.next_page_url)
+                        }
                     >
                         {t('common.next')}
                         <ChevronRight className="size-4" />

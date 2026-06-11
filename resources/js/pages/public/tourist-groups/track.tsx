@@ -33,14 +33,22 @@ export default function TouristGroupTrack({ reference, result }: PageProps) {
             <Head title={t('tourism.track.title')} />
 
             <div className="mx-auto max-w-xl">
-                <h1 className="text-3xl font-semibold">{t('tourism.track.title')}</h1>
-                <p className="mt-1 text-muted-foreground">{t('tourism.track.hint')}</p>
+                <h1 className="text-3xl font-semibold">
+                    {t('tourism.track.title')}
+                </h1>
+                <p className="mt-1 text-muted-foreground">
+                    {t('tourism.track.hint')}
+                </p>
 
                 <form
                     className="mt-6 flex gap-3"
                     onSubmit={(event) => {
                         event.preventDefault();
-                        router.get(track({ locale }).url, { reference: value }, { preserveState: true });
+                        router.get(
+                            track({ locale }).url,
+                            { reference: value },
+                            { preserveState: true },
+                        );
                     }}
                 >
                     <Label htmlFor="reference" className="sr-only">
@@ -64,10 +72,14 @@ export default function TouristGroupTrack({ reference, result }: PageProps) {
                 {result && result.found && (
                     <div className="mt-6 space-y-2 rounded-lg border p-4">
                         <div className="flex items-center justify-between">
-                            <span className="font-mono font-semibold">{result.reference}</span>
+                            <span className="font-mono font-semibold">
+                                {result.reference}
+                            </span>
                             <Badge>{result.status}</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">{t('tourism.track.route', { route: result.route })}</p>
+                        <p className="text-sm text-muted-foreground">
+                            {t('tourism.track.route', { route: result.route })}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                             {result.start_date} — {result.end_date}
                         </p>

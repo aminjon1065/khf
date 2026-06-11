@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ArchiveRestore, ArrowLeft, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import type {Paginator} from '@/components/admin/data-table';
+import type { Paginator } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -45,12 +45,13 @@ export default function PostsTrash({ posts }: PageProps) {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold">Корзина</h1>
-                        <p className="text-sm text-muted-foreground">Удалённые материалы можно восстановить</p>
+                        <p className="text-sm text-muted-foreground">
+                            Удалённые материалы можно восстановить
+                        </p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
                         <Link href={index().url}>
-                            <ArrowLeft className="size-4" />
-                            К материалам
+                            <ArrowLeft className="size-4" />К материалам
                         </Link>
                     </Button>
                 </div>
@@ -61,14 +62,21 @@ export default function PostsTrash({ posts }: PageProps) {
                             <TableRow>
                                 <TableHead>Заголовок</TableHead>
                                 <TableHead>Тип</TableHead>
-                                <TableHead className="hidden sm:table-cell">Удалён</TableHead>
-                                <TableHead className="w-0 text-right">Действия</TableHead>
+                                <TableHead className="hidden sm:table-cell">
+                                    Удалён
+                                </TableHead>
+                                <TableHead className="w-0 text-right">
+                                    Действия
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {posts.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                                    <TableCell
+                                        colSpan={4}
+                                        className="h-24 text-center text-muted-foreground"
+                                    >
                                         Корзина пуста
                                     </TableCell>
                                 </TableRow>
@@ -77,7 +85,9 @@ export default function PostsTrash({ posts }: PageProps) {
                                     <TableRow key={post.id}>
                                         <TableCell>{post.title}</TableCell>
                                         <TableCell>{post.type_label}</TableCell>
-                                        <TableCell className="hidden sm:table-cell">{post.deleted_at}</TableCell>
+                                        <TableCell className="hidden sm:table-cell">
+                                            {post.deleted_at}
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
                                                 <Button
@@ -85,7 +95,14 @@ export default function PostsTrash({ posts }: PageProps) {
                                                     size="icon"
                                                     aria-label="Восстановить"
                                                     onClick={() =>
-                                                        router.patch(restore(post.id).url, {}, { preserveScroll: true })
+                                                        router.patch(
+                                                            restore(post.id)
+                                                                .url,
+                                                            {},
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
+                                                        )
                                                     }
                                                 >
                                                     <ArchiveRestore className="size-4" />
@@ -94,7 +111,9 @@ export default function PostsTrash({ posts }: PageProps) {
                                                     variant="ghost"
                                                     size="icon"
                                                     aria-label="Удалить навсегда"
-                                                    onClick={() => setPurging(post)}
+                                                    onClick={() =>
+                                                        setPurging(post)
+                                                    }
                                                 >
                                                     <Trash2 className="size-4 text-destructive" />
                                                 </Button>
@@ -108,7 +127,10 @@ export default function PostsTrash({ posts }: PageProps) {
                 </div>
             </div>
 
-            <Dialog open={Boolean(purging)} onOpenChange={(open) => !open && setPurging(null)}>
+            <Dialog
+                open={Boolean(purging)}
+                onOpenChange={(open) => !open && setPurging(null)}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Удалить навсегда?</DialogTitle>
@@ -117,7 +139,10 @@ export default function PostsTrash({ posts }: PageProps) {
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setPurging(null)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setPurging(null)}
+                        >
                             Отмена
                         </Button>
                         <Button

@@ -24,8 +24,12 @@ export default function AdminDashboard({ stats }: DashboardProps) {
 
             <div className="flex h-full flex-1 flex-col gap-6 p-4">
                 <div>
-                    <h1 className="text-2xl font-semibold">Панель управления</h1>
-                    <p className="text-sm text-muted-foreground">Обзор системы КЧС</p>
+                    <h1 className="text-2xl font-semibold">
+                        Панель управления
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Обзор системы КЧС
+                    </p>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -38,7 +42,9 @@ export default function AdminDashboard({ stats }: DashboardProps) {
                                 <card.icon className="size-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-3xl font-semibold">{card.value}</div>
+                                <div className="text-3xl font-semibold">
+                                    {card.value}
+                                </div>
                             </CardContent>
                         </Card>
                     ))}
@@ -49,8 +55,9 @@ export default function AdminDashboard({ stats }: DashboardProps) {
                         <CardTitle>Модули</CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
-                        Управление контентом, событиями ЧС, оповещениями, обращениями и
-                        пользователями появится здесь по мере подключения модулей.
+                        Управление контентом, событиями ЧС, оповещениями,
+                        обращениями и пользователями появится здесь по мере
+                        подключения модулей.
                     </CardContent>
                 </Card>
             </div>

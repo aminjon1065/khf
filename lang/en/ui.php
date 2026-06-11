@@ -22,6 +22,8 @@ return [
         'reception' => 'Public Reception',
         'tourism' => 'Tourism',
         'subscribe' => 'Subscribe',
+        'guides' => 'Safety',
+        'contacts' => 'Contacts',
         'login' => 'Log in',
     ],
     'footer' => [
@@ -52,6 +54,7 @@ return [
         'operational_situation' => 'Operational situation',
         'reference_number' => 'Registration number',
         'track_status' => 'Track status',
+        'updated' => 'Updated: :date',
     ],
     'home' => [
         'meta_title' => 'Home',
@@ -80,6 +83,12 @@ return [
     'incidents' => [
         'subtitle' => 'Incidents and emergencies',
         'empty' => 'No registered incidents.',
+        'view_map' => 'Open map',
+        'summary' => [
+            'active' => 'Active',
+            'controlled' => 'Under control',
+            'resolved' => 'Resolved',
+        ],
     ],
     'map' => [
         'heading' => 'Interactive emergency map',
@@ -169,5 +178,27 @@ return [
             'unsubscribed' => 'You have unsubscribed from notifications.',
             'invalid' => 'The link is invalid or has expired.',
         ],
+    ],
+    'guides' => [
+        'title' => 'Safety guides',
+        'subtitle' => 'How to act during emergencies',
+        'all_audiences' => 'All',
+        'empty' => 'No guides published yet.',
+        'downloads' => 'Downloads',
+        'print' => 'Print',
+    ],
+    'contacts' => [
+        'title' => 'Contacts',
+        'subtitle' => 'Emergency services and regional offices',
+        'emergency_numbers' => 'Emergency numbers',
+        'helpline' => 'Unified helpline',
+        'rescue' => 'Rescue service',
+        'fire' => 'Fire service',
+        'police' => 'Police',
+        'ambulance' => 'Ambulance',
+        'regional_offices' => 'Regional offices',
+        'feedback' => 'Feedback',
+        'feedback_text' => 'Have a question, suggestion or complaint? Submit an appeal and we will respond.',
+        'feedback_cta' => 'Submit an appeal',
     ],
 ];

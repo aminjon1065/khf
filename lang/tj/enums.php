@@ -31,6 +31,10 @@ return [
         'published' => 'Нашршуда',
         'archived' => 'Дар бойгонӣ',
     ],
+    'guide_audience' => [
+        'general' => 'Барои аҳолӣ',
+        'children' => 'Барои кӯдакон',
+    ],
     'document_type' => [
         'law' => 'Қонунгузорӣ',
         'regulation' => 'Санадҳои меъёрӣ',

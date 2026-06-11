@@ -1,5 +1,19 @@
 import { Link } from '@inertiajs/react';
-import { Bell, ExternalLink, FileText, FolderTree, Inbox, Languages, LayoutDashboard, Mail, Mountain, Newspaper, TriangleAlert, Users } from 'lucide-react';
+import {
+    Bell,
+    BookOpen,
+    ExternalLink,
+    FileText,
+    FolderTree,
+    Inbox,
+    Languages,
+    LayoutDashboard,
+    Mail,
+    Mountain,
+    Newspaper,
+    TriangleAlert,
+    Users,
+} from 'lucide-react';
 import { AppEmblem } from '@/components/app-emblem';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -21,6 +35,7 @@ import { index as alertsIndex } from '@/routes/admin/alerts';
 import { index as appealsIndex } from '@/routes/admin/appeals';
 import { index as categoriesIndex } from '@/routes/admin/categories';
 import { index as documentsIndex } from '@/routes/admin/documents';
+import { index as guidesIndex } from '@/routes/admin/guides';
 import { index as incidentsIndex } from '@/routes/admin/incidents';
 import { index as languagesIndex } from '@/routes/admin/languages';
 import { index as pagesIndex } from '@/routes/admin/pages';
@@ -42,7 +57,13 @@ type AdminNavGroup = {
 const navGroups: AdminNavGroup[] = [
     {
         label: 'Обзор',
-        items: [{ title: 'Панель управления', href: adminDashboard(), icon: LayoutDashboard }],
+        items: [
+            {
+                title: 'Панель управления',
+                href: adminDashboard(),
+                icon: LayoutDashboard,
+            },
+        ],
     },
     {
         label: 'Контент',
@@ -70,6 +91,12 @@ const navGroups: AdminNavGroup[] = [
                 href: documentsIndex(),
                 icon: FileText,
                 permission: 'documents.manage',
+            },
+            {
+                title: 'Памятки',
+                href: guidesIndex(),
+                icon: BookOpen,
+                permission: 'guides.manage',
             },
         ],
     },
@@ -137,7 +164,7 @@ export function AdminSidebar() {
     const { can } = usePermissions();
 
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar collapsible="icon" variant="sidebar">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -145,8 +172,12 @@ export function AdminSidebar() {
                             <Link href={adminDashboard()} prefetch>
                                 <AppEmblem className="size-8 shrink-0" />
                                 <span className="flex flex-col text-left leading-tight">
-                                    <span className="font-semibold">КЧС · CMS</span>
-                                    <span className="text-xs text-muted-foreground">Панель управления</span>
+                                    <span className="font-semibold">
+                                        КЧС · CMS
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        Панель управления
+                                    </span>
                                 </span>
                             </Link>
                         </SidebarMenuButton>
@@ -156,7 +187,9 @@ export function AdminSidebar() {
 
             <SidebarContent>
                 {navGroups.map((group) => {
-                    const items = group.items.filter((item) => !item.permission || can(item.permission));
+                    const items = group.items.filter(
+                        (item) => !item.permission || can(item.permission),
+                    );
 
                     if (items.length === 0) {
                         return null;
@@ -189,7 +222,10 @@ export function AdminSidebar() {
             <SidebarFooter>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild tooltip={{ children: 'На сайт' }}>
+                        <SidebarMenuButton
+                            asChild
+                            tooltip={{ children: 'На сайт' }}
+                        >
                             <Link href={home()}>
                                 <ExternalLink />
                                 <span>На сайт</span>

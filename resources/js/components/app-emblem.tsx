@@ -25,5 +25,7 @@ export function AppEmblem({
     const active = locale ?? page.locale;
     const src = EMBLEMS[active] ?? EMBLEMS.tj;
 
-    return <img src={src} alt={alt} className={className} width={40} height={40} />;
+    return (
+        <img src={src} alt={alt} className={className} width={40} height={40} />
+    );
 }

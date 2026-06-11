@@ -39,7 +39,13 @@ const mapStyle: maplibregl.StyleSpecification = {
  * Reusable MapLibre map (ТЗ §6.3). Plots colour-coded markers with popups and optionally lets the
  * caller pick a point (incident form). Centred on Tajikistan by default.
  */
-export function MapView({ markers = [], center = [69.0, 38.8], zoom = 6, className, onPick }: MapViewProps) {
+export function MapView({
+    markers = [],
+    center = [69.0, 38.8],
+    zoom = 6,
+    className,
+    onPick,
+}: MapViewProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<maplibregl.Map | null>(null);
     const pickMarkerRef = useRef<maplibregl.Marker | null>(null);
@@ -51,7 +57,12 @@ export function MapView({ markers = [], center = [69.0, 38.8], zoom = 6, classNa
             return;
         }
 
-        const map = new maplibregl.Map({ container, style: mapStyle, center, zoom });
+        const map = new maplibregl.Map({
+            container,
+            style: mapStyle,
+            center,
+            zoom,
+        });
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
         mapRef.current = map;
 
@@ -92,7 +103,11 @@ export function MapView({ markers = [], center = [69.0, 38.8], zoom = 6, classNa
 
             return new maplibregl.Marker({ element })
                 .setLngLat([marker.lng, marker.lat])
-                .setPopup(new maplibregl.Popup({ offset: 14 }).setDOMContent(popupContent))
+                .setPopup(
+                    new maplibregl.Popup({ offset: 14 }).setDOMContent(
+                        popupContent,
+                    ),
+                )
                 .addTo(map);
         });
 
@@ -112,7 +127,9 @@ export function MapView({ markers = [], center = [69.0, 38.8], zoom = 6, classNa
             if (pickMarkerRef.current) {
                 pickMarkerRef.current.setLngLat([lng, lat]);
             } else {
-                pickMarkerRef.current = new maplibregl.Marker({ color: '#1f4e8c' })
+                pickMarkerRef.current = new maplibregl.Marker({
+                    color: '#1f4e8c',
+                })
                     .setLngLat([lng, lat])
                     .addTo(map);
             }
@@ -127,5 +144,7 @@ export function MapView({ markers = [], center = [69.0, 38.8], zoom = 6, classNa
         };
     }, [onPick]);
 
-    return <div ref={containerRef} className={cn('h-full w-full', className)} />;
+    return (
+        <div ref={containerRef} className={cn('h-full w-full', className)} />
+    );
 }

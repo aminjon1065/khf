@@ -34,22 +34,39 @@ export default function NewsShow({ post, recent }: PageProps) {
 
             <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
                 <article className="min-w-0">
-                    <Link href={newsIndex({ locale }).url} className="text-sm text-primary hover:underline">
+                    <Link
+                        href={newsIndex({ locale }).url}
+                        className="text-sm text-primary hover:underline"
+                    >
                         {t('news.back_to_list')}
                     </Link>
 
                     <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="text-primary">{post.category ?? post.type_label}</span>
-                        {post.published_at && <span>· {post.published_at}</span>}
+                        <span className="text-primary">
+                            {post.category ?? post.type_label}
+                        </span>
+                        {post.published_at && (
+                            <span>· {post.published_at}</span>
+                        )}
                     </div>
 
-                    <h1 className="mt-2 text-3xl font-semibold leading-tight">{post.title}</h1>
+                    <h1 className="mt-2 text-3xl leading-tight font-semibold">
+                        {post.title}
+                    </h1>
 
                     {post.cover_url && (
-                        <img src={post.cover_url} alt="" className="mt-6 w-full rounded-lg object-cover" />
+                        <img
+                            src={post.cover_url}
+                            alt=""
+                            className="mt-6 w-full rounded-lg object-cover"
+                        />
                     )}
 
-                    {post.excerpt && <p className="mt-6 text-lg text-muted-foreground">{post.excerpt}</p>}
+                    {post.excerpt && (
+                        <p className="mt-6 text-lg text-muted-foreground">
+                            {post.excerpt}
+                        </p>
+                    )}
 
                     {post.body && (
                         // Body is sanitised server-side (App\Support\HtmlSanitizer) before storage.
@@ -60,22 +77,31 @@ export default function NewsShow({ post, recent }: PageProps) {
                     )}
 
                     {post.author && (
-                        <p className="mt-8 text-sm text-muted-foreground">{t('news.author', { author: post.author })}</p>
+                        <p className="mt-8 text-sm text-muted-foreground">
+                            {t('news.author', { author: post.author })}
+                        </p>
                     )}
                 </article>
 
                 <aside className="space-y-4">
-                    <h2 className="text-lg font-semibold">{t('common.latest_news')}</h2>
+                    <h2 className="text-lg font-semibold">
+                        {t('common.latest_news')}
+                    </h2>
                     <ul className="space-y-3">
                         {recent.map((item) => (
                             <li key={item.slug}>
                                 <Link
-                                    href={show({ locale, slug: item.slug ?? '' }).url}
+                                    href={
+                                        show({ locale, slug: item.slug ?? '' })
+                                            .url
+                                    }
                                     className="block text-sm hover:text-primary"
                                 >
                                     {item.title}
                                     {item.published_at && (
-                                        <span className="block text-xs text-muted-foreground">{item.published_at}</span>
+                                        <span className="block text-xs text-muted-foreground">
+                                            {item.published_at}
+                                        </span>
                                     )}
                                 </Link>
                             </li>

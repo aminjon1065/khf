@@ -1,7 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Check } from 'lucide-react';
-import { useState  } from 'react';
-import type {FormEvent} from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -43,7 +43,14 @@ type PageProps = {
     defaultLocale: string;
 };
 
-export default function AlertForm({ alert, levels, statuses, regions, locales, defaultLocale }: PageProps) {
+export default function AlertForm({
+    alert,
+    levels,
+    statuses,
+    regions,
+    locales,
+    defaultLocale,
+}: PageProps) {
     const isEdit = Boolean(alert);
 
     const initialTranslations: Record<string, Translation> = {};
@@ -68,7 +75,11 @@ export default function AlertForm({ alert, levels, statuses, regions, locales, d
     const [activeLocale, setActiveLocale] = useState(defaultLocale);
     const errors = form.errors as Record<string, string>;
 
-    const setTranslation = (locale: string, field: keyof Translation, value: string) => {
+    const setTranslation = (
+        locale: string,
+        field: keyof Translation,
+        value: string,
+    ) => {
         form.setData('translations', {
             ...form.data.translations,
             [locale]: { ...form.data.translations[locale], [field]: value },
@@ -89,11 +100,22 @@ export default function AlertForm({ alert, levels, statuses, regions, locales, d
 
     return (
         <>
-            <Head title={isEdit ? 'Редактирование оповещения' : 'Новое оповещение'} />
+            <Head
+                title={
+                    isEdit ? 'Редактирование оповещения' : 'Новое оповещение'
+                }
+            />
 
-            <form onSubmit={submit} className="flex h-full flex-1 flex-col gap-6 p-4">
+            <form
+                onSubmit={submit}
+                className="flex h-full flex-1 flex-col gap-6 p-4"
+            >
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">{isEdit ? 'Редактирование оповещения' : 'Новое оповещение'}</h1>
+                    <h1 className="text-2xl font-semibold">
+                        {isEdit
+                            ? 'Редактирование оповещения'
+                            : 'Новое оповещение'}
+                    </h1>
                     <div className="flex gap-2">
                         <Button type="button" variant="outline" asChild>
                             <Link href={index().url}>Отмена</Link>
@@ -107,13 +129,21 @@ export default function AlertForm({ alert, levels, statuses, regions, locales, d
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div className="space-y-2">
                         <Label htmlFor="hazard_level">Уровень опасности</Label>
-                        <Select value={form.data.hazard_level} onValueChange={(value) => form.setData('hazard_level', value)}>
+                        <Select
+                            value={form.data.hazard_level}
+                            onValueChange={(value) =>
+                                form.setData('hazard_level', value)
+                            }
+                        >
                             <SelectTrigger id="hazard_level">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 {levels.map((level) => (
-                                    <SelectItem key={level.value} value={level.value}>
+                                    <SelectItem
+                                        key={level.value}
+                                        value={level.value}
+                                    >
                                         {level.label}
                                     </SelectItem>
                                 ))}
@@ -123,13 +153,21 @@ export default function AlertForm({ alert, levels, statuses, regions, locales, d
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="status">Статус</Label>
-                        <Select value={form.data.status} onValueChange={(value) => form.setData('status', value)}>
+                        <Select
+                            value={form.data.status}
+                            onValueChange={(value) =>
+                                form.setData('status', value)
+                            }
+                        >
                             <SelectTrigger id="status">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 {statuses.map((status) => (
-                                    <SelectItem key={status.value} value={status.value}>
+                                    <SelectItem
+                                        key={status.value}
+                                        value={status.value}
+                                    >
                                         {status.label}
                                     </SelectItem>
                                 ))}
@@ -140,8 +178,17 @@ export default function AlertForm({ alert, levels, statuses, regions, locales, d
                     <div className="space-y-2">
                         <Label htmlFor="region">Регион</Label>
                         <Select
-                            value={form.data.region_id ? String(form.data.region_id) : 'none'}
-                            onValueChange={(value) => form.setData('region_id', value === 'none' ? null : Number(value))}
+                            value={
+                                form.data.region_id
+                                    ? String(form.data.region_id)
+                                    : 'none'
+                            }
+                            onValueChange={(value) =>
+                                form.setData(
+                                    'region_id',
+                                    value === 'none' ? null : Number(value),
+                                )
+                            }
                         >
                             <SelectTrigger id="region">
                                 <SelectValue />
@@ -149,7 +196,10 @@ export default function AlertForm({ alert, levels, statuses, regions, locales, d
                             <SelectContent>
                                 <SelectItem value="none">Вся страна</SelectItem>
                                 {regions.map((region) => (
-                                    <SelectItem key={region.id} value={String(region.id)}>
+                                    <SelectItem
+                                        key={region.id}
+                                        value={String(region.id)}
+                                    >
                                         {region.name}
                                     </SelectItem>
                                 ))}
@@ -163,7 +213,9 @@ export default function AlertForm({ alert, levels, statuses, regions, locales, d
                             id="starts_at"
                             type="datetime-local"
                             value={form.data.starts_at}
-                            onChange={(event) => form.setData('starts_at', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('starts_at', event.target.value)
+                            }
                         />
                         <InputError message={errors.starts_at} />
                     </div>
@@ -173,7 +225,9 @@ export default function AlertForm({ alert, levels, statuses, regions, locales, d
                             id="ends_at"
                             type="datetime-local"
                             value={form.data.ends_at}
-                            onChange={(event) => form.setData('ends_at', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('ends_at', event.target.value)
+                            }
                         />
                         <InputError message={errors.ends_at} />
                     </div>
@@ -183,9 +237,13 @@ export default function AlertForm({ alert, levels, statuses, regions, locales, d
                     <Checkbox
                         id="is_dismissible"
                         checked={form.data.is_dismissible}
-                        onCheckedChange={(checked) => form.setData('is_dismissible', checked === true)}
+                        onCheckedChange={(checked) =>
+                            form.setData('is_dismissible', checked === true)
+                        }
                     />
-                    <Label htmlFor="is_dismissible">Пользователь может закрыть баннер</Label>
+                    <Label htmlFor="is_dismissible">
+                        Пользователь может закрыть баннер
+                    </Label>
                 </div>
 
                 <div className="flex flex-wrap gap-2 border-b pb-2">
@@ -193,15 +251,19 @@ export default function AlertForm({ alert, levels, statuses, regions, locales, d
                         <Button
                             key={locale.code}
                             type="button"
-                            variant={activeLocale === locale.code ? 'default' : 'ghost'}
+                            variant={
+                                activeLocale === locale.code
+                                    ? 'default'
+                                    : 'ghost'
+                            }
                             size="sm"
                             className="gap-2"
                             onClick={() => setActiveLocale(locale.code)}
                         >
                             {locale.native_name}
-                            {Boolean(form.data.translations[locale.code]?.title) && (
-                                <Check className="size-3.5 text-green-600" />
-                            )}
+                            {Boolean(
+                                form.data.translations[locale.code]?.title,
+                            ) && <Check className="size-3.5 text-green-600" />}
                         </Button>
                     ))}
                 </div>
@@ -212,9 +274,19 @@ export default function AlertForm({ alert, levels, statuses, regions, locales, d
                         <Input
                             id="title"
                             value={active.title}
-                            onChange={(event) => setTranslation(activeLocale, 'title', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'title',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.title`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.title`]
+                            }
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="body">Текст</Label>
@@ -222,9 +294,19 @@ export default function AlertForm({ alert, levels, statuses, regions, locales, d
                             id="body"
                             rows={4}
                             value={active.body}
-                            onChange={(event) => setTranslation(activeLocale, 'body', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'body',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.body`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.body`]
+                            }
+                        />
                     </div>
                 </div>
             </form>

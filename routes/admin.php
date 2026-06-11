@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AppealController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
+use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\IncidentController;
 use App\Http\Controllers\Admin\LanguageController;
 use App\Http\Controllers\Admin\PageController;
@@ -99,6 +100,19 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
             Route::patch('documents/{document}/restore', [DocumentController::class, 'restore'])->name('documents.restore')->withTrashed();
             Route::delete('documents/{document}/force', [DocumentController::class, 'forceDelete'])->name('documents.force-delete')->withTrashed();
+        });
+
+        // Content — safety guides / memos (guides.manage).
+        Route::middleware('can:'.Permission::ManageGuides->value)->group(function () {
+            Route::get('guides', [GuideController::class, 'index'])->name('guides.index');
+            Route::get('guides/trash', [GuideController::class, 'trash'])->name('guides.trash');
+            Route::get('guides/create', [GuideController::class, 'create'])->name('guides.create');
+            Route::post('guides', [GuideController::class, 'store'])->name('guides.store');
+            Route::get('guides/{guide}/edit', [GuideController::class, 'edit'])->name('guides.edit');
+            Route::put('guides/{guide}', [GuideController::class, 'update'])->name('guides.update');
+            Route::delete('guides/{guide}', [GuideController::class, 'destroy'])->name('guides.destroy');
+            Route::patch('guides/{guide}/restore', [GuideController::class, 'restore'])->name('guides.restore')->withTrashed();
+            Route::delete('guides/{guide}/force', [GuideController::class, 'forceDelete'])->name('guides.force-delete')->withTrashed();
         });
 
         // Services — citizen appeals moderation queue (appeals.manage).

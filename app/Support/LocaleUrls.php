@@ -74,6 +74,32 @@ class LocaleUrls
     }
 
     /**
+     * Per-locale switch map + hreflang alternates for a slug-based detail page (guides.show,
+     * pages.show, news.show). Slugs differ per locale, so the generic path-swap in switchMap()
+     * would 404; here each locale uses its OWN translation slug, and locales with no translation
+     * fall back to that locale's homepage. Returned to the page as `localeSwitch` + `seoAlternates`.
+     *
+     * @param  array<string, string>  $slugByLocale  locale code → that locale's slug
+     * @return array{switch: array<string, string>, alternates: list<array{code: string, hreflang: string, url: string}>}
+     */
+    public function contentUrls(string $routeName, array $slugByLocale): array
+    {
+        $switch = [];
+        $alternates = [];
+
+        foreach ($this->supportedCodes() as $code) {
+            $url = isset($slugByLocale[$code])
+                ? route($routeName, ['locale' => $code, 'slug' => $slugByLocale[$code]])
+                : url($code);
+
+            $switch[$code] = $url;
+            $alternates[] = ['code' => $code, 'hreflang' => $this->hreflang($code), 'url' => $url];
+        }
+
+        return ['switch' => $switch, 'alternates' => $alternates];
+    }
+
+    /**
      * Valid BCP-47 tag for an internal locale code (tj → tg).
      */
     public function hreflang(string $code): string

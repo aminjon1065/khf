@@ -1,6 +1,8 @@
 @php
     $localeUrls = app(\App\Support\LocaleUrls::class);
-    $seoAlternates = $localeUrls->alternates(request());
+    // Slug-based detail pages (guides/pages/news .show) pass per-locale alternates as a prop, since
+    // their slugs differ per locale; everything else uses the generic path-swap.
+    $seoAlternates = $page['props']['seoAlternates'] ?? $localeUrls->alternates(request());
 
     $locale = app()->getLocale();
     $seo = $page['props']['seo'] ?? [];

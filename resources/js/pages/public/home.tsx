@@ -1,8 +1,10 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Bell, Map, Phone, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AppEmblem } from '@/components/app-emblem';
 import { useTranslations } from '@/hooks/use-translations';
 import { index as newsIndex, show } from '@/routes/news';
+import { EmergencyHero, ActiveAlert } from '@/Components/Public/EmergencyHero';
 
 type NewsCard = {
     title: string | null;
@@ -18,84 +20,145 @@ type PageProps = {
 };
 
 export default function Home({ latestPosts }: PageProps) {
-    const { locale } = usePage().props;
+    const { locale, activeAlerts } = usePage().props as { locale: string; activeAlerts?: ActiveAlert[] };
     const { t } = useTranslations();
 
+    const criticalAlerts = (activeAlerts ?? []).filter(a => a.level === 'critical');
+    const isRedState = criticalAlerts.length > 0;
+
     const quickLinks = [
-        { icon: Phone, label: t('home.quick_links.emergency_phone'), value: '112' },
-        { icon: ShieldAlert, label: t('home.quick_links.safety_guides_label'), value: t('home.quick_links.safety_guides_hint') },
-        { icon: Map, label: t('common.emergency_map'), value: t('common.operational_situation') },
-        { icon: Bell, label: t('home.quick_links.subscribe_label'), value: t('home.quick_links.subscribe_hint') },
+        {
+            icon: Phone,
+            label: t('home.quick_links.emergency_phone'),
+            value: '112',
+        },
+        {
+            icon: ShieldAlert,
+            label: t('home.quick_links.safety_guides_label'),
+            value: t('home.quick_links.safety_guides_hint'),
+        },
+        {
+            icon: Map,
+            label: t('common.emergency_map'),
+            value: t('common.operational_situation'),
+        },
+        {
+            icon: Bell,
+            label: t('home.quick_links.subscribe_label'),
+            value: t('home.quick_links.subscribe_hint'),
+        },
     ];
 
     return (
         <>
             <Head title={t('home.meta_title')} />
 
-            <section className="rounded-xl bg-primary px-6 py-12 text-primary-foreground sm:px-10">
-                <h1 className="max-w-3xl text-3xl font-semibold sm:text-4xl">{t('home.hero.title')}</h1>
-                <p className="mt-3 max-w-2xl text-primary-foreground/80">{t('home.hero.subtitle')}</p>
-                <div className="mt-6 flex flex-wrap gap-3">
-                    <Button variant="signal" asChild>
-                        <Link href={newsIndex({ locale }).url}>{t('common.latest_news')}</Link>
-                    </Button>
-                    <a
-                        href="tel:112"
-                        className="inline-flex items-center gap-2 rounded-md border border-primary-foreground/30 px-4 py-2 text-sm font-medium"
-                    >
-                        <Phone className="size-4" />
-                        {t('home.hero.emergency_call')}
-                    </a>
-                </div>
-            </section>
+            {isRedState ? (
+                <EmergencyHero alerts={criticalAlerts} />
+            ) : (
+                <section className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-primary/10 via-background to-background px-6 py-16 text-center sm:px-10 sm:py-24 border border-border/50 shadow-sm transition-all duration-700">
+                    <div className="mx-auto flex max-w-3xl flex-col items-center">
+                        <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+                            {t('home.hero.title')}
+                        </h1>
+                        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+                            {t('home.hero.subtitle')}
+                        </p>
+                        <div className="mt-10 flex flex-wrap justify-center gap-4">
+                            <Button variant="default" size="lg" className="rounded-full px-8 shadow-md transition-transform hover:scale-105" asChild>
+                                <Link href={newsIndex({ locale }).url}>
+                                    {t('common.latest_news')}
+                                </Link>
+                            </Button>
+                            <a
+                                href="tel:112"
+                                className="inline-flex items-center gap-2 rounded-full border bg-background px-8 py-2.5 text-sm font-semibold shadow-sm transition-all hover:bg-muted hover:shadow-md hover:border-signal/50"
+                            >
+                                <Phone className="size-4 text-signal" />
+                                {t('home.hero.emergency_call')}
+                            </a>
+                        </div>
+                    </div>
+                </section>
+            )}
 
-            <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <section className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {quickLinks.map((item) => (
-                    <div key={item.label} className="flex items-start gap-3 rounded-lg border p-4">
-                        <item.icon className="size-6 shrink-0 text-primary" />
+                    <div
+                        key={item.label}
+                        className="group flex flex-col items-center gap-4 rounded-2xl border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                    >
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                            <item.icon className="size-6" />
+                        </div>
                         <div>
-                            <p className="font-medium">{item.label}</p>
-                            <p className="text-sm text-muted-foreground">{item.value}</p>
+                            <p className="font-semibold text-foreground">{item.label}</p>
+                            <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                                {item.value}
+                            </p>
                         </div>
                     </div>
                 ))}
             </section>
 
-            <section className="mt-12">
-                <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-2xl font-semibold">{t('common.latest_news')}</h2>
-                    <Link href={newsIndex({ locale }).url} className="text-sm text-primary hover:underline">
+            <section className="mt-20">
+                <div className="mb-8 flex items-end justify-between border-b pb-4">
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground">
+                        {t('common.latest_news')}
+                    </h2>
+                    <Link
+                        href={newsIndex({ locale }).url}
+                        className="text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+                    >
                         {t('home.news.view_all')}
                     </Link>
                 </div>
 
                 {latestPosts.length === 0 ? (
-                    <p className="text-muted-foreground">{t('common.no_publications')}</p>
+                    <div className="flex h-40 items-center justify-center rounded-xl border border-dashed text-muted-foreground">
+                        <p>{t('common.no_publications')}</p>
+                    </div>
                 ) : (
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                         {latestPosts.map((post) => (
                             <Link
                                 key={post.slug}
-                                href={show({ locale, slug: post.slug ?? '' }).url}
-                                className="group flex flex-col overflow-hidden rounded-lg border transition-shadow hover:shadow-md"
+                                href={
+                                    show({ locale, slug: post.slug ?? '' }).url
+                                }
+                                className="group flex flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                             >
-                                <div className="aspect-video w-full bg-muted">
-                                    {post.cover_url && (
+                                <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
+                                    {post.cover_url ? (
                                         <img
                                             src={post.cover_url}
                                             alt=""
-                                            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
+                                    ) : (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-secondary">
+                                            <AppEmblem className="size-12 text-muted-foreground/30" />
+                                        </div>
                                     )}
                                 </div>
-                                <div className="flex flex-1 flex-col gap-2 p-4">
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                        {post.category && <span className="text-primary">{post.category}</span>}
-                                        {post.published_at && <span>{post.published_at}</span>}
+                                <div className="flex flex-1 flex-col p-6">
+                                    <div className="mb-3 flex items-center gap-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                                        {post.category && (
+                                            <span className="text-primary">
+                                                {post.category}
+                                            </span>
+                                        )}
+                                        {post.published_at && (
+                                            <span>{post.published_at}</span>
+                                        )}
                                     </div>
-                                    <h3 className="font-semibold leading-snug group-hover:text-primary">{post.title}</h3>
+                                    <h3 className="text-xl font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
+                                        {post.title}
+                                    </h3>
                                     {post.excerpt && (
-                                        <p className="line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>
+                                        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                                            {post.excerpt}
+                                        </p>
                                     )}
                                 </div>
                             </Link>

@@ -31,6 +31,10 @@ return [
         'published' => 'Published',
         'archived' => 'Archived',
     ],
+    'guide_audience' => [
+        'general' => 'General public',
+        'children' => 'For children',
+    ],
     'document_type' => [
         'law' => 'Legislation',
         'regulation' => 'Regulations',

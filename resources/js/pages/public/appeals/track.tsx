@@ -34,14 +34,22 @@ export default function AppealTrack({ reference, result }: PageProps) {
             <Head title={t('appeals.track.title')} />
 
             <div className="mx-auto max-w-xl">
-                <h1 className="text-3xl font-semibold">{t('appeals.track.title')}</h1>
-                <p className="mt-1 text-muted-foreground">{t('appeals.track.hint')}</p>
+                <h1 className="text-3xl font-semibold">
+                    {t('appeals.track.title')}
+                </h1>
+                <p className="mt-1 text-muted-foreground">
+                    {t('appeals.track.hint')}
+                </p>
 
                 <form
                     className="mt-6 flex gap-3"
                     onSubmit={(event) => {
                         event.preventDefault();
-                        router.get(track({ locale }).url, { reference: value }, { preserveState: true });
+                        router.get(
+                            track({ locale }).url,
+                            { reference: value },
+                            { preserveState: true },
+                        );
                     }}
                 >
                     <Label htmlFor="reference" className="sr-only">
@@ -65,13 +73,27 @@ export default function AppealTrack({ reference, result }: PageProps) {
                 {result && result.found && (
                     <div className="mt-6 space-y-2 rounded-lg border p-4">
                         <div className="flex items-center justify-between">
-                            <span className="font-mono font-semibold">{result.reference}</span>
+                            <span className="font-mono font-semibold">
+                                {result.reference}
+                            </span>
                             <Badge>{result.status}</Badge>
                         </div>
                         <p className="font-medium">{result.subject}</p>
-                        <p className="text-sm text-muted-foreground">{t('appeals.track.category_label', { category: result.category })}</p>
-                        <p className="text-sm text-muted-foreground">{t('appeals.track.submitted_label', { created_at: result.created_at ?? '' })}</p>
-                        <p className="text-sm text-muted-foreground">{t('appeals.track.updated_label', { updated_at: result.updated_at ?? '' })}</p>
+                        <p className="text-sm text-muted-foreground">
+                            {t('appeals.track.category_label', {
+                                category: result.category,
+                            })}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            {t('appeals.track.submitted_label', {
+                                created_at: result.created_at ?? '',
+                            })}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            {t('appeals.track.updated_label', {
+                                updated_at: result.updated_at ?? '',
+                            })}
+                        </p>
                     </div>
                 )}
             </div>

@@ -13,10 +13,12 @@ export function usePermissions() {
     const permissions = auth?.permissions ?? [];
     const isSuperAdmin = roles.includes(SUPER_ADMIN_ROLE);
 
-    const can = (permission: string): boolean => isSuperAdmin || permissions.includes(permission);
+    const can = (permission: string): boolean =>
+        isSuperAdmin || permissions.includes(permission);
 
     const canAny = (required: string[]): boolean =>
-        isSuperAdmin || required.some((permission) => permissions.includes(permission));
+        isSuperAdmin ||
+        required.some((permission) => permissions.includes(permission));
 
     const hasRole = (role: string): boolean => roles.includes(role);
 

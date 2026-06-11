@@ -1,14 +1,13 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Ban, CircleCheck, Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState  } from 'react';
-import type {FormEvent} from 'react';
-import {
-    DataTable
-    
-    
-    
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import { DataTable } from '@/components/admin/data-table';
+import type {
+    DataTableColumn,
+    DataTableFilters,
+    Paginator,
 } from '@/components/admin/data-table';
-import type {DataTableColumn, DataTableFilters, Paginator} from '@/components/admin/data-table';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -64,7 +63,9 @@ export default function UsersIndex({ users, filters, roles }: PageProps) {
         {
             key: 'role',
             label: 'Роль',
-            render: (user) => <Badge variant="secondary">{roleLabel(user.role)}</Badge>,
+            render: (user) => (
+                <Badge variant="secondary">{roleLabel(user.role)}</Badge>
+            ),
         },
         {
             key: 'is_blocked',
@@ -76,7 +77,12 @@ export default function UsersIndex({ users, filters, roles }: PageProps) {
                     <Badge>Активен</Badge>
                 ),
         },
-        { key: 'created_at', label: 'Создан', sortable: true, className: 'hidden sm:table-cell' },
+        {
+            key: 'created_at',
+            label: 'Создан',
+            sortable: true,
+            className: 'hidden sm:table-cell',
+        },
     ];
 
     return (
@@ -86,7 +92,9 @@ export default function UsersIndex({ users, filters, roles }: PageProps) {
             <div className="flex h-full flex-1 flex-col gap-6 p-4">
                 <div>
                     <h1 className="text-2xl font-semibold">Пользователи</h1>
-                    <p className="text-sm text-muted-foreground">Учётные записи сотрудников Комитета</p>
+                    <p className="text-sm text-muted-foreground">
+                        Учётные записи сотрудников Комитета
+                    </p>
                 </div>
 
                 <DataTable
@@ -123,10 +131,18 @@ export default function UsersIndex({ users, filters, roles }: PageProps) {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                aria-label={user.is_blocked ? 'Разблокировать' : 'Заблокировать'}
+                                aria-label={
+                                    user.is_blocked
+                                        ? 'Разблокировать'
+                                        : 'Заблокировать'
+                                }
                                 disabled={user.id === currentUserId}
                                 onClick={() =>
-                                    router.patch(block(user.id).url, {}, { preserveScroll: true })
+                                    router.patch(
+                                        block(user.id).url,
+                                        {},
+                                        { preserveScroll: true },
+                                    )
                                 }
                             >
                                 {user.is_blocked ? (
@@ -157,7 +173,10 @@ export default function UsersIndex({ users, filters, roles }: PageProps) {
                 roles={roles}
             />
 
-            <DeleteUserDialog user={deleting} onClose={() => setDeleting(null)} />
+            <DeleteUserDialog
+                user={deleting}
+                onClose={() => setDeleting(null)}
+            />
         </>
     );
 }
@@ -184,7 +203,10 @@ function UserFormDialog({
     const submit = (event: FormEvent) => {
         event.preventDefault();
 
-        const options = { preserveScroll: true, onSuccess: () => onOpenChange(false) };
+        const options = {
+            preserveScroll: true,
+            onSuccess: () => onOpenChange(false),
+        };
 
         if (isEdit && user) {
             form.put(update(user.id).url, options);
@@ -197,7 +219,11 @@ function UserFormDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>{isEdit ? 'Изменить пользователя' : 'Добавить пользователя'}</DialogTitle>
+                    <DialogTitle>
+                        {isEdit
+                            ? 'Изменить пользователя'
+                            : 'Добавить пользователя'}
+                    </DialogTitle>
                     <DialogDescription>
                         {isEdit
                             ? 'Оставьте пароль пустым, чтобы не менять его.'
@@ -211,7 +237,9 @@ function UserFormDialog({
                         <Input
                             id="name"
                             value={form.data.name}
-                            onChange={(event) => form.setData('name', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('name', event.target.value)
+                            }
                         />
                         <InputError message={form.errors.name} />
                     </div>
@@ -222,32 +250,46 @@ function UserFormDialog({
                             id="email"
                             type="email"
                             value={form.data.email}
-                            onChange={(event) => form.setData('email', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('email', event.target.value)
+                            }
                         />
                         <InputError message={form.errors.email} />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="password">{isEdit ? 'Новый пароль' : 'Пароль'}</Label>
+                        <Label htmlFor="password">
+                            {isEdit ? 'Новый пароль' : 'Пароль'}
+                        </Label>
                         <Input
                             id="password"
                             type="password"
                             autoComplete="new-password"
                             value={form.data.password}
-                            onChange={(event) => form.setData('password', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('password', event.target.value)
+                            }
                         />
                         <InputError message={form.errors.password} />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="role">Роль</Label>
-                        <Select value={form.data.role} onValueChange={(value) => form.setData('role', value)}>
+                        <Select
+                            value={form.data.role}
+                            onValueChange={(value) =>
+                                form.setData('role', value)
+                            }
+                        >
                             <SelectTrigger id="role">
                                 <SelectValue placeholder="Выберите роль" />
                             </SelectTrigger>
                             <SelectContent>
                                 {roles.map((role) => (
-                                    <SelectItem key={role.value} value={role.value}>
+                                    <SelectItem
+                                        key={role.value}
+                                        value={role.value}
+                                    >
                                         {role.label}
                                     </SelectItem>
                                 ))}
@@ -257,7 +299,11 @@ function UserFormDialog({
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                        >
                             Отмена
                         </Button>
                         <Button type="submit" disabled={form.processing}>
@@ -270,22 +316,35 @@ function UserFormDialog({
     );
 }
 
-function DeleteUserDialog({ user, onClose }: { user: UserRow | null; onClose: () => void }) {
+function DeleteUserDialog({
+    user,
+    onClose,
+}: {
+    user: UserRow | null;
+    onClose: () => void;
+}) {
     const submit = () => {
         if (!user) {
             return;
         }
 
-        router.delete(destroy(user.id).url, { preserveScroll: true, onSuccess: onClose });
+        router.delete(destroy(user.id).url, {
+            preserveScroll: true,
+            onSuccess: onClose,
+        });
     };
 
     return (
-        <Dialog open={Boolean(user)} onOpenChange={(open) => !open && onClose()}>
+        <Dialog
+            open={Boolean(user)}
+            onOpenChange={(open) => !open && onClose()}
+        >
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Удалить пользователя?</DialogTitle>
                     <DialogDescription>
-                        Учётная запись «{user?.name}» будет удалена. Это действие нельзя отменить.
+                        Учётная запись «{user?.name}» будет удалена. Это
+                        действие нельзя отменить.
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>

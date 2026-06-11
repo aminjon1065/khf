@@ -14,7 +14,9 @@ export default function ErrorPage({ status }: PageProps) {
     const { locale } = usePage().props;
     const { t } = useTranslations();
 
-    const key = (KNOWN as readonly number[]).includes(status) ? String(status) : '500';
+    const key = (KNOWN as readonly number[]).includes(status)
+        ? String(status)
+        : '500';
     const title = t(`errors.${key}.title`);
     const message = t(`errors.${key}.message`);
 
@@ -23,13 +25,17 @@ export default function ErrorPage({ status }: PageProps) {
             <Head title={`${status} — ${title}`} />
 
             <div className="mx-auto flex max-w-xl flex-col items-center gap-4 py-16 text-center">
-                <p className="text-6xl font-semibold tracking-tight text-primary">{status}</p>
+                <p className="text-6xl font-semibold tracking-tight text-primary">
+                    {status}
+                </p>
                 <h1 className="text-2xl font-semibold">{title}</h1>
                 <p className="text-muted-foreground">{message}</p>
 
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                     <Button asChild>
-                        <Link href={welcome({ locale }).url}>{t('nav.home')}</Link>
+                        <Link href={welcome({ locale }).url}>
+                            {t('nav.home')}
+                        </Link>
                     </Button>
                     <a
                         href="tel:112"

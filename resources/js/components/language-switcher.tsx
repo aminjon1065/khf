@@ -22,12 +22,18 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         return null;
     }
 
-    const current = locales.find((language) => language.code === locale) ?? locales[0];
+    const current =
+        locales.find((language) => language.code === locale) ?? locales[0];
 
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className={cn('gap-2', className)} aria-label={t('lang.switch')}>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn('gap-2', className)}
+                    aria-label={t('lang.switch')}
+                >
                     <Languages className="size-4" />
                     <span className="uppercase">{current?.code}</span>
                 </Button>
@@ -41,10 +47,16 @@ export function LanguageSwitcher({ className }: { className?: string }) {
                             lang={language.hreflang}
                             className="flex cursor-pointer items-center justify-between gap-3"
                         >
-                            <span className={cn(language.code === locale && 'font-semibold')}>
+                            <span
+                                className={cn(
+                                    language.code === locale && 'font-semibold',
+                                )}
+                            >
                                 {language.native_name}
                             </span>
-                            {language.code === locale && <Check className="size-4" />}
+                            {language.code === locale && (
+                                <Check className="size-4" />
+                            )}
                         </Link>
                     </DropdownMenuItem>
                 ))}

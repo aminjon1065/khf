@@ -6,6 +6,7 @@ use App\Enums\AlertStatus;
 use App\Enums\AppealStatus;
 use App\Enums\ContentStatus;
 use App\Enums\DocumentType;
+use App\Enums\GuideAudience;
 use App\Enums\HazardLevel;
 use App\Enums\IncidentStatus;
 use App\Enums\IncidentType;
@@ -16,6 +17,7 @@ use App\Models\Alert;
 use App\Models\Appeal;
 use App\Models\Category;
 use App\Models\Document;
+use App\Models\Guide;
 use App\Models\Incident;
 use App\Models\Page;
 use App\Models\PageTranslation;
@@ -45,7 +47,60 @@ class DemoContentSeeder extends Seeder
         $this->seedIncidents($regions);
         $this->seedAlert($regions);
         $this->seedDocuments();
+        $this->seedGuides();
         $this->seedInbox($regions);
+    }
+
+    private function seedGuides(): void
+    {
+        if (Guide::query()->exists()) {
+            return;
+        }
+
+        $guides = [
+            [
+                'hazard' => IncidentType::Earthquake, 'audience' => GuideAudience::General,
+                'tj' => ['title' => 'Ҳангоми заминҷунбӣ чӣ бояд кард', 'summary' => 'Қоидаҳои рафтор пеш аз, ҳангом ва пас аз ларзиш.', 'content' => '<h2>Пеш аз заминҷунбӣ</h2><ul><li>Ашёи вазнинро маҳкам кунед.</li><li>Маҷмӯи фавриро омода созед.</li></ul><h2>Ҳангоми ларзиш</h2><ul><li>Оромиро нигоҳ доред.</li><li>Зери миз пинҳон шавед ва сарро ҳифз кунед.</li></ul>'],
+                'ru' => ['title' => 'Как действовать при землетрясении', 'summary' => 'Правила поведения до, во время и после толчков.', 'content' => '<h2>До землетрясения</h2><ul><li>Закрепите тяжёлые предметы.</li><li>Подготовьте тревожный чемоданчик.</li></ul><h2>Во время толчков</h2><ul><li>Сохраняйте спокойствие.</li><li>Укройтесь под столом и защитите голову.</li></ul>'],
+                'en' => ['title' => 'What to do during an earthquake', 'summary' => 'Rules of conduct before, during and after tremors.', 'content' => '<h2>Before</h2><ul><li>Secure heavy objects.</li><li>Prepare an emergency kit.</li></ul><h2>During</h2><ul><li>Stay calm.</li><li>Take cover under a table and protect your head.</li></ul>'],
+            ],
+            [
+                'hazard' => IncidentType::Flood, 'audience' => GuideAudience::General,
+                'tj' => ['title' => 'Ҳангоми обхезӣ ва сел', 'summary' => 'Чӣ тавр аз минтақаи хатарнок дур шудан мумкин аст.', 'content' => '<ul><li>Ба ҷойҳои баланд гузаред.</li><li>Ба соҳилҳои дарёҳо наздик нашавед.</li><li>Дастури наҷотдиҳандагонро иҷро кунед.</li></ul>'],
+                'ru' => ['title' => 'При наводнении и селе', 'summary' => 'Как уйти из опасной зоны.', 'content' => '<ul><li>Поднимитесь на возвышенность.</li><li>Не приближайтесь к руслам рек.</li><li>Следуйте указаниям спасателей.</li></ul>'],
+                'en' => ['title' => 'During a flood or mudflow', 'summary' => 'How to leave a danger zone.', 'content' => '<ul><li>Move to higher ground.</li><li>Stay away from riverbeds.</li><li>Follow rescuers’ instructions.</li></ul>'],
+            ],
+            [
+                'hazard' => IncidentType::Fire, 'audience' => GuideAudience::General,
+                'tj' => ['title' => 'Ҳангоми сӯхтор', 'summary' => 'Амалҳои аввалия ҳангоми оташсӯзӣ.', 'content' => '<ul><li>Ба рақами 101 занг занед.</li><li>Бинокориро зуд тарк кунед.</li><li>Бо дастмоли тар нафасро ҳифз кунед.</li></ul>'],
+                'ru' => ['title' => 'При пожаре', 'summary' => 'Первоочередные действия при возгорании.', 'content' => '<ul><li>Позвоните по номеру 101.</li><li>Быстро покиньте здание.</li><li>Защитите дыхание влажной тканью.</li></ul>'],
+                'en' => ['title' => 'In case of fire', 'summary' => 'First actions in a fire.', 'content' => '<ul><li>Call 101.</li><li>Leave the building quickly.</li><li>Cover your breathing with a wet cloth.</li></ul>'],
+            ],
+            [
+                'hazard' => IncidentType::Earthquake, 'audience' => GuideAudience::Children,
+                'tj' => ['title' => 'Заминҷунбӣ: барои хонандагон', 'summary' => 'Дастур барои мактаббачагон.', 'content' => '<ul><li>Натарс, ором бош.</li><li>Зери парта пинҳон шав.</li><li>Пас аз ларзиш бо муаллим бадар бар о.</li></ul>'],
+                'ru' => ['title' => 'Землетрясение: для школьников', 'summary' => 'Памятка для детей.', 'content' => '<ul><li>Не бойся, сохраняй спокойствие.</li><li>Спрячься под партой.</li><li>После толчков выходи вместе с учителем.</li></ul>'],
+                'en' => ['title' => 'Earthquake: for pupils', 'summary' => 'A memo for children.', 'content' => '<ul><li>Don’t panic, stay calm.</li><li>Hide under your desk.</li><li>After the tremors, leave with your teacher.</li></ul>'],
+            ],
+        ];
+
+        foreach ($guides as $i => $data) {
+            $guide = Guide::create([
+                'hazard_type' => $data['hazard'],
+                'audience' => $data['audience'],
+                'status' => ContentStatus::Published,
+                'sort_order' => $i + 1,
+            ]);
+
+            $guide->upsertTranslations(collect(['tj', 'ru', 'en'])->mapWithKeys(fn (string $locale): array => [
+                $locale => [
+                    'title' => $data[$locale]['title'],
+                    'slug' => Str::slug($data['en']['title']).'-'.$locale,
+                    'summary' => $data[$locale]['summary'],
+                    'content' => $data[$locale]['content'],
+                ],
+            ])->all());
+        }
     }
 
     /**

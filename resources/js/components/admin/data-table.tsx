@@ -1,7 +1,14 @@
 import { router } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import { useEffect, useRef, useState  } from 'react';
-import type {ReactNode} from 'react';
+import {
+    ArrowDown,
+    ArrowUp,
+    ArrowUpDown,
+    ChevronLeft,
+    ChevronRight,
+    Search,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -71,7 +78,12 @@ export function DataTable<T>({
     const visit = (params: Record<string, unknown>) => {
         router.get(
             baseUrl,
-            { search: filters.search, sort: filters.sort, direction: filters.direction, ...params },
+            {
+                search: filters.search,
+                sort: filters.sort,
+                direction: filters.direction,
+                ...params,
+            },
             { preserveState: true, preserveScroll: true, replace: true },
         );
     };
@@ -94,7 +106,10 @@ export function DataTable<T>({
     }, [search]);
 
     const toggleSort = (key: string) => {
-        const direction = filters.sort === key && filters.direction === 'asc' ? 'desc' : 'asc';
+        const direction =
+            filters.sort === key && filters.direction === 'asc'
+                ? 'desc'
+                : 'asc';
         visit({ sort: key, direction, page: 1 });
     };
 
@@ -103,12 +118,20 @@ export function DataTable<T>({
             return <ArrowUpDown className="size-3.5 opacity-50" />;
         }
 
-        return filters.direction === 'desc' ? <ArrowDown className="size-3.5" /> : <ArrowUp className="size-3.5" />;
+        return filters.direction === 'desc' ? (
+            <ArrowDown className="size-3.5" />
+        ) : (
+            <ArrowUp className="size-3.5" />
+        );
     };
 
     const goTo = (url: string | null) => {
         if (url) {
-            router.get(url, {}, { preserveState: true, preserveScroll: true, replace: true });
+            router.get(
+                url,
+                {},
+                { preserveState: true, preserveScroll: true, replace: true },
+            );
         }
     };
 
@@ -134,11 +157,16 @@ export function DataTable<T>({
                     <TableHeader>
                         <TableRow>
                             {columns.map((column) => (
-                                <TableHead key={column.key} className={column.className}>
+                                <TableHead
+                                    key={column.key}
+                                    className={column.className}
+                                >
                                     {column.sortable ? (
                                         <button
                                             type="button"
-                                            onClick={() => toggleSort(column.key)}
+                                            onClick={() =>
+                                                toggleSort(column.key)
+                                            }
                                             className="inline-flex items-center gap-1.5 hover:text-foreground"
                                         >
                                             {column.label}
@@ -149,13 +177,20 @@ export function DataTable<T>({
                                     )}
                                 </TableHead>
                             ))}
-                            {actions && <TableHead className="w-0 text-right">Действия</TableHead>}
+                            {actions && (
+                                <TableHead className="w-0 text-right">
+                                    Действия
+                                </TableHead>
+                            )}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {paginator.data.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={colSpan} className="h-24 text-center text-muted-foreground">
+                                <TableCell
+                                    colSpan={colSpan}
+                                    className="h-24 text-center text-muted-foreground"
+                                >
                                     {emptyMessage}
                                 </TableCell>
                             </TableRow>
@@ -163,13 +198,27 @@ export function DataTable<T>({
                             paginator.data.map((row) => (
                                 <TableRow key={getRowId(row)}>
                                     {columns.map((column) => (
-                                        <TableCell key={column.key} className={column.className}>
+                                        <TableCell
+                                            key={column.key}
+                                            className={column.className}
+                                        >
                                             {column.render
                                                 ? column.render(row)
-                                                : String((row as Record<string, unknown>)[column.key] ?? '')}
+                                                : String(
+                                                      (
+                                                          row as Record<
+                                                              string,
+                                                              unknown
+                                                          >
+                                                      )[column.key] ?? '',
+                                                  )}
                                         </TableCell>
                                     ))}
-                                    {actions && <TableCell className="text-right">{actions(row)}</TableCell>}
+                                    {actions && (
+                                        <TableCell className="text-right">
+                                            {actions(row)}
+                                        </TableCell>
+                                    )}
                                 </TableRow>
                             ))
                         )}
@@ -179,7 +228,9 @@ export function DataTable<T>({
 
             <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <span>
-                    {paginator.total > 0 ? `${paginator.from}–${paginator.to} из ${paginator.total}` : '0 из 0'}
+                    {paginator.total > 0
+                        ? `${paginator.from}–${paginator.to} из ${paginator.total}`
+                        : '0 из 0'}
                 </span>
                 <div className="flex items-center gap-2">
                     <Button

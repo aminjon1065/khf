@@ -1,7 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Check, FileText, X } from 'lucide-react';
-import { useState  } from 'react';
-import type {FormEvent} from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,7 +41,13 @@ type PageProps = {
     defaultLocale: string;
 };
 
-export default function DocumentForm({ document, types, statuses, locales, defaultLocale }: PageProps) {
+export default function DocumentForm({
+    document,
+    types,
+    statuses,
+    locales,
+    defaultLocale,
+}: PageProps) {
     const isEdit = Boolean(document);
 
     const initialTranslations: Record<string, Translation> = {};
@@ -66,9 +72,15 @@ export default function DocumentForm({ document, types, statuses, locales, defau
 
     const [activeLocale, setActiveLocale] = useState(defaultLocale);
     const errors = form.errors as Record<string, string>;
-    const existingFiles = (document?.files ?? []).filter((file) => !form.data.remove_files.includes(file.id));
+    const existingFiles = (document?.files ?? []).filter(
+        (file) => !form.data.remove_files.includes(file.id),
+    );
 
-    const setTranslation = (locale: string, field: keyof Translation, value: string) => {
+    const setTranslation = (
+        locale: string,
+        field: keyof Translation,
+        value: string,
+    ) => {
         form.setData('translations', {
             ...form.data.translations,
             [locale]: { ...form.data.translations[locale], [field]: value },
@@ -89,11 +101,18 @@ export default function DocumentForm({ document, types, statuses, locales, defau
 
     return (
         <>
-            <Head title={isEdit ? 'Редактирование документа' : 'Новый документ'} />
+            <Head
+                title={isEdit ? 'Редактирование документа' : 'Новый документ'}
+            />
 
-            <form onSubmit={submit} className="flex h-full flex-1 flex-col gap-6 p-4">
+            <form
+                onSubmit={submit}
+                className="flex h-full flex-1 flex-col gap-6 p-4"
+            >
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">{isEdit ? 'Редактирование документа' : 'Новый документ'}</h1>
+                    <h1 className="text-2xl font-semibold">
+                        {isEdit ? 'Редактирование документа' : 'Новый документ'}
+                    </h1>
                     <div className="flex gap-2">
                         <Button type="button" variant="outline" asChild>
                             <Link href={index().url}>Отмена</Link>
@@ -107,13 +126,21 @@ export default function DocumentForm({ document, types, statuses, locales, defau
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="space-y-2">
                         <Label htmlFor="type">Тип</Label>
-                        <Select value={form.data.type} onValueChange={(value) => form.setData('type', value)}>
+                        <Select
+                            value={form.data.type}
+                            onValueChange={(value) =>
+                                form.setData('type', value)
+                            }
+                        >
                             <SelectTrigger id="type">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 {types.map((type) => (
-                                    <SelectItem key={type.value} value={type.value}>
+                                    <SelectItem
+                                        key={type.value}
+                                        value={type.value}
+                                    >
                                         {type.label}
                                     </SelectItem>
                                 ))}
@@ -123,13 +150,21 @@ export default function DocumentForm({ document, types, statuses, locales, defau
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="status">Статус</Label>
-                        <Select value={form.data.status} onValueChange={(value) => form.setData('status', value)}>
+                        <Select
+                            value={form.data.status}
+                            onValueChange={(value) =>
+                                form.setData('status', value)
+                            }
+                        >
                             <SelectTrigger id="status">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 {statuses.map((status) => (
-                                    <SelectItem key={status.value} value={status.value}>
+                                    <SelectItem
+                                        key={status.value}
+                                        value={status.value}
+                                    >
                                         {status.label}
                                     </SelectItem>
                                 ))}
@@ -143,7 +178,12 @@ export default function DocumentForm({ document, types, statuses, locales, defau
                             id="document_date"
                             type="date"
                             value={form.data.document_date}
-                            onChange={(event) => form.setData('document_date', event.target.value)}
+                            onChange={(event) =>
+                                form.setData(
+                                    'document_date',
+                                    event.target.value,
+                                )
+                            }
                         />
                         <InputError message={errors.document_date} />
                     </div>
@@ -152,7 +192,9 @@ export default function DocumentForm({ document, types, statuses, locales, defau
                         <Input
                             id="source"
                             value={form.data.source}
-                            onChange={(event) => form.setData('source', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('source', event.target.value)
+                            }
                         />
                         <InputError message={errors.source} />
                     </div>
@@ -163,18 +205,33 @@ export default function DocumentForm({ document, types, statuses, locales, defau
                     {existingFiles.length > 0 && (
                         <ul className="space-y-2">
                             {existingFiles.map((file) => (
-                                <li key={file.id} className="flex items-center gap-3 rounded-md border p-2 text-sm">
+                                <li
+                                    key={file.id}
+                                    className="flex items-center gap-3 rounded-md border p-2 text-sm"
+                                >
                                     <FileText className="size-4 text-muted-foreground" />
-                                    <a href={file.url} className="flex-1 text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                                    <a
+                                        href={file.url}
+                                        className="flex-1 text-primary hover:underline"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
                                         {file.name}
                                     </a>
-                                    <span className="text-muted-foreground">{file.size}</span>
+                                    <span className="text-muted-foreground">
+                                        {file.size}
+                                    </span>
                                     <Button
                                         type="button"
                                         variant="ghost"
                                         size="icon"
                                         aria-label="Убрать файл"
-                                        onClick={() => form.setData('remove_files', [...form.data.remove_files, file.id])}
+                                        onClick={() =>
+                                            form.setData('remove_files', [
+                                                ...form.data.remove_files,
+                                                file.id,
+                                            ])
+                                        }
                                     >
                                         <X className="size-4" />
                                     </Button>
@@ -186,10 +243,18 @@ export default function DocumentForm({ document, types, statuses, locales, defau
                         type="file"
                         multiple
                         accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.jpg,.jpeg,.png"
-                        onChange={(event) => form.setData('files', Array.from(event.target.files ?? []))}
+                        onChange={(event) =>
+                            form.setData(
+                                'files',
+                                Array.from(event.target.files ?? []),
+                            )
+                        }
                     />
                     <InputError message={errors['files.0'] ?? errors.files} />
-                    <p className="text-xs text-muted-foreground">До 20 МБ на файл. PDF, Word, Excel, PowerPoint, изображения, архивы.</p>
+                    <p className="text-xs text-muted-foreground">
+                        До 20 МБ на файл. PDF, Word, Excel, PowerPoint,
+                        изображения, архивы.
+                    </p>
                 </div>
 
                 <div className="flex flex-wrap gap-2 border-b pb-2">
@@ -197,15 +262,19 @@ export default function DocumentForm({ document, types, statuses, locales, defau
                         <Button
                             key={locale.code}
                             type="button"
-                            variant={activeLocale === locale.code ? 'default' : 'ghost'}
+                            variant={
+                                activeLocale === locale.code
+                                    ? 'default'
+                                    : 'ghost'
+                            }
                             size="sm"
                             className="gap-2"
                             onClick={() => setActiveLocale(locale.code)}
                         >
                             {locale.native_name}
-                            {Boolean(form.data.translations[locale.code]?.name) && (
-                                <Check className="size-3.5 text-green-600" />
-                            )}
+                            {Boolean(
+                                form.data.translations[locale.code]?.name,
+                            ) && <Check className="size-3.5 text-green-600" />}
                         </Button>
                     ))}
                 </div>
@@ -216,9 +285,19 @@ export default function DocumentForm({ document, types, statuses, locales, defau
                         <Input
                             id="name"
                             value={active.name}
-                            onChange={(event) => setTranslation(activeLocale, 'name', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'name',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.name`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.name`]
+                            }
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="description">Краткое описание</Label>
@@ -226,9 +305,21 @@ export default function DocumentForm({ document, types, statuses, locales, defau
                             id="description"
                             rows={4}
                             value={active.description}
-                            onChange={(event) => setTranslation(activeLocale, 'description', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'description',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.description`]} />
+                        <InputError
+                            message={
+                                errors[
+                                    `translations.${activeLocale}.description`
+                                ]
+                            }
+                        />
                     </div>
                 </div>
             </form>

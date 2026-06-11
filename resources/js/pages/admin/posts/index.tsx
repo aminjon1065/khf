@@ -1,13 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import {
-    DataTable
-    
-    
-    
+import { DataTable } from '@/components/admin/data-table';
+import type {
+    DataTableColumn,
+    DataTableFilters,
+    Paginator,
 } from '@/components/admin/data-table';
-import type {DataTableColumn, DataTableFilters, Paginator} from '@/components/admin/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,14 +39,21 @@ type PageProps = {
     trashedCount: number;
 };
 
-const statusVariant: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+const statusVariant: Record<
+    string,
+    'default' | 'secondary' | 'outline' | 'destructive'
+> = {
     published: 'default',
     draft: 'secondary',
     moderation: 'outline',
     archived: 'destructive',
 };
 
-export default function PostsIndex({ posts, filters, trashedCount }: PageProps) {
+export default function PostsIndex({
+    posts,
+    filters,
+    trashedCount,
+}: PageProps) {
     const [deleting, setDeleting] = useState<PostRow | null>(null);
 
     const columns: DataTableColumn<PostRow>[] = [
@@ -57,7 +63,11 @@ export default function PostsIndex({ posts, filters, trashedCount }: PageProps) 
             render: (post) => (
                 <div className="flex items-center gap-3">
                     {post.cover_url ? (
-                        <img src={post.cover_url} alt="" className="h-10 w-16 rounded object-cover" />
+                        <img
+                            src={post.cover_url}
+                            alt=""
+                            className="h-10 w-16 rounded object-cover"
+                        />
                     ) : (
                         <div className="h-10 w-16 rounded bg-muted" />
                     )}
@@ -80,7 +90,7 @@ export default function PostsIndex({ posts, filters, trashedCount }: PageProps) 
                                 className={
                                     hasTranslation
                                         ? 'px-1.5 text-[10px] uppercase'
-                                        : 'px-1.5 text-[10px] uppercase text-muted-foreground'
+                                        : 'px-1.5 text-[10px] text-muted-foreground uppercase'
                                 }
                             >
                                 {locale}
@@ -90,7 +100,12 @@ export default function PostsIndex({ posts, filters, trashedCount }: PageProps) 
                 </div>
             ),
         },
-        { key: 'type', label: 'Тип', sortable: true, render: (post) => post.type_label },
+        {
+            key: 'type',
+            label: 'Тип',
+            sortable: true,
+            render: (post) => post.type_label,
+        },
         {
             key: 'category',
             label: 'Рубрика',
@@ -101,9 +116,18 @@ export default function PostsIndex({ posts, filters, trashedCount }: PageProps) 
             key: 'status',
             label: 'Статус',
             sortable: true,
-            render: (post) => <Badge variant={statusVariant[post.status] ?? 'secondary'}>{post.status_label}</Badge>,
+            render: (post) => (
+                <Badge variant={statusVariant[post.status] ?? 'secondary'}>
+                    {post.status_label}
+                </Badge>
+            ),
         },
-        { key: 'published_at', label: 'Публикация', sortable: true, className: 'hidden sm:table-cell' },
+        {
+            key: 'published_at',
+            label: 'Публикация',
+            sortable: true,
+            className: 'hidden sm:table-cell',
+        },
     ];
 
     return (
@@ -113,9 +137,12 @@ export default function PostsIndex({ posts, filters, trashedCount }: PageProps) 
             <div className="flex h-full flex-1 flex-col gap-6 p-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold">Новости и материалы</h1>
+                        <h1 className="text-2xl font-semibold">
+                            Новости и материалы
+                        </h1>
                         <p className="text-sm text-muted-foreground">
-                            Новости, пресс-релизы, объявления и оперативные сводки
+                            Новости, пресс-релизы, объявления и оперативные
+                            сводки
                         </p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
@@ -143,7 +170,12 @@ export default function PostsIndex({ posts, filters, trashedCount }: PageProps) 
                     }
                     actions={(post) => (
                         <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="icon" aria-label="Изменить" asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Изменить"
+                                asChild
+                            >
                                 <Link href={edit(post.id).url}>
                                     <Pencil className="size-4" />
                                 </Link>
@@ -161,7 +193,10 @@ export default function PostsIndex({ posts, filters, trashedCount }: PageProps) 
                 />
             </div>
 
-            <Dialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)}>
+            <Dialog
+                open={Boolean(deleting)}
+                onOpenChange={(open) => !open && setDeleting(null)}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Удалить материал?</DialogTitle>
@@ -170,7 +205,10 @@ export default function PostsIndex({ posts, filters, trashedCount }: PageProps) 
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleting(null)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleting(null)}
+                        >
                             Отмена
                         </Button>
                         <Button

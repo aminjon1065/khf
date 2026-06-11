@@ -1,13 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import {
-    DataTable
-    
-    
-    
+import { DataTable } from '@/components/admin/data-table';
+import type {
+    DataTableColumn,
+    DataTableFilters,
+    Paginator,
 } from '@/components/admin/data-table';
-import type {DataTableColumn, DataTableFilters, Paginator} from '@/components/admin/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,7 +47,11 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
 
 const contentLocales = ['tj', 'ru', 'en'];
 
-export default function AlertsIndex({ alerts, filters, trashedCount }: PageProps) {
+export default function AlertsIndex({
+    alerts,
+    filters,
+    trashedCount,
+}: PageProps) {
     const [deleting, setDeleting] = useState<AlertRow | null>(null);
 
     const columns: DataTableColumn<AlertRow>[] = [
@@ -61,8 +64,16 @@ export default function AlertsIndex({ alerts, filters, trashedCount }: PageProps
                     {contentLocales.map((locale) => (
                         <Badge
                             key={locale}
-                            variant={alert.locales.includes(locale) ? 'default' : 'outline'}
-                            className={alert.locales.includes(locale) ? 'uppercase' : 'uppercase text-muted-foreground'}
+                            variant={
+                                alert.locales.includes(locale)
+                                    ? 'default'
+                                    : 'outline'
+                            }
+                            className={
+                                alert.locales.includes(locale)
+                                    ? 'uppercase'
+                                    : 'text-muted-foreground uppercase'
+                            }
                         >
                             {locale}
                         </Badge>
@@ -86,10 +97,24 @@ export default function AlertsIndex({ alerts, filters, trashedCount }: PageProps
             key: 'status',
             label: 'Статус',
             sortable: true,
-            render: (alert) => <Badge variant={statusVariant[alert.status] ?? 'secondary'}>{alert.status_label}</Badge>,
+            render: (alert) => (
+                <Badge variant={statusVariant[alert.status] ?? 'secondary'}>
+                    {alert.status_label}
+                </Badge>
+            ),
         },
-        { key: 'region', label: 'Регион', className: 'hidden lg:table-cell', render: (alert) => alert.region ?? 'Вся страна' },
-        { key: 'starts_at', label: 'Начало', sortable: true, className: 'hidden sm:table-cell' },
+        {
+            key: 'region',
+            label: 'Регион',
+            className: 'hidden lg:table-cell',
+            render: (alert) => alert.region ?? 'Вся страна',
+        },
+        {
+            key: 'starts_at',
+            label: 'Начало',
+            sortable: true,
+            className: 'hidden sm:table-cell',
+        },
     ];
 
     return (
@@ -100,7 +125,9 @@ export default function AlertsIndex({ alerts, filters, trashedCount }: PageProps
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold">Оповещения</h1>
-                        <p className="text-sm text-muted-foreground">Баннеры тревоги на сайте</p>
+                        <p className="text-sm text-muted-foreground">
+                            Баннеры тревоги на сайте
+                        </p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
                         <Link href={trash().url}>
@@ -127,12 +154,22 @@ export default function AlertsIndex({ alerts, filters, trashedCount }: PageProps
                     }
                     actions={(alert) => (
                         <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="icon" aria-label="Изменить" asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Изменить"
+                                asChild
+                            >
                                 <Link href={edit(alert.id).url}>
                                     <Pencil className="size-4" />
                                 </Link>
                             </Button>
-                            <Button variant="ghost" size="icon" aria-label="Удалить" onClick={() => setDeleting(alert)}>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Удалить"
+                                onClick={() => setDeleting(alert)}
+                            >
                                 <Trash2 className="size-4" />
                             </Button>
                         </div>
@@ -140,14 +177,22 @@ export default function AlertsIndex({ alerts, filters, trashedCount }: PageProps
                 />
             </div>
 
-            <Dialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)}>
+            <Dialog
+                open={Boolean(deleting)}
+                onOpenChange={(open) => !open && setDeleting(null)}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Удалить оповещение?</DialogTitle>
-                        <DialogDescription>«{deleting?.title}» будет перемещено в корзину.</DialogDescription>
+                        <DialogDescription>
+                            «{deleting?.title}» будет перемещено в корзину.
+                        </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleting(null)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleting(null)}
+                        >
                             Отмена
                         </Button>
                         <Button

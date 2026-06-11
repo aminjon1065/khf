@@ -44,7 +44,9 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
     }
 
     const setLink = () => {
-        const previous = editor.getAttributes('link').href as string | undefined;
+        const previous = editor.getAttributes('link').href as
+            | string
+            | undefined;
         const url = window.prompt('Ссылка (URL)', previous ?? 'https://');
 
         if (url === null) {
@@ -57,41 +59,112 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
             return;
         }
 
-        editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+        editor
+            .chain()
+            .focus()
+            .extendMarkRange('link')
+            .setLink({ href: url })
+            .run();
     };
 
     return (
         <div className="rounded-md border">
             <div className="flex flex-wrap items-center gap-1 border-b p-1">
-                <Toggle size="sm" pressed={editor.isActive('bold')} onPressedChange={() => editor.chain().focus().toggleBold().run()} aria-label="Жирный">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('bold')}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleBold().run()
+                    }
+                    aria-label="Жирный"
+                >
                     <Bold className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive('italic')} onPressedChange={() => editor.chain().focus().toggleItalic().run()} aria-label="Курсив">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('italic')}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleItalic().run()
+                    }
+                    aria-label="Курсив"
+                >
                     <Italic className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive('heading', { level: 2 })} onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} aria-label="Заголовок 2">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('heading', { level: 2 })}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleHeading({ level: 2 }).run()
+                    }
+                    aria-label="Заголовок 2"
+                >
                     <Heading2 className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive('heading', { level: 3 })} onPressedChange={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} aria-label="Заголовок 3">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('heading', { level: 3 })}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleHeading({ level: 3 }).run()
+                    }
+                    aria-label="Заголовок 3"
+                >
                     <Heading3 className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive('bulletList')} onPressedChange={() => editor.chain().focus().toggleBulletList().run()} aria-label="Маркированный список">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('bulletList')}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleBulletList().run()
+                    }
+                    aria-label="Маркированный список"
+                >
                     <List className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive('orderedList')} onPressedChange={() => editor.chain().focus().toggleOrderedList().run()} aria-label="Нумерованный список">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('orderedList')}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleOrderedList().run()
+                    }
+                    aria-label="Нумерованный список"
+                >
                     <ListOrdered className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive('blockquote')} onPressedChange={() => editor.chain().focus().toggleBlockquote().run()} aria-label="Цитата">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('blockquote')}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleBlockquote().run()
+                    }
+                    aria-label="Цитата"
+                >
                     <Quote className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive('link')} onPressedChange={setLink} aria-label="Ссылка">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('link')}
+                    onPressedChange={setLink}
+                    aria-label="Ссылка"
+                >
                     <LinkIcon className="size-4" />
                 </Toggle>
                 <div className="ml-auto flex gap-1">
-                    <Button type="button" variant="ghost" size="icon" onClick={() => editor.chain().focus().undo().run()} aria-label="Отменить">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => editor.chain().focus().undo().run()}
+                        aria-label="Отменить"
+                    >
                         <Undo className="size-4" />
                     </Button>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => editor.chain().focus().redo().run()} aria-label="Повторить">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => editor.chain().focus().redo().run()}
+                        aria-label="Повторить"
+                    >
                         <Redo className="size-4" />
                     </Button>
                 </div>

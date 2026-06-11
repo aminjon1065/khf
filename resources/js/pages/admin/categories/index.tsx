@@ -1,13 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import {
-    DataTable
-    
-    
-    
+import { DataTable } from '@/components/admin/data-table';
+import type {
+    DataTableColumn,
+    DataTableFilters,
+    Paginator,
 } from '@/components/admin/data-table';
-import type {DataTableColumn, DataTableFilters, Paginator} from '@/components/admin/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,13 +45,18 @@ export default function CategoriesIndex({ categories, filters }: PageProps) {
             render: (category) => (
                 <div className="flex gap-1">
                     {supportedLocales.map((locale) => {
-                        const hasTranslation = category.locales.includes(locale);
+                        const hasTranslation =
+                            category.locales.includes(locale);
 
                         return (
                             <Badge
                                 key={locale}
                                 variant={hasTranslation ? 'default' : 'outline'}
-                                className={hasTranslation ? 'uppercase' : 'uppercase text-muted-foreground'}
+                                className={
+                                    hasTranslation
+                                        ? 'uppercase'
+                                        : 'text-muted-foreground uppercase'
+                                }
                             >
                                 {locale}
                             </Badge>
@@ -61,7 +65,12 @@ export default function CategoriesIndex({ categories, filters }: PageProps) {
                 </div>
             ),
         },
-        { key: 'sort_order', label: 'Порядок', sortable: true, className: 'hidden sm:table-cell' },
+        {
+            key: 'sort_order',
+            label: 'Порядок',
+            sortable: true,
+            className: 'hidden sm:table-cell',
+        },
     ];
 
     return (
@@ -71,7 +80,9 @@ export default function CategoriesIndex({ categories, filters }: PageProps) {
             <div className="flex h-full flex-1 flex-col gap-6 p-4">
                 <div>
                     <h1 className="text-2xl font-semibold">Рубрики</h1>
-                    <p className="text-sm text-muted-foreground">Категории материалов и документов</p>
+                    <p className="text-sm text-muted-foreground">
+                        Категории материалов и документов
+                    </p>
                 </div>
 
                 <DataTable
@@ -91,7 +102,12 @@ export default function CategoriesIndex({ categories, filters }: PageProps) {
                     }
                     actions={(category) => (
                         <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="icon" aria-label="Изменить" asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Изменить"
+                                asChild
+                            >
                                 <Link href={edit(category.id).url}>
                                     <Pencil className="size-4" />
                                 </Link>
@@ -109,16 +125,23 @@ export default function CategoriesIndex({ categories, filters }: PageProps) {
                 />
             </div>
 
-            <Dialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)}>
+            <Dialog
+                open={Boolean(deleting)}
+                onOpenChange={(open) => !open && setDeleting(null)}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Удалить рубрику?</DialogTitle>
                         <DialogDescription>
-                            Рубрика «{deleting?.name}» будет удалена. Это действие нельзя отменить.
+                            Рубрика «{deleting?.name}» будет удалена. Это
+                            действие нельзя отменить.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleting(null)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleting(null)}
+                        >
                             Отмена
                         </Button>
                         <Button

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\PostTranslation;
+use App\Support\LocaleUrls;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,10 +46,15 @@ class PostController extends Controller
 
         $post = Post::published()
             ->whereKey($translation->post_id)
-            ->with(['category.translations', 'media', 'author'])
+            ->with(['category.translations', 'media', 'author', 'translations'])
             ->first();
 
         abort_if($post === null, 404);
+
+        $urls = app(LocaleUrls::class)->contentUrls(
+            'news.show',
+            $post->translations->pluck('slug', 'locale')->all(),
+        );
 
         return Inertia::render('public/news/show', [
             'post' => [
@@ -70,6 +76,8 @@ class PostController extends Controller
                 ->get()
                 ->map(fn (Post $recent) => $this->card($recent, $appLocale))
                 ->all(),
+            'localeSwitch' => $urls['switch'],
+            'seoAlternates' => $urls['alternates'],
         ]);
     }
 
