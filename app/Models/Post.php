@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -36,6 +38,7 @@ class Post extends Model implements HasMedia
     use HasTranslations;
     use InteractsWithMedia;
     use SoftDeletes;
+    use LogsActivity;
 
     public const COVER_COLLECTION = 'cover';
 
@@ -61,8 +64,7 @@ class Post extends Model implements HasMedia
     }
 
     /**
-     * Single cover image (ТЗ §6.2). Conversions run synchronously — no queue worker on shared
-     * hosting (D-10).
+     * Single cover image (ТЗ §6.2). Conversions run via background queue.
      */
     public function registerMediaCollections(): void
     {
@@ -72,8 +74,7 @@ class Post extends Model implements HasMedia
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
-            ->fit(Fit::Crop, 480, 320)
-            ->nonQueued();
+            ->fit(Fit::Crop, 480, 320);
     }
 
     /**
@@ -103,5 +104,13 @@ class Post extends Model implements HasMedia
             ->where(function (Builder $inner) {
                 $inner->whereNull('published_at')->orWhere('published_at', '<=', now());
             });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
     }
 }

@@ -1,4 +1,4 @@
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
@@ -7,6 +7,14 @@ import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import PublicLayout from '@/layouts/public/public-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+
+router.on('navigate', (event) => {
+    if (window._paq) {
+        window._paq.push(['setCustomUrl', window.location.pathname]);
+        window._paq.push(['setDocumentTitle', document.title]);
+        window._paq.push(['trackPageView']);
+    }
+});
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

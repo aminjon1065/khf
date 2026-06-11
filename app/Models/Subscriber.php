@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 /**
  * Newsletter / alert subscriber (ТЗ §6.4.3). Double opt-in: created `pending`, confirmed via a
@@ -29,6 +30,7 @@ class Subscriber extends Model
 {
     /** @use HasFactory<SubscriberFactory> */
     use HasFactory;
+    use HasPushSubscriptions;
 
     /** @var list<string> */
     protected $fillable = [

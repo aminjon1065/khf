@@ -11,7 +11,9 @@ use App\Http\Controllers\Public\MapController;
 use App\Http\Controllers\Public\PageController;
 use App\Http\Controllers\Public\PostController;
 use App\Http\Controllers\Public\SearchController;
+use App\Http\Controllers\Public\SitemapController;
 use App\Http\Controllers\Public\SubscriptionController;
+use App\Http\Controllers\Public\PushSubscriptionController;
 use App\Http\Controllers\Public\TouristGroupController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +23,8 @@ use Illuminate\Support\Facades\Route;
  */
 Route::get('/', fn () => redirect()->route('welcome', ['locale' => app()->getLocale()]))
     ->name('home');
+
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
 
 /*
  * Public, locale-prefixed content (ТЗ §14, decision D-15). Every locale carries a prefix
@@ -41,12 +45,12 @@ Route::prefix('{locale}')
         Route::get('documents/{document}/files/{media}', [DocumentController::class, 'download'])->name('documents.download');
 
         // Safety guides catalogue + guide page (ТЗ §6.5). Download is controlled (private disk).
-        Route::get('guides', [GuideController::class, 'index'])->name('guides.index');
+        Route::get('guides', [GuideController::class, 'index'])->middleware('cache.headers:public;max_age=3600;etag')->name('guides.index');
         Route::get('guides/{guide}/files/{media}', [GuideController::class, 'download'])->name('guides.download');
-        Route::get('guides/{slug}', [GuideController::class, 'show'])->name('guides.show');
+        Route::get('guides/{slug}', [GuideController::class, 'show'])->middleware('cache.headers:public;max_age=3600;etag')->name('guides.show');
 
         // Contacts: emergency numbers, regional offices, map + feedback (ТЗ §6.9).
-        Route::get('contacts', [ContactController::class, 'index'])->name('contacts.index');
+        Route::get('contacts', [ContactController::class, 'index'])->middleware('cache.headers:public;max_age=3600;etag')->name('contacts.index');
 
         // Citizen appeals (electronic reception) — public form is rate-limited (ТЗ §12.4).
         Route::get('appeals', [AppealController::class, 'create'])->name('appeals.create');
@@ -64,8 +68,12 @@ Route::prefix('{locale}')
         Route::get('subscribe/confirm/{token}', [SubscriptionController::class, 'confirm'])->name('subscriptions.confirm');
         Route::get('subscribe/unsubscribe/{token}', [SubscriptionController::class, 'unsubscribe'])->name('subscriptions.unsubscribe');
 
+        // Web Push subscriptions
+        Route::post('push/subscribe', [PushSubscriptionController::class, 'store'])->name('push.subscribe');
+        Route::post('push/unsubscribe', [PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
+
         // CMS-managed static content pages (About / Activities / Contacts …) by current-locale slug.
-        Route::get('pages/{slug}', [PageController::class, 'show'])->name('pages.show');
+        Route::get('pages/{slug}', [PageController::class, 'show'])->middleware('cache.headers:public;max_age=3600;etag')->name('pages.show');
     });
 
 /*
@@ -78,3 +86,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/admin.php';
 require __DIR__.'/settings.php';
+
+Route::fallback(function () {
+    $path = request()->path();
+    $redirects = config('redirects', []);
+    
+    if (array_key_exists($path, $redirects)) {
+        return redirect($redirects[$path], 301);
+    }
+    
+    $pathWithSlash = '/' . ltrim($path, '/');
+    if (array_key_exists($pathWithSlash, $redirects)) {
+        return redirect($redirects[$pathWithSlash], 301);
+    }
+    
+    abort(404);
+});

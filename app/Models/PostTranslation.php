@@ -6,6 +6,8 @@ use Database\Factories\PostTranslationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Stevebauman\Purify\Facades\Purify;
 
 /**
  * Per-locale content of a {@see Post} (ТЗ §9).
@@ -43,5 +45,15 @@ class PostTranslation extends Model
     public function post(): BelongsTo
     {
         return $this->belongsTo(Post::class);
+    }
+
+    /**
+     * Sanitize the body HTML when setting it to prevent XSS (ТЗ §12.2).
+     */
+    protected function body(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => $value !== null ? Purify::clean($value) : null,
+        );
     }
 }

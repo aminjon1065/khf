@@ -24,3 +24,9 @@ declare module '@inertiajs/core' {
         };
     }
 }
+
+declare global {
+    interface Window {
+        _paq?: any[];
+    }
+}

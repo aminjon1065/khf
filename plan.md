@@ -259,20 +259,20 @@ management — before content modules (Phase 4) build on them.
 
 ## Phase 14 — Search Engine
 
-- [ ] Full-text search over posts, documents, guides, pages (locale-aware) (§6.10)
-- [ ] MySQL full-text indexes (+ Scout abstraction if needed) (§10) for tg/ru handling
-- [ ] Results page: match highlighting, content-type filters, pagination (§6.10)
-- [ ] Tests: search relevance basics, filters, Tajik/Russian queries
+- [x] Full-text search over posts, documents, guides, pages (locale-aware) (§6.10)
+- [x] MySQL full-text indexes (+ Scout abstraction if needed) (§10) for tg/ru handling
+- [x] Results page: match highlighting, content-type filters, pagination (§6.10)
+- [x] Tests: search relevance basics, filters, Tajik/Russian queries
 
 ## Phase 15 — Analytics
 
-- [ ] Self-hosted Matomo integration (privacy-respecting tracking) (§15.2)
-- [ ] Goal tracking: subscriptions, tourist registration, appeals (§15.2)
-- [ ] sitemap.xml (with language versions) + robots.txt (§15.1)
-- [ ] schema.org markup (Organization, NewsArticle) (§15.1)
-- [ ] 301 redirect map from legacy kchs.tj / khf.tj URLs (§15.1)
-- [ ] Social account links/widgets (data/perf-safe) (§6.12, §15.3)
-- [ ] Tests: sitemap generation, redirects, structured data presence
+- [x] Self-hosted Matomo integration (privacy-respecting tracking) (§15.2)
+- [x] Goal tracking: subscriptions, tourist registration, appeals (§15.2)
+- [x] sitemap.xml (with language versions) + robots.txt (§15.1)
+- [x] schema.org markup (Organization, NewsArticle) (§15.1)
+- [x] 301 redirect map from legacy kchs.tj / khf.tj URLs (§15.1)
+- [x] Social account links/widgets (data/perf-safe) (§6.12, §15.3)
+- [x] Tests: sitemap generation, redirects, structured data presence
 
 ## Phase 16 — Security Hardening
 
@@ -290,12 +290,12 @@ management — before content modules (Phase 4) build on them.
 
 ## Phase 17 — Performance Optimization
 
-- [ ] Database/file page+data caching with correct invalidation on publish (alerts never cache-delayed) (§10.6, §13.1; no Redis per D-10)
-- [ ] HTTP cache headers + versioned static assets (§13.1)
-- [ ] Image optimization + responsive/adaptive delivery + lazy loading (§13.1)
-- [ ] Code splitting + response compression (gzip/brotli) (§13.1)
-- [ ] DB query optimization: indexes, eliminate N+1 (eager loading), paginate large lists (§13.1)
-- [ ] Move heavy ops (sends, import, image processing) to queues (§10.4)
+- [x] Database/file page+data caching with correct invalidation on publish (alerts never cache-delayed) (§10.6, §13.1; no Redis per D-10)
+- [x] HTTP cache headers + versioned static assets (§13.1)
+- [x] Image optimization + responsive/adaptive delivery + lazy loading (§13.1)
+- [x] Code splitting + response compression (gzip/brotli) (§13.1)
+- [x] DB query optimization: indexes, eliminate N+1 (eager loading), paginate large lists (§13.1)
+- [x] Move heavy ops (sends, import, image processing) to queues (§10.4)
 - [ ] Load testing confirming targets (TTFB ≤600ms cached, ×10 peak) (§13, §18.1)
 - [ ] Graceful degradation under load (secondary features limited, alerts/ops preserved) (§13)
 

@@ -41,6 +41,31 @@
             <link rel="alternate" type="application/rss+xml" title="{{ trans('ui.news.heading') }}" href="{{ route('news.rss', ['locale' => $locale]) }}">
         @endif
 
+        {{-- Matomo Analytics --}}
+        @if (config('services.matomo.url') && config('services.matomo.site_id'))
+            <script>
+                var _paq = window._paq = window._paq || [];
+                /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+                _paq.push(['trackPageView']);
+                _paq.push(['enableLinkTracking']);
+                (function() {
+                    var u="{{ config('services.matomo.url') }}";
+                    if (!u.endsWith('/')) { u += '/'; }
+                    _paq.push(['setTrackerUrl', u+'matomo.php']);
+                    _paq.push(['setSiteId', '{{ config('services.matomo.site_id') }}']);
+                    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+                    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+                })();
+            </script>
+        @endif
+
+        {{-- Schema.org JSON-LD --}}
+        @if (isset($page['props']['schema']))
+            <script type="application/ld+json">
+                {!! json_encode($page['props']['schema'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+            </script>
+        @endif
+
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
             (function() {

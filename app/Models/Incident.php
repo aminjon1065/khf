@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 /**
  * An emergency event (ТЗ §6.3, §7.4). Multilingual title/description live in
@@ -33,6 +35,7 @@ class Incident extends Model
     use HasFactory;
 
     use HasTranslations;
+    use LogsActivity;
     use SoftDeletes;
 
     /** @var list<string> */
@@ -59,6 +62,14 @@ class Incident extends Model
             'longitude' => 'float',
             'occurred_at' => 'datetime',
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
     }
 
     /**

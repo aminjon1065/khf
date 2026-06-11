@@ -1,2 +1,10 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /tj/appeals/track
+Disallow: /ru/appeals/track
+Disallow: /en/appeals/track
+Disallow: /tj/tourist-groups/track
+Disallow: /ru/tourist-groups/track
+Disallow: /en/tourist-groups/track
+
+Sitemap: /sitemap.xml

@@ -6,6 +6,8 @@ use Database\Factories\PageTranslationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Stevebauman\Purify\Facades\Purify;
 
 /**
  * Per-locale content of a {@see Page} (ТЗ §9).
@@ -41,5 +43,15 @@ class PageTranslation extends Model
     public function page(): BelongsTo
     {
         return $this->belongsTo(Page::class);
+    }
+
+    /**
+     * Sanitize the content HTML when setting it to prevent XSS (ТЗ §12.2).
+     */
+    protected function content(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => $value !== null ? Purify::clean($value) : null,
+        );
     }
 }

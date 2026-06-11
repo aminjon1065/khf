@@ -32,6 +32,7 @@ class SubscriptionController extends Controller
                 ->map(fn (Region $region) => ['id' => $region->id, 'name' => $region->translation($locale)?->name ?? $region->code])
                 ->all(),
             'status' => session('subscription_status'),
+            'vapidPublicKey' => config('webpush.vapid.public_key'),
         ]);
     }
 

@@ -1,5 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import type { FormEvent } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { useTranslations } from '@/hooks/use-translations';
 import { store } from '@/routes/subscriptions';
+import { subscribe as pushSubscribeRoute } from '@/routes/push';
 
 type Option = { value: string; label: string };
 type RegionOption = { id: number; name: string };
@@ -22,11 +23,37 @@ type PageProps = {
     topics: Option[];
     regions: RegionOption[];
     status: 'pending' | 'confirmed' | 'unsubscribed' | 'invalid' | null;
+    vapidPublicKey?: string;
 };
 
-export default function Subscribe({ topics, regions, status }: PageProps) {
+// Base64 helper for VAPID key
+function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+export default function Subscribe({ topics, regions, status, vapidPublicKey }: PageProps) {
     const { locale } = usePage().props;
     const { t } = useTranslations();
+    const [isPushSupported, setIsPushSupported] = useState(false);
+    const [pushStatus, setPushStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+    useEffect(() => {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            setIsPushSupported(true);
+            navigator.serviceWorker.register('/sw.js');
+        }
+    }, []);
 
     const statusMessages: Record<
         string,
@@ -39,6 +66,8 @@ export default function Subscribe({ topics, regions, status }: PageProps) {
             tone: 'info',
         },
         invalid: { title: t('subscribe.status.invalid'), tone: 'error' },
+        push_success: { title: 'Успешно подписаны на браузерные уведомления', tone: 'success' },
+        push_error: { title: 'Ошибка при подписке на уведомления', tone: 'error' },
     };
 
     const form = useForm({
@@ -65,7 +94,70 @@ export default function Subscribe({ topics, regions, status }: PageProps) {
         form.post(store({ locale }).url, { preserveScroll: true });
     };
 
-    const banner = status ? statusMessages[status] : null;
+    const handlePushSubscribe = async () => {
+        if (!vapidPublicKey) {
+            console.error('VAPID public key not found');
+            return;
+        }
+
+        try {
+            setPushStatus('loading');
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                throw new Error('Permission denied');
+            }
+
+            const registration = await navigator.serviceWorker.ready;
+            let subscription = await registration.pushManager.getSubscription();
+            
+            if (!subscription) {
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                });
+            }
+
+            let token = localStorage.getItem('push_subscriber_token');
+            if (!token) {
+                token = crypto.randomUUID();
+                localStorage.setItem('push_subscriber_token', token);
+            }
+
+            const key = subscription.getKey ? subscription.getKey('p256dh') : '';
+            const auth = subscription.getKey ? subscription.getKey('auth') : '';
+
+            const response = await fetch(pushSubscribeRoute({ locale }).url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.head.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                },
+                body: JSON.stringify({
+                    endpoint: subscription.endpoint,
+                    keys: {
+                        p256dh: key ? btoa(String.fromCharCode.apply(null, new Uint8Array(key) as unknown as number[])) : '',
+                        auth: auth ? btoa(String.fromCharCode.apply(null, new Uint8Array(auth) as unknown as number[])) : '',
+                    },
+                    subscriber_token: token,
+                    topics: form.data.topics,
+                    region_id: form.data.region_id,
+                    locale: locale,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save subscription on server');
+            }
+
+            setPushStatus('success');
+        } catch (error) {
+            console.error(error);
+            setPushStatus('error');
+        }
+    };
+
+    const currentStatus = pushStatus === 'success' ? 'push_success' : pushStatus === 'error' ? 'push_error' : status;
+    const banner = currentStatus ? statusMessages[currentStatus] : null;
 
     return (
         <>
@@ -94,96 +186,134 @@ export default function Subscribe({ topics, regions, status }: PageProps) {
                     </p>
                 )}
 
-                <form onSubmit={submit} className="mt-6 space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="email">{t('common.email')}</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            value={form.data.email}
-                            onChange={(e) =>
-                                form.setData('email', e.target.value)
-                            }
-                        />
-                        <InputError message={errors.email} />
+                <form onSubmit={submit} className="mt-6 space-y-8">
+                    {/* Preferences Selection */}
+                    <div className="space-y-4 rounded-lg border p-4">
+                        <h2 className="font-medium text-lg">1. Настройки оповещений</h2>
+                        <div className="space-y-2">
+                            <Label>{t('subscribe.form.topics')}</Label>
+                            <div className="space-y-2">
+                                {topics.map((topic) => (
+                                    <label
+                                        key={topic.value}
+                                        className="flex items-center gap-2 text-sm"
+                                    >
+                                        <Checkbox
+                                            checked={form.data.topics.includes(
+                                                topic.value,
+                                            )}
+                                            onCheckedChange={(checked) =>
+                                                toggleTopic(
+                                                    topic.value,
+                                                    checked === true,
+                                                )
+                                            }
+                                        />
+                                        {topic.label}
+                                    </label>
+                                ))}
+                            </div>
+                            <InputError message={errors.topics} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="region">
+                                {t('subscribe.form.region_optional')}
+                            </Label>
+                            <Select
+                                value={
+                                    form.data.region_id
+                                        ? String(form.data.region_id)
+                                        : 'none'
+                                }
+                                onValueChange={(value) =>
+                                    form.setData(
+                                        'region_id',
+                                        value === 'none' ? null : Number(value),
+                                    )
+                                }
+                            >
+                                <SelectTrigger id="region">
+                                    <SelectValue
+                                        placeholder={t(
+                                            'subscribe.form.all_regions',
+                                        )}
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">
+                                        {t('subscribe.form.all_regions')}
+                                    </SelectItem>
+                                    {regions.map((region) => (
+                                        <SelectItem
+                                            key={region.id}
+                                            value={String(region.id)}
+                                        >
+                                            {region.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label>{t('subscribe.form.topics')}</Label>
-                        <div className="space-y-2">
-                            {topics.map((topic) => (
-                                <label
-                                    key={topic.value}
-                                    className="flex items-center gap-2 text-sm"
-                                >
+                    {/* Channel Selection */}
+                    <div className="space-y-4 rounded-lg border p-4">
+                        <h2 className="font-medium text-lg">2. Каналы получения (выберите один или оба)</h2>
+                        
+                        <div className="grid gap-6 md:grid-cols-2">
+                            {/* Email Subscription */}
+                            <div className="space-y-4 border-l-2 pl-4">
+                                <h3 className="font-medium">E-mail рассылка</h3>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">{t('common.email')}</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        value={form.data.email}
+                                        onChange={(e) =>
+                                            form.setData('email', e.target.value)
+                                        }
+                                        placeholder="your@email.com"
+                                    />
+                                    <InputError message={errors.email} />
+                                </div>
+                                <label className="flex items-start gap-2 text-sm">
                                     <Checkbox
-                                        checked={form.data.topics.includes(
-                                            topic.value,
-                                        )}
+                                        checked={form.data.consent}
                                         onCheckedChange={(checked) =>
-                                            toggleTopic(
-                                                topic.value,
-                                                checked === true,
-                                            )
+                                            form.setData('consent', checked === true)
                                         }
                                     />
-                                    {topic.label}
+                                    <span>{t('subscribe.form.consent')}</span>
                                 </label>
-                            ))}
-                        </div>
-                        <InputError message={errors.topics} />
-                    </div>
+                                <InputError message={errors.consent} />
+                                <Button type="submit" disabled={form.processing || !form.data.email || !form.data.consent}>
+                                    {t('subscribe.form.submit')}
+                                </Button>
+                            </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="region">
-                            {t('subscribe.form.region_optional')}
-                        </Label>
-                        <Select
-                            value={
-                                form.data.region_id
-                                    ? String(form.data.region_id)
-                                    : 'none'
-                            }
-                            onValueChange={(value) =>
-                                form.setData(
-                                    'region_id',
-                                    value === 'none' ? null : Number(value),
-                                )
-                            }
-                        >
-                            <SelectTrigger id="region">
-                                <SelectValue
-                                    placeholder={t(
-                                        'subscribe.form.all_regions',
-                                    )}
-                                />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">
-                                    {t('subscribe.form.all_regions')}
-                                </SelectItem>
-                                {regions.map((region) => (
-                                    <SelectItem
-                                        key={region.id}
-                                        value={String(region.id)}
+                            {/* Push Subscription */}
+                            <div className="space-y-4 border-l-2 pl-4">
+                                <h3 className="font-medium">Браузерные уведомления</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Получайте экстренные оповещения прямо на экране вашего устройства. E-mail не требуется.
+                                </p>
+                                {isPushSupported ? (
+                                    <Button 
+                                        type="button" 
+                                        variant="secondary" 
+                                        onClick={handlePushSubscribe}
+                                        disabled={pushStatus === 'loading'}
                                     >
-                                        {region.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                                        {pushStatus === 'loading' ? 'Настройка...' : 'Разрешить уведомления'}
+                                    </Button>
+                                ) : (
+                                    <p className="text-sm text-orange-600">Ваш браузер не поддерживает Push-уведомления.</p>
+                                )}
+                            </div>
+                        </div>
                     </div>
-
-                    <label className="flex items-start gap-2 text-sm">
-                        <Checkbox
-                            checked={form.data.consent}
-                            onCheckedChange={(checked) =>
-                                form.setData('consent', checked === true)
-                            }
-                        />
-                        <span>{t('subscribe.form.consent')}</span>
-                    </label>
-                    <InputError message={errors.consent} />
 
                     <input
                         type="text"
@@ -196,10 +326,6 @@ export default function Subscribe({ topics, regions, status }: PageProps) {
                             form.setData('website', e.target.value)
                         }
                     />
-
-                    <Button type="submit" disabled={form.processing}>
-                        {t('subscribe.form.submit')}
-                    </Button>
                 </form>
             </div>
         </>

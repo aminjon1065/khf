@@ -3,6 +3,7 @@
 use App\Enums\Permission;
 use App\Http\Controllers\Admin\AlertController;
 use App\Http\Controllers\Admin\AppealController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
@@ -152,5 +153,10 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
             Route::patch('users/{user}/block', [UserController::class, 'toggleBlock'])->name('users.block');
             Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        });
+
+        // Audit Logs (super-admin only).
+        Route::middleware('can:'.Permission::ManageSettings->value)->group(function () {
+            Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
         });
     });

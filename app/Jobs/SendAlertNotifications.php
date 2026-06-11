@@ -8,6 +8,7 @@ use App\Mail\AlertNotification;
 use App\Models\Alert;
 use App\Models\NotificationLog;
 use App\Models\Subscriber;
+use App\Notifications\AlertPushNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Queue\Queueable;
@@ -41,20 +42,39 @@ class SendAlertNotifications implements ShouldQueue
                 foreach ($subscribers as $subscriber) {
                     $translation = $alert->translation($subscriber->locale);
 
-                    Mail::to($subscriber->email)->locale($subscriber->locale)->queue(new AlertNotification(
-                        $translation?->title ?? '',
-                        $translation?->body ?? '',
-                        $alert->hazard_level,
-                        route('subscriptions.unsubscribe', ['locale' => $subscriber->locale, 'token' => $subscriber->token]),
-                    ));
+                    if (!empty($subscriber->email)) {
+                        Mail::to($subscriber->email)->locale($subscriber->locale)->queue(new AlertNotification(
+                            $translation?->title ?? '',
+                            $translation?->body ?? '',
+                            $alert->hazard_level,
+                            route('subscriptions.unsubscribe', ['locale' => $subscriber->locale, 'token' => $subscriber->token]),
+                        ));
 
-                    NotificationLog::create([
-                        'alert_id' => $alert->id,
-                        'subscriber_id' => $subscriber->id,
-                        'channel' => 'email',
-                        'status' => 'queued',
-                        'sent_at' => now(),
-                    ]);
+                        NotificationLog::create([
+                            'alert_id' => $alert->id,
+                            'subscriber_id' => $subscriber->id,
+                            'channel' => 'email',
+                            'status' => 'queued',
+                            'sent_at' => now(),
+                        ]);
+                    }
+
+                    if ($subscriber->pushSubscriptions()->exists()) {
+                        $subscriber->notify(new AlertPushNotification(
+                            $translation?->title ?? '',
+                            $translation?->body ?? '',
+                            url('/'), // In a real scenario, this could be the alert page url
+                            $alert->hazard_level->value
+                        ));
+
+                        NotificationLog::create([
+                            'alert_id' => $alert->id,
+                            'subscriber_id' => $subscriber->id,
+                            'channel' => 'webpush',
+                            'status' => 'queued',
+                            'sent_at' => now(),
+                        ]);
+                    }
                 }
             });
 

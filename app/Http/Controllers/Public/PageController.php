@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Page;
 use App\Models\PageTranslation;
 use App\Support\LocaleUrls;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,34 +20,47 @@ class PageController extends Controller
     {
         $appLocale = app()->getLocale();
 
-        $translation = PageTranslation::query()
-            ->where('locale', $appLocale)
-            ->where('slug', $slug)
-            ->first();
+        $pageVersion = Page::max('updated_at') ?? 'empty';
+        $cacheKey = 'page.'.$appLocale.'.'.$slug.'.'.$pageVersion;
 
-        abort_if($translation === null, 404);
+        $data = Cache::remember($cacheKey, 3600, function () use ($appLocale, $slug) {
+            $translation = PageTranslation::query()
+                ->where('locale', $appLocale)
+                ->where('slug', $slug)
+                ->first();
 
-        $page = Page::published()->with('translations')->whereKey($translation->page_id)->first();
+            if ($translation === null) {
+                return null;
+            }
 
-        abort_if($page === null, 404);
+            $page = Page::published()->with('translations')->whereKey($translation->page_id)->first();
 
-        $urls = app(LocaleUrls::class)->contentUrls(
-            'pages.show',
-            $page->translations->pluck('slug', 'locale')->all(),
-        );
+            if ($page === null) {
+                return null;
+            }
 
-        return Inertia::render('public/pages/show', [
-            'page' => [
-                'title' => $translation->title,
-                'content' => $translation->content,
-                'updated_at' => $page->updated_at?->format('d.m.Y'),
-            ],
-            'seo' => [
-                'title' => $translation->seo_title ?: $translation->title,
-                'description' => $translation->seo_description,
-            ],
-            'localeSwitch' => $urls['switch'],
-            'seoAlternates' => $urls['alternates'],
-        ]);
+            $urls = app(LocaleUrls::class)->contentUrls(
+                'pages.show',
+                $page->translations->pluck('slug', 'locale')->all(),
+            );
+
+            return [
+                'page' => [
+                    'title' => $translation->title,
+                    'content' => $translation->content,
+                    'updated_at' => $page->updated_at?->format('d.m.Y'),
+                ],
+                'seo' => [
+                    'title' => $translation->seo_title ?: $translation->title,
+                    'description' => $translation->seo_description,
+                ],
+                'localeSwitch' => $urls['switch'],
+                'seoAlternates' => $urls['alternates'],
+            ];
+        });
+
+        abort_if($data === null, 404);
+
+        return Inertia::render('public/pages/show', $data);
     }
 }
