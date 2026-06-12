@@ -3,6 +3,7 @@ import { Check } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
+import { MapView } from '@/components/map-view';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +17,6 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes/admin';
 import { index, store, update } from '@/routes/admin/incidents';
-import { MapView } from '@/components/map-view';
 
 type Translation = { title: string; description: string };
 type Option = { value: string; label: string };
@@ -152,7 +152,9 @@ export default function IncidentForm({
                                 <InputError message={errors.type} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="hazard_level">Уровень опасности</Label>
+                                <Label htmlFor="hazard_level">
+                                    Уровень опасности
+                                </Label>
                                 <Select
                                     value={form.data.hazard_level}
                                     onValueChange={(value) =>
@@ -208,18 +210,36 @@ export default function IncidentForm({
                                             : 'none'
                                     }
                                     onValueChange={(value) => {
-                                        const regionId = value === 'none' ? null : Number(value);
+                                        const regionId =
+                                            value === 'none'
+                                                ? null
+                                                : Number(value);
+
                                         if (regionId) {
-                                            const region = regions.find(r => r.id === regionId);
-                                            if (region && region.lat && region.lng) {
+                                            const region = regions.find(
+                                                (r) => r.id === regionId,
+                                            );
+
+                                            if (
+                                                region &&
+                                                region.lat &&
+                                                region.lng
+                                            ) {
                                                 form.setData((prev) => ({
                                                     ...prev,
                                                     region_id: regionId,
-                                                    latitude: Number(region.lat.toFixed(7)),
-                                                    longitude: Number(region.lng.toFixed(7))
+                                                    latitude: Number(
+                                                        region.lat.toFixed(7),
+                                                    ),
+                                                    longitude: Number(
+                                                        region.lng.toFixed(7),
+                                                    ),
                                                 }));
                                             } else {
-                                                form.setData('region_id', regionId);
+                                                form.setData(
+                                                    'region_id',
+                                                    regionId,
+                                                );
                                             }
                                         } else {
                                             form.setData('region_id', null);
@@ -246,13 +266,18 @@ export default function IncidentForm({
                                 <InputError message={errors.region_id} />
                             </div>
                             <div className="space-y-2 sm:col-span-2">
-                                <Label htmlFor="occurred_at">Дата и время</Label>
+                                <Label htmlFor="occurred_at">
+                                    Дата и время
+                                </Label>
                                 <Input
                                     id="occurred_at"
                                     type="datetime-local"
                                     value={form.data.occurred_at}
                                     onChange={(event) =>
-                                        form.setData('occurred_at', event.target.value)
+                                        form.setData(
+                                            'occurred_at',
+                                            event.target.value,
+                                        )
                                     }
                                 />
                                 <InputError message={errors.occurred_at} />
@@ -275,8 +300,11 @@ export default function IncidentForm({
                                 >
                                     {locale.native_name}
                                     {Boolean(
-                                        form.data.translations[locale.code]?.title,
-                                    ) && <Check className="size-3.5 text-green-600" />}
+                                        form.data.translations[locale.code]
+                                            ?.title,
+                                    ) && (
+                                        <Check className="size-3.5 text-green-600" />
+                                    )}
                                 </Button>
                             ))}
                         </div>
@@ -297,7 +325,9 @@ export default function IncidentForm({
                                 />
                                 <InputError
                                     message={
-                                        errors[`translations.${activeLocale}.title`]
+                                        errors[
+                                            `translations.${activeLocale}.title`
+                                        ]
                                     }
                                 />
                             </div>
@@ -327,16 +357,28 @@ export default function IncidentForm({
                     </div>
 
                     <div className="lg:col-span-1">
-                        <div className="sticky top-20 rounded-xl border bg-card p-5 shadow-sm space-y-4">
-                            <h3 className="font-semibold text-foreground">Координаты на карте</h3>
+                        <div className="sticky top-20 space-y-4 rounded-xl border bg-card p-5 shadow-sm">
+                            <h3 className="font-semibold text-foreground">
+                                Координаты на карте
+                            </h3>
                             <p className="text-xs text-muted-foreground">
-                                Кликните по карте, чтобы автоматически указать широту и долготу, или выберите регион для приближения.
+                                Кликните по карте, чтобы автоматически указать
+                                широту и долготу, или выберите регион для
+                                приближения.
                             </p>
-                            <div className="h-80 overflow-hidden rounded-lg border relative">
+                            <div className="relative h-80 overflow-hidden rounded-lg border">
                                 <MapView
                                     initialPickedCoords={
-                                        form.data.latitude && form.data.longitude
-                                            ? { lat: Number(form.data.latitude), lng: Number(form.data.longitude) }
+                                        form.data.latitude &&
+                                        form.data.longitude
+                                            ? {
+                                                  lat: Number(
+                                                      form.data.latitude,
+                                                  ),
+                                                  lng: Number(
+                                                      form.data.longitude,
+                                                  ),
+                                              }
                                             : null
                                     }
                                     onPick={({ lat, lng }) => {
@@ -357,7 +399,14 @@ export default function IncidentForm({
                                         step="0.0000001"
                                         value={form.data.latitude}
                                         onChange={(event) =>
-                                            form.setData('latitude', event.target.value === '' ? '' : Number(event.target.value))
+                                            form.setData(
+                                                'latitude',
+                                                event.target.value === ''
+                                                    ? ''
+                                                    : Number(
+                                                          event.target.value,
+                                                      ),
+                                            )
                                         }
                                     />
                                     <InputError message={errors.latitude} />
@@ -370,7 +419,14 @@ export default function IncidentForm({
                                         step="0.0000001"
                                         value={form.data.longitude}
                                         onChange={(event) =>
-                                            form.setData('longitude', event.target.value === '' ? '' : Number(event.target.value))
+                                            form.setData(
+                                                'longitude',
+                                                event.target.value === ''
+                                                    ? ''
+                                                    : Number(
+                                                          event.target.value,
+                                                      ),
+                                            )
                                         }
                                     />
                                     <InputError message={errors.longitude} />

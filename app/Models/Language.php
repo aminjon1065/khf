@@ -64,14 +64,28 @@ class Language extends Model
     /**
      * Active languages, ordered for display. Cached and invalidated on save/delete.
      *
+     * Self-healing: a stale or incompatible cache entry (e.g. a `file`-store blob that survived a
+     * `migrate:fresh` and unserializes to `__PHP_Incomplete_Class`) is discarded and recomputed,
+     * rather than being returned and violating this method's return type.
+     *
      * @return Collection<int, Language>
      */
     public static function active(): Collection
     {
-        return Cache::rememberForever(self::CACHE_KEY, static fn (): Collection => static::query()
+        $cached = Cache::get(self::CACHE_KEY);
+
+        if ($cached instanceof Collection) {
+            return $cached;
+        }
+
+        $languages = static::query()
             ->where('is_active', true)
             ->orderBy('sort_order')
-            ->get());
+            ->get();
+
+        Cache::forever(self::CACHE_KEY, $languages);
+
+        return $languages;
     }
 
     /**

@@ -66,8 +66,12 @@ export default function PublicContacts({ regions }: PageProps) {
             <Head title={t('contacts.title')} />
 
             <div className="mb-8">
-                <h1 className="text-3xl font-semibold">{t('contacts.title')}</h1>
-                <p className="text-muted-foreground">{t('contacts.subtitle')}</p>
+                <h1 className="text-3xl font-semibold">
+                    {t('contacts.title')}
+                </h1>
+                <p className="text-muted-foreground">
+                    {t('contacts.subtitle')}
+                </p>
             </div>
 
             <section className="mb-10">

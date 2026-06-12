@@ -142,17 +142,41 @@ class HandleInertiaRequests extends Middleware
     private function locales(): array
     {
         try {
-            return Language::active()
-                ->map(fn (Language $language): array => [
-                    'code' => $language->code,
-                    'native_name' => $language->native_name,
-                    'hreflang' => $language->hreflang,
-                    'is_default' => $language->is_default,
-                ])
-                ->all();
+            $active = Language::active();
+            if ($active->isNotEmpty()) {
+                return $active
+                    ->map(fn (Language $language): array => [
+                        'code' => $language->code,
+                        'native_name' => $language->native_name,
+                        'hreflang' => $language->hreflang,
+                        'is_default' => $language->is_default,
+                    ])
+                    ->all();
+            }
         } catch (\Throwable) {
-            return [];
+            // Fall through to config-based defaults
         }
+
+        return [
+            [
+                'code' => 'tj',
+                'native_name' => 'Тоҷикӣ',
+                'hreflang' => 'tg',
+                'is_default' => true,
+            ],
+            [
+                'code' => 'ru',
+                'native_name' => 'Русский',
+                'hreflang' => 'ru',
+                'is_default' => false,
+            ],
+            [
+                'code' => 'en',
+                'native_name' => 'English',
+                'hreflang' => 'en',
+                'is_default' => false,
+            ],
+        ];
     }
 
     /**

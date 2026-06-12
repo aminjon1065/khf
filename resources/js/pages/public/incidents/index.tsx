@@ -40,8 +40,16 @@ export default function IncidentsArchive({ incidents, summary }: PageProps) {
 
     const stats = [
         { key: 'active', value: summary.active, tone: 'text-hazard-danger' },
-        { key: 'controlled', value: summary.controlled, tone: 'text-hazard-elevated' },
-        { key: 'resolved', value: summary.resolved, tone: 'text-hazard-normal' },
+        {
+            key: 'controlled',
+            value: summary.controlled,
+            tone: 'text-hazard-elevated',
+        },
+        {
+            key: 'resolved',
+            value: summary.resolved,
+            tone: 'text-hazard-normal',
+        },
     ] as const;
 
     return (
@@ -68,7 +76,9 @@ export default function IncidentsArchive({ incidents, summary }: PageProps) {
             <div className="mb-8 grid gap-4 sm:grid-cols-3">
                 {stats.map((stat) => (
                     <div key={stat.key} className="rounded-lg border p-4">
-                        <p className={`text-3xl font-semibold ${stat.tone}`}>{stat.value}</p>
+                        <p className={`text-3xl font-semibold ${stat.tone}`}>
+                            {stat.value}
+                        </p>
                         <p className="mt-1 text-sm text-muted-foreground">
                             {t(`incidents.summary.${stat.key}`)}
                         </p>

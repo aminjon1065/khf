@@ -10,10 +10,10 @@ use App\Http\Controllers\Public\IncidentController;
 use App\Http\Controllers\Public\MapController;
 use App\Http\Controllers\Public\PageController;
 use App\Http\Controllers\Public\PostController;
+use App\Http\Controllers\Public\PushSubscriptionController;
 use App\Http\Controllers\Public\SearchController;
 use App\Http\Controllers\Public\SitemapController;
 use App\Http\Controllers\Public\SubscriptionController;
-use App\Http\Controllers\Public\PushSubscriptionController;
 use App\Http\Controllers\Public\TouristGroupController;
 use Illuminate\Support\Facades\Route;
 
@@ -55,12 +55,14 @@ Route::prefix('{locale}')
         // Citizen appeals (electronic reception) — public form is rate-limited (ТЗ §12.4).
         Route::get('appeals', [AppealController::class, 'create'])->name('appeals.create');
         Route::post('appeals', [AppealController::class, 'store'])->middleware('throttle:6,1')->name('appeals.store');
-        Route::get('appeals/track', [AppealController::class, 'track'])->name('appeals.track');
+        // Tracking lookups are throttled to prevent brute-force enumeration of reference numbers.
+        Route::get('appeals/track', [AppealController::class, 'track'])->middleware('throttle:20,1')->name('appeals.track');
 
         // Tourist-group registration — public form is rate-limited (ТЗ §12.4).
         Route::get('tourist-groups', [TouristGroupController::class, 'create'])->name('tourist-groups.create');
         Route::post('tourist-groups', [TouristGroupController::class, 'store'])->middleware('throttle:6,1')->name('tourist-groups.store');
-        Route::get('tourist-groups/track', [TouristGroupController::class, 'track'])->name('tourist-groups.track');
+        // Tracking lookups are throttled to prevent brute-force enumeration of reference numbers.
+        Route::get('tourist-groups/track', [TouristGroupController::class, 'track'])->middleware('throttle:20,1')->name('tourist-groups.track');
 
         // Notification subscriptions (double opt-in) — public form is rate-limited (ТЗ §6.4.3).
         Route::get('subscribe', [SubscriptionController::class, 'create'])->name('subscriptions.create');
@@ -68,9 +70,9 @@ Route::prefix('{locale}')
         Route::get('subscribe/confirm/{token}', [SubscriptionController::class, 'confirm'])->name('subscriptions.confirm');
         Route::get('subscribe/unsubscribe/{token}', [SubscriptionController::class, 'unsubscribe'])->name('subscriptions.unsubscribe');
 
-        // Web Push subscriptions
-        Route::post('push/subscribe', [PushSubscriptionController::class, 'store'])->name('push.subscribe');
-        Route::post('push/unsubscribe', [PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
+        // Web Push subscriptions — rate-limited like the other public endpoints (ТЗ §12.4).
+        Route::post('push/subscribe', [PushSubscriptionController::class, 'store'])->middleware('throttle:10,1')->name('push.subscribe');
+        Route::post('push/unsubscribe', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:10,1')->name('push.unsubscribe');
 
         // CMS-managed static content pages (About / Activities / Contacts …) by current-locale slug.
         Route::get('pages/{slug}', [PageController::class, 'show'])->middleware('cache.headers:public;max_age=3600;etag')->name('pages.show');
@@ -90,15 +92,15 @@ require __DIR__.'/settings.php';
 Route::fallback(function () {
     $path = request()->path();
     $redirects = config('redirects', []);
-    
+
     if (array_key_exists($path, $redirects)) {
         return redirect($redirects[$path], 301);
     }
-    
-    $pathWithSlash = '/' . ltrim($path, '/');
+
+    $pathWithSlash = '/'.ltrim($path, '/');
     if (array_key_exists($pathWithSlash, $redirects)) {
         return redirect($redirects[$pathWithSlash], 301);
     }
-    
+
     abort(404);
 });

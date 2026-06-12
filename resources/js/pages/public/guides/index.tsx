@@ -29,11 +29,11 @@ export default function GuidesIndex({ guides, filters, audiences }: PageProps) {
     const { t } = useTranslations();
 
     const applyAudience = (audience: string | undefined) => {
-        router.get(
-            guidesIndex({ locale }).url,
-            audience ? { audience } : {},
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
+        router.get(guidesIndex({ locale }).url, audience ? { audience } : {}, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
     };
 
     return (

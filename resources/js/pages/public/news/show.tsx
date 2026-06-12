@@ -57,7 +57,7 @@ export default function NewsShow({ post, recent }: PageProps) {
                     {post.cover_url && (
                         <img
                             src={post.cover_url}
-                            alt=""
+                            alt={post.title ?? ''}
                             className="mt-6 w-full rounded-lg object-cover"
                         />
                     )}

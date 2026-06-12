@@ -9,14 +9,14 @@ type AdminBarProps = {
 
 export function AdminBar({ pageId, postId }: AdminBarProps) {
     return (
-        <div className="w-full bg-[#1e293b] text-slate-100 py-1.5 px-4 text-xs font-medium border-b border-slate-700 shadow-sm print:hidden flex items-center justify-between z-55">
+        <div className="z-55 flex w-full items-center justify-between border-b border-slate-700 bg-[#1e293b] px-4 py-1.5 text-xs font-medium text-slate-100 shadow-sm print:hidden">
             <div className="flex items-center gap-5">
                 {/* Logo and CMS link */}
                 <Link
                     href="/admin"
-                    className="flex items-center gap-2 hover:text-white transition-colors text-slate-200"
+                    className="flex items-center gap-2 text-slate-200 transition-colors hover:text-white"
                 >
-                    <AppEmblem className="size-4 shrink-0 app-logo-emblem" />
+                    <AppEmblem className="app-logo-emblem size-4 shrink-0" />
                     <span className="font-bold tracking-tight">КЧС · CMS</span>
                 </Link>
 
@@ -25,7 +25,7 @@ export function AdminBar({ pageId, postId }: AdminBarProps) {
                 {/* Dashboard link */}
                 <Link
                     href="/admin"
-                    className="flex items-center gap-1.5 hover:text-white transition-colors text-slate-300"
+                    className="flex items-center gap-1.5 text-slate-300 transition-colors hover:text-white"
                 >
                     <LayoutDashboard className="size-3.5 text-slate-400" />
                     <span>Панель управления</span>
@@ -37,7 +37,7 @@ export function AdminBar({ pageId, postId }: AdminBarProps) {
                         <div className="h-3 w-px bg-slate-700" />
                         <Link
                             href={`/admin/posts/${postId}/edit`}
-                            className="flex items-center gap-1.5 hover:text-white transition-colors text-slate-300 font-semibold"
+                            className="flex items-center gap-1.5 font-semibold text-slate-300 transition-colors hover:text-white"
                         >
                             <Settings className="size-3.5 text-slate-400" />
                             <span>Редактировать новость</span>
@@ -50,7 +50,7 @@ export function AdminBar({ pageId, postId }: AdminBarProps) {
                         <div className="h-3 w-px bg-slate-700" />
                         <Link
                             href={`/admin/pages/${pageId}/edit`}
-                            className="flex items-center gap-1.5 hover:text-white transition-colors text-slate-300 font-semibold"
+                            className="flex items-center gap-1.5 font-semibold text-slate-300 transition-colors hover:text-white"
                         >
                             <Settings className="size-3.5 text-slate-400" />
                             <span>Редактировать страницу</span>
@@ -64,7 +64,7 @@ export function AdminBar({ pageId, postId }: AdminBarProps) {
                 <div className="flex items-center gap-3">
                     <Link
                         href="/admin/posts/create"
-                        className="flex items-center gap-1 hover:text-white transition-colors text-slate-400"
+                        className="flex items-center gap-1 text-slate-400 transition-colors hover:text-white"
                         title="Создать новость"
                     >
                         <Plus className="size-3 text-slate-500" />
@@ -72,7 +72,7 @@ export function AdminBar({ pageId, postId }: AdminBarProps) {
                     </Link>
                     <Link
                         href="/admin/pages/create"
-                        className="flex items-center gap-1 hover:text-white transition-colors text-slate-400"
+                        className="flex items-center gap-1 text-slate-400 transition-colors hover:text-white"
                         title="Создать страницу"
                     >
                         <Plus className="size-3 text-slate-500" />
@@ -81,10 +81,10 @@ export function AdminBar({ pageId, postId }: AdminBarProps) {
                 </div>
             </div>
 
-            <div className="flex items-center gap-4 text-slate-400 text-[11px]">
+            <div className="flex items-center gap-4 text-[11px] text-slate-400">
                 <Link
                     href="/admin"
-                    className="hover:text-white transition-colors flex items-center gap-1"
+                    className="flex items-center gap-1 transition-colors hover:text-white"
                 >
                     <span>Админ-панель</span>
                     <ExternalLink className="size-3 text-slate-500" />

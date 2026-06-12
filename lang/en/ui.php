@@ -29,9 +29,34 @@ return [
     'footer' => [
         'hotline' => 'Unified helpline',
         'sections' => 'Sections',
+        'useful_resources' => 'Useful resources',
+        'president' => 'President of the Republic of Tajikistan',
+        'government' => 'Government of the Republic of Tajikistan',
+        'egov' => 'Public Services Portal of the RT',
     ],
     'lang' => [
         'switch' => 'Change language',
+        'label' => 'Language / Забон',
+    ],
+    'a11y' => [
+        'open' => 'Version for the visually impaired',
+        'settings_search' => 'Settings and search',
+        'site_search' => 'Search the site',
+        'font' => 'Font',
+        'colors' => 'Colors',
+        'images' => 'Images',
+        'size_normal' => 'A (Standard)',
+        'size_large' => 'A+ (Large)',
+        'size_xl' => 'A++ (Huge)',
+        'contrast_normal' => 'Normal',
+        'contrast_monochrome' => 'B/W',
+        'contrast_inverted' => 'Inverted',
+        'contrast_blueyellow' => 'Blue-yellow',
+        'images_on' => 'On',
+        'images_grayscale' => 'B/W',
+        'images_off' => 'Off',
+        'reset' => 'Reset settings',
+        'close_panel' => 'Close panel',
     ],
     'errors' => [
         '403' => ['title' => 'Access denied', 'message' => 'You do not have permission to view this page.'],
@@ -73,6 +98,33 @@ return [
         'news' => [
             'view_all' => 'All news →',
         ],
+        'emergency' => [
+            'title' => 'Attention! Emergency situation',
+            'instructions' => 'Instructions',
+            'instructions_sub' => 'How to act in an emergency',
+            'map' => 'Emergency map',
+            'map_sub' => 'Operational situation',
+        ],
+        'slider' => [
+            'rescue_badge' => 'Unified rescue service',
+            'rescue_title' => 'Unified Rescue Service of CoES Tajikistan',
+            'rescue_text' => 'If your life is in danger or you witness an emergency, call the free 112 number immediately. We operate around the clock.',
+            'rescue_call' => 'Call 112',
+            'rescue_instructions' => 'Instructions',
+            'news_badge' => 'Top story',
+            'news_fallback_title' => 'Official portal of CoES Tajikistan',
+            'news_fallback_text' => 'Stay informed about the latest operational news, storm warnings, and recommendations from the Committee of Emergency Situations.',
+            'news_read_more' => 'Read more',
+            'news_feed' => 'News feed',
+            'tourism_badge' => 'Safe tourism',
+            'tourism_title' => 'Tourist group registration',
+            'tourism_text' => 'Planning a hike along the mountain routes of Tajikistan? Register your group with CoES. This allows rescuers to provide prompt assistance in case of an incident.',
+            'tourism_register' => 'Register a group',
+            'tourism_situation' => 'Situation',
+            'prev' => 'Previous slide',
+            'next' => 'Next slide',
+            'go_to' => 'Go to slide :number',
+        ],
     ],
     'news' => [
         'title' => 'News',
@@ -93,6 +145,10 @@ return [
     'map' => [
         'heading' => 'Interactive emergency map',
         'subtitle' => 'Active incidents in the territory of the Republic of Tajikistan',
+        'filter_type' => 'Incident type',
+        'filter_type_all' => 'All types',
+        'filter_level' => 'Hazard level',
+        'filter_level_all' => 'All levels',
     ],
     'documents' => [
         'title' => 'Documents',
@@ -165,6 +221,20 @@ return [
     'subscribe' => [
         'title' => 'Subscription to notifications',
         'subtitle' => 'Receive emergency alerts and news by email',
+        'sections' => [
+            'preferences' => '1. Notification settings',
+            'channels' => '2. Delivery channels (choose one or both)',
+        ],
+        'email_channel' => 'Email newsletter',
+        'push' => [
+            'channel' => 'Browser notifications',
+            'hint' => 'Receive emergency alerts directly on your device screen. No email required.',
+            'enable' => 'Allow notifications',
+            'loading' => 'Setting up…',
+            'unsupported' => 'Your browser does not support push notifications.',
+            'success' => 'You have successfully subscribed to browser notifications.',
+            'error' => 'An error occurred while subscribing to notifications.',
+        ],
         'form' => [
             'topics' => 'Topics',
             'region_optional' => 'Region (optional)',
@@ -200,5 +270,17 @@ return [
         'feedback' => 'Feedback',
         'feedback_text' => 'Have a question, suggestion or complaint? Submit an appeal and we will respond.',
         'feedback_cta' => 'Submit an appeal',
+    ],
+    'actions' => [
+        'search' => 'Search',
+    ],
+    'table' => [
+        'empty' => 'Nothing found',
+    ],
+    'search' => [
+        'prompt' => 'Enter a search query…',
+        'results_for' => 'Results for «:query»',
+        'enter_query' => 'Enter a query to search',
+        'no_results_hint' => 'Try changing your search query or using different keywords.',
     ],
 ];

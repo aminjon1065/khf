@@ -1,16 +1,31 @@
-import { useEffect, useState } from 'react';
 import { usePage, Link } from '@inertiajs/react';
-import { Search, FileText, Map, Info, BookOpen, AlertCircle, X, Loader2 } from 'lucide-react';
+import {
+    Search,
+    FileText,
+    Info,
+    BookOpen,
+    AlertCircle,
+    Loader2,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { useTranslations } from '@/hooks/use-translations';
 import { api as searchApi } from '@/routes/search';
-import { SharedData } from '@/types';
+import type { SharedData } from '@/types';
+
+type SearchResultItem = {
+    id: number;
+    type: string;
+    title: string;
+    excerpt: string | null;
+    url: string;
+    date: string | null;
+};
 
 export function GlobalSearchModal({
     isOpen,
@@ -21,10 +36,21 @@ export function GlobalSearchModal({
 }) {
     const { t } = useTranslations();
     const { locale } = usePage<SharedData>().props;
-    
+
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState<any[]>([]);
+    const [results, setResults] = useState<SearchResultItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Clear state when the dialog closes so the next open starts fresh — handled here rather than in
+    // an effect to avoid a setState-in-effect render cascade.
+    const handleOpenChange = (open: boolean) => {
+        if (!open) {
+            setQuery('');
+            setResults([]);
+        }
+
+        setIsOpen(open);
+    };
 
     // Keyboard shortcut Cmd+K or Ctrl+K
     useEffect(() => {
@@ -35,26 +61,23 @@ export function GlobalSearchModal({
             }
         };
         document.addEventListener('keydown', down);
+
         return () => document.removeEventListener('keydown', down);
     }, [setIsOpen]);
 
     // Live search with debounce
     useEffect(() => {
-        if (!isOpen) {
-            setQuery('');
-            setResults([]);
-            return;
-        }
-
-        if (query.length < 2) {
-            setResults([]);
+        if (!isOpen || query.length < 2) {
             return;
         }
 
         const timer = setTimeout(async () => {
             setIsLoading(true);
+
             try {
-                const response = await fetch(`${searchApi({ locale }).url}?q=${encodeURIComponent(query)}`);
+                const response = await fetch(
+                    `${searchApi({ locale }).url}?q=${encodeURIComponent(query)}`,
+                );
                 const data = await response.json();
                 setResults(data.data || []);
             } catch (error) {
@@ -67,75 +90,94 @@ export function GlobalSearchModal({
         return () => clearTimeout(timer);
     }, [query, isOpen, locale]);
 
+    // Stale results from a longer query stay hidden once the query drops below the 2-char threshold.
+    const visibleResults = query.length >= 2 ? results : [];
+
     const getIcon = (type: string) => {
         switch (type) {
-            case 'post': return <AlertCircle className="size-4 text-blue-500" />;
-            case 'page': return <Info className="size-4 text-green-500" />;
-            case 'document': return <FileText className="size-4 text-orange-500" />;
-            case 'guide': return <BookOpen className="size-4 text-purple-500" />;
-            default: return <FileText className="size-4" />;
+            case 'post':
+                return <AlertCircle className="size-4 text-blue-500" />;
+            case 'page':
+                return <Info className="size-4 text-green-500" />;
+            case 'document':
+                return <FileText className="size-4 text-orange-500" />;
+            case 'guide':
+                return <BookOpen className="size-4 text-purple-500" />;
+            default:
+                return <FileText className="size-4" />;
         }
     };
 
     const getTypeLabel = (type: string) => {
         switch (type) {
-            case 'post': return t('nav.news');
-            case 'page': return t('nav.home'); // Simplified
-            case 'document': return t('nav.documents');
-            case 'guide': return t('nav.guides');
-            default: return type;
+            case 'post':
+                return t('nav.news');
+            case 'page':
+                return t('nav.home'); // Simplified
+            case 'document':
+                return t('nav.documents');
+            case 'guide':
+                return t('nav.guides');
+            default:
+                return type;
         }
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden gap-0 bg-background/95 backdrop-blur-xl">
-                <DialogHeader className="p-4 border-b">
-                    <DialogTitle className="sr-only">Search</DialogTitle>
+        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+            <DialogContent className="gap-0 overflow-hidden bg-background/95 p-0 backdrop-blur-xl sm:max-w-[600px]">
+                <DialogHeader className="border-b p-4">
+                    <DialogTitle className="sr-only">
+                        {t('actions.search')}
+                    </DialogTitle>
                     <div className="flex items-center gap-3">
-                        <Search className="size-5 text-muted-foreground shrink-0" />
+                        <Search className="size-5 shrink-0 text-muted-foreground" />
                         <input
                             type="text"
                             autoFocus
                             placeholder={t('actions.search') + '...'}
-                            className="flex-1 bg-transparent outline-none text-base placeholder:text-muted-foreground/60"
+                            className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground/60"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                         />
-                        {isLoading && <Loader2 className="size-5 animate-spin text-muted-foreground shrink-0" />}
-                        <div className="hidden sm:flex text-[10px] text-muted-foreground border px-1.5 py-0.5 rounded bg-muted/50">
+                        {isLoading && (
+                            <Loader2 className="size-5 shrink-0 animate-spin text-muted-foreground" />
+                        )}
+                        <div className="hidden rounded border bg-muted/50 px-1.5 py-0.5 text-[10px] text-muted-foreground sm:flex">
                             ESC
                         </div>
                     </div>
                 </DialogHeader>
 
                 <div className="max-h-[60vh] overflow-y-auto p-2">
-                    {query.length >= 2 && results.length === 0 && !isLoading && (
-                        <div className="text-center py-8 text-muted-foreground text-sm">
-                            {t('table.empty')}
-                        </div>
-                    )}
-                    
+                    {query.length >= 2 &&
+                        results.length === 0 &&
+                        !isLoading && (
+                            <div className="py-8 text-center text-sm text-muted-foreground">
+                                {t('table.empty')}
+                            </div>
+                        )}
+
                     {query.length < 2 && (
-                        <div className="text-center py-8 text-muted-foreground/60 text-sm">
-                            Введите поисковый запрос...
+                        <div className="py-8 text-center text-sm text-muted-foreground/60">
+                            {t('search.prompt')}
                         </div>
                     )}
 
                     <div className="flex flex-col gap-1">
-                        {results.map((result, idx) => (
+                        {visibleResults.map((result, idx) => (
                             <Link
                                 key={`${result.type}-${result.id}-${idx}`}
                                 href={result.url}
                                 onClick={() => setIsOpen(false)}
-                                className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/60 transition-colors group"
+                                className="group flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-muted/60"
                             >
-                                <div className="mt-0.5 bg-background p-1.5 rounded-md shadow-sm border">
+                                <div className="mt-0.5 rounded-md border bg-background p-1.5 shadow-sm">
                                     {getIcon(result.type)}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+                                <div className="min-w-0 flex-1">
+                                    <div className="mb-1 flex items-center gap-2">
+                                        <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
                                             {getTypeLabel(result.type)}
                                         </span>
                                         {result.date && (
@@ -144,11 +186,11 @@ export function GlobalSearchModal({
                                             </span>
                                         )}
                                     </div>
-                                    <h4 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                                    <h4 className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary">
                                         {result.title}
                                     </h4>
                                     {result.excerpt && (
-                                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                                        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
                                             {result.excerpt}
                                         </p>
                                     )}

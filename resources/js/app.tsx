@@ -8,7 +8,7 @@ import AuthLayout from '@/layouts/auth-layout';
 import PublicLayout from '@/layouts/public/public-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 
-router.on('navigate', (event) => {
+router.on('navigate', () => {
     if (window._paq) {
         window._paq.push(['setCustomUrl', window.location.pathname]);
         window._paq.push(['setDocumentTitle', document.title]);

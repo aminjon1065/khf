@@ -23,6 +23,11 @@ class RolePermissionSeeder extends Seeder
             PermissionModel::findOrCreate($permission->value, 'web');
         }
 
+        // Reset the registrar again: findOrCreate() above primed its in-memory cache with the
+        // pre-existing (empty) permission set and Spatie does not refresh it on insert, so without
+        // this syncPermissions() below would not see the permissions we just created.
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
         foreach (Role::cases() as $role) {
             $model = RoleModel::findOrCreate($role->value, 'web');
 

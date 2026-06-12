@@ -1,25 +1,34 @@
+import { Eye, Image, Type } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Eye, EyeOff, Image, Type } from 'lucide-react';
+import { useTranslations } from '@/hooks/use-translations';
 
 type FontSize = 'normal' | 'large' | 'xl';
 type ContrastMode = 'normal' | 'monochrome' | 'inverted' | 'blueyellow';
 type ImagesMode = 'normal' | 'grayscale' | 'hidden';
 
+/**
+ * Read a persisted preference. This toolbar only mounts client-side (on user toggle), so reading
+ * localStorage in a lazy initializer is safe and avoids a setState-in-effect render cascade.
+ */
+function readStored<T extends string>(key: string, fallback: T): T {
+    if (typeof window === 'undefined') {
+        return fallback;
+    }
+
+    return (localStorage.getItem(key) as T) || fallback;
+}
+
 export function AccessibilityToolbar({ onClose }: { onClose: () => void }) {
-    const [fontSize, setFontSize] = useState<FontSize>('normal');
-    const [contrast, setContrast] = useState<ContrastMode>('normal');
-    const [imagesMode, setImagesMode] = useState<ImagesMode>('normal');
-
-    // Load initial settings from localStorage on mount
-    useEffect(() => {
-        const storedSize = (localStorage.getItem('a11y-font-size') as FontSize) || 'normal';
-        const storedContrast = (localStorage.getItem('a11y-contrast') as ContrastMode) || 'normal';
-        const storedImages = (localStorage.getItem('a11y-images') as ImagesMode) || 'normal';
-
-        setFontSize(storedSize);
-        setContrast(storedContrast);
-        setImagesMode(storedImages);
-    }, []);
+    const { t } = useTranslations();
+    const [fontSize, setFontSize] = useState<FontSize>(() =>
+        readStored('a11y-font-size', 'normal'),
+    );
+    const [contrast, setContrast] = useState<ContrastMode>(() =>
+        readStored('a11y-contrast', 'normal'),
+    );
+    const [imagesMode, setImagesMode] = useState<ImagesMode>(() =>
+        readStored('a11y-images', 'normal'),
+    );
 
     // Apply classes to documentElement when settings change
     useEffect(() => {
@@ -27,11 +36,13 @@ export function AccessibilityToolbar({ onClose }: { onClose: () => void }) {
 
         // Font Size
         root.classList.remove('a11y-size-large', 'a11y-size-xl');
+
         if (fontSize === 'large') {
             root.classList.add('a11y-size-large');
         } else if (fontSize === 'xl') {
             root.classList.add('a11y-size-xl');
         }
+
         localStorage.setItem('a11y-font-size', fontSize);
     }, [fontSize]);
 
@@ -39,7 +50,12 @@ export function AccessibilityToolbar({ onClose }: { onClose: () => void }) {
         const root = document.documentElement;
 
         // Contrast
-        root.classList.remove('a11y-contrast-monochrome', 'a11y-contrast-inverted', 'a11y-contrast-blueyellow');
+        root.classList.remove(
+            'a11y-contrast-monochrome',
+            'a11y-contrast-inverted',
+            'a11y-contrast-blueyellow',
+        );
+
         if (contrast === 'monochrome') {
             root.classList.add('a11y-contrast-monochrome');
         } else if (contrast === 'inverted') {
@@ -47,6 +63,7 @@ export function AccessibilityToolbar({ onClose }: { onClose: () => void }) {
         } else if (contrast === 'blueyellow') {
             root.classList.add('a11y-contrast-blueyellow');
         }
+
         localStorage.setItem('a11y-contrast', contrast);
     }, [contrast]);
 
@@ -55,11 +72,13 @@ export function AccessibilityToolbar({ onClose }: { onClose: () => void }) {
 
         // Images
         root.classList.remove('a11y-images-grayscale', 'a11y-images-hidden');
+
         if (imagesMode === 'grayscale') {
             root.classList.add('a11y-images-grayscale');
         } else if (imagesMode === 'hidden') {
             root.classList.add('a11y-images-hidden');
         }
+
         localStorage.setItem('a11y-images', imagesMode);
     }, [imagesMode]);
 
@@ -70,46 +89,52 @@ export function AccessibilityToolbar({ onClose }: { onClose: () => void }) {
     };
 
     return (
-        <div className="w-full bg-[#1e293b] text-slate-100 border-b border-slate-700 py-3 px-4 shadow-inner transition-all duration-300 print:hidden z-55">
-            <div className="mx-auto max-w-6xl flex flex-wrap gap-6 items-center justify-between">
+        <div
+            role="region"
+            aria-label={t('a11y.open')}
+            className="z-55 w-full border-b border-slate-700 bg-[#1e293b] px-4 py-3 text-slate-100 shadow-inner transition-all duration-300 print:hidden"
+        >
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6">
                 <div className="flex flex-wrap items-center gap-6">
                     {/* Font Size Panel */}
                     <div className="flex items-center gap-3">
                         <Type className="size-4 text-slate-400" />
-                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Шрифт:</span>
-                        <div className="flex rounded-md bg-slate-800 p-0.5 border border-slate-700">
+                        <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            {t('a11y.font')}:
+                        </span>
+                        <div className="flex rounded-md border border-slate-700 bg-slate-800 p-0.5">
                             <button
                                 type="button"
                                 onClick={() => setFontSize('normal')}
-                                className={`rounded px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
+                                className={`cursor-pointer rounded px-3 py-1 text-xs font-semibold transition-all ${
                                     fontSize === 'normal'
                                         ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'hover:text-white text-slate-400'
+                                        : 'text-slate-400 hover:text-white'
                                 }`}
                             >
-                                А (Стандарт)
+                                {t('a11y.size_normal')}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setFontSize('large')}
-                                className={`rounded px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
+                                className={`cursor-pointer rounded px-3 py-1 text-xs font-semibold transition-all ${
                                     fontSize === 'large'
                                         ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'hover:text-white text-slate-400'
+                                        : 'text-slate-400 hover:text-white'
                                 }`}
                             >
-                                А+ (Крупный)
+                                {t('a11y.size_large')}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setFontSize('xl')}
-                                className={`rounded px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
+                                className={`cursor-pointer rounded px-3 py-1 text-xs font-semibold transition-all ${
                                     fontSize === 'xl'
                                         ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'hover:text-white text-slate-400'
+                                        : 'text-slate-400 hover:text-white'
                                 }`}
                             >
-                                А++ (Огромный)
+                                {t('a11y.size_xl')}
                             </button>
                         </div>
                     </div>
@@ -117,51 +142,53 @@ export function AccessibilityToolbar({ onClose }: { onClose: () => void }) {
                     {/* Contrast Panel */}
                     <div className="flex items-center gap-3">
                         <Eye className="size-4 text-slate-400" />
-                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Цвета:</span>
-                        <div className="flex rounded-md bg-slate-800 p-0.5 border border-slate-700">
+                        <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            {t('a11y.colors')}:
+                        </span>
+                        <div className="flex rounded-md border border-slate-700 bg-slate-800 p-0.5">
                             <button
                                 type="button"
                                 onClick={() => setContrast('normal')}
-                                className={`rounded px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
+                                className={`cursor-pointer rounded px-3 py-1 text-xs font-semibold transition-all ${
                                     contrast === 'normal'
                                         ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'hover:text-white text-slate-400'
+                                        : 'text-slate-400 hover:text-white'
                                 }`}
                             >
-                                Обычные
+                                {t('a11y.contrast_normal')}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setContrast('monochrome')}
-                                className={`rounded px-3 py-1 text-xs font-semibold transition-all cursor-pointer border border-transparent ${
+                                className={`cursor-pointer rounded border border-transparent px-3 py-1 text-xs font-semibold transition-all ${
                                     contrast === 'monochrome'
-                                        ? 'bg-white text-black font-bold border-slate-400 shadow-sm'
-                                        : 'hover:text-white text-slate-400'
+                                        ? 'border-slate-400 bg-white font-bold text-black shadow-sm'
+                                        : 'text-slate-400 hover:text-white'
                                 }`}
                             >
-                                Ч/Б
+                                {t('a11y.contrast_monochrome')}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setContrast('inverted')}
-                                className={`rounded px-3 py-1 text-xs font-semibold transition-all cursor-pointer border border-transparent ${
+                                className={`cursor-pointer rounded border border-transparent px-3 py-1 text-xs font-semibold transition-all ${
                                     contrast === 'inverted'
-                                        ? 'bg-black text-white font-bold border-slate-700 shadow-sm'
-                                        : 'hover:text-white text-slate-400'
+                                        ? 'border-slate-700 bg-black font-bold text-white shadow-sm'
+                                        : 'text-slate-400 hover:text-white'
                                 }`}
                             >
-                                Инверсия
+                                {t('a11y.contrast_inverted')}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setContrast('blueyellow')}
-                                className={`rounded px-3 py-1 text-xs font-semibold transition-all cursor-pointer border border-transparent ${
+                                className={`cursor-pointer rounded border border-transparent px-3 py-1 text-xs font-semibold transition-all ${
                                     contrast === 'blueyellow'
-                                        ? 'bg-[#0000ff] text-[#ffff00] font-bold border-blue-900 shadow-sm'
-                                        : 'hover:text-white text-slate-400'
+                                        ? 'border-blue-900 bg-[#0000ff] font-bold text-[#ffff00] shadow-sm'
+                                        : 'text-slate-400 hover:text-white'
                                 }`}
                             >
-                                Сине-желтый
+                                {t('a11y.contrast_blueyellow')}
                             </button>
                         </div>
                     </div>
@@ -169,59 +196,61 @@ export function AccessibilityToolbar({ onClose }: { onClose: () => void }) {
                     {/* Images Mode Panel */}
                     <div className="flex items-center gap-3">
                         <Image className="size-4 text-slate-400" />
-                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Картинки:</span>
-                        <div className="flex rounded-md bg-slate-800 p-0.5 border border-slate-700">
+                        <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            {t('a11y.images')}:
+                        </span>
+                        <div className="flex rounded-md border border-slate-700 bg-slate-800 p-0.5">
                             <button
                                 type="button"
                                 onClick={() => setImagesMode('normal')}
-                                className={`rounded px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
+                                className={`cursor-pointer rounded px-3 py-1 text-xs font-semibold transition-all ${
                                     imagesMode === 'normal'
                                         ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'hover:text-white text-slate-400'
+                                        : 'text-slate-400 hover:text-white'
                                 }`}
                             >
-                                Вкл
+                                {t('a11y.images_on')}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setImagesMode('grayscale')}
-                                className={`rounded px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
+                                className={`cursor-pointer rounded px-3 py-1 text-xs font-semibold transition-all ${
                                     imagesMode === 'grayscale'
                                         ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'hover:text-white text-slate-400'
+                                        : 'text-slate-400 hover:text-white'
                                 }`}
                             >
-                                Ч/Б
+                                {t('a11y.images_grayscale')}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setImagesMode('hidden')}
-                                className={`rounded px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
+                                className={`cursor-pointer rounded px-3 py-1 text-xs font-semibold transition-all ${
                                     imagesMode === 'hidden'
                                         ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'hover:text-white text-slate-400'
+                                        : 'text-slate-400 hover:text-white'
                                 }`}
                             >
-                                Выкл
+                                {t('a11y.images_off')}
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3 ml-auto">
+                <div className="ml-auto flex items-center gap-3">
                     <button
                         type="button"
                         onClick={resetAll}
-                        className="rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white cursor-pointer"
+                        className="cursor-pointer rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
                     >
-                        Сбросить настройки
+                        {t('a11y.reset')}
                     </button>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="rounded-md bg-red-950/40 border border-red-900/60 hover:bg-red-900 hover:text-white px-3 py-1 text-xs font-medium text-red-200 transition-all cursor-pointer"
+                        className="cursor-pointer rounded-md border border-red-900/60 bg-red-950/40 px-3 py-1 text-xs font-medium text-red-200 transition-all hover:bg-red-900 hover:text-white"
                     >
-                        Закрыть панель
+                        {t('a11y.close_panel')}
                     </button>
                 </div>
             </div>

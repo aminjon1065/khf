@@ -113,9 +113,7 @@ export default function GuideForm({
 
     return (
         <>
-            <Head
-                title={isEdit ? 'Редактирование памятки' : 'Новая памятка'}
-            />
+            <Head title={isEdit ? 'Редактирование памятки' : 'Новая памятка'} />
 
             <form
                 onSubmit={submit}
@@ -139,16 +137,25 @@ export default function GuideForm({
                     <div className="space-y-2">
                         <Label htmlFor="hazard_type">Тип ЧС</Label>
                         <Select
-                            value={form.data.hazard_type ? form.data.hazard_type : 'none'}
+                            value={
+                                form.data.hazard_type
+                                    ? form.data.hazard_type
+                                    : 'none'
+                            }
                             onValueChange={(value) =>
-                                form.setData('hazard_type', value === 'none' ? '' : value)
+                                form.setData(
+                                    'hazard_type',
+                                    value === 'none' ? '' : value,
+                                )
                             }
                         >
                             <SelectTrigger id="hazard_type">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="none">Без привязки</SelectItem>
+                                <SelectItem value="none">
+                                    Без привязки
+                                </SelectItem>
                                 {hazardTypes.map((hazardType) => (
                                     <SelectItem
                                         key={hazardType.value}

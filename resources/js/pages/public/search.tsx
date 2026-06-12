@@ -1,7 +1,13 @@
 import { Head, Link } from '@inertiajs/react';
-import { FileText, Map, Info, BookOpen, AlertCircle, Search as SearchIcon } from 'lucide-react';
-import PublicLayout from '@/layouts/public/public-layout';
+import {
+    FileText,
+    Info,
+    BookOpen,
+    AlertCircle,
+    Search as SearchIcon,
+} from 'lucide-react';
 import { useTranslations } from '@/hooks/use-translations';
+import PublicLayout from '@/layouts/public/public-layout';
 
 interface SearchResult {
     id: number;
@@ -23,21 +29,31 @@ export default function Search({
 
     const getIcon = (type: string) => {
         switch (type) {
-            case 'post': return <AlertCircle className="size-5 text-blue-500" />;
-            case 'page': return <Info className="size-5 text-green-500" />;
-            case 'document': return <FileText className="size-5 text-orange-500" />;
-            case 'guide': return <BookOpen className="size-5 text-purple-500" />;
-            default: return <FileText className="size-5" />;
+            case 'post':
+                return <AlertCircle className="size-5 text-blue-500" />;
+            case 'page':
+                return <Info className="size-5 text-green-500" />;
+            case 'document':
+                return <FileText className="size-5 text-orange-500" />;
+            case 'guide':
+                return <BookOpen className="size-5 text-purple-500" />;
+            default:
+                return <FileText className="size-5" />;
         }
     };
 
     const getTypeLabel = (type: string) => {
         switch (type) {
-            case 'post': return t('nav.news');
-            case 'page': return t('nav.home');
-            case 'document': return t('nav.documents');
-            case 'guide': return t('nav.guides');
-            default: return type;
+            case 'post':
+                return t('nav.news');
+            case 'page':
+                return t('nav.home');
+            case 'document':
+                return t('nav.documents');
+            case 'guide':
+                return t('nav.guides');
+            default:
+                return type;
         }
     };
 
@@ -45,22 +61,28 @@ export default function Search({
         <PublicLayout>
             <Head title={`${t('actions.search')} - ${query}`} />
 
-            <div className="max-w-3xl mx-auto py-8">
+            <div className="mx-auto max-w-3xl py-8">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+                    <h1 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-foreground">
                         <SearchIcon className="size-8 text-muted-foreground" />
                         {t('actions.search')}
                     </h1>
-                    <p className="text-muted-foreground mt-2 text-lg">
-                        {query ? `Результаты по запросу «${query}»` : 'Введите запрос для поиска'}
+                    <p className="mt-2 text-lg text-muted-foreground">
+                        {query
+                            ? t('search.results_for', { query })
+                            : t('search.enter_query')}
                     </p>
                 </div>
 
                 {query && results.length === 0 && (
-                    <div className="text-center py-16 bg-card border rounded-lg shadow-sm">
-                        <SearchIcon className="size-12 text-muted-foreground/30 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium">{t('table.empty')}</h3>
-                        <p className="text-muted-foreground mt-1">Попробуйте изменить поисковый запрос или использовать другие ключевые слова.</p>
+                    <div className="rounded-lg border bg-card py-16 text-center shadow-sm">
+                        <SearchIcon className="mx-auto mb-4 size-12 text-muted-foreground/30" />
+                        <h3 className="text-lg font-medium">
+                            {t('table.empty')}
+                        </h3>
+                        <p className="mt-1 text-muted-foreground">
+                            {t('search.no_results_hint')}
+                        </p>
                     </div>
                 )}
 
@@ -70,15 +92,15 @@ export default function Search({
                             <Link
                                 key={`${result.type}-${result.id}-${idx}`}
                                 href={result.url}
-                                className="block p-4 sm:p-6 bg-card border rounded-xl shadow-sm hover:shadow-md transition-shadow group"
+                                className="group block rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md sm:p-6"
                             >
                                 <div className="flex gap-4">
-                                    <div className="mt-1 bg-muted/50 p-2 rounded-lg h-fit border border-border/50">
+                                    <div className="mt-1 h-fit rounded-lg border border-border/50 bg-muted/50 p-2">
                                         {getIcon(result.type)}
                                     </div>
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1.5">
-                                            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                        <div className="mb-1.5 flex items-center gap-2">
+                                            <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                                 {getTypeLabel(result.type)}
                                             </span>
                                             {result.date && (
@@ -87,11 +109,11 @@ export default function Search({
                                                 </span>
                                             )}
                                         </div>
-                                        <h2 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                                        <h2 className="text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
                                             {result.title}
                                         </h2>
                                         {result.excerpt && (
-                                            <p className="text-muted-foreground mt-2 leading-relaxed text-sm sm:text-base">
+                                            <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
                                                 {result.excerpt}
                                             </p>
                                         )}

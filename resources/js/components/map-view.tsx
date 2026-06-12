@@ -60,7 +60,9 @@ export function MapView({
         }
 
         const initialCenter: [number, number] =
-            initialPickedCoords && initialPickedCoords.lat && initialPickedCoords.lng
+            initialPickedCoords &&
+            initialPickedCoords.lat &&
+            initialPickedCoords.lng
                 ? [initialPickedCoords.lng, initialPickedCoords.lat]
                 : center;
 
@@ -68,7 +70,12 @@ export function MapView({
             container,
             style: mapStyle,
             center: initialCenter,
-            zoom: initialPickedCoords && initialPickedCoords.lat && initialPickedCoords.lng ? 10 : zoom,
+            zoom:
+                initialPickedCoords &&
+                initialPickedCoords.lat &&
+                initialPickedCoords.lng
+                    ? 10
+                    : zoom,
         });
 
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
@@ -80,7 +87,12 @@ export function MapView({
         mapRef.current = map;
 
         // If in pick mode and initial coordinates are provided, create marker
-        if (onPick && initialPickedCoords && initialPickedCoords.lat && initialPickedCoords.lng) {
+        if (
+            onPick &&
+            initialPickedCoords &&
+            initialPickedCoords.lat &&
+            initialPickedCoords.lng
+        ) {
             pickMarkerRef.current = new maplibregl.Marker({
                 color: '#1f4e8c',
             })
@@ -93,6 +105,7 @@ export function MapView({
                 pickMarkerRef.current.remove();
                 pickMarkerRef.current = null;
             }
+
             map.remove();
             mapRef.current = null;
         };
@@ -143,7 +156,13 @@ export function MapView({
     // Pan to dynamic coordinate changes (e.g. region dropdown changes)
     useEffect(() => {
         const map = mapRef.current;
-        if (!map || !initialPickedCoords || !initialPickedCoords.lat || !initialPickedCoords.lng) {
+
+        if (
+            !map ||
+            !initialPickedCoords ||
+            !initialPickedCoords.lat ||
+            !initialPickedCoords.lng
+        ) {
             return;
         }
 

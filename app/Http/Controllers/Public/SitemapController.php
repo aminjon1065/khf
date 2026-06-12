@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\Document;
 use App\Models\Guide;
 use App\Models\Page;
 use App\Models\Post;
@@ -16,9 +15,17 @@ class SitemapController extends Controller
 {
     public function index(LocaleUrls $localeUrls): Response
     {
-        $xml = Cache::remember('sitemap.xml', now()->addHour(), function () use ($localeUrls) {
+        // Version the cache key by the newest content timestamp so the sitemap refreshes as soon as
+        // a post/guide/page is updated, rather than serving stale URLs until the hourly TTL lapses.
+        $version = collect([
+            Post::max('updated_at'),
+            Guide::max('updated_at'),
+            Page::max('updated_at'),
+        ])->filter()->max() ?? 'empty';
+
+        $xml = Cache::remember('sitemap.xml.'.$version, now()->addHour(), function () use ($localeUrls) {
             $locales = config('app.locales');
-            
+
             $urls = [];
 
             // Helper to build url entry
@@ -30,11 +37,13 @@ class SitemapController extends Controller
                     $routeParams = array_merge(['locale' => $locale], $params);
                     // For models, we might need a specific slug per locale. Let's assume generic paths for now or pass localized params.
                     // Actually, generic paths work if $params doesn't depend on locale. For Post, slug is per locale!
-                    
+
                     if (isset($params['_model'])) {
                         $model = $params['_model'];
                         $translation = $model->translation($locale);
-                        if (!$translation) continue;
+                        if (! $translation) {
+                            continue;
+                        }
                         $routeParams['slug'] = $translation->slug;
                         // remove model from params
                         unset($routeParams['_model']);
@@ -65,9 +74,9 @@ class SitemapController extends Controller
 
             // Static routes
             $staticRoutes = [
-                'welcome', 'search.index', 'news.index', 'incidents.index', 
-                'map.index', 'documents.index', 'guides.index', 'contacts.index', 
-                'appeals.create', 'tourist-groups.create', 'subscriptions.create'
+                'welcome', 'search.index', 'news.index', 'incidents.index',
+                'map.index', 'documents.index', 'guides.index', 'contacts.index',
+                'appeals.create', 'tourist-groups.create', 'subscriptions.create',
             ];
 
             foreach ($staticRoutes as $route) {

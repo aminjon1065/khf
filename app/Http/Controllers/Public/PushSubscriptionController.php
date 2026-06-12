@@ -17,13 +17,13 @@ class PushSubscriptionController extends Controller
     {
         $validated = $request->validate([
             'endpoint' => 'required|url',
-            'keys.auth' => 'required|string',
-            'keys.p256dh' => 'required|string',
-            'subscriber_token' => 'required|string',
+            'keys.auth' => 'required|string|max:255',
+            'keys.p256dh' => 'required|string|max:255',
+            'subscriber_token' => 'required|string|max:255',
             'topics' => 'nullable|array',
-            'topics.*' => 'string',
+            'topics.*' => 'string|max:64',
             'region_id' => 'nullable|exists:regions,id',
-            'locale' => 'required|string',
+            'locale' => 'required|string|max:5',
         ]);
 
         // Find or create subscriber by token
@@ -62,7 +62,7 @@ class PushSubscriptionController extends Controller
     {
         $validated = $request->validate([
             'endpoint' => 'required|url',
-            'subscriber_token' => 'required|string',
+            'subscriber_token' => 'required|string|max:255',
         ]);
 
         $subscriber = Subscriber::where('token', $validated['subscriber_token'])->first();

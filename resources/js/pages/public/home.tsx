@@ -1,11 +1,11 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Bell, Map, Phone, ShieldAlert } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { AppEmblem } from '@/components/app-emblem';
+import { HomeSlider } from '@/components/home-slider';
+import type { ActiveAlert } from '@/components/Public/EmergencyHero';
+import { EmergencyHero } from '@/components/Public/EmergencyHero';
 import { useTranslations } from '@/hooks/use-translations';
 import { index as newsIndex, show } from '@/routes/news';
-import { EmergencyHero, ActiveAlert } from '@/components/Public/EmergencyHero';
-import { HomeSlider } from '@/components/home-slider';
 
 type NewsCard = {
     title: string | null;
@@ -21,10 +21,15 @@ type PageProps = {
 };
 
 export default function Home({ latestPosts }: PageProps) {
-    const { locale, activeAlerts } = usePage().props as { locale: string; activeAlerts?: ActiveAlert[] };
+    const { locale, activeAlerts } = usePage().props as {
+        locale: string;
+        activeAlerts?: ActiveAlert[];
+    };
     const { t } = useTranslations();
 
-    const criticalAlerts = (activeAlerts ?? []).filter(a => a.level === 'critical');
+    const criticalAlerts = (activeAlerts ?? []).filter(
+        (a) => a.level === 'critical',
+    );
     const isRedState = criticalAlerts.length > 0;
 
     const quickLinks = [
@@ -70,8 +75,10 @@ export default function Home({ latestPosts }: PageProps) {
                             <item.icon className="size-6" />
                         </div>
                         <div>
-                            <p className="font-semibold text-foreground">{item.label}</p>
-                            <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                            <p className="font-semibold text-foreground">
+                                {item.label}
+                            </p>
+                            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                                 {item.value}
                             </p>
                         </div>
@@ -120,7 +127,7 @@ export default function Home({ latestPosts }: PageProps) {
                                     )}
                                 </div>
                                 <div className="flex flex-1 flex-col p-6">
-                                    <div className="mb-3 flex items-center gap-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                                    <div className="mb-3 flex items-center gap-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
                                         {post.category && (
                                             <span className="text-primary">
                                                 {post.category}
@@ -130,7 +137,7 @@ export default function Home({ latestPosts }: PageProps) {
                                             <span>{post.published_at}</span>
                                         )}
                                     </div>
-                                    <h3 className="text-xl font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
+                                    <h3 className="text-xl leading-tight font-bold text-foreground transition-colors group-hover:text-primary">
                                         {post.title}
                                     </h3>
                                     {post.excerpt && (
