@@ -253,3 +253,165 @@
         text-decoration: none;
     }
 }
+
+/* ==========================================================================
+   Accessibility Mode Overrides (ТЗ §6.11)
+   ========================================================================== */
+
+/* Font Size Scaling */
+html.a11y-size-large {
+    font-size: 118% !important;
+}
+
+html.a11y-size-xl {
+    font-size: 132% !important;
+}
+
+/* Contrast Mode: Monochrome (Black on White) */
+html.a11y-contrast-monochrome {
+    --background: #ffffff !important;
+    --foreground: #000000 !important;
+    --card: #ffffff !important;
+    --card-foreground: #000000 !important;
+    --popover: #ffffff !important;
+    --popover-foreground: #000000 !important;
+    --primary: #000000 !important;
+    --primary-foreground: #ffffff !important;
+    --secondary: #f3f4f6 !important;
+    --secondary-foreground: #000000 !important;
+    --muted: #f3f4f6 !important;
+    --muted-foreground: #374151 !important;
+    --accent: #f3f4f6 !important;
+    --accent-foreground: #000000 !important;
+    --border: #000000 !important;
+    --input: #000000 !important;
+    --ring: #000000 !important;
+}
+html.a11y-contrast-monochrome * {
+    border-color: #000000 !important;
+    background-color: transparent !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+html.a11y-contrast-monochrome button,
+html.a11y-contrast-monochrome a,
+html.a11y-contrast-monochrome select,
+html.a11y-contrast-monochrome input,
+html.a11y-contrast-monochrome textarea {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: 2px solid #000000 !important;
+}
+html.a11y-contrast-monochrome header,
+html.a11y-contrast-monochrome footer,
+html.a11y-contrast-monochrome .bg-primary,
+html.a11y-contrast-monochrome button[type="submit"] {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+html.a11y-contrast-monochrome header * {
+    color: #ffffff !important;
+}
+
+/* Contrast Mode: Inverted (White on Black) */
+html.a11y-contrast-inverted {
+    --background: #000000 !important;
+    --foreground: #ffffff !important;
+    --card: #000000 !important;
+    --card-foreground: #ffffff !important;
+    --popover: #000000 !important;
+    --popover-foreground: #ffffff !important;
+    --primary: #ffffff !important;
+    --primary-foreground: #000000 !important;
+    --secondary: #1f2937 !important;
+    --secondary-foreground: #ffffff !important;
+    --muted: #1f2937 !important;
+    --muted-foreground: #d1d5db !important;
+    --accent: #1f2937 !important;
+    --accent-foreground: #ffffff !important;
+    --border: #ffffff !important;
+    --input: #ffffff !important;
+    --ring: #ffffff !important;
+}
+html.a11y-contrast-inverted * {
+    border-color: #ffffff !important;
+    background-color: transparent !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+html.a11y-contrast-inverted button,
+html.a11y-contrast-inverted a,
+html.a11y-contrast-inverted select,
+html.a11y-contrast-inverted input,
+html.a11y-contrast-inverted textarea {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+}
+html.a11y-contrast-inverted header,
+html.a11y-contrast-inverted footer,
+html.a11y-contrast-inverted .bg-primary,
+html.a11y-contrast-inverted button[type="submit"] {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+html.a11y-contrast-inverted header * {
+    color: #000000 !important;
+}
+
+/* Contrast Mode: Blue-Yellow */
+html.a11y-contrast-blueyellow {
+    --background: #0000ff !important;
+    --foreground: #ffff00 !important;
+    --card: #0000ff !important;
+    --card-foreground: #ffff00 !important;
+    --popover: #0000ff !important;
+    --popover-foreground: #ffff00 !important;
+    --primary: #ffff00 !important;
+    --primary-foreground: #0000ff !important;
+    --secondary: #0000aa !important;
+    --secondary-foreground: #ffff00 !important;
+    --muted: #0000aa !important;
+    --muted-foreground: #ffff00 !important;
+    --accent: #0000aa !important;
+    --accent-foreground: #ffff00 !important;
+    --border: #ffff00 !important;
+    --input: #ffff00 !important;
+    --ring: #ffff00 !important;
+}
+html.a11y-contrast-blueyellow * {
+    border-color: #ffff00 !important;
+    background-color: transparent !important;
+    color: #ffff00 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+html.a11y-contrast-blueyellow button,
+html.a11y-contrast-blueyellow a,
+html.a11y-contrast-blueyellow select,
+html.a11y-contrast-blueyellow input,
+html.a11y-contrast-blueyellow textarea {
+    background-color: #0000ff !important;
+    color: #ffff00 !important;
+    border: 2px solid #ffff00 !important;
+}
+html.a11y-contrast-blueyellow header,
+html.a11y-contrast-blueyellow footer,
+html.a11y-contrast-blueyellow .bg-primary,
+html.a11y-contrast-blueyellow button[type="submit"] {
+    background-color: #ffff00 !important;
+    color: #0000ff !important;
+}
+html.a11y-contrast-blueyellow header * {
+    color: #0000ff !important;
+}
+
+/* Image controls */
+html.a11y-images-grayscale img:not(.app-logo-emblem) {
+    filter: grayscale(100%) !important;
+}
+html.a11y-images-hidden img:not(.app-logo-emblem) {
+    display: none !important;
+}

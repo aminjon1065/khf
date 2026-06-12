@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { Phone, Search } from 'lucide-react';
+import { Eye, Phone, Search } from 'lucide-react';
 import { AlertBanner } from '@/components/alert-banner';
 import { AppEmblem } from '@/components/app-emblem';
 import { LanguageSwitcher } from '@/components/language-switcher';
-import { GlobalSearchModal } from '@/Components/Public/GlobalSearchModal';
+import { GlobalSearchModal } from '@/components/Public/GlobalSearchModal';
+import { AccessibilityToolbar } from '@/components/accessibility-toolbar';
+import { AdminBar } from '@/components/admin-bar';
 import { useTranslations } from '@/hooks/use-translations';
 import { login, welcome } from '@/routes';
 import { create as appealsCreate } from '@/routes/appeals';
@@ -30,13 +32,31 @@ export default function PublicLayout({
     const navPages = props.navPages ?? [];
     const { t } = useTranslations();
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [isA11yOpen, setIsA11yOpen] = useState(false);
     
     // Check for critical alerts to trigger Red State header
     const activeAlerts = (props.activeAlerts as Array<{ level: string }>) ?? [];
     const isRedState = activeAlerts.some((a) => a.level === 'critical');
 
+    // Admin privileges check for WordPress-style AdminBar
+    const canManage = auth?.user && (
+        auth.roles?.includes('super-admin') ||
+        auth.roles?.includes('moderator') ||
+        auth.permissions?.includes('posts.manage') ||
+        auth.permissions?.includes('pages.manage')
+    );
+
+    const pageId = (props.page as { id?: number })?.id;
+    const postId = (props.post as { id?: number })?.id;
+
     return (
         <div className="flex min-h-screen flex-col bg-card text-foreground font-sans antialiased selection:bg-primary/20">
+            {canManage && (
+                <AdminBar pageId={pageId} postId={postId} />
+            )}
+            {isA11yOpen && (
+                <AccessibilityToolbar onClose={() => setIsA11yOpen(false)} />
+            )}
             <AlertBanner />
             <header className={`sticky top-0 z-50 border-b print:hidden transition-all duration-500 ${isRedState ? 'bg-red-900 text-white border-red-700 shadow-lg' : 'bg-[#0f172a] text-white border-slate-800 shadow-md'}`}>
                 <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
@@ -107,8 +127,16 @@ export default function PublicLayout({
                                 112
                             </a>
                             <button
+                                onClick={() => setIsA11yOpen(!isA11yOpen)}
+                                className="p-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+                                aria-label="Версия для слабовидящих"
+                                title="Версия для слабовидящих"
+                            >
+                                <Eye className="size-5" />
+                            </button>
+                            <button
                                 onClick={() => setIsSearchOpen(true)}
-                                className="p-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                                className="p-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
                                 aria-label="Search"
                             >
                                 <Search className="size-5" />
@@ -132,32 +160,58 @@ export default function PublicLayout({
             </main>
 
             <footer className="border-t bg-muted print:hidden">
-                <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 text-sm text-muted-foreground sm:grid-cols-2">
-                    <div className="flex flex-col gap-1">
+                <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 text-sm text-muted-foreground sm:grid-cols-3">
+                    <div className="flex flex-col gap-2">
                         <p className="font-semibold text-foreground">
                             {t('footer.hotline')}: 112
                         </p>
-                        <p>{t('site.full_name')}</p>
+                        <p className="leading-relaxed">{t('site.full_name')}</p>
                     </div>
-                    <nav className="flex flex-col gap-2 sm:items-end">
+                    
+                    <div className="flex flex-col gap-2">
+                        <p className="font-semibold text-foreground">
+                            Полезные ресурсы
+                        </p>
+                        <ul className="space-y-2">
+                            <li>
+                                <a href="https://president.tj" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                                    Президент Республики Таджикистан
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://government.tj" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                                    Правительство Республики Таджикистан
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://egov.tj" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                                    Портал государственных услуг РТ
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <nav className="flex flex-col gap-2">
                         <p className="font-semibold text-foreground">
                             {t('footer.sections')}
                         </p>
-                        <Link href={guidesIndex({ locale }).url} className="hover:text-primary">
-                            {t('nav.guides')}
-                        </Link>
-                        <Link href={contactsIndex({ locale }).url} className="hover:text-primary">
-                            {t('nav.contacts')}
-                        </Link>
-                        {navPages.map((page) => (
-                            <Link
-                                key={page.slug}
-                                href={pageShow({ locale, slug: page.slug }).url}
-                                className="hover:text-primary"
-                            >
-                                {page.title}
+                        <div className="flex flex-col gap-2">
+                            <Link href={guidesIndex({ locale }).url} className="hover:text-primary transition-colors">
+                                {t('nav.guides')}
                             </Link>
-                        ))}
+                            <Link href={contactsIndex({ locale }).url} className="hover:text-primary transition-colors">
+                                {t('nav.contacts')}
+                            </Link>
+                            {navPages.map((page) => (
+                                <Link
+                                    key={page.slug}
+                                    href={pageShow({ locale, slug: page.slug }).url}
+                                    className="hover:text-primary transition-colors"
+                                >
+                                    {page.title}
+                                </Link>
+                            ))}
+                        </div>
                     </nav>
                 </div>
             </footer>

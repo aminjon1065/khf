@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { FileText, Map, Info, BookOpen, AlertCircle, Search as SearchIcon } from 'lucide-react';
-import PublicLayout from '@/Layouts/public/public-layout';
+import PublicLayout from '@/layouts/public/public-layout';
 import { useTranslations } from '@/hooks/use-translations';
 
 interface SearchResult {

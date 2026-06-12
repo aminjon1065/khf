@@ -46,6 +46,7 @@ class PageController extends Controller
 
             return [
                 'page' => [
+                    'id' => $page->id,
                     'title' => $translation->title,
                     'content' => $translation->content,
                     'updated_at' => $page->updated_at?->format('d.m.Y'),

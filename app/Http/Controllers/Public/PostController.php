@@ -72,6 +72,7 @@ class PostController extends Controller
 
             return [
                 'post' => [
+                    'id' => $post->id,
                     'title' => $translation->title,
                     'excerpt' => $translation->excerpt,
                     'body' => $translation->body,

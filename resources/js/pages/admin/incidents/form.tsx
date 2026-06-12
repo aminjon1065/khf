@@ -16,11 +16,12 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes/admin';
 import { index, store, update } from '@/routes/admin/incidents';
+import { MapView } from '@/components/map-view';
 
 type Translation = { title: string; description: string };
 type Option = { value: string; label: string };
 type LocaleOption = { code: string; native_name: string };
-type RegionOption = { id: number; name: string };
+type RegionOption = { id: number; name: string; lat: number; lng: number };
 
 type IncidentData = {
     id: number;
@@ -123,219 +124,259 @@ export default function IncidentForm({
                     </div>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <div className="space-y-2">
-                        <Label htmlFor="type">Тип</Label>
-                        <Select
-                            value={form.data.type}
-                            onValueChange={(value) =>
-                                form.setData('type', value)
-                            }
-                        >
-                            <SelectTrigger id="type">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {types.map((type) => (
-                                    <SelectItem
-                                        key={type.value}
-                                        value={type.value}
-                                    >
-                                        {type.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.type} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="hazard_level">Уровень опасности</Label>
-                        <Select
-                            value={form.data.hazard_level}
-                            onValueChange={(value) =>
-                                form.setData('hazard_level', value)
-                            }
-                        >
-                            <SelectTrigger id="hazard_level">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {levels.map((level) => (
-                                    <SelectItem
-                                        key={level.value}
-                                        value={level.value}
-                                    >
-                                        {level.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.hazard_level} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="status">Статус</Label>
-                        <Select
-                            value={form.data.status}
-                            onValueChange={(value) =>
-                                form.setData('status', value)
-                            }
-                        >
-                            <SelectTrigger id="status">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {statuses.map((status) => (
-                                    <SelectItem
-                                        key={status.value}
-                                        value={status.value}
-                                    >
-                                        {status.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.status} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="region">Регион</Label>
-                        <Select
-                            value={
-                                form.data.region_id
-                                    ? String(form.data.region_id)
-                                    : 'none'
-                            }
-                            onValueChange={(value) =>
-                                form.setData(
-                                    'region_id',
-                                    value === 'none' ? null : Number(value),
-                                )
-                            }
-                        >
-                            <SelectTrigger id="region">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">
-                                    — Не указан —
-                                </SelectItem>
-                                {regions.map((region) => (
-                                    <SelectItem
-                                        key={region.id}
-                                        value={String(region.id)}
-                                    >
-                                        {region.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.region_id} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="occurred_at">Дата и время</Label>
-                        <Input
-                            id="occurred_at"
-                            type="datetime-local"
-                            value={form.data.occurred_at}
-                            onChange={(event) =>
-                                form.setData('occurred_at', event.target.value)
-                            }
-                        />
-                        <InputError message={errors.occurred_at} />
-                    </div>
-                </div>
+                <div className="grid gap-6 lg:grid-cols-3">
+                    <div className="space-y-6 lg:col-span-2">
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="type">Тип</Label>
+                                <Select
+                                    value={form.data.type}
+                                    onValueChange={(value) =>
+                                        form.setData('type', value)
+                                    }
+                                >
+                                    <SelectTrigger id="type">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {types.map((type) => (
+                                            <SelectItem
+                                                key={type.value}
+                                                value={type.value}
+                                            >
+                                                {type.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.type} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="hazard_level">Уровень опасности</Label>
+                                <Select
+                                    value={form.data.hazard_level}
+                                    onValueChange={(value) =>
+                                        form.setData('hazard_level', value)
+                                    }
+                                >
+                                    <SelectTrigger id="hazard_level">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {levels.map((level) => (
+                                            <SelectItem
+                                                key={level.value}
+                                                value={level.value}
+                                            >
+                                                {level.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.hazard_level} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="status">Статус</Label>
+                                <Select
+                                    value={form.data.status}
+                                    onValueChange={(value) =>
+                                        form.setData('status', value)
+                                    }
+                                >
+                                    <SelectTrigger id="status">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {statuses.map((status) => (
+                                            <SelectItem
+                                                key={status.value}
+                                                value={status.value}
+                                            >
+                                                {status.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.status} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="region">Регион</Label>
+                                <Select
+                                    value={
+                                        form.data.region_id
+                                            ? String(form.data.region_id)
+                                            : 'none'
+                                    }
+                                    onValueChange={(value) => {
+                                        const regionId = value === 'none' ? null : Number(value);
+                                        if (regionId) {
+                                            const region = regions.find(r => r.id === regionId);
+                                            if (region && region.lat && region.lng) {
+                                                form.setData((prev) => ({
+                                                    ...prev,
+                                                    region_id: regionId,
+                                                    latitude: Number(region.lat.toFixed(7)),
+                                                    longitude: Number(region.lng.toFixed(7))
+                                                }));
+                                            } else {
+                                                form.setData('region_id', regionId);
+                                            }
+                                        } else {
+                                            form.setData('region_id', null);
+                                        }
+                                    }}
+                                >
+                                    <SelectTrigger id="region">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">
+                                            — Не указан —
+                                        </SelectItem>
+                                        {regions.map((region) => (
+                                            <SelectItem
+                                                key={region.id}
+                                                value={String(region.id)}
+                                            >
+                                                {region.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.region_id} />
+                            </div>
+                            <div className="space-y-2 sm:col-span-2">
+                                <Label htmlFor="occurred_at">Дата и время</Label>
+                                <Input
+                                    id="occurred_at"
+                                    type="datetime-local"
+                                    value={form.data.occurred_at}
+                                    onChange={(event) =>
+                                        form.setData('occurred_at', event.target.value)
+                                    }
+                                />
+                                <InputError message={errors.occurred_at} />
+                            </div>
+                        </div>
 
-                <div className="grid gap-4 sm:grid-cols-2 lg:max-w-md">
-                    <div className="space-y-2">
-                        <Label htmlFor="latitude">Широта</Label>
-                        <Input
-                            id="latitude"
-                            type="number"
-                            step="0.0000001"
-                            value={form.data.latitude}
-                            onChange={(event) =>
-                                form.setData('latitude', event.target.value)
-                            }
-                        />
-                        <InputError message={errors.latitude} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="longitude">Долгота</Label>
-                        <Input
-                            id="longitude"
-                            type="number"
-                            step="0.0000001"
-                            value={form.data.longitude}
-                            onChange={(event) =>
-                                form.setData('longitude', event.target.value)
-                            }
-                        />
-                        <InputError message={errors.longitude} />
-                    </div>
-                </div>
+                        <div className="flex flex-wrap gap-2 border-b pb-2">
+                            {locales.map((locale) => (
+                                <Button
+                                    key={locale.code}
+                                    type="button"
+                                    variant={
+                                        activeLocale === locale.code
+                                            ? 'default'
+                                            : 'ghost'
+                                    }
+                                    size="sm"
+                                    className="gap-2"
+                                    onClick={() => setActiveLocale(locale.code)}
+                                >
+                                    {locale.native_name}
+                                    {Boolean(
+                                        form.data.translations[locale.code]?.title,
+                                    ) && <Check className="size-3.5 text-green-600" />}
+                                </Button>
+                            ))}
+                        </div>
 
-                <div className="flex flex-wrap gap-2 border-b pb-2">
-                    {locales.map((locale) => (
-                        <Button
-                            key={locale.code}
-                            type="button"
-                            variant={
-                                activeLocale === locale.code
-                                    ? 'default'
-                                    : 'ghost'
-                            }
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => setActiveLocale(locale.code)}
-                        >
-                            {locale.native_name}
-                            {Boolean(
-                                form.data.translations[locale.code]?.title,
-                            ) && <Check className="size-3.5 text-green-600" />}
-                        </Button>
-                    ))}
-                </div>
-
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="title">Заголовок</Label>
-                        <Input
-                            id="title"
-                            value={active.title}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'title',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.title`]
-                            }
-                        />
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="title">Заголовок</Label>
+                                <Input
+                                    id="title"
+                                    value={active.title}
+                                    onChange={(event) =>
+                                        setTranslation(
+                                            activeLocale,
+                                            'title',
+                                            event.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={
+                                        errors[`translations.${activeLocale}.title`]
+                                    }
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Описание</Label>
+                                <Textarea
+                                    id="description"
+                                    rows={6}
+                                    value={active.description}
+                                    onChange={(event) =>
+                                        setTranslation(
+                                            activeLocale,
+                                            'description',
+                                            event.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={
+                                        errors[
+                                            `translations.${activeLocale}.description`
+                                        ]
+                                    }
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="description">Описание</Label>
-                        <Textarea
-                            id="description"
-                            rows={6}
-                            value={active.description}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'description',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                        <InputError
-                            message={
-                                errors[
-                                    `translations.${activeLocale}.description`
-                                ]
-                            }
-                        />
+
+                    <div className="lg:col-span-1">
+                        <div className="sticky top-20 rounded-xl border bg-card p-5 shadow-sm space-y-4">
+                            <h3 className="font-semibold text-foreground">Координаты на карте</h3>
+                            <p className="text-xs text-muted-foreground">
+                                Кликните по карте, чтобы автоматически указать широту и долготу, или выберите регион для приближения.
+                            </p>
+                            <div className="h-80 overflow-hidden rounded-lg border relative">
+                                <MapView
+                                    initialPickedCoords={
+                                        form.data.latitude && form.data.longitude
+                                            ? { lat: Number(form.data.latitude), lng: Number(form.data.longitude) }
+                                            : null
+                                    }
+                                    onPick={({ lat, lng }) => {
+                                        form.setData((data) => ({
+                                            ...data,
+                                            latitude: Number(lat.toFixed(7)),
+                                            longitude: Number(lng.toFixed(7)),
+                                        }));
+                                    }}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="latitude">Широта</Label>
+                                    <Input
+                                        id="latitude"
+                                        type="number"
+                                        step="0.0000001"
+                                        value={form.data.latitude}
+                                        onChange={(event) =>
+                                            form.setData('latitude', event.target.value === '' ? '' : Number(event.target.value))
+                                        }
+                                    />
+                                    <InputError message={errors.latitude} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="longitude">Долгота</Label>
+                                    <Input
+                                        id="longitude"
+                                        type="number"
+                                        step="0.0000001"
+                                        value={form.data.longitude}
+                                        onChange={(event) =>
+                                            form.setData('longitude', event.target.value === '' ? '' : Number(event.target.value))
+                                        }
+                                    />
+                                    <InputError message={errors.longitude} />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </form>

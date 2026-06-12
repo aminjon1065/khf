@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { AppEmblem } from '@/components/app-emblem';
 import { useTranslations } from '@/hooks/use-translations';
 import { index as newsIndex, show } from '@/routes/news';
-import { EmergencyHero, ActiveAlert } from '@/Components/Public/EmergencyHero';
+import { EmergencyHero, ActiveAlert } from '@/components/Public/EmergencyHero';
+import { HomeSlider } from '@/components/home-slider';
 
 type NewsCard = {
     title: string | null;
@@ -56,30 +57,7 @@ export default function Home({ latestPosts }: PageProps) {
             {isRedState ? (
                 <EmergencyHero alerts={criticalAlerts} />
             ) : (
-                <section className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-primary/10 via-background to-background px-6 py-16 text-center sm:px-10 sm:py-24 border border-border/50 shadow-sm transition-all duration-700">
-                    <div className="mx-auto flex max-w-3xl flex-col items-center">
-                        <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                            {t('home.hero.title')}
-                        </h1>
-                        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-                            {t('home.hero.subtitle')}
-                        </p>
-                        <div className="mt-10 flex flex-wrap justify-center gap-4">
-                            <Button variant="default" size="lg" className="rounded-full px-8 shadow-md transition-transform hover:scale-105" asChild>
-                                <Link href={newsIndex({ locale }).url}>
-                                    {t('common.latest_news')}
-                                </Link>
-                            </Button>
-                            <a
-                                href="tel:112"
-                                className="inline-flex items-center gap-2 rounded-full border bg-background px-8 py-2.5 text-sm font-semibold shadow-sm transition-all hover:bg-muted hover:shadow-md hover:border-signal/50"
-                            >
-                                <Phone className="size-4 text-signal" />
-                                {t('home.hero.emergency_call')}
-                            </a>
-                        </div>
-                    </div>
-                </section>
+                <HomeSlider latestPosts={latestPosts} locale={locale} t={t} />
             )}
 
             <section className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

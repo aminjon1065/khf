@@ -199,7 +199,12 @@ class IncidentController extends Controller
                 ->with('translations')
                 ->orderBy('sort_order')
                 ->get()
-                ->map(fn (Region $region) => ['id' => $region->id, 'name' => $region->translation($locale)?->name ?? $region->code])
+                ->map(fn (Region $region) => [
+                    'id' => $region->id,
+                    'name' => $region->translation($locale)?->name ?? $region->code,
+                    'lat' => (float) $region->latitude,
+                    'lng' => (float) $region->longitude,
+                ])
                 ->all(),
             'locales' => Language::active()
                 ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])

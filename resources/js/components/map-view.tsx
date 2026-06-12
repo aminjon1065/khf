@@ -18,6 +18,7 @@ type MapViewProps = {
     zoom?: number;
     className?: string;
     onPick?: (coords: { lat: number; lng: number }) => void;
+    initialPickedCoords?: { lat: number | null; lng: number | null } | null;
 };
 
 // OSM raster tiles. For production, point this at the Committee's own OSM-compatible tile server
@@ -45,6 +46,7 @@ export function MapView({
     zoom = 6,
     className,
     onPick,
+    initialPickedCoords,
 }: MapViewProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<maplibregl.Map | null>(null);
@@ -57,16 +59,40 @@ export function MapView({
             return;
         }
 
+        const initialCenter: [number, number] =
+            initialPickedCoords && initialPickedCoords.lat && initialPickedCoords.lng
+                ? [initialPickedCoords.lng, initialPickedCoords.lat]
+                : center;
+
         const map = new maplibregl.Map({
             container,
             style: mapStyle,
-            center,
-            zoom,
+            center: initialCenter,
+            zoom: initialPickedCoords && initialPickedCoords.lat && initialPickedCoords.lng ? 10 : zoom,
         });
+
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+        map.on('load', () => {
+            map.resize();
+        });
+
         mapRef.current = map;
 
+        // If in pick mode and initial coordinates are provided, create marker
+        if (onPick && initialPickedCoords && initialPickedCoords.lat && initialPickedCoords.lng) {
+            pickMarkerRef.current = new maplibregl.Marker({
+                color: '#1f4e8c',
+            })
+                .setLngLat([initialPickedCoords.lng, initialPickedCoords.lat])
+                .addTo(map);
+        }
+
         return () => {
+            if (pickMarkerRef.current) {
+                pickMarkerRef.current.remove();
+                pickMarkerRef.current = null;
+            }
             map.remove();
             mapRef.current = null;
         };
@@ -113,6 +139,31 @@ export function MapView({
 
         return () => created.forEach((marker) => marker.remove());
     }, [markers]);
+
+    // Pan to dynamic coordinate changes (e.g. region dropdown changes)
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map || !initialPickedCoords || !initialPickedCoords.lat || !initialPickedCoords.lng) {
+            return;
+        }
+
+        const { lat, lng } = initialPickedCoords;
+        map.flyTo({
+            center: [lng, lat],
+            zoom: map.getZoom() < 8 ? 8 : map.getZoom(),
+            essential: true,
+        });
+
+        if (pickMarkerRef.current) {
+            pickMarkerRef.current.setLngLat([lng, lat]);
+        } else {
+            pickMarkerRef.current = new maplibregl.Marker({
+                color: '#1f4e8c',
+            })
+                .setLngLat([lng, lat])
+                .addTo(map);
+        }
+    }, [initialPickedCoords?.lat, initialPickedCoords?.lng]);
 
     useEffect(() => {
         const map = mapRef.current;

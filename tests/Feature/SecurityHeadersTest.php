@@ -29,7 +29,7 @@ it('sends a content security policy with safe defaults', function () {
 });
 
 it('does not send HSTS over plain http', function () {
-    $this->get(route('welcome', ['locale' => 'tj']))
+    $this->get('http://khf.test/tj')
         ->assertHeaderMissing('Strict-Transport-Security');
 });
 
