@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\ContentStatus;
 use App\Enums\PostType;
+use App\Models\Concerns\ClearsResponseCache;
+use App\Models\Concerns\HasSeoMeta;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,8 +14,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -32,13 +34,15 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class Post extends Model implements HasMedia
 {
+    use ClearsResponseCache;
+
     /** @use HasFactory<PostFactory> */
     use HasFactory;
-
+    use HasSeoMeta;
     use HasTranslations;
     use InteractsWithMedia;
-    use SoftDeletes;
     use LogsActivity;
+    use SoftDeletes;
 
     public const COVER_COLLECTION = 'cover';
 

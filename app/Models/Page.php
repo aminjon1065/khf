@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\ContentStatus;
+use App\Models\Concerns\ClearsResponseCache;
+use App\Models\Concerns\HasSeoMeta;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\PageFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,8 +24,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Page extends Model
 {
+    use ClearsResponseCache;
     /** @use HasFactory<PageFactory> */
     use HasFactory;
+
+    use HasSeoMeta;
 
     use HasTranslations;
     use SoftDeletes;

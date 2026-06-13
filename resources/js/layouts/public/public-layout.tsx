@@ -7,6 +7,7 @@ import { AlertBanner } from '@/components/alert-banner';
 import { AppEmblem } from '@/components/app-emblem';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { GlobalSearchModal } from '@/components/Public/GlobalSearchModal';
+import { BottomNavigation } from '@/components/Public/bottom-navigation';
 import {
     Sheet,
     SheetContent,
@@ -194,7 +195,7 @@ export default function PublicLayout({
                         <LanguageSwitcher className={switcherClass} />
 
                         {/* Mobile & Tablet Hamburger Drawer */}
-                        <div className="lg:hidden">
+                        <div className="hidden sm:block lg:hidden">
                             <Sheet
                                 open={isMobileMenuOpen}
                                 onOpenChange={setIsMobileMenuOpen}
@@ -472,6 +473,7 @@ export default function PublicLayout({
                 </div>
             </footer>
 
+            <BottomNavigation />
             <GlobalSearchModal
                 isOpen={isSearchOpen}
                 setIsOpen={setIsSearchOpen}

@@ -20,6 +20,7 @@
         "spatie/laravel-activitylog": "^5.0",
         "spatie/laravel-medialibrary": "^11.23",
         "spatie/laravel-permission": "^8.0",
+        "spatie/laravel-responsecache": "^8.4",
         "stevebauman/purify": "^6.3",
         "symfony/html-sanitizer": "^8.1"
     },

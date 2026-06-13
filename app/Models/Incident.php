@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\HazardLevel;
 use App\Enums\IncidentStatus;
 use App\Enums\IncidentType;
+use App\Models\Concerns\ClearsResponseCache;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\IncidentFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,8 +14,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * An emergency event (ТЗ §6.3, §7.4). Multilingual title/description live in
@@ -31,6 +32,8 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
  */
 class Incident extends Model
 {
+    use ClearsResponseCache;
+
     /** @use HasFactory<IncidentFactory> */
     use HasFactory;
 

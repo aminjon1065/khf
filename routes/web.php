@@ -16,6 +16,7 @@ use App\Http\Controllers\Public\SitemapController;
 use App\Http\Controllers\Public\SubscriptionController;
 use App\Http\Controllers\Public\TouristGroupController;
 use Illuminate\Support\Facades\Route;
+use Spatie\ResponseCache\Middlewares\CacheResponse;
 
 /*
  * Root → resolved localized homepage. The locale is set by the SetLocale middleware
@@ -33,24 +34,24 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.x
 Route::prefix('{locale}')
     ->whereIn('locale', config('app.locales'))
     ->group(function () {
-        Route::get('/', [HomeController::class, 'index'])->name('welcome');
+        Route::get('/', [HomeController::class, 'index'])->middleware(CacheResponse::class)->name('welcome');
         Route::get('search', [SearchController::class, 'index'])->name('search.index');
         Route::get('search/api', [SearchController::class, 'api'])->name('search.api');
-        Route::get('news', [PostController::class, 'index'])->name('news.index');
-        Route::get('news/rss', [FeedController::class, 'news'])->name('news.rss');
-        Route::get('news/{slug}', [PostController::class, 'show'])->name('news.show');
-        Route::get('incidents', [IncidentController::class, 'index'])->name('incidents.index');
-        Route::get('map', [MapController::class, 'index'])->name('map.index');
-        Route::get('documents', [DocumentController::class, 'index'])->name('documents.index');
+        Route::get('news', [PostController::class, 'index'])->middleware(CacheResponse::class)->name('news.index');
+        Route::get('news/rss', [FeedController::class, 'news'])->middleware(CacheResponse::class)->name('news.rss');
+        Route::get('news/{slug}', [PostController::class, 'show'])->middleware(CacheResponse::class)->name('news.show');
+        Route::get('incidents', [IncidentController::class, 'index'])->middleware(CacheResponse::class)->name('incidents.index');
+        Route::get('map', [MapController::class, 'index'])->middleware(CacheResponse::class)->name('map.index');
+        Route::get('documents', [DocumentController::class, 'index'])->middleware(CacheResponse::class)->name('documents.index');
         Route::get('documents/{document}/files/{media}', [DocumentController::class, 'download'])->name('documents.download');
 
         // Safety guides catalogue + guide page (ТЗ §6.5). Download is controlled (private disk).
-        Route::get('guides', [GuideController::class, 'index'])->middleware('cache.headers:public;max_age=3600;etag')->name('guides.index');
+        Route::get('guides', [GuideController::class, 'index'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('guides.index');
         Route::get('guides/{guide}/files/{media}', [GuideController::class, 'download'])->name('guides.download');
-        Route::get('guides/{slug}', [GuideController::class, 'show'])->middleware('cache.headers:public;max_age=3600;etag')->name('guides.show');
+        Route::get('guides/{slug}', [GuideController::class, 'show'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('guides.show');
 
         // Contacts: emergency numbers, regional offices, map + feedback (ТЗ §6.9).
-        Route::get('contacts', [ContactController::class, 'index'])->middleware('cache.headers:public;max_age=3600;etag')->name('contacts.index');
+        Route::get('contacts', [ContactController::class, 'index'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('contacts.index');
 
         // Citizen appeals (electronic reception) — public form is rate-limited (ТЗ §12.4).
         Route::get('appeals', [AppealController::class, 'create'])->name('appeals.create');
@@ -75,7 +76,7 @@ Route::prefix('{locale}')
         Route::post('push/unsubscribe', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:10,1')->name('push.unsubscribe');
 
         // CMS-managed static content pages (About / Activities / Contacts …) by current-locale slug.
-        Route::get('pages/{slug}', [PageController::class, 'show'])->middleware('cache.headers:public;max_age=3600;etag')->name('pages.show');
+        Route::get('pages/{slug}', [PageController::class, 'show'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('pages.show');
     });
 
 /*

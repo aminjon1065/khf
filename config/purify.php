@@ -1,5 +1,6 @@
 <?php
 
+use Stevebauman\Purify\Cache\CacheDefinitionCache;
 use Stevebauman\Purify\Definitions\Html5Definition;
 
 return [
@@ -42,9 +43,9 @@ return [
         'default' => [
             'Core.Encoding' => 'utf-8',
             'HTML.Doctype' => 'HTML 4.01 Transitional',
-            'HTML.Allowed' => 'h1,h2,h3,h4,h5,h6,b,u,strong,i,em,s,del,a[href|title],ul,ol,li,p[style],br,span,img[width|height|alt|src],blockquote',
+            'HTML.Allowed' => 'h1[style],h2[style],h3[style],h4[style],h5[style],h6[style],b,u,strong,i,em,s,del,a[href|title|target],ul,ol,li[style],p[style],br,span[style],img[width|height|alt|src|title|style],blockquote',
             'HTML.ForbiddenElements' => '',
-            'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align',
+            'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align,line-height,float,margin,width,height,display,max-width,clear',
             'AutoFormat.AutoParagraph' => false,
             'AutoFormat.RemoveEmpty' => false,
         ],
@@ -103,7 +104,7 @@ return [
 
     'serializer' => [
         'driver' => env('CACHE_STORE', env('CACHE_DRIVER', 'file')),
-        'cache' => \Stevebauman\Purify\Cache\CacheDefinitionCache::class,
+        'cache' => CacheDefinitionCache::class,
     ],
 
     // 'serializer' => [

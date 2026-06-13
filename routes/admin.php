@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\IncidentController;
 use App\Http\Controllers\Admin\LanguageController;
+use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\SubscriberController;
@@ -27,6 +28,12 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
     ->name('admin.')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Media Library (accessible to all CMS users)
+        Route::get('media', [MediaController::class, 'index'])->name('media.index');
+        Route::get('api/media', [MediaController::class, 'apiIndex'])->name('api.media.index');
+        Route::post('media', [MediaController::class, 'store'])->name('media.store');
+        Route::delete('media/{mediaFile}', [MediaController::class, 'destroy'])->name('media.destroy');
 
         // Content — pages (content roles via pages.manage).
         Route::middleware('can:'.Permission::ManagePages->value)->group(function () {

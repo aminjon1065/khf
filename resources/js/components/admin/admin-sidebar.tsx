@@ -5,6 +5,7 @@ import {
     ExternalLink,
     FileText,
     FolderTree,
+    Image,
     Inbox,
     Languages,
     LayoutDashboard,
@@ -35,6 +36,7 @@ import { index as alertsIndex } from '@/routes/admin/alerts';
 import { index as appealsIndex } from '@/routes/admin/appeals';
 import { index as categoriesIndex } from '@/routes/admin/categories';
 import { index as documentsIndex } from '@/routes/admin/documents';
+import { index as mediaIndex } from '@/routes/admin/media';
 import { index as guidesIndex } from '@/routes/admin/guides';
 import { index as incidentsIndex } from '@/routes/admin/incidents';
 import { index as languagesIndex } from '@/routes/admin/languages';
@@ -85,6 +87,12 @@ const navGroups: AdminNavGroup[] = [
                 href: categoriesIndex(),
                 icon: FolderTree,
                 permission: 'categories.manage',
+            },
+            {
+                title: 'Медиабиблиотека',
+                href: mediaIndex(),
+                icon: Image,
+                // Media library is accessible if you can manage posts or documents
             },
             {
                 title: 'Документы',
