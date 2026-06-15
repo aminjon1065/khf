@@ -1,4 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { Check } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
@@ -218,6 +219,8 @@ export default function Subscribe({
 
                 {banner && (
                     <p
+                        role={banner.tone === 'error' ? 'alert' : 'status'}
+                        aria-live="polite"
                         className={
                             'mt-6 rounded-md border p-4 text-sm ' +
                             (banner.tone === 'success'
@@ -237,8 +240,15 @@ export default function Subscribe({
                         <h2 className="text-lg font-medium">
                             {t('subscribe.sections.preferences')}
                         </h2>
-                        <div className="space-y-2">
-                            <Label>{t('subscribe.form.topics')}</Label>
+                        <fieldset
+                            className="space-y-2"
+                            aria-describedby={
+                                errors.topics ? 'topics-error' : undefined
+                            }
+                        >
+                            <legend className="text-sm font-medium">
+                                {t('subscribe.form.topics')}
+                            </legend>
                             <div className="space-y-2">
                                 {topics.map((topic) => (
                                     <label
@@ -260,8 +270,8 @@ export default function Subscribe({
                                     </label>
                                 ))}
                             </div>
-                            <InputError message={errors.topics} />
-                        </div>
+                            <InputError id="topics-error" message={errors.topics} />
+                        </fieldset>
 
                         <div className="space-y-2">
                             <Label htmlFor="region">
@@ -331,8 +341,10 @@ export default function Subscribe({
                                             )
                                         }
                                         placeholder="your@email.com"
+                                        aria-invalid={!!errors.email}
+                                        aria-describedby={errors.email ? 'email-error' : undefined}
                                     />
-                                    <InputError message={errors.email} />
+                                    <InputError id="email-error" message={errors.email} />
                                 </div>
                                 <label className="flex items-start gap-2 text-sm">
                                     <Checkbox
@@ -367,7 +379,19 @@ export default function Subscribe({
                                 <p className="text-sm text-muted-foreground">
                                     {t('subscribe.push.hint')}
                                 </p>
-                                {isPushSupported ? (
+                                {!isPushSupported ? (
+                                    <p className="text-sm text-orange-600">
+                                        {t('subscribe.push.unsupported')}
+                                    </p>
+                                ) : pushStatus === 'success' ? (
+                                    <p className="inline-flex items-center gap-2 text-sm font-medium text-green-600">
+                                        <Check
+                                            className="size-4"
+                                            aria-hidden="true"
+                                        />
+                                        {t('subscribe.push.enabled')}
+                                    </p>
+                                ) : (
                                     <Button
                                         type="button"
                                         variant="secondary"
@@ -378,10 +402,6 @@ export default function Subscribe({
                                             ? t('subscribe.push.loading')
                                             : t('subscribe.push.enable')}
                                     </Button>
-                                ) : (
-                                    <p className="text-sm text-orange-600">
-                                        {t('subscribe.push.unsupported')}
-                                    </p>
                                 )}
                             </div>
                         </div>

@@ -162,8 +162,8 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         });
 
-        // Audit Logs (super-admin only).
-        Route::middleware('can:'.Permission::ManageSettings->value)->group(function () {
+        // Audit log — read-only security/activity trail (ТЗ §7.10, §12.7), gated by audit.view.
+        Route::middleware('can:'.Permission::ViewAudit->value)->group(function () {
             Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
         });
     });

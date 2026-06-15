@@ -1,6 +1,9 @@
-import { useState, useRef } from 'react';
-import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
+import { Loader2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import ReactCrop from 'react-image-crop';
+import type { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -8,8 +11,6 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
 
 type ImageCropModalProps = {
     isOpen: boolean;
@@ -59,8 +60,10 @@ export function ImageCropModal({ isOpen, onClose, imageUrl, onCropComplete }: Im
                 (blob) => {
                     if (!blob) {
                         reject(new Error('Canvas is empty'));
+
                         return;
                     }
+
                     resolve(blob);
                 },
                 'image/jpeg',
@@ -70,8 +73,12 @@ export function ImageCropModal({ isOpen, onClose, imageUrl, onCropComplete }: Im
     };
 
     const handleSave = async () => {
-        if (!completedCrop || !imgRef.current) return;
+        if (!completedCrop || !imgRef.current) {
+return;
+}
+
         setIsCropping(true);
+
         try {
             const blob = await getCroppedImg(imgRef.current, completedCrop);
             onCropComplete(blob);

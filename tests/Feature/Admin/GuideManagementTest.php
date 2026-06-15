@@ -87,6 +87,26 @@ it('renders the index with translation-status locales', function () {
             ->where('guides.data.0.locales', ['tj']));
 });
 
+it('renders the admin create and edit screens', function () {
+    $guide = Guide::factory()->create();
+    $guide->upsertTranslations(['tj' => ['title' => 'Т', 'slug' => 't-edit']]);
+
+    $this->actingAs($this->editor)->get(route('admin.guides.create'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/guides/form')
+            ->has('hazardTypes')
+            ->has('audiences')
+            ->has('statuses')
+            ->has('locales'));
+
+    $this->actingAs($this->editor)->get(route('admin.guides.edit', $guide))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/guides/form')
+            ->where('guide.id', $guide->id));
+});
+
 it('generates unique slugs when auto-generated slugs would collide', function () {
     // Tajik titles that Str::slug strips to empty would otherwise collapse to the same slug.
     $payload = guidePayload([

@@ -37,6 +37,7 @@ class StorePostRequest extends FormRequest
             'status' => ['required', Rule::in(ContentStatus::values())],
             'published_at' => ['nullable', 'date'],
             'cover' => ['nullable', 'image', 'max:5120'],
+            'cover_media_id' => ['nullable', 'integer', 'exists:media_files,id'],
             'remove_cover' => ['boolean'],
             'translations' => ['array'],
         ];

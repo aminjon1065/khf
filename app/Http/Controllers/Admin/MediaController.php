@@ -21,7 +21,7 @@ class MediaController extends Controller
             ->latest()
             ->paginate(24);
 
-        return Inertia::render('Admin/Media/Index', [
+        return Inertia::render('admin/media/index', [
             'mediaFiles' => $mediaFiles,
         ]);
     }

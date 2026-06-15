@@ -46,6 +46,9 @@ return [
             'HTML.Allowed' => 'h1[style],h2[style],h3[style],h4[style],h5[style],h6[style],b,u,strong,i,em,s,del,a[href|title|target],ul,ol,li[style],p[style],br,span[style],img[width|height|alt|src|title|style],blockquote',
             'HTML.ForbiddenElements' => '',
             'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align,line-height,float,margin,width,height,display,max-width,clear',
+            // `display`/`overflow`/`visibility` are "tricky" CSS in HTMLPurifier and are only
+            // registered when this is on — required so `display` (image alignment) does not fatal.
+            'CSS.AllowTricky' => true,
             'AutoFormat.AutoParagraph' => false,
             'AutoFormat.RemoveEmpty' => false,
         ],

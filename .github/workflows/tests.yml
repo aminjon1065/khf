@@ -57,5 +57,10 @@ jobs:
       - name: Build Assets
         run: npm run build
 
+      # Type-check once (build first so the Wayfinder-generated route/action types exist).
+      - name: Type Check
+        if: matrix.php-version == '8.4'
+        run: npm run types:check
+
       - name: Tests
         run: ./vendor/bin/pest

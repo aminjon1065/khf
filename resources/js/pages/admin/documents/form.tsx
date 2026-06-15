@@ -1,7 +1,12 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { Check, FileText, X } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
+import { FileText, X } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import {
+    CpLocaleTabs,
+    CpPanel,
+    CpPublishForm,
+} from '@/components/admin/cp/publish-form';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,231 +103,151 @@ export default function DocumentForm({
     };
 
     const active = form.data.translations[activeLocale];
+    const title = isEdit ? 'Редактирование документа' : 'Новый документ';
 
     return (
         <>
-            <Head
-                title={isEdit ? 'Редактирование документа' : 'Новый документ'}
-            />
+            <Head title={title} />
 
-            <form
+            <CpPublishForm
+                title={title}
+                backHref={index().url}
                 onSubmit={submit}
-                className="flex h-full flex-1 flex-col gap-6 p-4"
+                processing={form.processing}
+                sidebar={
+                    <>
+                        <CpPanel title="Публикация">
+                            <div className="space-y-2">
+                                <Label htmlFor="type">Тип</Label>
+                                <Select value={form.data.type} onValueChange={(value) => form.setData('type', value)}>
+                                    <SelectTrigger id="type">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {types.map((type) => (
+                                            <SelectItem key={type.value} value={type.value}>
+                                                {type.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.type} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="status">Статус</Label>
+                                <Select value={form.data.status} onValueChange={(value) => form.setData('status', value)}>
+                                    <SelectTrigger id="status">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {statuses.map((status) => (
+                                            <SelectItem key={status.value} value={status.value}>
+                                                {status.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.status} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="document_date">Дата документа</Label>
+                                <Input
+                                    id="document_date"
+                                    type="date"
+                                    value={form.data.document_date}
+                                    onChange={(event) => form.setData('document_date', event.target.value)}
+                                />
+                                <InputError message={errors.document_date} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="source">Орган / источник</Label>
+                                <Input
+                                    id="source"
+                                    value={form.data.source}
+                                    onChange={(event) => form.setData('source', event.target.value)}
+                                />
+                                <InputError message={errors.source} />
+                            </div>
+                        </CpPanel>
+
+                        <CpPanel title="Файлы">
+                            {existingFiles.length > 0 && (
+                                <ul className="space-y-2">
+                                    {existingFiles.map((file) => (
+                                        <li
+                                            key={file.id}
+                                            className="flex items-center gap-3 rounded-md border border-border p-2 text-sm"
+                                        >
+                                            <FileText className="size-4 text-muted-foreground" />
+                                            <a
+                                                href={file.url}
+                                                className="min-w-0 flex-1 truncate text-primary hover:underline"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                {file.name}
+                                            </a>
+                                            <span className="text-muted-foreground">{file.size}</span>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                aria-label="Убрать файл"
+                                                onClick={() =>
+                                                    form.setData('remove_files', [...form.data.remove_files, file.id])
+                                                }
+                                            >
+                                                <X className="size-4" />
+                                            </Button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                            <Input
+                                type="file"
+                                multiple
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.jpg,.jpeg,.png"
+                                onChange={(event) => form.setData('files', Array.from(event.target.files ?? []))}
+                            />
+                            <InputError message={errors['files.0'] ?? errors.files} />
+                            <p className="text-xs text-muted-foreground">
+                                До 20 МБ на файл. PDF, Word, Excel, PowerPoint, изображения, архивы.
+                            </p>
+                        </CpPanel>
+                    </>
+                }
             >
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">
-                        {isEdit ? 'Редактирование документа' : 'Новый документ'}
-                    </h1>
-                    <div className="flex gap-2">
-                        <Button type="button" variant="outline" asChild>
-                            <Link href={index().url}>Отмена</Link>
-                        </Button>
-                        <Button type="submit" disabled={form.processing}>
-                            Сохранить
-                        </Button>
-                    </div>
-                </div>
+                <CpLocaleTabs
+                    locales={locales}
+                    active={activeLocale}
+                    onChange={setActiveLocale}
+                    isComplete={(code) => Boolean(form.data.translations[code]?.name)}
+                />
 
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="type">Тип</Label>
-                        <Select
-                            value={form.data.type}
-                            onValueChange={(value) =>
-                                form.setData('type', value)
-                            }
-                        >
-                            <SelectTrigger id="type">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {types.map((type) => (
-                                    <SelectItem
-                                        key={type.value}
-                                        value={type.value}
-                                    >
-                                        {type.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.type} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="status">Статус</Label>
-                        <Select
-                            value={form.data.status}
-                            onValueChange={(value) =>
-                                form.setData('status', value)
-                            }
-                        >
-                            <SelectTrigger id="status">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {statuses.map((status) => (
-                                    <SelectItem
-                                        key={status.value}
-                                        value={status.value}
-                                    >
-                                        {status.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.status} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="document_date">Дата документа</Label>
-                        <Input
-                            id="document_date"
-                            type="date"
-                            value={form.data.document_date}
-                            onChange={(event) =>
-                                form.setData(
-                                    'document_date',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                        <InputError message={errors.document_date} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="source">Орган / источник</Label>
-                        <Input
-                            id="source"
-                            value={form.data.source}
-                            onChange={(event) =>
-                                form.setData('source', event.target.value)
-                            }
-                        />
-                        <InputError message={errors.source} />
-                    </div>
-                </div>
-
-                <div className="space-y-3">
-                    <Label>Файлы</Label>
-                    {existingFiles.length > 0 && (
-                        <ul className="space-y-2">
-                            {existingFiles.map((file) => (
-                                <li
-                                    key={file.id}
-                                    className="flex items-center gap-3 rounded-md border p-2 text-sm"
-                                >
-                                    <FileText className="size-4 text-muted-foreground" />
-                                    <a
-                                        href={file.url}
-                                        className="flex-1 text-primary hover:underline"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        {file.name}
-                                    </a>
-                                    <span className="text-muted-foreground">
-                                        {file.size}
-                                    </span>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        aria-label="Убрать файл"
-                                        onClick={() =>
-                                            form.setData('remove_files', [
-                                                ...form.data.remove_files,
-                                                file.id,
-                                            ])
-                                        }
-                                    >
-                                        <X className="size-4" />
-                                    </Button>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                    <Input
-                        type="file"
-                        multiple
-                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.jpg,.jpeg,.png"
-                        onChange={(event) =>
-                            form.setData(
-                                'files',
-                                Array.from(event.target.files ?? []),
-                            )
-                        }
+                <div>
+                    <input
+                        aria-label="Наименование"
+                        value={active.name}
+                        onChange={(event) => setTranslation(activeLocale, 'name', event.target.value)}
+                        placeholder="Наименование документа"
+                        className="w-full border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
                     />
-                    <InputError message={errors['files.0'] ?? errors.files} />
-                    <p className="text-xs text-muted-foreground">
-                        До 20 МБ на файл. PDF, Word, Excel, PowerPoint,
-                        изображения, архивы.
-                    </p>
+                    <InputError message={errors[`translations.${activeLocale}.name`]} />
                 </div>
 
-                <div className="flex flex-wrap gap-2 border-b pb-2">
-                    {locales.map((locale) => (
-                        <Button
-                            key={locale.code}
-                            type="button"
-                            variant={
-                                activeLocale === locale.code
-                                    ? 'default'
-                                    : 'ghost'
-                            }
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => setActiveLocale(locale.code)}
-                        >
-                            {locale.native_name}
-                            {Boolean(
-                                form.data.translations[locale.code]?.name,
-                            ) && <Check className="size-3.5 text-green-600" />}
-                        </Button>
-                    ))}
-                </div>
-
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Наименование</Label>
-                        <Input
-                            id="name"
-                            value={active.name}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'name',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.name`]
-                            }
-                        />
-                    </div>
+                <CpPanel title="Описание">
                     <div className="space-y-2">
                         <Label htmlFor="description">Краткое описание</Label>
                         <Textarea
                             id="description"
-                            rows={4}
+                            rows={5}
                             value={active.description}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'description',
-                                    event.target.value,
-                                )
-                            }
+                            onChange={(event) => setTranslation(activeLocale, 'description', event.target.value)}
                         />
-                        <InputError
-                            message={
-                                errors[
-                                    `translations.${activeLocale}.description`
-                                ]
-                            }
-                        />
+                        <InputError message={errors[`translations.${activeLocale}.description`]} />
                     </div>
-                </div>
-            </form>
+                </CpPanel>
+            </CpPublishForm>
         </>
     );
 }

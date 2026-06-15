@@ -6,6 +6,8 @@ use App\Models\Concerns\HasTranslations;
 use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * A content category / rubric (ТЗ §6.2, Приложение Б). Name and slug are per-locale in
@@ -20,6 +22,7 @@ class Category extends Model
     use HasFactory;
 
     use HasTranslations;
+    use LogsActivity;
 
     /** @var list<string> */
     protected $fillable = [
@@ -34,5 +37,13 @@ class Category extends Model
         return [
             'sort_order' => 'integer',
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
     }
 }

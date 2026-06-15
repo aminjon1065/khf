@@ -19,6 +19,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 export type DataTableColumn<T> = {
     key: string;
@@ -58,8 +59,10 @@ type DataTableProps<T> = {
 };
 
 /**
- * Reusable server-side data table for the CMS: debounced search, sortable columns and pagination,
- * all driven through Inertia visits so state stays on the server (ТЗ §7.1).
+ * Reusable server-side listing for the control panel (Statamic-style): a search + toolbar bar, a
+ * white bordered table card with an uppercase header and hoverable rows, and a pagination footer.
+ * Debounced search, sortable columns and paging all go through Inertia visits so state stays on the
+ * server (ТЗ §7.1).
  */
 export function DataTable<T>({
     columns,
@@ -146,20 +149,23 @@ export function DataTable<T>({
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
                         placeholder={searchPlaceholder}
-                        className="pl-8"
+                        className="bg-card pl-8"
                     />
                 </div>
                 {toolbar}
             </div>
 
-            <div className="rounded-md border">
+            <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <Table>
                     <TableHeader>
-                        <TableRow>
+                        <TableRow className="border-border bg-muted/40 hover:bg-muted/40">
                             {columns.map((column) => (
                                 <TableHead
                                     key={column.key}
-                                    className={column.className}
+                                    className={cn(
+                                        'h-10 px-4 text-xs font-medium tracking-wide text-muted-foreground uppercase',
+                                        column.className,
+                                    )}
                                 >
                                     {column.sortable ? (
                                         <button
@@ -167,7 +173,7 @@ export function DataTable<T>({
                                             onClick={() =>
                                                 toggleSort(column.key)
                                             }
-                                            className="inline-flex items-center gap-1.5 hover:text-foreground"
+                                            className="-mx-1 inline-flex items-center gap-1.5 rounded px-1 hover:text-foreground"
                                         >
                                             {column.label}
                                             {sortIcon(column.key)}
@@ -178,7 +184,7 @@ export function DataTable<T>({
                                 </TableHead>
                             ))}
                             {actions && (
-                                <TableHead className="w-0 text-right">
+                                <TableHead className="h-10 w-0 px-4 text-right text-xs font-medium tracking-wide text-muted-foreground uppercase">
                                     Действия
                                 </TableHead>
                             )}
@@ -186,21 +192,27 @@ export function DataTable<T>({
                     </TableHeader>
                     <TableBody>
                         {paginator.data.length === 0 ? (
-                            <TableRow>
+                            <TableRow className="hover:bg-transparent">
                                 <TableCell
                                     colSpan={colSpan}
-                                    className="h-24 text-center text-muted-foreground"
+                                    className="h-28 text-center text-muted-foreground"
                                 >
                                     {emptyMessage}
                                 </TableCell>
                             </TableRow>
                         ) : (
                             paginator.data.map((row) => (
-                                <TableRow key={getRowId(row)}>
+                                <TableRow
+                                    key={getRowId(row)}
+                                    className="border-border transition-colors last:border-0 hover:bg-muted/40"
+                                >
                                     {columns.map((column) => (
                                         <TableCell
                                             key={column.key}
-                                            className={column.className}
+                                            className={cn(
+                                                'px-4 py-3',
+                                                column.className,
+                                            )}
                                         >
                                             {column.render
                                                 ? column.render(row)
@@ -215,7 +227,7 @@ export function DataTable<T>({
                                         </TableCell>
                                     ))}
                                     {actions && (
-                                        <TableCell className="text-right">
+                                        <TableCell className="px-4 py-3 text-right">
                                             {actions(row)}
                                         </TableCell>
                                     )}

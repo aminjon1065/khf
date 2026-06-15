@@ -3,12 +3,17 @@
 namespace App\Providers;
 
 use App\Enums\Role;
+use App\Listeners\LogAuthenticationActivity;
 use App\Models\User;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Date;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -37,6 +42,22 @@ class AppServiceProvider extends ServiceProvider
 
         $this->configureDefaults();
         $this->configureAuthorization();
+        $this->configureRateLimiting();
+
+        // Security audit trail: log sign-in / sign-out / failed-login / 2FA events (ТЗ §12.7).
+        Event::subscribe(LogAuthenticationActivity::class);
+    }
+
+    /**
+     * Named rate limiters. The internal API allows 60 requests/minute, keyed by bearer token (so
+     * each integrator gets its own budget) or client IP for the unauthenticated discovery endpoint
+     * (ТЗ §10.9, §12.4).
+     */
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('api', function (Request $request): Limit {
+            return Limit::perMinute(60)->by($request->bearerToken() ?: $request->ip());
+        });
     }
 
     /**
@@ -69,7 +90,7 @@ class AppServiceProvider extends ServiceProvider
                 ->letters()
                 ->numbers()
                 ->symbols();
-                
+
             return app()->isProduction() ? $rule->uncompromised() : $rule;
         });
     }

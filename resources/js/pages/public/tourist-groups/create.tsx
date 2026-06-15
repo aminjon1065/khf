@@ -106,8 +106,10 @@ export default function TouristGroupCreate({
                                 onChange={(e) =>
                                     form.setData('leader_name', e.target.value)
                                 }
+                                aria-invalid={!!errors.leader_name}
+                                aria-describedby={errors.leader_name ? 'leader_name-error' : undefined}
                             />
-                            <InputError message={errors.leader_name} />
+                            <InputError id="leader_name-error" message={errors.leader_name} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="leader_phone">
@@ -119,8 +121,10 @@ export default function TouristGroupCreate({
                                 onChange={(e) =>
                                     form.setData('leader_phone', e.target.value)
                                 }
+                                aria-invalid={!!errors.leader_phone}
+                                aria-describedby={errors.leader_phone ? 'leader_phone-error' : undefined}
                             />
-                            <InputError message={errors.leader_phone} />
+                            <InputError id="leader_phone-error" message={errors.leader_phone} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="leader_email">
@@ -133,8 +137,10 @@ export default function TouristGroupCreate({
                                 onChange={(e) =>
                                     form.setData('leader_email', e.target.value)
                                 }
+                                aria-invalid={!!errors.leader_email}
+                                aria-describedby={errors.leader_email ? 'leader_email-error' : undefined}
                             />
-                            <InputError message={errors.leader_email} />
+                            <InputError id="leader_email-error" message={errors.leader_email} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="participants_count">
@@ -151,8 +157,13 @@ export default function TouristGroupCreate({
                                         Number(e.target.value),
                                     )
                                 }
+                                aria-invalid={!!errors.participants_count}
+                                aria-describedby={errors.participants_count ? 'participants_count-error' : undefined}
                             />
-                            <InputError message={errors.participants_count} />
+                            <p className="text-xs text-muted-foreground">
+                                {t('tourism.form.participants_hint')}
+                            </p>
+                            <InputError id="participants_count-error" message={errors.participants_count} />
                         </div>
                     </div>
 
@@ -173,7 +184,11 @@ export default function TouristGroupCreate({
                                 )
                             }
                         >
-                            <SelectTrigger id="region">
+                            <SelectTrigger
+                                id="region"
+                                aria-invalid={!!errors.region_id}
+                                aria-describedby={errors.region_id ? 'region_id-error' : undefined}
+                            >
                                 <SelectValue
                                     placeholder={t(
                                         'tourism.form.region_placeholder',
@@ -194,7 +209,7 @@ export default function TouristGroupCreate({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <InputError message={errors.region_id} />
+                        <InputError id="region_id-error" message={errors.region_id} />
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -209,8 +224,10 @@ export default function TouristGroupCreate({
                                 onChange={(e) =>
                                     form.setData('start_date', e.target.value)
                                 }
+                                aria-invalid={!!errors.start_date}
+                                aria-describedby={errors.start_date ? 'start_date-error' : undefined}
                             />
-                            <InputError message={errors.start_date} />
+                            <InputError id="start_date-error" message={errors.start_date} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="end_date">
@@ -223,8 +240,10 @@ export default function TouristGroupCreate({
                                 onChange={(e) =>
                                     form.setData('end_date', e.target.value)
                                 }
+                                aria-invalid={!!errors.end_date}
+                                aria-describedby={errors.end_date ? 'end_date-error' : undefined}
                             />
-                            <InputError message={errors.end_date} />
+                            <InputError id="end_date-error" message={errors.end_date} />
                         </div>
                     </div>
 
@@ -237,8 +256,10 @@ export default function TouristGroupCreate({
                             onChange={(e) =>
                                 form.setData('route', e.target.value)
                             }
+                            aria-invalid={!!errors.route}
+                            aria-describedby={errors.route ? 'route-error' : undefined}
                         />
-                        <InputError message={errors.route} />
+                        <InputError id="route-error" message={errors.route} />
                     </div>
 
                     <div className="space-y-2">
@@ -252,8 +273,10 @@ export default function TouristGroupCreate({
                             onChange={(e) =>
                                 form.setData('equipment', e.target.value)
                             }
+                            aria-invalid={!!errors.equipment}
+                            aria-describedby={errors.equipment ? 'equipment-error' : undefined}
                         />
-                        <InputError message={errors.equipment} />
+                        <InputError id="equipment-error" message={errors.equipment} />
                     </div>
 
                     {/* Honeypot (ТЗ §12.4). */}

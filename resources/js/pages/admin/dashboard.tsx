@@ -413,16 +413,24 @@ function StatCard({
 }) {
     const body = (
         <Card
-            className={href ? 'transition-colors hover:border-primary/40' : ''}
+            className={
+                href
+                    ? 'h-full transition-colors hover:border-primary/40'
+                    : 'h-full'
+            }
         >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-2">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Icon className="size-5" />
+                </span>
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                     {label}
                 </CardTitle>
-                <Icon className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-3xl font-semibold">{value}</div>
+                <div className="text-3xl font-semibold tracking-tight">
+                    {value}
+                </div>
                 {hint && (
                     <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
                 )}

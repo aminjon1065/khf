@@ -100,7 +100,11 @@ export default function AppealCreate({
                                 form.setData('category', value)
                             }
                         >
-                            <SelectTrigger id="category">
+                            <SelectTrigger
+                                id="category"
+                                aria-invalid={!!errors.category}
+                                aria-describedby={errors.category ? 'category-error' : undefined}
+                            >
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -114,7 +118,7 @@ export default function AppealCreate({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <InputError message={errors.category} />
+                        <InputError id="category-error" message={errors.category} />
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -128,8 +132,10 @@ export default function AppealCreate({
                                 onChange={(e) =>
                                     form.setData('name', e.target.value)
                                 }
+                                aria-invalid={!!errors.name}
+                                aria-describedby={errors.name ? 'name-error' : undefined}
                             />
-                            <InputError message={errors.name} />
+                            <InputError id="name-error" message={errors.name} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">{t('common.email')}</Label>
@@ -140,8 +146,10 @@ export default function AppealCreate({
                                 onChange={(e) =>
                                     form.setData('email', e.target.value)
                                 }
+                                aria-invalid={!!errors.email}
+                                aria-describedby={errors.email ? 'email-error' : undefined}
                             />
-                            <InputError message={errors.email} />
+                            <InputError id="email-error" message={errors.email} />
                         </div>
                     </div>
 
@@ -155,8 +163,10 @@ export default function AppealCreate({
                             onChange={(e) =>
                                 form.setData('phone', e.target.value)
                             }
+                            aria-invalid={!!errors.phone}
+                            aria-describedby={errors.phone ? 'phone-error' : undefined}
                         />
-                        <InputError message={errors.phone} />
+                        <InputError id="phone-error" message={errors.phone} />
                     </div>
 
                     <div className="space-y-2">
@@ -169,8 +179,10 @@ export default function AppealCreate({
                             onChange={(e) =>
                                 form.setData('subject', e.target.value)
                             }
+                            aria-invalid={!!errors.subject}
+                            aria-describedby={errors.subject ? 'subject-error' : undefined}
                         />
-                        <InputError message={errors.subject} />
+                        <InputError id="subject-error" message={errors.subject} />
                     </div>
 
                     <div className="space-y-2">
@@ -184,8 +196,10 @@ export default function AppealCreate({
                             onChange={(e) =>
                                 form.setData('message', e.target.value)
                             }
+                            aria-invalid={!!errors.message}
+                            aria-describedby={errors.message ? 'message-error' : undefined}
                         />
-                        <InputError message={errors.message} />
+                        <InputError id="message-error" message={errors.message} />
                     </div>
 
                     {/* Honeypot — hidden from users, traps bots (ТЗ §12.4). */}

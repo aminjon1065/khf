@@ -1,10 +1,13 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { Check } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { CpRichTextField } from '@/components/admin/cp/fields';
+import {
+    CpLocaleTabs,
+    CpPanel,
+    CpPublishForm,
+} from '@/components/admin/cp/publish-form';
 import InputError from '@/components/input-error';
-import { RichTextEditor } from '@/components/rich-text-editor';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -98,220 +101,130 @@ export default function PageForm({
     };
 
     const active = form.data.translations[activeLocale];
+    const title = isEdit ? 'Редактирование страницы' : 'Новая страница';
 
     return (
         <>
-            <Head
-                title={isEdit ? 'Редактирование страницы' : 'Новая страница'}
-            />
+            <Head title={title} />
 
-            <form
+            <CpPublishForm
+                title={title}
+                backHref={index().url}
                 onSubmit={submit}
-                className="flex h-full flex-1 flex-col gap-6 p-4"
+                processing={form.processing}
+                sidebar={
+                    <CpPanel title="Публикация">
+                        <div className="space-y-2">
+                            <Label htmlFor="status">Статус</Label>
+                            <Select
+                                value={form.data.status}
+                                onValueChange={(value) => form.setData('status', value)}
+                            >
+                                <SelectTrigger id="status">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {statuses.map((status) => (
+                                        <SelectItem key={status.value} value={status.value}>
+                                            {status.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <InputError message={errors.status} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="parent">Родительская страница</Label>
+                            <Select
+                                value={form.data.parent_id ? String(form.data.parent_id) : 'none'}
+                                onValueChange={(value) =>
+                                    form.setData('parent_id', value === 'none' ? null : Number(value))
+                                }
+                            >
+                                <SelectTrigger id="parent">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">— Нет —</SelectItem>
+                                    {parents.map((parent) => (
+                                        <SelectItem key={parent.id} value={String(parent.id)}>
+                                            {parent.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <InputError message={errors.parent_id} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="sort_order">Порядок</Label>
+                            <Input
+                                id="sort_order"
+                                type="number"
+                                min={0}
+                                value={form.data.sort_order}
+                                onChange={(event) => form.setData('sort_order', Number(event.target.value))}
+                            />
+                            <InputError message={errors.sort_order} />
+                        </div>
+                    </CpPanel>
+                }
             >
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">
-                        {isEdit ? 'Редактирование страницы' : 'Новая страница'}
-                    </h1>
-                    <div className="flex gap-2">
-                        <Button type="button" variant="outline" asChild>
-                            <Link href={index().url}>Отмена</Link>
-                        </Button>
-                        <Button type="submit" disabled={form.processing}>
-                            Сохранить
-                        </Button>
-                    </div>
+                <CpLocaleTabs
+                    locales={locales}
+                    active={activeLocale}
+                    onChange={setActiveLocale}
+                    isComplete={(code) => Boolean(form.data.translations[code]?.title)}
+                />
+
+                <div>
+                    <input
+                        aria-label="Заголовок"
+                        value={active.title}
+                        onChange={(event) => setTranslation(activeLocale, 'title', event.target.value)}
+                        placeholder="Заголовок"
+                        className="w-full border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                    />
+                    <InputError message={errors[`translations.${activeLocale}.title`]} />
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-3">
+                <CpPanel title="Содержание">
                     <div className="space-y-2">
-                        <Label htmlFor="status">Статус</Label>
-                        <Select
-                            value={form.data.status}
-                            onValueChange={(value) =>
-                                form.setData('status', value)
-                            }
-                        >
-                            <SelectTrigger id="status">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {statuses.map((status) => (
-                                    <SelectItem
-                                        key={status.value}
-                                        value={status.value}
-                                    >
-                                        {status.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.status} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="parent">Родительская страница</Label>
-                        <Select
-                            value={
-                                form.data.parent_id
-                                    ? String(form.data.parent_id)
-                                    : 'none'
-                            }
-                            onValueChange={(value) =>
-                                form.setData(
-                                    'parent_id',
-                                    value === 'none' ? null : Number(value),
-                                )
-                            }
-                        >
-                            <SelectTrigger id="parent">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">— Нет —</SelectItem>
-                                {parents.map((parent) => (
-                                    <SelectItem
-                                        key={parent.id}
-                                        value={String(parent.id)}
-                                    >
-                                        {parent.title}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.parent_id} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="sort_order">Порядок</Label>
+                        <Label htmlFor="slug">ЧПУ (slug)</Label>
                         <Input
-                            id="sort_order"
-                            type="number"
-                            min={0}
-                            value={form.data.sort_order}
-                            onChange={(event) =>
-                                form.setData(
-                                    'sort_order',
-                                    Number(event.target.value),
-                                )
-                            }
+                            id="slug"
+                            value={active.slug}
+                            onChange={(event) => setTranslation(activeLocale, 'slug', event.target.value)}
                         />
-                        <InputError message={errors.sort_order} />
+                        <InputError message={errors[`translations.${activeLocale}.slug`]} />
                     </div>
-                </div>
+                    <CpRichTextField
+                        label="Содержимое"
+                        editorKey={activeLocale}
+                        value={active.content}
+                        onChange={(html) => setTranslation(activeLocale, 'content', html)}
+                        error={errors[`translations.${activeLocale}.content`]}
+                    />
+                </CpPanel>
 
-                <div className="flex flex-wrap gap-2 border-b pb-2">
-                    {locales.map((locale) => (
-                        <Button
-                            key={locale.code}
-                            type="button"
-                            variant={
-                                activeLocale === locale.code
-                                    ? 'default'
-                                    : 'ghost'
-                            }
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => setActiveLocale(locale.code)}
-                        >
-                            {locale.native_name}
-                            {Boolean(
-                                form.data.translations[locale.code]?.title,
-                            ) && <Check className="size-3.5 text-green-600" />}
-                        </Button>
-                    ))}
-                </div>
-
-                <div className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="title">Заголовок</Label>
-                            <Input
-                                id="title"
-                                value={active.title}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'title',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                            <InputError
-                                message={
-                                    errors[`translations.${activeLocale}.title`]
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="slug">ЧПУ (slug)</Label>
-                            <Input
-                                id="slug"
-                                value={active.slug}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'slug',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                            <InputError
-                                message={
-                                    errors[`translations.${activeLocale}.slug`]
-                                }
-                            />
-                        </div>
-                    </div>
-
+                <CpPanel title="SEO">
                     <div className="space-y-2">
-                        <Label htmlFor="content">Содержимое</Label>
-                        <RichTextEditor
-                            key={activeLocale}
-                            value={active.content}
-                            onChange={(html) =>
-                                setTranslation(activeLocale, 'content', html)
-                            }
-                        />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.content`]
-                            }
+                        <Label htmlFor="seo_title">SEO заголовок</Label>
+                        <Input
+                            id="seo_title"
+                            value={active.seo_title}
+                            onChange={(event) => setTranslation(activeLocale, 'seo_title', event.target.value)}
                         />
                     </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="seo_title">SEO заголовок</Label>
-                            <Input
-                                id="seo_title"
-                                value={active.seo_title}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'seo_title',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="seo_description">
-                                SEO описание
-                            </Label>
-                            <Input
-                                id="seo_description"
-                                value={active.seo_description}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'seo_description',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                        </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="seo_description">SEO описание</Label>
+                        <Input
+                            id="seo_description"
+                            value={active.seo_description}
+                            onChange={(event) => setTranslation(activeLocale, 'seo_description', event.target.value)}
+                        />
                     </div>
-                </div>
-            </form>
+                </CpPanel>
+            </CpPublishForm>
         </>
     );
 }

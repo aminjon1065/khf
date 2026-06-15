@@ -35,9 +35,9 @@ it('shows the CMS dashboard to a privileged user with confirmed 2FA', function (
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/dashboard')
-            ->has('stats.users')
-            ->has('stats.languages')
-            ->has('stats.roles')
+            ->has('stats.system.users')
+            ->has('stats.system.languages')
+            ->has('stats.system.roles')
             ->where('auth.roles', ['super-admin'])
         );
 });

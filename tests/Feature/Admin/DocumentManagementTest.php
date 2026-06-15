@@ -77,6 +77,25 @@ it('validates the default-locale name', function () {
         ->assertSessionHasErrors('translations.tj.name');
 });
 
+it('renders the admin create and edit screens', function () {
+    $document = Document::factory()->create();
+    $document->upsertTranslations(['tj' => ['name' => 'Қонун']]);
+
+    $this->actingAs($this->editor)->get(route('admin.documents.create'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/documents/form')
+            ->has('types')
+            ->has('statuses')
+            ->has('locales'));
+
+    $this->actingAs($this->editor)->get(route('admin.documents.edit', $document))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/documents/form')
+            ->where('document.id', $document->id));
+});
+
 it('renders the public registry and downloads a file via the controlled route', function () {
     Storage::fake('local');
 

@@ -1,5 +1,5 @@
-import Image from '@tiptap/extension-image';
 import { mergeAttributes } from '@tiptap/core';
+import Image from '@tiptap/extension-image';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { ImageNodeView } from './image-node-view';
 
@@ -22,7 +22,10 @@ export const CustomImage = Image.extend({
                 default: null,
                 parseHTML: element => element.getAttribute('width') || element.style.width,
                 renderHTML: attributes => {
-                    if (!attributes.width) return {};
+                    if (!attributes.width) {
+return {};
+}
+
                     return { width: attributes.width };
                 },
             },
@@ -30,7 +33,10 @@ export const CustomImage = Image.extend({
                 default: null,
                 parseHTML: element => element.getAttribute('height') || element.style.height,
                 renderHTML: attributes => {
-                    if (!attributes.height) return {};
+                    if (!attributes.height) {
+return {};
+}
+
                     return { height: attributes.height };
                 },
             },
@@ -38,7 +44,10 @@ export const CustomImage = Image.extend({
                 default: 'none',
                 parseHTML: element => element.style.float || 'none',
                 renderHTML: attributes => {
-                    if (!attributes.float || attributes.float === 'none') return {};
+                    if (!attributes.float || attributes.float === 'none') {
+return {};
+}
+
                     return { style: `float: ${attributes.float};` };
                 },
             },
@@ -46,7 +55,10 @@ export const CustomImage = Image.extend({
                 default: '0',
                 parseHTML: element => element.style.margin || '0',
                 renderHTML: attributes => {
-                    if (!attributes.margin || attributes.margin === '0') return {};
+                    if (!attributes.margin || attributes.margin === '0') {
+return {};
+}
+
                     return { style: `margin: ${attributes.margin};` };
                 },
             },
@@ -54,7 +66,10 @@ export const CustomImage = Image.extend({
                 default: 'inline-block',
                 parseHTML: element => element.style.display || 'inline-block',
                 renderHTML: attributes => {
-                    if (!attributes.display || attributes.display === 'inline-block') return {};
+                    if (!attributes.display || attributes.display === 'inline-block') {
+return {};
+}
+
                     return { style: `display: ${attributes.display};` };
                 },
             },
@@ -68,14 +83,16 @@ export const CustomImage = Image.extend({
         if (HTMLAttributes.float && HTMLAttributes.float !== 'none') {
             styleStr += `float: ${HTMLAttributes.float}; `;
         }
+
         if (HTMLAttributes.margin && HTMLAttributes.margin !== '0') {
             styleStr += `margin: ${HTMLAttributes.margin}; `;
         }
+
         if (HTMLAttributes.display && HTMLAttributes.display !== 'inline-block') {
             styleStr += `display: ${HTMLAttributes.display}; `;
         }
         
-        const attributes = { ...HTMLAttributes, style: styleStr.trim() };
+        const attributes: Record<string, unknown> = { ...HTMLAttributes, style: styleStr.trim() };
         
         // Remove virtual attributes so they aren't rendered as raw HTML attrs
         delete attributes.float;

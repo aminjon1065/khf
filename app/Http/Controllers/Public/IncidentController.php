@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Public;
 use App\Enums\IncidentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Incident;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\Cache;
 
 class IncidentController extends Controller
 {
@@ -20,12 +20,13 @@ class IncidentController extends Controller
         $locale = app()->getLocale();
 
         $cacheKeyVersion = Incident::max('updated_at') ?? 'empty';
-        
+
         $counts = Cache::remember('incidents.summary.'.$cacheKeyVersion, 3600, function () {
             return Incident::query()
                 ->selectRaw('status, COUNT(*) as total')
                 ->groupBy('status')
-                ->pluck('total', 'status');
+                ->pluck('total', 'status')
+                ->all();
         });
 
         $summary = [
@@ -38,7 +39,7 @@ class IncidentController extends Controller
         // the list consistent with the unfiltered summary counts above (translation() falls back).
         $page = request('page', 1);
         $incidentsCacheKey = 'incidents.archive.'.$locale.'.page.'.$page.'.'.$cacheKeyVersion;
-        
+
         $incidents = Cache::remember($incidentsCacheKey, 3600, function () use ($locale) {
             return Incident::query()
                 ->with(['translations', 'region.translations'])

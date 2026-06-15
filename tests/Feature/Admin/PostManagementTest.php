@@ -4,6 +4,7 @@ use App\Enums\ContentStatus;
 use App\Enums\PostType;
 use App\Enums\Role;
 use App\Models\Category;
+use App\Models\MediaFile;
 use App\Models\Post;
 use App\Models\User;
 use Database\Seeders\LanguageSeeder;
@@ -138,6 +139,29 @@ it('uploads and removes a post cover image', function () {
     ]));
 
     expect($post->fresh()->getFirstMedia(Post::COVER_COLLECTION))->toBeNull();
+});
+
+it('attaches a cover image picked from the media library', function () {
+    Storage::fake('public');
+
+    $mediaFile = MediaFile::create(['user_id' => $this->editor->id, 'name' => 'library.jpg']);
+    $mediaFile->addMedia(UploadedFile::fake()->image('library.jpg', 800, 600))
+        ->toMediaCollection('default');
+
+    $this->actingAs($this->editor)->post(route('admin.posts.store'), postPayload([
+        'cover_media_id' => $mediaFile->getKey(),
+    ]));
+
+    $post = Post::first();
+
+    expect($post->getFirstMedia(Post::COVER_COLLECTION))->not->toBeNull();
+});
+
+it('rejects a cover_media_id that does not exist', function () {
+    $this->actingAs($this->editor)
+        ->from(route('admin.posts.create'))
+        ->post(route('admin.posts.store'), postPayload(['cover_media_id' => 99999]))
+        ->assertSessionHasErrors('cover_media_id');
 });
 
 it('soft deletes, restores and force deletes a post', function () {

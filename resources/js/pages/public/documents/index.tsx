@@ -77,6 +77,7 @@ export default function DocumentsRegistry({
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder={t('documents.form.search_placeholder')}
+                    aria-label={t('documents.form.search_placeholder')}
                     className="sm:max-w-xs"
                 />
                 <Select
@@ -85,7 +86,10 @@ export default function DocumentsRegistry({
                         apply({ type: value === 'all' ? undefined : value })
                     }
                 >
-                    <SelectTrigger className="sm:max-w-xs">
+                    <SelectTrigger
+                        className="sm:max-w-xs"
+                        aria-label={t('documents.form.type_placeholder')}
+                    >
                         <SelectValue
                             placeholder={t('documents.form.type_placeholder')}
                         />

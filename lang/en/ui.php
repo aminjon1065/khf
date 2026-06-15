@@ -26,6 +26,10 @@ return [
         'contacts' => 'Contacts',
         'login' => 'Log in',
     ],
+    'govbar' => [
+        'identifier' => 'Official state portal of the Republic of Tajikistan',
+        'secure' => 'Secure connection',
+    ],
     'footer' => [
         'hotline' => 'Unified helpline',
         'sections' => 'Sections',
@@ -33,6 +37,8 @@ return [
         'president' => 'President of the Republic of Tajikistan',
         'government' => 'Government of the Republic of Tajikistan',
         'egov' => 'Public Services Portal of the RT',
+        'accessibility' => 'Accessibility statement',
+        'rights' => 'All rights reserved',
     ],
     'lang' => [
         'switch' => 'Change language',
@@ -40,6 +46,11 @@ return [
     ],
     'a11y' => [
         'open' => 'Version for the visually impaired',
+        'skip_to_content' => 'Skip to content',
+        'primary_nav' => 'Primary navigation',
+        'footer_nav' => 'Footer navigation',
+        'menu' => 'Menu',
+        'search_results' => 'Search results',
         'settings_search' => 'Settings and search',
         'site_search' => 'Search the site',
         'font' => 'Font',
@@ -87,6 +98,23 @@ return [
             'title' => 'Committee of Emergency Situations and Civil Defense',
             'subtitle' => 'Up-to-date information on threats and emergencies, safety guidelines, and public alerts for the Republic of Tajikistan.',
             'emergency_call' => 'Emergency call: 112',
+            'map_cta' => 'Emergency map',
+            'guides_cta' => 'Safety guides',
+            'call_label' => 'Unified rescue service',
+            'call_note' => '24/7 · toll-free',
+        ],
+        'status' => [
+            'label' => 'Operational situation',
+            'normal' => 'NORMAL',
+            'elevated' => 'ELEVATED',
+            'danger' => 'DANGER',
+        ],
+        'operational' => [
+            'title' => 'Operational situation',
+            'active' => 'Active emergencies',
+            'controlled' => 'Under control',
+            'resolved' => 'Resolved',
+            'all_clear' => 'No active emergencies',
         ],
         'quick_links' => [
             'emergency_phone' => 'Emergency phone',
@@ -188,7 +216,7 @@ return [
     ],
     'tourism' => [
         'create' => [
-            'page_title' => 'Tourist group registration',
+            'page_title' => 'Route registration',
             'subtitle' => 'Notify the mountain rescue service of your route for your safety',
             'success_page_title' => 'Application received',
             'success_heading' => 'Application registered',
@@ -197,10 +225,11 @@ return [
             'track_link' => 'Track application',
         ],
         'form' => [
-            'leader_name' => 'Group leader',
+            'leader_name' => 'Applicant full name',
             'leader_phone' => 'Phone',
             'leader_email' => 'Email (optional)',
             'participants_count' => 'Number of participants',
+            'participants_hint' => 'Enter 1 if travelling alone',
             'region' => 'Region',
             'region_placeholder' => 'Select a region',
             'region_none' => 'Not specified',
@@ -208,7 +237,7 @@ return [
             'end_date' => 'Return date',
             'route' => 'Route',
             'equipment' => 'Equipment and special notes (optional)',
-            'submit' => 'Register group',
+            'submit' => 'Register route',
             'reference_placeholder' => 'TUR-2026-XXXXXX',
         ],
         'track' => [
@@ -230,6 +259,7 @@ return [
             'channel' => 'Browser notifications',
             'hint' => 'Receive emergency alerts directly on your device screen. No email required.',
             'enable' => 'Allow notifications',
+            'enabled' => 'Notifications enabled',
             'loading' => 'Setting up…',
             'unsupported' => 'Your browser does not support push notifications.',
             'success' => 'You have successfully subscribed to browser notifications.',

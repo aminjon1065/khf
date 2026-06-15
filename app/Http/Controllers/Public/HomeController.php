@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Enums\IncidentStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Incident;
 use App\Models\Post;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
@@ -42,8 +44,28 @@ class HomeController extends Controller
                 ->all();
         });
 
+        // Operational-situation summary (ТЗ §5, §6.1) — incident counts by status, surfaced in the
+        // homepage hero. Cached on the latest incident change like the incidents archive.
+        $operational = Cache::remember(
+            'home.operational.'.(Incident::max('updated_at') ?? 'empty'),
+            3600,
+            function (): array {
+                $counts = Incident::query()
+                    ->selectRaw('status, COUNT(*) as total')
+                    ->groupBy('status')
+                    ->pluck('total', 'status');
+
+                return [
+                    'active' => (int) ($counts[IncidentStatus::Active->value] ?? 0),
+                    'controlled' => (int) ($counts[IncidentStatus::Controlled->value] ?? 0),
+                    'resolved' => (int) ($counts[IncidentStatus::Resolved->value] ?? 0),
+                ];
+            }
+        );
+
         return Inertia::render('public/home', [
             'latestPosts' => $latestPosts,
+            'operational' => $operational,
             'schema' => [
                 '@context' => 'https://schema.org',
                 '@type' => 'GovernmentOrganization',
@@ -53,7 +75,7 @@ class HomeController extends Controller
                 'logo' => url('/images/emblem-tj.webp'),
                 'contactPoint' => [
                     '@type' => 'ContactPoint',
-                    'telephone' => '119',
+                    'telephone' => '112',
                     'contactType' => 'Emergency',
                 ],
             ],

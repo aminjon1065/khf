@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -32,8 +34,10 @@ class Guide extends Model implements HasMedia
 
     /** @use HasFactory<GuideFactory> */
     use HasFactory;
+
     use HasTranslations;
     use InteractsWithMedia;
+    use LogsActivity;
     use SoftDeletes;
 
     public const FILES_COLLECTION = 'files';
@@ -70,5 +74,13 @@ class Guide extends Model implements HasMedia
     public function scopePublished(Builder $query): void
     {
         $query->where('status', ContentStatus::Published);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
     }
 }

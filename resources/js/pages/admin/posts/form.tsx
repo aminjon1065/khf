@@ -1,11 +1,15 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { Check } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { CpAssetsField } from '@/components/admin/cp/assets-field';
+import { CpRichTextField } from '@/components/admin/cp/fields';
+import {
+    CpLocaleTabs,
+    CpPanel,
+    CpPublishForm,
+} from '@/components/admin/cp/publish-form';
+import { CpRelationField } from '@/components/admin/cp/relation-field';
 import InputError from '@/components/input-error';
-import { RichTextEditor } from '@/components/rich-text-editor';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -80,6 +84,7 @@ export default function PostForm({
         status: post?.status ?? statuses[0]?.value ?? 'draft',
         published_at: post?.published_at ?? '',
         cover: null as File | null,
+        cover_media_id: null as number | null,
         remove_cover: false,
         translations: initialTranslations,
     });
@@ -109,299 +114,184 @@ export default function PostForm({
     };
 
     const active = form.data.translations[activeLocale];
+    const title = isEdit ? 'Редактирование материала' : 'Новый материал';
 
     return (
         <>
-            <Head
-                title={isEdit ? 'Редактирование материала' : 'Новый материал'}
-            />
+            <Head title={title} />
 
-            <form
+            <CpPublishForm
+                title={title}
+                backHref={index().url}
                 onSubmit={submit}
-                className="flex h-full flex-1 flex-col gap-6 p-4"
+                processing={form.processing}
+                sidebar={
+                    <>
+                        <CpPanel title="Публикация">
+                            <div className="space-y-2">
+                                <Label htmlFor="status">Статус</Label>
+                                <Select
+                                    value={form.data.status}
+                                    onValueChange={(value) => form.setData('status', value)}
+                                >
+                                    <SelectTrigger id="status">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {statuses.map((status) => (
+                                            <SelectItem key={status.value} value={status.value}>
+                                                {status.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.status} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="type">Тип</Label>
+                                <Select
+                                    value={form.data.type}
+                                    onValueChange={(value) => form.setData('type', value)}
+                                >
+                                    <SelectTrigger id="type">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {types.map((type) => (
+                                            <SelectItem key={type.value} value={type.value}>
+                                                {type.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.type} />
+                            </div>
+                            <CpRelationField
+                                id="category"
+                                label="Рубрика"
+                                value={form.data.category_id}
+                                options={categories}
+                                onChange={(value) => form.setData('category_id', value)}
+                                placeholder="— Нет —"
+                                error={errors.category_id}
+                            />
+                            <div className="space-y-2">
+                                <Label htmlFor="published_at">Дата публикации</Label>
+                                <Input
+                                    id="published_at"
+                                    type="datetime-local"
+                                    value={form.data.published_at}
+                                    onChange={(event) => form.setData('published_at', event.target.value)}
+                                />
+                                <InputError message={errors.published_at} />
+                            </div>
+                        </CpPanel>
+
+                        <CpPanel title="Обложка">
+                            <CpAssetsField
+                                label="Изображение обложки"
+                                instructions="Загрузите файл или выберите из медиабиблиотеки"
+                                currentUrl={post?.cover_url ?? null}
+                                file={form.data.cover}
+                                mediaId={form.data.cover_media_id}
+                                removed={form.data.remove_cover}
+                                onUpload={(file) =>
+                                    form.setData({
+                                        ...form.data,
+                                        cover: file,
+                                        cover_media_id: null,
+                                        remove_cover: false,
+                                    })
+                                }
+                                onPickAsset={(asset) =>
+                                    form.setData({
+                                        ...form.data,
+                                        cover: null,
+                                        cover_media_id: asset?.id ?? null,
+                                        remove_cover: false,
+                                    })
+                                }
+                                onClear={() =>
+                                    form.setData({
+                                        ...form.data,
+                                        cover: null,
+                                        cover_media_id: null,
+                                        remove_cover: true,
+                                    })
+                                }
+                                error={errors.cover ?? errors.cover_media_id}
+                            />
+                        </CpPanel>
+                    </>
+                }
             >
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">
-                        {isEdit ? 'Редактирование материала' : 'Новый материал'}
-                    </h1>
-                    <div className="flex gap-2">
-                        <Button type="button" variant="outline" asChild>
-                            <Link href={index().url}>Отмена</Link>
-                        </Button>
-                        <Button type="submit" disabled={form.processing}>
-                            Сохранить
-                        </Button>
-                    </div>
-                </div>
+                <CpLocaleTabs
+                    locales={locales}
+                    active={activeLocale}
+                    onChange={setActiveLocale}
+                    isComplete={(code) => Boolean(form.data.translations[code]?.title)}
+                />
 
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="type">Тип</Label>
-                        <Select
-                            value={form.data.type}
-                            onValueChange={(value) =>
-                                form.setData('type', value)
-                            }
-                        >
-                            <SelectTrigger id="type">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {types.map((type) => (
-                                    <SelectItem
-                                        key={type.value}
-                                        value={type.value}
-                                    >
-                                        {type.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.type} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="category">Рубрика</Label>
-                        <Select
-                            value={
-                                form.data.category_id
-                                    ? String(form.data.category_id)
-                                    : 'none'
-                            }
-                            onValueChange={(value) =>
-                                form.setData(
-                                    'category_id',
-                                    value === 'none' ? null : Number(value),
-                                )
-                            }
-                        >
-                            <SelectTrigger id="category">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">— Нет —</SelectItem>
-                                {categories.map((category) => (
-                                    <SelectItem
-                                        key={category.id}
-                                        value={String(category.id)}
-                                    >
-                                        {category.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.category_id} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="status">Статус</Label>
-                        <Select
-                            value={form.data.status}
-                            onValueChange={(value) =>
-                                form.setData('status', value)
-                            }
-                        >
-                            <SelectTrigger id="status">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {statuses.map((status) => (
-                                    <SelectItem
-                                        key={status.value}
-                                        value={status.value}
-                                    >
-                                        {status.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.status} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="published_at">Дата публикации</Label>
-                        <Input
-                            id="published_at"
-                            type="datetime-local"
-                            value={form.data.published_at}
-                            onChange={(event) =>
-                                form.setData('published_at', event.target.value)
-                            }
-                        />
-                        <InputError message={errors.published_at} />
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="cover">Обложка</Label>
-                    {post?.cover_url && !form.data.remove_cover && (
-                        <img
-                            src={post.cover_url}
-                            alt=""
-                            className="h-32 w-auto rounded-md border object-cover"
-                        />
-                    )}
-                    <Input
-                        id="cover"
-                        type="file"
-                        accept="image/*"
-                        className="max-w-sm"
-                        onChange={(event) =>
-                            form.setData(
-                                'cover',
-                                event.target.files?.[0] ?? null,
-                            )
-                        }
+                <div>
+                    <input
+                        aria-label="Заголовок"
+                        value={active.title}
+                        onChange={(event) => setTranslation(activeLocale, 'title', event.target.value)}
+                        placeholder="Заголовок"
+                        className="w-full border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
                     />
-                    <InputError message={errors.cover} />
-                    {post?.cover_url && (
-                        <label className="flex items-center gap-2 text-sm">
-                            <Checkbox
-                                checked={form.data.remove_cover}
-                                onCheckedChange={(checked) =>
-                                    form.setData(
-                                        'remove_cover',
-                                        checked === true,
-                                    )
-                                }
-                            />
-                            Удалить текущую обложку
-                        </label>
-                    )}
+                    <InputError message={errors[`translations.${activeLocale}.title`]} />
                 </div>
 
-                <div className="flex flex-wrap gap-2 border-b pb-2">
-                    {locales.map((locale) => (
-                        <Button
-                            key={locale.code}
-                            type="button"
-                            variant={
-                                activeLocale === locale.code
-                                    ? 'default'
-                                    : 'ghost'
-                            }
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => setActiveLocale(locale.code)}
-                        >
-                            {locale.native_name}
-                            {Boolean(
-                                form.data.translations[locale.code]?.title,
-                            ) && <Check className="size-3.5 text-green-600" />}
-                        </Button>
-                    ))}
-                </div>
-
-                <div className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="title">Заголовок</Label>
-                            <Input
-                                id="title"
-                                value={active.title}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'title',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                            <InputError
-                                message={
-                                    errors[`translations.${activeLocale}.title`]
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="slug">ЧПУ (slug)</Label>
-                            <Input
-                                id="slug"
-                                value={active.slug}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'slug',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                            <InputError
-                                message={
-                                    errors[`translations.${activeLocale}.slug`]
-                                }
-                            />
-                        </div>
+                <CpPanel title="Содержание">
+                    <div className="space-y-2">
+                        <Label htmlFor="slug">ЧПУ (slug)</Label>
+                        <Input
+                            id="slug"
+                            value={active.slug}
+                            onChange={(event) => setTranslation(activeLocale, 'slug', event.target.value)}
+                            placeholder="оставьте пустым для авто"
+                        />
+                        <InputError message={errors[`translations.${activeLocale}.slug`]} />
                     </div>
-
                     <div className="space-y-2">
                         <Label htmlFor="excerpt">Анонс</Label>
                         <Textarea
                             id="excerpt"
                             rows={2}
                             value={active.excerpt}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'excerpt',
-                                    event.target.value,
-                                )
-                            }
+                            onChange={(event) => setTranslation(activeLocale, 'excerpt', event.target.value)}
                         />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.excerpt`]
-                            }
-                        />
+                        <InputError message={errors[`translations.${activeLocale}.excerpt`]} />
                     </div>
+                    <CpRichTextField
+                        label="Полный текст"
+                        editorKey={activeLocale}
+                        value={active.body}
+                        onChange={(html) => setTranslation(activeLocale, 'body', html)}
+                        error={errors[`translations.${activeLocale}.body`]}
+                    />
+                </CpPanel>
 
+                <CpPanel title="SEO">
                     <div className="space-y-2">
-                        <Label htmlFor="body">Полный текст</Label>
-                        <RichTextEditor
-                            key={activeLocale}
-                            value={active.body}
-                            onChange={(html) =>
-                                setTranslation(activeLocale, 'body', html)
-                            }
-                        />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.body`]
-                            }
+                        <Label htmlFor="seo_title">SEO заголовок</Label>
+                        <Input
+                            id="seo_title"
+                            value={active.seo_title}
+                            onChange={(event) => setTranslation(activeLocale, 'seo_title', event.target.value)}
                         />
                     </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="seo_title">SEO заголовок</Label>
-                            <Input
-                                id="seo_title"
-                                value={active.seo_title}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'seo_title',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="seo_description">
-                                SEO описание
-                            </Label>
-                            <Input
-                                id="seo_description"
-                                value={active.seo_description}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'seo_description',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                        </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="seo_description">SEO описание</Label>
+                        <Input
+                            id="seo_description"
+                            value={active.seo_description}
+                            onChange={(event) => setTranslation(activeLocale, 'seo_description', event.target.value)}
+                        />
                     </div>
-                </div>
-            </form>
+                </CpPanel>
+            </CpPublishForm>
         </>
     );
 }

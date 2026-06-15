@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\StorePostRequest;
 use App\Http\Requests\Admin\UpdatePostRequest;
 use App\Models\Category;
 use App\Models\Language;
+use App\Models\MediaFile;
 use App\Models\Post;
 use App\Support\HtmlSanitizer;
 use Illuminate\Database\Eloquent\Builder;
@@ -213,15 +214,34 @@ class PostController extends Controller
     }
 
     /**
-     * Add an uploaded cover, or clear it when the "remove" flag is set (ТЗ §6.2, §7.7).
+     * Set the cover from an upload or a picked media-library asset, or clear it when the "remove"
+     * flag is set (ТЗ §6.2, §7.7). A fresh upload wins; otherwise a chosen library asset is copied
+     * into the cover collection (the assets fieldtype, D-22).
      */
     private function syncCover(Request $request, Post $post): void
     {
         if ($request->hasFile('cover')) {
             $post->addMediaFromRequest('cover')->toMediaCollection(Post::COVER_COLLECTION);
+        } elseif ($request->filled('cover_media_id')) {
+            $this->copyCoverFromLibrary($post, $request->integer('cover_media_id'));
         } elseif ($request->boolean('remove_cover')) {
             $post->clearMediaCollection(Post::COVER_COLLECTION);
         }
+    }
+
+    /**
+     * Copy a media-library asset's file into the post's (single-file) cover collection.
+     */
+    private function copyCoverFromLibrary(Post $post, int $mediaFileId): void
+    {
+        $media = MediaFile::find($mediaFileId)?->getFirstMedia('default');
+
+        if ($media === null) {
+            return;
+        }
+
+        $post->clearMediaCollection(Post::COVER_COLLECTION);
+        $media->copy($post, Post::COVER_COLLECTION);
     }
 
     /**

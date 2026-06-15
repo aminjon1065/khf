@@ -1,4 +1,6 @@
+import { Loader2, UploadCloud, Check } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -6,9 +8,6 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Loader2, UploadCloud, Check } from 'lucide-react';
 
 type MediaFile = {
     id: number;
@@ -34,32 +33,33 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLibraryMod
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (isOpen) {
-            fetchMedia();
+        if (!isOpen) {
+            return;
         }
+
+        // Intentional: show the spinner immediately while the library loads on open.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setLoading(true);
+
+        fetch('/admin/api/media')
+            .then((res) => res.json())
+            .then((data) => setMediaFiles(data.data || []))
+            .catch((err) => console.error('Failed to fetch media', err))
+            .finally(() => setLoading(false));
     }, [isOpen]);
 
-    const fetchMedia = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/admin/api/media');
-            const data = await res.json();
-            setMediaFiles(data.data || []);
-        } catch (err) {
-            console.error('Failed to fetch media', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files || e.target.files.length === 0) return;
+        if (!e.target.files || e.target.files.length === 0) {
+return;
+}
+
         const file = e.target.files[0];
 
         const formData = new FormData();
         formData.append('file', file);
 
         setUploading(true);
+
         try {
             const res = await fetch('/admin/media', {
                 method: 'POST',
@@ -75,6 +75,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLibraryMod
             console.error('Upload failed', err);
         } finally {
             setUploading(false);
+
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
             }
@@ -84,9 +85,11 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLibraryMod
     const handleInsert = () => {
         if (selectedId) {
             const file = mediaFiles.find(m => m.id === selectedId);
+
             if (file && file.media && file.media.length > 0) {
                 onSelect(file.media[0].original_url);
             }
+
             onClose();
         }
     };
@@ -128,7 +131,10 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLibraryMod
                             {mediaFiles.map((file) => {
                                 const isSelected = selectedId === file.id;
                                 const mediaItem = file.media?.[0];
-                                if (!mediaItem) return null;
+
+                                if (!mediaItem) {
+return null;
+}
 
                                 const isImage = mediaItem.original_url.match(/\.(jpeg|jpg|gif|png|webp|avif)$/i) != null;
 

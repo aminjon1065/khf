@@ -1,11 +1,16 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Bell, Map, Phone, ShieldAlert } from 'lucide-react';
+import { ArrowUpRight, Bell, Inbox, Map, ShieldAlert } from 'lucide-react';
 import { AppEmblem } from '@/components/app-emblem';
-import { HomeSlider } from '@/components/home-slider';
 import type { ActiveAlert } from '@/components/Public/EmergencyHero';
 import { EmergencyHero } from '@/components/Public/EmergencyHero';
+import { GovHero  } from '@/components/Public/gov-hero';
+import type {OperationalSummary} from '@/components/Public/gov-hero';
 import { useTranslations } from '@/hooks/use-translations';
+import { create as appealsCreate } from '@/routes/appeals';
+import { index as guidesIndex } from '@/routes/guides';
+import { index as mapIndex } from '@/routes/map';
 import { index as newsIndex, show } from '@/routes/news';
+import { create as subscriptionsCreate } from '@/routes/subscriptions';
 
 type NewsCard = {
     title: string | null;
@@ -18,9 +23,10 @@ type NewsCard = {
 
 type PageProps = {
     latestPosts: NewsCard[];
+    operational?: OperationalSummary;
 };
 
-export default function Home({ latestPosts }: PageProps) {
+export default function Home({ latestPosts, operational }: PageProps) {
     const { locale, activeAlerts } = usePage().props as {
         locale: string;
         activeAlerts?: ActiveAlert[];
@@ -32,26 +38,35 @@ export default function Home({ latestPosts }: PageProps) {
     );
     const isRedState = criticalAlerts.length > 0;
 
-    const quickLinks = [
+    // Task-first service grid (govtech): every tile is an actionable destination, not decoration.
+    const tasks = [
         {
-            icon: Phone,
-            label: t('home.quick_links.emergency_phone'),
-            value: '112',
+            icon: Map,
+            label: t('common.emergency_map'),
+            hint: t('common.operational_situation'),
+            href: mapIndex({ locale }).url,
+            accent: false,
         },
         {
             icon: ShieldAlert,
             label: t('home.quick_links.safety_guides_label'),
-            value: t('home.quick_links.safety_guides_hint'),
+            hint: t('home.quick_links.safety_guides_hint'),
+            href: guidesIndex({ locale }).url,
+            accent: false,
         },
         {
-            icon: Map,
-            label: t('common.emergency_map'),
-            value: t('common.operational_situation'),
+            icon: Inbox,
+            label: t('nav.reception'),
+            hint: t('appeals.subtitle'),
+            href: appealsCreate({ locale }).url,
+            accent: false,
         },
         {
             icon: Bell,
             label: t('home.quick_links.subscribe_label'),
-            value: t('home.quick_links.subscribe_hint'),
+            hint: t('home.quick_links.subscribe_hint'),
+            href: subscriptionsCreate({ locale }).url,
+            accent: true,
         },
     ];
 
@@ -62,27 +77,35 @@ export default function Home({ latestPosts }: PageProps) {
             {isRedState ? (
                 <EmergencyHero alerts={criticalAlerts} />
             ) : (
-                <HomeSlider latestPosts={latestPosts} locale={locale} t={t} />
+                <GovHero operational={operational} />
             )}
 
-            <section className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                {quickLinks.map((item) => (
-                    <div
+            <section className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {tasks.map((item) => (
+                    <Link
                         key={item.label}
-                        className="group flex flex-col items-center gap-4 rounded-2xl border bg-card p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                        href={item.href}
+                        className="group flex items-start gap-4 rounded-2xl border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                     >
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                            <item.icon className="size-6" />
-                        </div>
-                        <div>
-                            <p className="font-semibold text-foreground">
+                        <span
+                            className={`flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                                item.accent
+                                    ? 'bg-signal/10 text-signal group-hover:bg-signal group-hover:text-signal-foreground'
+                                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
+                            }`}
+                        >
+                            <item.icon className="size-5.5" />
+                        </span>
+                        <span className="flex-1">
+                            <span className="flex items-center gap-1 font-semibold text-foreground">
                                 {item.label}
-                            </p>
-                            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                                {item.value}
-                            </p>
-                        </div>
-                    </div>
+                                <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
+                            </span>
+                            <span className="mt-1 line-clamp-2 block text-sm leading-relaxed text-muted-foreground">
+                                {item.hint}
+                            </span>
+                        </span>
+                    </Link>
                 ))}
             </section>
 

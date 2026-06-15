@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * A static content page (ТЗ §6, §7.2). Multilingual fields live in `page_translations`.
@@ -25,12 +27,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Page extends Model
 {
     use ClearsResponseCache;
+
     /** @use HasFactory<PageFactory> */
     use HasFactory;
 
     use HasSeoMeta;
-
     use HasTranslations;
+    use LogsActivity;
     use SoftDeletes;
 
     /** @var list<string> */
@@ -73,5 +76,13 @@ class Page extends Model
     public function scopePublished(Builder $query): void
     {
         $query->where('status', ContentStatus::Published);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
     }
 }

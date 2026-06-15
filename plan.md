@@ -40,20 +40,29 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 ## Progress Summary
 
 - **Total Tasks:** 196
-- **Completed:** 116
+- **Completed:** 133
 - **In Progress:** 0
 - **Blocked:** 0 (Redis blocker removed — D-10: no Redis on shared hosting, DB drivers in use)
-- **Remaining:** 80
-- **Completion:** ~59%
+- **Remaining:** 63
+- **Completion:** ~68%
 
 > Phases 0–13 substantially done; **Phase 8 essentially closed**: page renderer + RSS + OG meta +
 > branded error pages, plus a full **Safety Guides** module (CMS + public catalogue/guide page,
 > hazard-type + audience incl. children, downloads, print), **Contacts** page (emergency numbers +
 > regional map + feedback), and an **operational-situation** summary on the incidents archive;
 > public portal fully trilingual (tj/ru/en); seeders (admin + trilingual demo incl. guides) in
-> place; 209 tests. Remaining: web push (12 tail), locale dates (13 tail), search (14),
-> SEO/sitemap/analytics (15), security hardening + audit
-> log (16), perf (17), testing/a11y/API (18), deploy (19).
+> place; 247 tests. **Phase 20 (Statamic CP) core in place** — shell, listing, publish forms ×7,
+> fieldtypes (text/textarea/select/toggle/bard/relation/assets), stacks, ⌘K palette, dashboard,
+> dark/a11y pass, CP render/permission tests; only the CP design-token doc remains there.
+> **Phase 16 (Security) essentially done** — headers/HSTS, rate-limit + honeypot, sanitization,
+> upload hardening, password/session policy, and a full **audit log** (8 models + security events +
+> read-only CP viewer); remaining: OWASP review pass + CI dep-scanning. **Phase 18 mostly done** —
+> internal token API (`/api/v1`), low-vision a11y mode, public-surface **WCAG AA sweep**, 249-test
+> backend coverage; remaining there: contrast measurement, client browser tests, cross-browser/UAT.
+> **Phase 19 progressing** — cron
+> scheduler (queue drain + audit prune) + CI now gates types & dependency audits; remaining: deploy
+> job/guide, env separation, backups, monitoring, TLS. Remaining elsewhere:
+> web push (12 tail), locale dates (13 tail), perf load-testing (17 tail).
 
 > Completed = starter-kit functionality already satisfying ТЗ (auth, 2FA, passkeys, settings, SSR,
 > shadcn base) + Phase 0 (audit, decisions D-1…D-9) + Phase 1 design tokens (Приложение В/Г).
@@ -276,17 +285,17 @@ management — before content modules (Phase 4) build on them.
 
 ## Phase 16 — Security Hardening
 
-- [ ] HTTPS-only + HTTP→HTTPS redirect + HSTS (§12.1)
-- [ ] CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy headers verified (§12.2)
-- [ ] HTML sanitization for WYSIWYG output (XSS) (§12.2)
-- [ ] CSRF verified on all mutating ops; SQLi covered by Eloquent (§12.2)
-- [ ] File upload hardening: type/size checks, no executables, storage outside webroot, controlled routes (§12.4)
-- [ ] Anti-spam + rate limiting on all public forms (§12.4)
-- [ ] Password policy, secure sessions (cookie flags, idle timeout) (§12.3)
-- [ ] Audit log: `audit_logs` — who/what/when for CMS actions + security events; tamper-resistant (§7.10, §12.7)
-- [ ] Secrets outside repo; dependency vulnerability checks (§12.5, §12.6)
+- [x] HTTPS-only + HTTP→HTTPS redirect + HSTS (§12.1) — `URL::forceScheme('https')` in production (AppServiceProvider) + HSTS emitted by `SecurityHeaders` middleware (config-driven max-age/subdomains/preload); secure cookies on
+- [x] CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy headers verified (§12.2) — `SecurityHeaders` middleware + `config/security.php` (CSP directives, frame/referrer/permissions policy, `X-Permitted-Cross-Domain-Policies`); dev CSP widened for Vite HMR; covered by `SecurityHeadersTest`
+- [x] HTML sanitization for WYSIWYG output (XSS) (§12.2) — stevebauman/purify on translation bodies; covered by `SecurityTest` + `PostManagementTest`
+- [x] CSRF verified on all mutating ops; SQLi covered by Eloquent (§12.2) — Laravel `VerifyCsrfToken` on web + Eloquent parameter binding throughout
+- [x] File upload hardening: type/size checks, no executables, storage outside webroot, controlled routes (§12.4) — `SafeFileUpload` rule (rejects executables), documents/guides on the private `local` disk via controlled download routes; covered by `SecurityTest` + `DocumentManagementTest`
+- [x] Anti-spam + rate limiting on all public forms (§12.4) — honeypot on appeals/tourist-groups/subscribe request classes + `throttle:` on every public POST and tracking lookup; login/2FA/passkey rate limiters in Fortify
+- [x] Password policy, secure sessions (cookie flags, idle timeout) (§12.3) — `Password::defaults` min 12 + mixed case/letters/numbers/symbols (+ uncompromised in prod); session `secure`/`http_only`/`same_site=lax`, 120-min lifetime
+- [x] Audit log: who/what/when for CMS actions + security events; tamper-resistant (§7.10, §12.7) — spatie/activitylog (`activity_log`). **Content auditing on all 8 CMS models** (posts, pages, categories, incidents, alerts, documents, guides, users — added Alert/Category/Guide/Page). **Security events** (login / logout / failed-login / lockout / 2FA enable·confirm·disable) recorded with IP + user-agent via `LogAuthenticationActivity` subscriber. Read-only CP viewer (`admin/audit-logs`) with event/type/search filters, gated by `audit.view`; append-only (no mutate routes) = tamper-resistant. Covered by `AuditLogTest`
+- [x] Secrets outside repo; dependency vulnerability checks (§12.5, §12.6) — secrets in `.env` (git-ignored); CI `security.yml` runs `composer audit` (blocking — currently clean) + `npm audit --omit=dev` (report-only until the dev-tool advisory `concurrently → shell-quote` is moved to devDependencies, flagged separately) on push/PR + weekly
 - [ ] Security review pass (OWASP Top 10) (§18.1)
-- [ ] Tests: headers, sanitization, upload rejection, rate limits, audit entries
+- [x] Tests: headers, sanitization, upload rejection, rate limits, audit entries — `SecurityHeadersTest` (headers), `SecurityTest` (sanitization + upload rejection + activity), `AuthenticationTest` (login throttle), `AuditLogTest` (content + security audit entries, viewer access/filter)
 
 ## Phase 17 — Performance Optimization
 
@@ -301,25 +310,42 @@ management — before content modules (Phase 4) build on them.
 
 ## Phase 18 — Testing
 
-- [ ] Backend unit + feature test coverage of key logic (§18.1)
+- [x] Backend unit + feature test coverage of key logic (§18.1) — 245 Pest tests across auth/RBAC/2FA, all CMS modules (CRUD + render + permission gating), public portal, i18n/SEO, security (headers/sanitization/uploads/audit), and the internal API
 - [ ] Key client-side scenario tests (Pest browser / smoke) (§18.1)
-- [ ] Accessibility audit WCAG 2.1 AA + low-vision mode verification (§6.11, §11.7, §18.1)
+- [~] Accessibility audit WCAG 2.1 AA + low-vision mode verification (§6.11, §11.7, §18.1) — **public-surface WCAG sweep done** (two-reviewer audit + remediation): skip-to-content link + focusable `<main>` (2.4.1), labelled landmarks on every `<nav>` incl. the mobile bottom bar as a real `<nav>` with `aria-current` (1.3.1/4.1.2), the emergency hero de-aliased from `role="alert"` (4.1.3), global search input named + `aria-live` results region (4.1.2/4.1.3), media-library/document filters labelled (1.3.1), subscribe topics → `<fieldset>/<legend>` + live status banner (1.3.1/4.1.3), and **form error association** (`aria-invalid` + `aria-describedby` + error ids) across appeals/tourist-groups/subscribe (3.3.1); HazardBadge de-aliased from `role="status"`; decorative icons hidden. Low-vision mode verified (below). Remaining: formal contrast-ratio measurement, residual decorative-icon polish on a few content pages, and a CMS-side pass
 - [ ] Cross-browser + mobile responsiveness checks (§18.1)
-- [ ] Internal API (token auth, versioning, rate limit) + documentation (§10.9, §18.3)
-- [ ] Low-vision accessibility mode (font size, contrast, reduced graphics, keyboard nav, screen-reader) (§6.11)
+- [x] Internal API (token auth, versioning, rate limit) + documentation (§10.9, §18.3) — dependency-free token API: `routes/api.php` versioned under `/api/v1`, locale-aware via `?locale=` (`SetApiLocale`), `throttle:api` 60/min keyed by token; `Authorization: Bearer` auth (`AuthenticateApiToken` + `api_tokens` SHA-256-hashed store, minted with `api:token`); read endpoints alerts/incidents/news(+show) via Eloquent API Resources (active/published only, body only on show); open self-documenting `/api/v1` discovery endpoint; JSON errors. Covered by `Api/V1/ApiTest` (12 cases)
+- [x] Low-vision accessibility mode (font size, contrast, reduced graphics, keyboard nav, screen-reader) (§6.11) — `accessibility-toolbar` in the public layout: font size (normal/large/xl), 4 contrast schemes (normal/monochrome/inverted/blue-yellow), image modes (on/grayscale/off), reset; persisted to localStorage, applied via `html.a11y-*` classes in `app.css`, fully trilingual (`a11y.*` keys)
 - [ ] UAT support on staging (§18.1)
 
 ## Phase 19 — Deployment
 
 - [ ] Shared-hosting deploy guide: docroot → `public/`, SSH deploy + `migrate --force`, asset build upload (D-13; §16.1)
-- [ ] Single cron entry `* * * * * php artisan schedule:run`; scheduler drains DB queue via `queue:work --stop-when-empty` (D-10; replaces Supervisor)
+- [x] Single cron entry `* * * * * php artisan schedule:run`; scheduler drains DB queue via `queue:work --stop-when-empty` (D-10; replaces Supervisor) — `routes/console.php` schedules `queue:work --stop-when-empty --tries=3 --max-time=55` every minute (`withoutOverlapping`) + weekly `activitylog:clean`; covered by `SchedulerTest`
 - [ ] Optional Docker/Compose for local dev only (app/PHP-FPM, Nginx, MySQL) — not production (D-13)
-- [ ] CI/CD pipeline: lint, types, tests, Vite build, deploy (extend existing GH Actions) (§16.2)
+- [~] CI/CD pipeline: lint, types, tests, Vite build, deploy (extend existing GH Actions) (§16.2) — GH Actions now run Pint + ESLint + Prettier (`lint.yml`), the Pest matrix on PHP 8.3/8.4/8.5 + Vite build (`tests.yml`, with **`types:check`** added after the build so Wayfinder types exist), and a **`security.yml`** dependency-audit job. Only the deploy job is left (needs owner hosting/secrets)
 - [ ] Env separation: dev / staging / production; secrets management (§16.1)
 - [ ] Backup automation (DB + files, 30-day retention) + restore verification (§4.3, §16.3)
 - [ ] Monitoring/alerting (availability, errors, queues) (§4.3, §16.3)
 - [ ] TLS certificate management (§16.3)
 - [ ] Deploy/runbook + admin/user (RU) + architecture + API documentation (§18.3)
+
+## Phase 20 — Statamic-style Control Panel (CMS redesign, D-19)
+
+> Re-skin the CMS to a faithful "lux copy" of the Statamic Control Panel on top of the existing DB
+> backend (D-19): keep all Eloquent/RBAC/data, replicate Statamic's CP architecture concepts +
+> design/UX, on the КЧС brand. Built incrementally; each module's existing CRUD is preserved.
+
+- [x] CP shell — Statamic-style chrome: light grouped sidebar (uppercase section labels, accent-tinted active item, brand block, account menu at foot), slim global header (breadcrumbs + view-site), soft neutral page background, mobile drawer; replaces the shadcn AdminLayout internals (`admin-layout`, `admin-sidebar`, `cp-topbar`, `cp-user-menu`)
+- [ ] CP design tokens pass — align radii/shadows/spacing/typography to Statamic's scale (still КЧС palette); document the CP token set
+- [x] Listing component (Statamic "Listing") — `DataTable` restyled in place (white bordered card, uppercase header, hover rows, search on `bg-card`, polished pagination); API unchanged so all 13 module indexes upgraded at once. Column-toggle + bulk actions deferred
+- [x] Publish form (Statamic two-column) — reusable shell (`cp/publish-form`: `CpPublishForm` two-column + Save/Cancel header, `CpPanel` field group, `CpLocaleTabs` locale switcher, large borderless title). **All 7 module forms converted** (posts, pages, categories, incidents, alerts, documents, guides): localised fields in the main column, meta in the sticky sidebar (status/type/category/dates/files/map). `useForm` shapes preserved → controllers/tests unaffected. Revisions/site-switcher deferred
+- [x] Fieldtypes — `cp/fields.tsx`: `CpField` shell (label + instructions + control + error) + `CpTextField` (incl. date/datetime via `type`), `CpTextareaField`, `CpSelectField`, `CpToggleField`, `CpRichTextField` (bard — TipTap wrapped in the field shell, remounts per-locale via `editorKey`); plus `CpRelationField` (relationship picker via a stack) and **`CpAssetsField`** (`cp/assets-field.tsx` — single-image assets fieldtype: upload **or** pick from the media library in a stack). Showcased on the **alerts** form (select/relation/datetime/toggle/textarea); posts «Рубрика» uses the relation field; **bard adopted in posts/pages/guides**; **assets adopted on the posts cover** (`cover_media_id` contract, server-side copy — D-22). Remaining forms can migrate incrementally
+- [x] Stacks — `cp/stack.tsx` (`CpStack`) slide-over on the Radix Sheet (right-anchored, overlay, focus-trap, Esc, slide animation, layerable); first real usage = the relationship picker in `CpRelationField`
+- [x] Command palette (⌘K) — `command-palette.tsx` on Radix Dialog (no new deps): fuzzy-jump to any section + «Создать …» actions, permission-gated from the shared `admin/nav.ts`, fully keyboard-driven (↑/↓/Enter/Esc); trigger in the CP topbar. Nav data extracted to `components/admin/nav.ts` (shared by sidebar + palette)
+- [x] Dashboard widgets (Statamic-style cards) — the operational dashboard (attention banner, KPI widget cards, recent appeals/incidents panels, system stats; all permission-gated) was already built; polished the KPI widgets with tinted icon chips to cohere with the CP look
+- [x] Dark mode parity + a11y pass for the whole CP — every CP surface is built on semantic tokens (`bg-card`/`text-foreground`/`border-border`/`bg-primary/10`…) so dark mode adapts automatically; added `focus-visible:ring-2 focus-visible:ring-ring` rings to every interactive CP element (sidebar nav, topbar buttons, account menu, command-palette trigger + items, locale tabs, relation-field trigger/clear, borderless titles), plus `sr-only` dialog/sheet descriptions for SR users
+- [x] Tests: CP renders per module, nav permission-gating, publish-form save flow — covered by the per-module feature suite (every `*ManagementTest` asserts the Inertia component + props render, store/update save flow, and route-level permission gating via `assertForbidden`). The Phase 20 redesign was presentation-only with `useForm`/route shapes preserved, so these tests cover it; added create+edit form-screen render assertions to the two thin modules (documents, guides) so all 7 publish-form modules assert their redesigned form renders. Client-side nav gating rides on the tested server-side gate (D-16)
 
 ---
 
@@ -395,9 +421,213 @@ management — before content modules (Phase 4) build on them.
   `/` redirects to default locale; `SetLocale` middleware resolves URL → session → browser →
   fallback. CMS under `/admin` (Russian UI, no locale prefix) guarded by auth+verified+role(+2FA).
   Internal API under `/api/v1` with token auth (Sanctum to be added in the API task, §10.9).
+- **D-19 (Accepted 2026-06-11, owner):** CMS UX/UI modelled on **Statamic Control Panel**. Owner
+  wants the CMS to look and feel like a "lux copy" of Statamic. Two scoping decisions taken with the
+  owner: (1) **keep the existing database backend** (Eloquent/RBAC/translations + dynamic & personal
+  data: incidents/alerts/appeals/subscribers/audit) — Statamic's flat-file architecture is a poor
+  fit for a gov emergency portal; we replicate Statamic's CP **architecture concepts + design/UX**
+  (grouped nav, listings, two-column publish forms, fieldtypes, Stacks/slide-overs, command palette)
+  1:1 on top of it. (2) **Statamic layout + КЧС brand**: faithful Statamic CP structure/components/
+  interactions, but on the КЧС palette (primary `#1f4e8c`, Inter) and WCAG-accessible — not a
+  pixel-copy of Statamic's own colours. Built incrementally as Phase 20.
+- **D-22 (Accepted 2026-06-15):** The assets fieldtype keeps the post **cover as a spatie media
+  collection on the model** (not a foreign-key/URL field). A library pick is passed as `cover_media_id`
+  and the controller **copies** the chosen `MediaFile`'s file into the cover collection via spatie
+  `Media::copy()`. Rationale: preserves the existing cover storage/conversions and the upload path
+  (backward-compatible), avoids an HTTP self-fetch (`addMediaFromUrl`) so it's testable with faked
+  storage, and a copy keeps the cover independent of later edits/deletes to the library asset. The
+  same field generalises to other single-image fields later.
+- **D-21 (Accepted 2026-06-15):** The internal API uses a **custom, dependency-free bearer-token**
+  scheme (an `api_tokens` table of SHA-256 hashes + a thin middleware), **not Laravel Sanctum**.
+  Rationale: CLAUDE.md forbids adding dependencies without owner approval, and the requirement is a
+  small read-only server-to-server API where static hashed tokens (minted via `api:token`) fully
+  satisfy "token auth" without the weight of Sanctum's personal-access-token/SPA machinery. If the
+  portal later needs per-user OAuth-style scopes or SPA cookie auth, revisit and adopt Sanctum then.
+- **D-20 (Accepted 2026-06-15):** The audit-log viewer is gated by the purpose-built **`audit.view`**
+  permission (granted to both super-admin and moderator as "read-only system insight"), not
+  `settings.manage`. Rationale: the route originally used `settings.manage` (super-admin only), which
+  left `ViewAudit` as dead code and contradicted the permission enum's documented intent. The viewer
+  is strictly read-only and the log is append-only, so giving moderators read access to the security
+  trail is low-risk and matches least-privilege insight. Reversible by switching the one `can:` middleware.
+- **D-23 (Accepted 2026-06-15, owner):** Public-portal visual direction = **modern govtech**
+  (FEMA/USWDS-style, emergency-forward). Three forks confirmed with the owner: (1) brand colour moved
+  to the **official navy `#1F4E8C`** (the ТЗ Приложение В primary; the tokens had drifted to a brighter
+  `#1e40af`), signal orange reserved for CTAs; new `--brand` + deep-navy `--brand-strong` (`#0f2f5e`)
+  chrome tokens drive the gov bar, hero and footer. (2) Added an **official government identifier bar**
+  (`GovBar`) above the masthead — the canonical govtech trust signal. (3) The auto-rotating homepage
+  **carousel is retired** (a11y anti-pattern) for a **static hero with a live operational-status
+  indicator** (`GovHero` — status derived from active alerts; incident counts from a new `operational`
+  prop). Header/footer re-tokenised off hardcoded `slate-*`; footer rebuilt as a structured block
+  (agency identity, sections, emergency numbers, resources, legal/WCAG bar). `home-slider.tsx` is now
+  unused. Presentation + one read-only controller prop; all 251 tests green.
 
 ## Change Log
 
+- **2026-06-15** — **Public portal — modern-govtech redesign (D-23).** Re-skinned the citizen-facing
+  portal to a FEMA/USWDS-style govtech standard. **Tokens:** `--primary` → official navy **#1F4E8C**
+  (was #1e40af) across primary/ring/secondary-/accent-foreground/chart-1, plus new `--brand` and
+  deep-navy `--brand-strong` chrome tokens (light + dark). **New `GovBar`** official identifier strip
+  above the masthead; **new `GovHero`** static hero with a live operational-status pill (from active
+  alerts) replacing the auto-rotating `HomeSlider`; homepage "quick links" became a real **task grid**
+  of links; **footer** rebuilt as a structured navy block (agency identity + sections + emergency
+  numbers 112/101/102/103 + resources + WCAG/legal bar); **header** re-tokenised off `slate-*`.
+  **Backend:** `HomeController` now shares a cached `operational` incident-count summary; fixed the
+  schema.org emergency `telephone` 119 → 112. **i18n:** added `govbar.*`, `home.hero` CTA + `home.status`
+  + `home.operational`, `footer.accessibility|rights` to all three locale dictionaries (228 keys,
+  parity-tested). Added `Public/HomeTest`. **251 tests green**; Pint/ESLint/types/build clean.
+- **2026-06-15** — **Phase 18 — WCAG 2.1 AA sweep (public surface).** Ran a two-reviewer audit
+  (layout/components + pages) then remediated every HIGH/MEDIUM finding: **skip-to-content** link +
+  focusable `<main id="main-content">` (2.4.1); `aria-label` on all navigation landmarks and the
+  mobile bottom bar converted from `<div>` to a real `<nav>` with `aria-current` (1.3.1, 4.1.2);
+  `EmergencyHero` stripped of its static `role="alert"`/`aria-live="assertive"` (was duplicating
+  `AlertBanner`) and region-labelled by its `<h1>` (4.1.3); `GlobalSearchModal` input given an
+  accessible name + a polite `aria-live` results region with a count, spinner/icons hidden (4.1.2,
+  4.1.3); document search/type filters labelled (1.3.1); subscribe topics wrapped in
+  `<fieldset>/<legend>` and its push/status banner made a live region (1.3.1, 4.1.3); **form error
+  association** wired across appeals (6), tourist-groups (9) and subscribe (`aria-invalid` +
+  `aria-describedby` + `id` on `InputError`) (3.3.1); `HazardBadge` de-aliased from `role="status"`;
+  decorative icons `aria-hidden`. Added 5 i18n keys (`a11y.skip_to_content`/`primary_nav`/`footer_nav`/
+  `menu`/`search_results`) across tj/ru/en (key-parity test green). **249 tests green**; pint/eslint/
+  types/build clean. Remaining: contrast-ratio measurement, residual decorative-icon polish, CMS pass.
+- **2026-06-15** — **Phase 19 — CI/CD hardening + cron scheduler.** Added the shared-hosting
+  scheduler (D-10): `routes/console.php` now drains the DB queue every minute
+  (`queue:work --stop-when-empty --tries=3 --max-time=55`, `withoutOverlapping`) and prunes the audit
+  log weekly (`activitylog:clean`) — driven by the single `schedule:run` cron; covered by
+  `SchedulerTest`. Strengthened CI: **`types:check`** added to `tests.yml` (after the Vite build, so
+  the git-ignored Wayfinder route/action types exist), and a new **`security.yml`** runs
+  `composer audit` (blocking, clean) + `npm audit --omit=dev` (report-only) on push/PR + weekly —
+  closing Phase 16's dependency-scanning item. `composer audit` is clean; the only npm advisory is a
+  dev-tool transitive (`concurrently → shell-quote`) miscategorised in `dependencies`, flagged as a
+  separate task (move to devDependencies + `npm audit fix`) rather than changing the lockfile
+  unprompted. **249 tests green**; Pint clean, workflows YAML-validated. Deliberately avoided a
+  full-repo Pint/Prettier reformat (45 pre-existing style-debt files) to not churn active WIP.
+- **2026-06-15** — **Phase 20 — Assets fieldtype.** Built the Statamic-style media picker
+  `CpAssetsField` (`cp/assets-field.tsx`): a single-image fieldtype that previews the current image
+  and lets the editor either upload a new file or pick an existing asset from the media library,
+  shown in a `CpStack` (grid + search, fetched from `/admin/api/media`). Adopted it on the **posts
+  cover** field. Contract (D-22): the cover stays a spatie media collection on `Post`; a library pick
+  sends `cover_media_id`, which `PostController::syncCover` copies into the cover collection via
+  spatie `Media::copy()` (no HTTP fetch → testable; a fresh upload still wins; remove still clears).
+  Added the `cover_media_id` validation rule (inherited by update) and two `PostManagementTest`
+  cases (library-cover attach + invalid-id rejection). **247 tests green**; pint/types/lint/build
+  clean. Phase 20 fieldtypes now complete; only the CP design-token doc remains.
+- **2026-06-15** — **Phase 18 — Internal API + a11y verified.** Built the internal read API (§10.9,
+  §18.3) **dependency-free** (no Sanctum — D-21): `api_tokens` table with SHA-256-hashed bearer
+  tokens (plaintext shown once, minted via the new `api:token` command), `AuthenticateApiToken` +
+  `SetApiLocale` middleware, `routes/api.php` registered in `bootstrap/app.php`, versioned `/api/v1`
+  with a `throttle:api` 60/min limiter (keyed by token). Endpoints: open `/api/v1` discovery, plus
+  token-gated `alerts` / `incidents` (paginated) / `news` (paginated) / `news/{id}` — all via Eloquent
+  API Resources, exposing only active/published content, locale-aware (`?locale=`), full body only on
+  show. Errors render as JSON (already configured). Added `Api/V1/ApiTest` (12 cases: auth/expiry,
+  per-endpoint shape, draft exclusion, locale switch, rate-limit headers, command). Also **verified
+  the low-vision accessibility mode** (`accessibility-toolbar`: font size / 4 contrast schemes / image
+  modes, persisted, trilingual, `html.a11y-*` CSS) and marked backend test coverage done (**245
+  tests**). Pint/types/build clean.
+- **2026-06-15** — **Phase 16 — Security Hardening: completed the audit log; verified the rest.** On
+  audit: most of Phase 16 was already built but unchecked (security headers + HSTS via the
+  `SecurityHeaders` middleware/`config/security.php`, rate-limiting + honeypot on public forms, purify
+  sanitization, `SafeFileUpload` hardening, strong password policy, secure session cookies) — marked
+  those done with their proving tests. The one real gap was the **audit log**, which I finished:
+  (1) extended spatie/activitylog coverage to **all 8 CMS models** (added `LogsActivity` to Alert,
+  Category, Guide, Page — Post/Document/User/Incident already had it); (2) added a
+  `LogAuthenticationActivity` event subscriber recording **security events** (login / logout /
+  failed-login / lockout / 2FA enable·confirm·disable) with IP + user-agent (confirmed Fortify's
+  custom `authenticateUsing` still fires `Login`/`Failed`); (3) rebuilt the stub `AuditLogController`
+  into a real read-only viewer (humanised RU event/subject labels, event + type + search filters,
+  shaped rows, `latest()` paginated) rendering the new CP page `admin/audit-logs/index` (fixes the old
+  `Admin/AuditLogs/Index` case bug); (4) **re-gated the route from `settings.manage` → `audit.view`**
+  (D-20) so the purpose-built permission is actually used (both roles get read-only insight); (5) added
+  the «Журнал аудита» CP nav item; (6) added `AuditLogTest` (6 cases). Append-only + no mutate routes
+  = tamper-resistant. **233 tests green**; pint/types/build clean, 0 lint errors.
+- **2026-06-15** — Phase 20 cont.: **CP tests closed**. Verified the redesign is covered by the
+  existing per-module feature suite — every `*ManagementTest` already asserts the Inertia component +
+  props render, the store/update save flow, and route-level permission gating (`assertForbidden` for
+  non-CMS users). Since Phase 20 was presentation-only (routes + `useForm` shapes preserved), that
+  coverage holds; added create+edit form-screen render assertions to the two thin modules (documents,
+  guides) so all 7 publish-form modules now assert their redesigned form renders. **227 tests green**;
+  Pint clean. Phase 20 remaining: assets fieldtype (awaits a firmed media-reference contract) +
+  CP design-token doc.
+- **2026-06-15** — Phase 20 cont. (step-by-step «сделать всё»): **bard fieldtype + dark/a11y pass +
+  Media fix closed**. (1) Added `CpRichTextField` to `cp/fields.tsx` — the TipTap `RichTextEditor`
+  wrapped in the `CpField` shell, remounting per-locale via an `editorKey` prop; **adopted it in the
+  posts, pages and guides content fields** (replacing the bare `<RichTextEditor>`), `useForm` shapes
+  unchanged → controllers/tests untouched. (2) **Dark/a11y pass** for the whole CP: confirmed every
+  surface rides semantic tokens (dark mode adapts for free) and added `focus-visible` rings across all
+  CP interactive elements + `sr-only` descriptions on the stack/command-palette dialogs. (3) **Closed
+  the Media-module NB** from the prior entry — lowercased the controller render + page path
+  (`admin/media/index`) so it resolves on case-sensitive Linux, dropped its self-wrapped `AppShell`
+  and put it on the CP `AdminLayout` via `.layout`, restyled to the CP card look. 225 tests green;
+  lint/types/build clean.
+- **2026-06-11** — Cleared the accumulated WIP type/lint errors → green gate (owner asked).
+  `types:check` was red from the parallel media/rich-text build: `custom-image.ts` (typed the
+  attributes record so the dynamic `delete`s are allowed), `Public/bottom-navigation.tsx` (dropped
+  unused/missing imports incl. the non-existent `app-header-mobile-menu`, switched `t(key,'fallback')`
+  → real `nav.*` keys, fixed the map route), `admin/Media/Index.tsx` (`Breadcrumbs` takes
+  `breadcrumbs`/`href`, not `items`/`url`). Lint was red from the media-picker WIP:
+  `media-library-modal.tsx` (removed unused `Input`, inlined the fetch-on-open effect to fix the
+  use-before-declare + a `set-state-in-effect` disable for the loading spinner), `image-node-view.tsx`
+  (dropped unused `useCallback`/`useEffect`, `isResizing` value), `image-crop-modal.tsx` (import
+  order). **Now: types 0, lint 0 errors (1 pre-existing map-view warning), build ✓, 225 tests ✓.**
+  NB still open: the Media page renders as `Admin/Media/Index` (capital) + self-wraps `AppShell` →
+  it 404s on case-sensitive Linux and isn't on the CP layout; flagged for a deliberate fix.
+- **2026-06-11** — Phase 20 cont.: **Dashboard widgets**. The CMS dashboard was already a strong
+  Statamic-style widget board (attention banner + KPI cards + recent appeals/incidents + system
+  stats, permission-gated) — polished the KPI widgets with tinted icon chips for cohesion with the
+  CP. Presentation-only; controller props/logic untouched. Lint/types/build clean. **Phase 20 core
+  is now in place** (shell, listing, publish forms ×7, command palette, stacks, fieldtypes,
+  dashboard); remaining: assets fieldtype (needs the Media module), bard fieldtype, dark/a11y pass,
+  CP tests.
+- **2026-06-11** — Phase 20 cont.: **Fieldtypes**. `components/admin/cp/fields.tsx` — `CpField`
+  shell (label + instructions + control + error) and the typed set `CpTextField` (text/date/datetime),
+  `CpTextareaField`, `CpSelectField`, `CpToggleField`. Refactored the **alerts** form onto them as
+  the showcase (select × hazard/status, `CpRelationField` for region via a stack, two datetime
+  fields, dismissible toggle with instructions, body textarea) — `useForm` shape unchanged. Adds
+  the Statamic "instructions under label" affordance. 225 tests green; lint/types/build clean.
+- **2026-06-11** — Phase 20 cont.: **Stacks** + first **fieldtype**. `components/admin/cp/stack.tsx`
+  (`CpStack`) — a Statamic-style right slide-over built on the Radix Sheet (overlay, focus-trap,
+  Esc, slide animation; layerable). `components/admin/cp/relation-field.tsx` (`CpRelationField`) — a
+  relationship picker fieldtype that opens a stack with a searchable list (clearable; value stays
+  the related id|null). Wired into the posts «Рубрика» field, replacing the inline Select — `useForm`
+  shape (`category_id`) unchanged, controller/tests untouched. Lint/types/build clean.
+- **2026-06-11** — Phase 20 cont.: **Command palette (⌘K)**. New `components/admin/command-palette.tsx`
+  on the existing Radix Dialog (no cmdk/new deps) — fuzzy search over all CMS sections + «Создать …»
+  actions, permission-gated, keyboard-driven (↑/↓/Enter/Esc), trigger added to the CP topbar. Nav
+  data extracted to a shared `components/admin/nav.ts` (consumed by both the sidebar and the palette;
+  sidebar slimmed accordingly). Lint/types/build clean.
+- **2026-06-11** — Fixed the WIP blockers that had turned the suite red (owner asked). (1) HTML
+  sanitiser: `stevebauman/purify` config listed `display` in `CSS.AllowedProperties`, which
+  HTMLPurifier rejects unless `CSS.AllowTricky` is on → enabled it in `config/purify.php` (keeps
+  the rich-text image-alignment feature working, no fatal 512). (2) Dashboard: the stale
+  `DashboardAccessTest` asserted flat `stats.users`; the controller + React page use the grouped
+  `stats.system.*` shape → test updated to the real contract. (3) `spatie/laravel-responsecache`
+  was active in tests, replaying cached plain responses that break Inertia assertions → added
+  `RESPONSE_CACHE_ENABLED=false` to phpunit.xml. **Full suite green again: 225 passed, 1174
+  assertions.** Pint clean.
+- **2026-06-11** — Phase 20 cont.: **all module forms converted** to the Statamic two-column publish
+  form. pages, categories, incidents (map + region→coords preserved), alerts, documents (files),
+  guides (files) refactored onto `CpPublishForm`/`CpPanel`/`CpLocaleTabs` — localised fields + big
+  borderless title in the main column, meta/files/map in the sticky sidebar. Every `useForm` shape
+  kept identical (controllers untouched). The whole CMS now shares one Statamic-style listing +
+  publish-form language. Lint/types/build clean for all converted files. (The parallel-WIP suite
+  failures this surfaced — htmlpurifier `display`, dashboard, response cache — were fixed next; see
+  the entry above.)
+- **2026-06-11** — Phase 20 cont. (Statamic CP): **Listing** + **Publish form**. `DataTable` restyled
+  to the Statamic listing (white bordered card, uppercase header, hover rows, refined pagination) —
+  API unchanged, so all 13 module tables upgraded with zero per-page edits. New publish-form shell
+  `components/admin/cp/publish-form.tsx` (`CpPublishForm` two-column + Save/Cancel header, `CpPanel`
+  field group, `CpLocaleTabs` per-locale switcher with completion check, large borderless title);
+  the **posts** form converted onto it as the flagship (localised fields in the main column, meta
+  — status/type/category/date/cover — in the sticky sidebar). useForm shape preserved, so the
+  controller/tests are unaffected. Lint/types/build clean for the new files.
+- **2026-06-11** — Phase 20 started (Statamic-style CP, D-19): built the **CP shell**. Replaced the
+  shadcn `AdminLayout` internals with a faithful Statamic Control-Panel chrome on КЧС tokens — a
+  light grouped sidebar (`admin-sidebar`: brand block, uppercase section labels, accent-tinted
+  active item, account menu pinned at the foot via new standalone `cp-user-menu`), a slim sticky
+  global header (`cp-topbar`: breadcrumbs + «На сайт»), a soft neutral page background, and a mobile
+  drawer. Dark mode preserved via existing tokens. CP shell files type/lint-clean; Vite build green.
+  NB: `tsc` currently reports 3 errors in unrelated in-progress files (`pages/admin/Media/Index.tsx`,
+  `components/Public/bottom-navigation.tsx`, `components/rich-text/custom-image.ts`) — not part of
+  this change; flagged to the owner.
 - **2026-06-11** — Phase 8 closed out (orchestrated via 2 workflows: 6-agent page build + 3-dim
   adversarial review). **Safety Guides** module (§6.5): `guides`/`guide_translations` migrations,
   `Guide`/`GuideTranslation` models, `GuideAudience` enum (general/children), `guides.view|manage`

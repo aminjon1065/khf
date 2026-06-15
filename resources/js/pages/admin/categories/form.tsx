@@ -1,9 +1,12 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { Check } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import {
+    CpLocaleTabs,
+    CpPanel,
+    CpPublishForm,
+} from '@/components/admin/cp/publish-form';
 import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes/admin';
@@ -70,109 +73,63 @@ export default function CategoryForm({
     };
 
     const active = form.data.translations[activeLocale];
+    const title = isEdit ? 'Редактирование рубрики' : 'Новая рубрика';
 
     return (
         <>
-            <Head title={isEdit ? 'Редактирование рубрики' : 'Новая рубрика'} />
+            <Head title={title} />
 
-            <form
+            <CpPublishForm
+                title={title}
+                backHref={index().url}
                 onSubmit={submit}
-                className="flex h-full flex-1 flex-col gap-6 p-4"
+                processing={form.processing}
+                sidebar={
+                    <CpPanel title="Публикация">
+                        <div className="space-y-2">
+                            <Label htmlFor="sort_order">Порядок</Label>
+                            <Input
+                                id="sort_order"
+                                type="number"
+                                min={0}
+                                value={form.data.sort_order}
+                                onChange={(event) => form.setData('sort_order', Number(event.target.value))}
+                            />
+                            <InputError message={errors.sort_order} />
+                        </div>
+                    </CpPanel>
+                }
             >
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">
-                        {isEdit ? 'Редактирование рубрики' : 'Новая рубрика'}
-                    </h1>
-                    <div className="flex gap-2">
-                        <Button type="button" variant="outline" asChild>
-                            <Link href={index().url}>Отмена</Link>
-                        </Button>
-                        <Button type="submit" disabled={form.processing}>
-                            Сохранить
-                        </Button>
-                    </div>
-                </div>
+                <CpLocaleTabs
+                    locales={locales}
+                    active={activeLocale}
+                    onChange={setActiveLocale}
+                    isComplete={(code) => Boolean(form.data.translations[code]?.name)}
+                />
 
-                <div className="max-w-xs space-y-2">
-                    <Label htmlFor="sort_order">Порядок</Label>
-                    <Input
-                        id="sort_order"
-                        type="number"
-                        min={0}
-                        value={form.data.sort_order}
-                        onChange={(event) =>
-                            form.setData(
-                                'sort_order',
-                                Number(event.target.value),
-                            )
-                        }
+                <div>
+                    <input
+                        aria-label="Название"
+                        value={active.name}
+                        onChange={(event) => setTranslation(activeLocale, 'name', event.target.value)}
+                        placeholder="Название рубрики"
+                        className="w-full border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
                     />
-                    <InputError message={errors.sort_order} />
+                    <InputError message={errors[`translations.${activeLocale}.name`]} />
                 </div>
 
-                <div className="flex flex-wrap gap-2 border-b pb-2">
-                    {locales.map((locale) => (
-                        <Button
-                            key={locale.code}
-                            type="button"
-                            variant={
-                                activeLocale === locale.code
-                                    ? 'default'
-                                    : 'ghost'
-                            }
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => setActiveLocale(locale.code)}
-                        >
-                            {locale.native_name}
-                            {Boolean(
-                                form.data.translations[locale.code]?.name,
-                            ) && <Check className="size-3.5 text-green-600" />}
-                        </Button>
-                    ))}
-                </div>
-
-                <div className="grid max-w-2xl gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Название</Label>
-                        <Input
-                            id="name"
-                            value={active.name}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'name',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.name`]
-                            }
-                        />
-                    </div>
+                <CpPanel title="Параметры">
                     <div className="space-y-2">
                         <Label htmlFor="slug">ЧПУ (slug)</Label>
                         <Input
                             id="slug"
                             value={active.slug}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'slug',
-                                    event.target.value,
-                                )
-                            }
+                            onChange={(event) => setTranslation(activeLocale, 'slug', event.target.value)}
                         />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.slug`]
-                            }
-                        />
+                        <InputError message={errors[`translations.${activeLocale}.slug`]} />
                     </div>
-                </div>
-            </form>
+                </CpPanel>
+            </CpPublishForm>
         </>
     );
 }

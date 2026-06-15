@@ -1,13 +1,13 @@
 import { NodeViewWrapper } from '@tiptap/react';
-import { useCallback, useRef, useState, useEffect } from 'react';
 import { AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { Toggle } from '@/components/ui/toggle';
 
 export function ImageNodeView({ node, updateAttributes, selected }: any) {
     const { src, alt, title, width, height, float } = node.attrs;
     const imageRef = useRef<HTMLImageElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
-    const [isResizing, setIsResizing] = useState(false);
+    const [, setIsResizing] = useState(false);
     
     // Fallbacks for display depending on alignment
     const wrapperStyle: React.CSSProperties = {
@@ -46,10 +46,21 @@ export function ImageNodeView({ node, updateAttributes, selected }: any) {
             let newWidth = startWidth;
             let newHeight = startHeight;
 
-            if (corner.includes('right')) newWidth += dx;
-            if (corner.includes('left')) newWidth -= dx;
-            if (corner.includes('bottom')) newHeight += dy;
-            if (corner.includes('top')) newHeight -= dy;
+            if (corner.includes('right')) {
+newWidth += dx;
+}
+
+            if (corner.includes('left')) {
+newWidth -= dx;
+}
+
+            if (corner.includes('bottom')) {
+newHeight += dy;
+}
+
+            if (corner.includes('top')) {
+newHeight -= dy;
+}
 
             // Maintain aspect ratio approximately
             const ratio = startWidth / startHeight;

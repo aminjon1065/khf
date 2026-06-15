@@ -1,20 +1,19 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { Check } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+    CpSelectField,
+    CpTextField,
+    CpTextareaField,
+    CpToggleField,
+} from '@/components/admin/cp/fields';
+import {
+    CpLocaleTabs,
+    CpPanel,
+    CpPublishForm,
+} from '@/components/admin/cp/publish-form';
+import { CpRelationField } from '@/components/admin/cp/relation-field';
+import InputError from '@/components/input-error';
 import { dashboard } from '@/routes/admin';
 import { index, store, update } from '@/routes/admin/alerts';
 
@@ -97,219 +96,99 @@ export default function AlertForm({
     };
 
     const active = form.data.translations[activeLocale];
+    const title = isEdit ? 'Редактирование оповещения' : 'Новое оповещение';
 
     return (
         <>
-            <Head
-                title={
-                    isEdit ? 'Редактирование оповещения' : 'Новое оповещение'
-                }
-            />
+            <Head title={title} />
 
-            <form
+            <CpPublishForm
+                title={title}
+                backHref={index().url}
                 onSubmit={submit}
-                className="flex h-full flex-1 flex-col gap-6 p-4"
-            >
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">
-                        {isEdit
-                            ? 'Редактирование оповещения'
-                            : 'Новое оповещение'}
-                    </h1>
-                    <div className="flex gap-2">
-                        <Button type="button" variant="outline" asChild>
-                            <Link href={index().url}>Отмена</Link>
-                        </Button>
-                        <Button type="submit" disabled={form.processing}>
-                            Сохранить
-                        </Button>
-                    </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <div className="space-y-2">
-                        <Label htmlFor="hazard_level">Уровень опасности</Label>
-                        <Select
+                processing={form.processing}
+                sidebar={
+                    <CpPanel title="Параметры">
+                        <CpSelectField
+                            id="hazard_level"
+                            label="Уровень опасности"
                             value={form.data.hazard_level}
-                            onValueChange={(value) =>
-                                form.setData('hazard_level', value)
-                            }
-                        >
-                            <SelectTrigger id="hazard_level">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {levels.map((level) => (
-                                    <SelectItem
-                                        key={level.value}
-                                        value={level.value}
-                                    >
-                                        {level.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.hazard_level} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="status">Статус</Label>
-                        <Select
+                            onChange={(value) => form.setData('hazard_level', value)}
+                            options={levels}
+                            error={errors.hazard_level}
+                        />
+                        <CpSelectField
+                            id="status"
+                            label="Статус"
                             value={form.data.status}
-                            onValueChange={(value) =>
-                                form.setData('status', value)
-                            }
-                        >
-                            <SelectTrigger id="status">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {statuses.map((status) => (
-                                    <SelectItem
-                                        key={status.value}
-                                        value={status.value}
-                                    >
-                                        {status.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.status} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="region">Регион</Label>
-                        <Select
-                            value={
-                                form.data.region_id
-                                    ? String(form.data.region_id)
-                                    : 'none'
-                            }
-                            onValueChange={(value) =>
-                                form.setData(
-                                    'region_id',
-                                    value === 'none' ? null : Number(value),
-                                )
-                            }
-                        >
-                            <SelectTrigger id="region">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">Вся страна</SelectItem>
-                                {regions.map((region) => (
-                                    <SelectItem
-                                        key={region.id}
-                                        value={String(region.id)}
-                                    >
-                                        {region.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.region_id} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="starts_at">Начало</Label>
-                        <Input
+                            onChange={(value) => form.setData('status', value)}
+                            options={statuses}
+                            error={errors.status}
+                        />
+                        <CpRelationField
+                            id="region"
+                            label="Регион"
+                            value={form.data.region_id}
+                            options={regions}
+                            onChange={(value) => form.setData('region_id', value)}
+                            placeholder="Вся страна"
+                            error={errors.region_id}
+                        />
+                        <CpTextField
                             id="starts_at"
+                            label="Начало"
                             type="datetime-local"
                             value={form.data.starts_at}
-                            onChange={(event) =>
-                                form.setData('starts_at', event.target.value)
-                            }
+                            onChange={(value) => form.setData('starts_at', value)}
+                            error={errors.starts_at}
                         />
-                        <InputError message={errors.starts_at} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="ends_at">Окончание</Label>
-                        <Input
+                        <CpTextField
                             id="ends_at"
+                            label="Окончание"
                             type="datetime-local"
                             value={form.data.ends_at}
-                            onChange={(event) =>
-                                form.setData('ends_at', event.target.value)
-                            }
+                            onChange={(value) => form.setData('ends_at', value)}
+                            error={errors.ends_at}
                         />
-                        <InputError message={errors.ends_at} />
-                    </div>
-                </div>
+                        <CpToggleField
+                            id="is_dismissible"
+                            label="Пользователь может закрыть баннер"
+                            instructions="Снимите для критических оповещений, которые нельзя скрыть."
+                            checked={form.data.is_dismissible}
+                            onChange={(value) => form.setData('is_dismissible', value)}
+                        />
+                    </CpPanel>
+                }
+            >
+                <CpLocaleTabs
+                    locales={locales}
+                    active={activeLocale}
+                    onChange={setActiveLocale}
+                    isComplete={(code) => Boolean(form.data.translations[code]?.title)}
+                />
 
-                <div className="flex items-center gap-2">
-                    <Checkbox
-                        id="is_dismissible"
-                        checked={form.data.is_dismissible}
-                        onCheckedChange={(checked) =>
-                            form.setData('is_dismissible', checked === true)
-                        }
+                <div>
+                    <input
+                        aria-label="Заголовок"
+                        value={active.title}
+                        onChange={(event) => setTranslation(activeLocale, 'title', event.target.value)}
+                        placeholder="Заголовок оповещения"
+                        className="w-full border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
                     />
-                    <Label htmlFor="is_dismissible">
-                        Пользователь может закрыть баннер
-                    </Label>
+                    <InputError message={errors[`translations.${activeLocale}.title`]} />
                 </div>
 
-                <div className="flex flex-wrap gap-2 border-b pb-2">
-                    {locales.map((locale) => (
-                        <Button
-                            key={locale.code}
-                            type="button"
-                            variant={
-                                activeLocale === locale.code
-                                    ? 'default'
-                                    : 'ghost'
-                            }
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => setActiveLocale(locale.code)}
-                        >
-                            {locale.native_name}
-                            {Boolean(
-                                form.data.translations[locale.code]?.title,
-                            ) && <Check className="size-3.5 text-green-600" />}
-                        </Button>
-                    ))}
-                </div>
-
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="title">Заголовок</Label>
-                        <Input
-                            id="title"
-                            value={active.title}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'title',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.title`]
-                            }
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="body">Текст</Label>
-                        <Textarea
-                            id="body"
-                            rows={4}
-                            value={active.body}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'body',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.body`]
-                            }
-                        />
-                    </div>
-                </div>
-            </form>
+                <CpPanel title="Текст">
+                    <CpTextareaField
+                        id="body"
+                        label="Текст оповещения"
+                        rows={5}
+                        value={active.body}
+                        onChange={(value) => setTranslation(activeLocale, 'body', value)}
+                        error={errors[`translations.${activeLocale}.body`]}
+                    />
+                </CpPanel>
+            </CpPublishForm>
         </>
     );
 }

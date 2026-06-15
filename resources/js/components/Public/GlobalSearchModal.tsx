@@ -96,15 +96,15 @@ export function GlobalSearchModal({
     const getIcon = (type: string) => {
         switch (type) {
             case 'post':
-                return <AlertCircle className="size-4 text-blue-500" />;
+                return <AlertCircle className="size-4 text-blue-500" aria-hidden="true" />;
             case 'page':
-                return <Info className="size-4 text-green-500" />;
+                return <Info className="size-4 text-green-500" aria-hidden="true" />;
             case 'document':
-                return <FileText className="size-4 text-orange-500" />;
+                return <FileText className="size-4 text-orange-500" aria-hidden="true" />;
             case 'guide':
-                return <BookOpen className="size-4 text-purple-500" />;
+                return <BookOpen className="size-4 text-purple-500" aria-hidden="true" />;
             default:
-                return <FileText className="size-4" />;
+                return <FileText className="size-4" aria-hidden="true" />;
         }
     };
 
@@ -131,25 +131,33 @@ export function GlobalSearchModal({
                         {t('actions.search')}
                     </DialogTitle>
                     <div className="flex items-center gap-3">
-                        <Search className="size-5 shrink-0 text-muted-foreground" />
+                        <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
                         <input
                             type="text"
                             autoFocus
+                            aria-label={t('actions.search')}
                             placeholder={t('actions.search') + '...'}
                             className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground/60"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                         />
                         {isLoading && (
-                            <Loader2 className="size-5 shrink-0 animate-spin text-muted-foreground" />
+                            <Loader2 className="size-5 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" />
                         )}
-                        <div className="hidden rounded border bg-muted/50 px-1.5 py-0.5 text-[10px] text-muted-foreground sm:flex">
-                            ESC
-                        </div>
                     </div>
                 </DialogHeader>
 
-                <div className="max-h-[60vh] overflow-y-auto p-2">
+                <div
+                    className="max-h-[60vh] overflow-y-auto p-2"
+                    aria-live="polite"
+                    aria-busy={isLoading}
+                >
+                    {visibleResults.length > 0 && (
+                        <p role="status" className="sr-only">
+                            {t('a11y.search_results')}: {visibleResults.length}
+                        </p>
+                    )}
+
                     {query.length >= 2 &&
                         results.length === 0 &&
                         !isLoading && (

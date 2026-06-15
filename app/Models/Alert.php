@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * Emergency alert / warning (ТЗ §6.4). Shown as the site banner on every public page when active.
@@ -30,6 +32,7 @@ class Alert extends Model
     use HasFactory;
 
     use HasTranslations;
+    use LogsActivity;
     use SoftDeletes;
 
     /** @var list<string> */
@@ -78,5 +81,13 @@ class Alert extends Model
         $query->where('status', AlertStatus::Published)
             ->where(fn (Builder $inner) => $inner->whereNull('starts_at')->orWhere('starts_at', '<=', $now))
             ->where(fn (Builder $inner) => $inner->whereNull('ends_at')->orWhere('ends_at', '>=', $now));
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
     }
 }
