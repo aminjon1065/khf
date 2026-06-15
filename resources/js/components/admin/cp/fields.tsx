@@ -36,7 +36,9 @@ export function CpField({
     return (
         <div className="space-y-1.5">
             {label && <Label htmlFor={id}>{label}</Label>}
-            {instructions && <p className="text-xs text-muted-foreground">{instructions}</p>}
+            {instructions && (
+                <p className="text-xs text-muted-foreground">{instructions}</p>
+            )}
             {children}
             <InputError message={error} />
         </div>
@@ -63,7 +65,12 @@ export function CpTextField({
     placeholder?: string;
 }) {
     return (
-        <CpField id={id} label={label} instructions={instructions} error={error}>
+        <CpField
+            id={id}
+            label={label}
+            instructions={instructions}
+            error={error}
+        >
             <Input
                 id={id}
                 type={type}
@@ -93,7 +100,12 @@ export function CpTextareaField({
     rows?: number;
 }) {
     return (
-        <CpField id={id} label={label} instructions={instructions} error={error}>
+        <CpField
+            id={id}
+            label={label}
+            instructions={instructions}
+            error={error}
+        >
             <Textarea
                 id={id}
                 rows={rows}
@@ -124,7 +136,12 @@ export function CpSelectField({
     placeholder?: string;
 }) {
     return (
-        <CpField id={id} label={label} instructions={instructions} error={error}>
+        <CpField
+            id={id}
+            label={label}
+            instructions={instructions}
+            error={error}
+        >
             <Select value={value} onValueChange={onChange}>
                 <SelectTrigger id={id}>
                     <SelectValue placeholder={placeholder} />
@@ -163,7 +180,12 @@ export function CpRichTextField({
     editorKey?: string | number;
 }) {
     return (
-        <CpField id={id} label={label} instructions={instructions} error={error}>
+        <CpField
+            id={id}
+            label={label}
+            instructions={instructions}
+            error={error}
+        >
             <RichTextEditor key={editorKey} value={value} onChange={onChange} />
         </CpField>
     );
@@ -198,7 +220,11 @@ export function CpToggleField({
                 <Label htmlFor={id} className="font-normal">
                     {label}
                 </Label>
-                {instructions && <p className="text-xs text-muted-foreground">{instructions}</p>}
+                {instructions && (
+                    <p className="text-xs text-muted-foreground">
+                        {instructions}
+                    </p>
+                )}
             </div>
         </div>
     );

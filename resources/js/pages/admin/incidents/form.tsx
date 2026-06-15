@@ -141,13 +141,21 @@ export default function IncidentForm({
                         <CpPanel title="Параметры">
                             <div className="space-y-2">
                                 <Label htmlFor="type">Тип</Label>
-                                <Select value={form.data.type} onValueChange={(value) => form.setData('type', value)}>
+                                <Select
+                                    value={form.data.type}
+                                    onValueChange={(value) =>
+                                        form.setData('type', value)
+                                    }
+                                >
                                     <SelectTrigger id="type">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {types.map((type) => (
-                                            <SelectItem key={type.value} value={type.value}>
+                                            <SelectItem
+                                                key={type.value}
+                                                value={type.value}
+                                            >
                                                 {type.label}
                                             </SelectItem>
                                         ))}
@@ -156,14 +164,24 @@ export default function IncidentForm({
                                 <InputError message={errors.type} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="hazard_level">Уровень опасности</Label>
-                                <Select value={form.data.hazard_level} onValueChange={(value) => form.setData('hazard_level', value)}>
+                                <Label htmlFor="hazard_level">
+                                    Уровень опасности
+                                </Label>
+                                <Select
+                                    value={form.data.hazard_level}
+                                    onValueChange={(value) =>
+                                        form.setData('hazard_level', value)
+                                    }
+                                >
                                     <SelectTrigger id="hazard_level">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {levels.map((level) => (
-                                            <SelectItem key={level.value} value={level.value}>
+                                            <SelectItem
+                                                key={level.value}
+                                                value={level.value}
+                                            >
                                                 {level.label}
                                             </SelectItem>
                                         ))}
@@ -173,13 +191,21 @@ export default function IncidentForm({
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="status">Статус</Label>
-                                <Select value={form.data.status} onValueChange={(value) => form.setData('status', value)}>
+                                <Select
+                                    value={form.data.status}
+                                    onValueChange={(value) =>
+                                        form.setData('status', value)
+                                    }
+                                >
                                     <SelectTrigger id="status">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {statuses.map((status) => (
-                                            <SelectItem key={status.value} value={status.value}>
+                                            <SelectItem
+                                                key={status.value}
+                                                value={status.value}
+                                            >
                                                 {status.label}
                                             </SelectItem>
                                         ))}
@@ -190,16 +216,25 @@ export default function IncidentForm({
                             <div className="space-y-2">
                                 <Label htmlFor="region">Регион</Label>
                                 <Select
-                                    value={form.data.region_id ? String(form.data.region_id) : 'none'}
+                                    value={
+                                        form.data.region_id
+                                            ? String(form.data.region_id)
+                                            : 'none'
+                                    }
                                     onValueChange={onRegionChange}
                                 >
                                     <SelectTrigger id="region">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="none">— Не указан —</SelectItem>
+                                        <SelectItem value="none">
+                                            — Не указан —
+                                        </SelectItem>
                                         {regions.map((region) => (
-                                            <SelectItem key={region.id} value={String(region.id)}>
+                                            <SelectItem
+                                                key={region.id}
+                                                value={String(region.id)}
+                                            >
                                                 {region.name}
                                             </SelectItem>
                                         ))}
@@ -208,23 +243,41 @@ export default function IncidentForm({
                                 <InputError message={errors.region_id} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="occurred_at">Дата и время</Label>
+                                <Label htmlFor="occurred_at">
+                                    Дата и время
+                                </Label>
                                 <Input
                                     id="occurred_at"
                                     type="datetime-local"
                                     value={form.data.occurred_at}
-                                    onChange={(event) => form.setData('occurred_at', event.target.value)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'occurred_at',
+                                            event.target.value,
+                                        )
+                                    }
                                 />
                                 <InputError message={errors.occurred_at} />
                             </div>
                         </CpPanel>
 
-                        <CpPanel title="Координаты на карте" description="Кликните по карте или выберите регион для приближения.">
+                        <CpPanel
+                            title="Координаты на карте"
+                            description="Кликните по карте или выберите регион для приближения."
+                        >
                             <div className="relative h-64 overflow-hidden rounded-lg border border-border">
                                 <MapView
                                     initialPickedCoords={
-                                        form.data.latitude && form.data.longitude
-                                            ? { lat: Number(form.data.latitude), lng: Number(form.data.longitude) }
+                                        form.data.latitude &&
+                                        form.data.longitude
+                                            ? {
+                                                  lat: Number(
+                                                      form.data.latitude,
+                                                  ),
+                                                  lng: Number(
+                                                      form.data.longitude,
+                                                  ),
+                                              }
                                             : null
                                     }
                                     onPick={({ lat, lng }) => {
@@ -245,7 +298,14 @@ export default function IncidentForm({
                                         step="0.0000001"
                                         value={form.data.latitude}
                                         onChange={(event) =>
-                                            form.setData('latitude', event.target.value === '' ? '' : Number(event.target.value))
+                                            form.setData(
+                                                'latitude',
+                                                event.target.value === ''
+                                                    ? ''
+                                                    : Number(
+                                                          event.target.value,
+                                                      ),
+                                            )
                                         }
                                     />
                                     <InputError message={errors.latitude} />
@@ -258,7 +318,14 @@ export default function IncidentForm({
                                         step="0.0000001"
                                         value={form.data.longitude}
                                         onChange={(event) =>
-                                            form.setData('longitude', event.target.value === '' ? '' : Number(event.target.value))
+                                            form.setData(
+                                                'longitude',
+                                                event.target.value === ''
+                                                    ? ''
+                                                    : Number(
+                                                          event.target.value,
+                                                      ),
+                                            )
                                         }
                                     />
                                     <InputError message={errors.longitude} />
@@ -272,18 +339,28 @@ export default function IncidentForm({
                     locales={locales}
                     active={activeLocale}
                     onChange={setActiveLocale}
-                    isComplete={(code) => Boolean(form.data.translations[code]?.title)}
+                    isComplete={(code) =>
+                        Boolean(form.data.translations[code]?.title)
+                    }
                 />
 
                 <div>
                     <input
                         aria-label="Заголовок"
                         value={active.title}
-                        onChange={(event) => setTranslation(activeLocale, 'title', event.target.value)}
+                        onChange={(event) =>
+                            setTranslation(
+                                activeLocale,
+                                'title',
+                                event.target.value,
+                            )
+                        }
                         placeholder="Заголовок события"
-                        className="w-full border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                        className="w-full rounded-sm border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
-                    <InputError message={errors[`translations.${activeLocale}.title`]} />
+                    <InputError
+                        message={errors[`translations.${activeLocale}.title`]}
+                    />
                 </div>
 
                 <CpPanel title="Описание">
@@ -293,9 +370,21 @@ export default function IncidentForm({
                             id="description"
                             rows={8}
                             value={active.description}
-                            onChange={(event) => setTranslation(activeLocale, 'description', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'description',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.description`]} />
+                        <InputError
+                            message={
+                                errors[
+                                    `translations.${activeLocale}.description`
+                                ]
+                            }
+                        />
                     </div>
                 </CpPanel>
             </CpPublishForm>

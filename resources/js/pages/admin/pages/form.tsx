@@ -118,14 +118,19 @@ export default function PageForm({
                             <Label htmlFor="status">Статус</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value) => form.setData('status', value)}
+                                onValueChange={(value) =>
+                                    form.setData('status', value)
+                                }
                             >
                                 <SelectTrigger id="status">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {statuses.map((status) => (
-                                        <SelectItem key={status.value} value={status.value}>
+                                        <SelectItem
+                                            key={status.value}
+                                            value={status.value}
+                                        >
                                             {status.label}
                                         </SelectItem>
                                     ))}
@@ -134,20 +139,34 @@ export default function PageForm({
                             <InputError message={errors.status} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="parent">Родительская страница</Label>
+                            <Label htmlFor="parent">
+                                Родительская страница
+                            </Label>
                             <Select
-                                value={form.data.parent_id ? String(form.data.parent_id) : 'none'}
+                                value={
+                                    form.data.parent_id
+                                        ? String(form.data.parent_id)
+                                        : 'none'
+                                }
                                 onValueChange={(value) =>
-                                    form.setData('parent_id', value === 'none' ? null : Number(value))
+                                    form.setData(
+                                        'parent_id',
+                                        value === 'none' ? null : Number(value),
+                                    )
                                 }
                             >
                                 <SelectTrigger id="parent">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="none">— Нет —</SelectItem>
+                                    <SelectItem value="none">
+                                        — Нет —
+                                    </SelectItem>
                                     {parents.map((parent) => (
-                                        <SelectItem key={parent.id} value={String(parent.id)}>
+                                        <SelectItem
+                                            key={parent.id}
+                                            value={String(parent.id)}
+                                        >
                                             {parent.title}
                                         </SelectItem>
                                     ))}
@@ -162,7 +181,12 @@ export default function PageForm({
                                 type="number"
                                 min={0}
                                 value={form.data.sort_order}
-                                onChange={(event) => form.setData('sort_order', Number(event.target.value))}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'sort_order',
+                                        Number(event.target.value),
+                                    )
+                                }
                             />
                             <InputError message={errors.sort_order} />
                         </div>
@@ -173,18 +197,28 @@ export default function PageForm({
                     locales={locales}
                     active={activeLocale}
                     onChange={setActiveLocale}
-                    isComplete={(code) => Boolean(form.data.translations[code]?.title)}
+                    isComplete={(code) =>
+                        Boolean(form.data.translations[code]?.title)
+                    }
                 />
 
                 <div>
                     <input
                         aria-label="Заголовок"
                         value={active.title}
-                        onChange={(event) => setTranslation(activeLocale, 'title', event.target.value)}
+                        onChange={(event) =>
+                            setTranslation(
+                                activeLocale,
+                                'title',
+                                event.target.value,
+                            )
+                        }
                         placeholder="Заголовок"
-                        className="w-full border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                        className="w-full rounded-sm border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
-                    <InputError message={errors[`translations.${activeLocale}.title`]} />
+                    <InputError
+                        message={errors[`translations.${activeLocale}.title`]}
+                    />
                 </div>
 
                 <CpPanel title="Содержание">
@@ -193,15 +227,27 @@ export default function PageForm({
                         <Input
                             id="slug"
                             value={active.slug}
-                            onChange={(event) => setTranslation(activeLocale, 'slug', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'slug',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.slug`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.slug`]
+                            }
+                        />
                     </div>
                     <CpRichTextField
                         label="Содержимое"
                         editorKey={activeLocale}
                         value={active.content}
-                        onChange={(html) => setTranslation(activeLocale, 'content', html)}
+                        onChange={(html) =>
+                            setTranslation(activeLocale, 'content', html)
+                        }
                         error={errors[`translations.${activeLocale}.content`]}
                     />
                 </CpPanel>
@@ -212,7 +258,13 @@ export default function PageForm({
                         <Input
                             id="seo_title"
                             value={active.seo_title}
-                            onChange={(event) => setTranslation(activeLocale, 'seo_title', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'seo_title',
+                                    event.target.value,
+                                )
+                            }
                         />
                     </div>
                     <div className="space-y-2">
@@ -220,7 +272,13 @@ export default function PageForm({
                         <Input
                             id="seo_description"
                             value={active.seo_description}
-                            onChange={(event) => setTranslation(activeLocale, 'seo_description', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'seo_description',
+                                    event.target.value,
+                                )
+                            }
                         />
                     </div>
                 </CpPanel>

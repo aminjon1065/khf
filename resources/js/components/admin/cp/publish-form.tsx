@@ -30,7 +30,9 @@ export function CpPublishForm({
     return (
         <form onSubmit={onSubmit} className="p-4 sm:p-6">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+                <h1 className="text-2xl font-semibold tracking-tight">
+                    {title}
+                </h1>
                 <div className="flex items-center gap-2">
                     <Button type="button" variant="outline" asChild>
                         <Link href={backHref}>Отмена</Link>
@@ -68,12 +70,19 @@ export function CpPanel({
     className?: string;
 }) {
     return (
-        <section className={cn('rounded-lg border border-border bg-card shadow-sm', className)}>
+        <section
+            className={cn(
+                'rounded-lg border border-border bg-card shadow-sm',
+                className,
+            )}
+        >
             {title && (
                 <header className="border-b border-border px-4 py-3">
                     <h2 className="text-sm font-semibold">{title}</h2>
                     {description && (
-                        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            {description}
+                        </p>
                     )}
                 </header>
             )}

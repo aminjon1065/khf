@@ -25,16 +25,52 @@ type Command = {
 };
 
 const createCommands: Omit<Command, 'icon' | 'group'>[] = [
-    { id: 'new:post', label: 'Создать новость', href: createPost(), permission: 'posts.manage' },
-    { id: 'new:page', label: 'Создать страницу', href: createPage(), permission: 'pages.manage' },
-    { id: 'new:category', label: 'Создать рубрику', href: createCategory(), permission: 'categories.manage' },
-    { id: 'new:incident', label: 'Создать событие ЧС', href: createIncident(), permission: 'incidents.manage' },
-    { id: 'new:alert', label: 'Создать оповещение', href: createAlert(), permission: 'alerts.manage' },
-    { id: 'new:document', label: 'Создать документ', href: createDocument(), permission: 'documents.manage' },
-    { id: 'new:guide', label: 'Создать памятку', href: createGuide(), permission: 'guides.manage' },
+    {
+        id: 'new:post',
+        label: 'Создать новость',
+        href: createPost(),
+        permission: 'posts.manage',
+    },
+    {
+        id: 'new:page',
+        label: 'Создать страницу',
+        href: createPage(),
+        permission: 'pages.manage',
+    },
+    {
+        id: 'new:category',
+        label: 'Создать рубрику',
+        href: createCategory(),
+        permission: 'categories.manage',
+    },
+    {
+        id: 'new:incident',
+        label: 'Создать событие ЧС',
+        href: createIncident(),
+        permission: 'incidents.manage',
+    },
+    {
+        id: 'new:alert',
+        label: 'Создать оповещение',
+        href: createAlert(),
+        permission: 'alerts.manage',
+    },
+    {
+        id: 'new:document',
+        label: 'Создать документ',
+        href: createDocument(),
+        permission: 'documents.manage',
+    },
+    {
+        id: 'new:guide',
+        label: 'Создать памятку',
+        href: createGuide(),
+        permission: 'guides.manage',
+    },
 ];
 
-const toUrl = (href: Href): string => (typeof href === 'string' ? href : href.url);
+const toUrl = (href: Href): string =>
+    typeof href === 'string' ? href : href.url;
 
 /**
  * Statamic-style command palette (⌘K / Ctrl+K): fuzzy-jump to any CMS section or "create" action.
@@ -46,7 +82,10 @@ export function CommandPalette() {
 
     useEffect(() => {
         const handler = (event: KeyboardEvent) => {
-            if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+            if (
+                (event.metaKey || event.ctrlKey) &&
+                event.key.toLowerCase() === 'k'
+            ) {
                 event.preventDefault();
                 setOpen((value) => !value);
             }
@@ -73,7 +112,9 @@ export function CommandPalette() {
 
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent className="top-[12%] max-w-xl translate-y-0 gap-0 overflow-hidden p-0">
-                    <DialogTitle className="sr-only">Командная панель</DialogTitle>
+                    <DialogTitle className="sr-only">
+                        Командная панель
+                    </DialogTitle>
                     <CommandPaletteBody onClose={() => setOpen(false)} />
                 </DialogContent>
             </Dialog>
@@ -116,7 +157,8 @@ function CommandPaletteBody({ onClose }: { onClose: () => void }) {
 
         return commands.filter(
             (command) =>
-                command.label.toLowerCase().includes(q) || command.group.toLowerCase().includes(q),
+                command.label.toLowerCase().includes(q) ||
+                command.group.toLowerCase().includes(q),
         );
     }, [commands, query]);
 
@@ -132,10 +174,16 @@ function CommandPaletteBody({ onClose }: { onClose: () => void }) {
     const onKeyDown = (event: React.KeyboardEvent) => {
         if (event.key === 'ArrowDown') {
             event.preventDefault();
-            setActive((value) => (filtered.length ? (value + 1) % filtered.length : 0));
+            setActive((value) =>
+                filtered.length ? (value + 1) % filtered.length : 0,
+            );
         } else if (event.key === 'ArrowUp') {
             event.preventDefault();
-            setActive((value) => (filtered.length ? (value - 1 + filtered.length) % filtered.length : 0));
+            setActive((value) =>
+                filtered.length
+                    ? (value - 1 + filtered.length) % filtered.length
+                    : 0,
+            );
         } else if (event.key === 'Enter') {
             event.preventDefault();
             run(filtered[active]);
@@ -186,11 +234,17 @@ function CommandPaletteBody({ onClose }: { onClose: () => void }) {
                                     <Icon
                                         className={cn(
                                             'size-4 shrink-0',
-                                            index === current ? 'text-primary' : 'text-muted-foreground',
+                                            index === current
+                                                ? 'text-primary'
+                                                : 'text-muted-foreground',
                                         )}
                                     />
-                                    <span className="flex-1">{command.label}</span>
-                                    <span className="text-xs text-muted-foreground">{command.group}</span>
+                                    <span className="flex-1">
+                                        {command.label}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        {command.group}
+                                    </span>
                                 </button>
                             </li>
                         );

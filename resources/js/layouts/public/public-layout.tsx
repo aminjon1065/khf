@@ -105,7 +105,10 @@ export default function PublicLayout({
                         href={welcome({ locale }).url}
                         className="xs:max-w-none flex max-w-[60%] items-center gap-2 transition-opacity hover:opacity-80"
                     >
-                        <AppEmblem alt="" className="size-9 shrink-0 sm:size-10" />
+                        <AppEmblem
+                            alt=""
+                            className="size-9 shrink-0 sm:size-10"
+                        />
                         <span
                             className={`truncate text-base font-bold tracking-tight sm:text-xl ${isRedState ? 'text-white' : 'text-foreground'}`}
                         >
@@ -229,7 +232,10 @@ export default function PublicLayout({
                                 >
                                     <SheetHeader className="flex justify-start border-b border-slate-800 pb-4 text-left">
                                         <SheetTitle className="flex items-center gap-2 text-lg font-bold text-white">
-                                            <AppEmblem alt="" className="size-8 shrink-0" />
+                                            <AppEmblem
+                                                alt=""
+                                                className="size-8 shrink-0"
+                                            />
                                             <span className="truncate">
                                                 {t('site.short_name')}
                                             </span>
@@ -473,7 +479,8 @@ export default function PublicLayout({
                                 <Link
                                     key={page.slug}
                                     href={
-                                        pageShow({ locale, slug: page.slug }).url
+                                        pageShow({ locale, slug: page.slug })
+                                            .url
                                     }
                                     className="transition-colors hover:text-white"
                                 >
@@ -584,8 +591,8 @@ export default function PublicLayout({
                 <div className="border-t border-white/10">
                     <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 text-xs text-brand-strong-foreground/60 sm:flex-row sm:items-center sm:justify-between">
                         <span>
-                            © {new Date().getFullYear()} {t('site.short_name')} ·{' '}
-                            {t('footer.rights')}
+                            © {new Date().getFullYear()} {t('site.short_name')}{' '}
+                            · {t('footer.rights')}
                         </span>
                         <div className="flex items-center gap-4">
                             <button

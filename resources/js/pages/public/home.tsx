@@ -3,8 +3,8 @@ import { ArrowUpRight, Bell, Inbox, Map, ShieldAlert } from 'lucide-react';
 import { AppEmblem } from '@/components/app-emblem';
 import type { ActiveAlert } from '@/components/Public/EmergencyHero';
 import { EmergencyHero } from '@/components/Public/EmergencyHero';
-import { GovHero  } from '@/components/Public/gov-hero';
-import type {OperationalSummary} from '@/components/Public/gov-hero';
+import { GovHero } from '@/components/Public/gov-hero';
+import type { OperationalSummary } from '@/components/Public/gov-hero';
 import { useTranslations } from '@/hooks/use-translations';
 import { create as appealsCreate } from '@/routes/appeals';
 import { index as guidesIndex } from '@/routes/guides';
@@ -99,7 +99,7 @@ export default function Home({ latestPosts, operational }: PageProps) {
                         <span className="flex-1">
                             <span className="flex items-center gap-1 font-semibold text-foreground">
                                 {item.label}
-                                <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
+                                <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary" />
                             </span>
                             <span className="mt-1 line-clamp-2 block text-sm leading-relaxed text-muted-foreground">
                                 {item.hint}

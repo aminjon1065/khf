@@ -2,7 +2,7 @@ import Color from '@tiptap/extension-color';
 import FontFamily from '@tiptap/extension-font-family';
 import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
-import { TextStyle } from "@tiptap/extension-text-style";
+import { TextStyle } from '@tiptap/extension-text-style';
 import Underline from '@tiptap/extension-underline';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -68,7 +68,9 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
     }
 
     const setLink = () => {
-        const previous = editor.getAttributes('link').href as string | undefined;
+        const previous = editor.getAttributes('link').href as
+            | string
+            | undefined;
         const url = window.prompt('Ссылка (URL)', previous ?? 'https://');
 
         if (url === null) {
@@ -81,7 +83,12 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
             return;
         }
 
-        editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+        editor
+            .chain()
+            .focus()
+            .extendMarkRange('link')
+            .setLink({ href: url })
+            .run();
     };
 
     const handleMediaSelect = (url: string) => {
@@ -89,92 +96,214 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
     };
 
     return (
-        <div className="rounded-md border flex flex-col">
-            <div className="flex flex-wrap items-center gap-1 border-b p-1 bg-muted/50">
-                <Toggle size="sm" pressed={editor.isActive('bold')} onPressedChange={() => editor.chain().focus().toggleBold().run()} aria-label="Жирный">
+        <div className="flex flex-col rounded-md border">
+            <div className="flex flex-wrap items-center gap-1 border-b bg-muted/50 p-1">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('bold')}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleBold().run()
+                    }
+                    aria-label="Жирный"
+                >
                     <Bold className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive('italic')} onPressedChange={() => editor.chain().focus().toggleItalic().run()} aria-label="Курсив">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('italic')}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleItalic().run()
+                    }
+                    aria-label="Курсив"
+                >
                     <Italic className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive('underline')} onPressedChange={() => editor.chain().focus().toggleUnderline().run()} aria-label="Подчеркнутый">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('underline')}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleUnderline().run()
+                    }
+                    aria-label="Подчеркнутый"
+                >
                     <UnderlineIcon className="size-4" />
                 </Toggle>
 
-                <div className="w-[1px] h-4 bg-border mx-1" />
+                <div className="mx-1 h-4 w-[1px] bg-border" />
 
-                <Toggle size="sm" pressed={editor.isActive('heading', { level: 2 })} onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} aria-label="Заголовок 2">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('heading', { level: 2 })}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleHeading({ level: 2 }).run()
+                    }
+                    aria-label="Заголовок 2"
+                >
                     <Heading2 className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive('heading', { level: 3 })} onPressedChange={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} aria-label="Заголовок 3">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('heading', { level: 3 })}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleHeading({ level: 3 }).run()
+                    }
+                    aria-label="Заголовок 3"
+                >
                     <Heading3 className="size-4" />
                 </Toggle>
 
-                <div className="w-[1px] h-4 bg-border mx-1" />
+                <div className="mx-1 h-4 w-[1px] bg-border" />
 
-                <Toggle size="sm" pressed={editor.isActive({ textAlign: 'left' })} onPressedChange={() => editor.chain().focus().setTextAlign('left').run()} aria-label="По левому краю">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive({ textAlign: 'left' })}
+                    onPressedChange={() =>
+                        editor.chain().focus().setTextAlign('left').run()
+                    }
+                    aria-label="По левому краю"
+                >
                     <AlignLeft className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive({ textAlign: 'center' })} onPressedChange={() => editor.chain().focus().setTextAlign('center').run()} aria-label="По центру">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive({ textAlign: 'center' })}
+                    onPressedChange={() =>
+                        editor.chain().focus().setTextAlign('center').run()
+                    }
+                    aria-label="По центру"
+                >
                     <AlignCenter className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive({ textAlign: 'right' })} onPressedChange={() => editor.chain().focus().setTextAlign('right').run()} aria-label="По правому краю">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive({ textAlign: 'right' })}
+                    onPressedChange={() =>
+                        editor.chain().focus().setTextAlign('right').run()
+                    }
+                    aria-label="По правому краю"
+                >
                     <AlignRight className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive({ textAlign: 'justify' })} onPressedChange={() => editor.chain().focus().setTextAlign('justify').run()} aria-label="По ширине">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive({ textAlign: 'justify' })}
+                    onPressedChange={() =>
+                        editor.chain().focus().setTextAlign('justify').run()
+                    }
+                    aria-label="По ширине"
+                >
                     <AlignJustify className="size-4" />
                 </Toggle>
 
-                <div className="w-[1px] h-4 bg-border mx-1" />
+                <div className="mx-1 h-4 w-[1px] bg-border" />
 
-                <Toggle size="sm" pressed={editor.isActive('bulletList')} onPressedChange={() => editor.chain().focus().toggleBulletList().run()} aria-label="Маркированный список">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('bulletList')}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleBulletList().run()
+                    }
+                    aria-label="Маркированный список"
+                >
                     <List className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive('orderedList')} onPressedChange={() => editor.chain().focus().toggleOrderedList().run()} aria-label="Нумерованный список">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('orderedList')}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleOrderedList().run()
+                    }
+                    aria-label="Нумерованный список"
+                >
                     <ListOrdered className="size-4" />
                 </Toggle>
-                <Toggle size="sm" pressed={editor.isActive('blockquote')} onPressedChange={() => editor.chain().focus().toggleBlockquote().run()} aria-label="Цитата">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('blockquote')}
+                    onPressedChange={() =>
+                        editor.chain().focus().toggleBlockquote().run()
+                    }
+                    aria-label="Цитата"
+                >
                     <Quote className="size-4" />
                 </Toggle>
-                
-                <div className="w-[1px] h-4 bg-border mx-1" />
+
+                <div className="mx-1 h-4 w-[1px] bg-border" />
 
                 <input
                     type="color"
-                    className="w-6 h-6 p-0 border-0 rounded cursor-pointer"
-                    onInput={(event) => editor.chain().focus().setColor((event.target as HTMLInputElement).value).run()}
+                    className="h-6 w-6 cursor-pointer rounded border-0 p-0"
+                    onInput={(event) =>
+                        editor
+                            .chain()
+                            .focus()
+                            .setColor((event.target as HTMLInputElement).value)
+                            .run()
+                    }
                     value={editor.getAttributes('textStyle').color || '#000000'}
                     aria-label="Цвет текста"
                 />
 
                 <select
-                    className="text-xs border border-input rounded-sm p-1 ml-1 focus:outline-none"
-                    onChange={(event) => editor.chain().focus().setFontFamily(event.target.value).run()}
+                    className="ml-1 rounded-sm border border-input p-1 text-xs focus:outline-none"
+                    onChange={(event) =>
+                        editor
+                            .chain()
+                            .focus()
+                            .setFontFamily(event.target.value)
+                            .run()
+                    }
                     value={editor.getAttributes('textStyle').fontFamily || ''}
                 >
                     <option value="">Шрифт по умолчанию</option>
                     <option value="Inter">Inter</option>
-                    <option value="Comic Sans MS, Comic Sans">Comic Sans</option>
+                    <option value="Comic Sans MS, Comic Sans">
+                        Comic Sans
+                    </option>
                     <option value="serif">Serif</option>
                     <option value="monospace">Monospace</option>
                 </select>
 
-                <div className="w-[1px] h-4 bg-border mx-1" />
+                <div className="mx-1 h-4 w-[1px] bg-border" />
 
-                <Toggle size="sm" pressed={editor.isActive('link')} onPressedChange={setLink} aria-label="Ссылка">
+                <Toggle
+                    size="sm"
+                    pressed={editor.isActive('link')}
+                    onPressedChange={setLink}
+                    aria-label="Ссылка"
+                >
                     <LinkIcon className="size-4" />
                 </Toggle>
 
-                <Button type="button" variant="outline" size="sm" className="h-8 px-2 ml-1" onClick={() => setIsMediaModalOpen(true)} aria-label="Вставить медиа">
-                    <ImageIcon className="size-4 mr-1" />
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="ml-1 h-8 px-2"
+                    onClick={() => setIsMediaModalOpen(true)}
+                    aria-label="Вставить медиа"
+                >
+                    <ImageIcon className="mr-1 size-4" />
                     Медиа
                 </Button>
 
                 <div className="ml-auto flex gap-1">
-                    <Button type="button" variant="ghost" size="icon" onClick={() => editor.chain().focus().undo().run()} aria-label="Отменить">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => editor.chain().focus().undo().run()}
+                        aria-label="Отменить"
+                    >
                         <Undo className="size-4" />
                     </Button>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => editor.chain().focus().redo().run()} aria-label="Повторить">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => editor.chain().focus().redo().run()}
+                        aria-label="Повторить"
+                    >
                         <Redo className="size-4" />
                     </Button>
                 </div>
@@ -183,10 +312,10 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
                 <EditorContent editor={editor} />
             </div>
 
-            <MediaLibraryModal 
-                isOpen={isMediaModalOpen} 
-                onClose={() => setIsMediaModalOpen(false)} 
-                onSelect={handleMediaSelect} 
+            <MediaLibraryModal
+                isOpen={isMediaModalOpen}
+                onClose={() => setIsMediaModalOpen(false)}
+                onSelect={handleMediaSelect}
             />
         </div>
     );

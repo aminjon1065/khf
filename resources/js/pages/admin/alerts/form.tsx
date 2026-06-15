@@ -113,7 +113,9 @@ export default function AlertForm({
                             id="hazard_level"
                             label="Уровень опасности"
                             value={form.data.hazard_level}
-                            onChange={(value) => form.setData('hazard_level', value)}
+                            onChange={(value) =>
+                                form.setData('hazard_level', value)
+                            }
                             options={levels}
                             error={errors.hazard_level}
                         />
@@ -130,7 +132,9 @@ export default function AlertForm({
                             label="Регион"
                             value={form.data.region_id}
                             options={regions}
-                            onChange={(value) => form.setData('region_id', value)}
+                            onChange={(value) =>
+                                form.setData('region_id', value)
+                            }
                             placeholder="Вся страна"
                             error={errors.region_id}
                         />
@@ -139,7 +143,9 @@ export default function AlertForm({
                             label="Начало"
                             type="datetime-local"
                             value={form.data.starts_at}
-                            onChange={(value) => form.setData('starts_at', value)}
+                            onChange={(value) =>
+                                form.setData('starts_at', value)
+                            }
                             error={errors.starts_at}
                         />
                         <CpTextField
@@ -155,7 +161,9 @@ export default function AlertForm({
                             label="Пользователь может закрыть баннер"
                             instructions="Снимите для критических оповещений, которые нельзя скрыть."
                             checked={form.data.is_dismissible}
-                            onChange={(value) => form.setData('is_dismissible', value)}
+                            onChange={(value) =>
+                                form.setData('is_dismissible', value)
+                            }
                         />
                     </CpPanel>
                 }
@@ -164,18 +172,28 @@ export default function AlertForm({
                     locales={locales}
                     active={activeLocale}
                     onChange={setActiveLocale}
-                    isComplete={(code) => Boolean(form.data.translations[code]?.title)}
+                    isComplete={(code) =>
+                        Boolean(form.data.translations[code]?.title)
+                    }
                 />
 
                 <div>
                     <input
                         aria-label="Заголовок"
                         value={active.title}
-                        onChange={(event) => setTranslation(activeLocale, 'title', event.target.value)}
+                        onChange={(event) =>
+                            setTranslation(
+                                activeLocale,
+                                'title',
+                                event.target.value,
+                            )
+                        }
                         placeholder="Заголовок оповещения"
-                        className="w-full border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                        className="w-full rounded-sm border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
-                    <InputError message={errors[`translations.${activeLocale}.title`]} />
+                    <InputError
+                        message={errors[`translations.${activeLocale}.title`]}
+                    />
                 </div>
 
                 <CpPanel title="Текст">
@@ -184,7 +202,9 @@ export default function AlertForm({
                         label="Текст оповещения"
                         rows={5}
                         value={active.body}
-                        onChange={(value) => setTranslation(activeLocale, 'body', value)}
+                        onChange={(value) =>
+                            setTranslation(activeLocale, 'body', value)
+                        }
                         error={errors[`translations.${activeLocale}.body`]}
                     />
                 </CpPanel>

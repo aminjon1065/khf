@@ -103,7 +103,11 @@ export default function AppealCreate({
                             <SelectTrigger
                                 id="category"
                                 aria-invalid={!!errors.category}
-                                aria-describedby={errors.category ? 'category-error' : undefined}
+                                aria-describedby={
+                                    errors.category
+                                        ? 'category-error'
+                                        : undefined
+                                }
                             >
                                 <SelectValue />
                             </SelectTrigger>
@@ -118,7 +122,10 @@ export default function AppealCreate({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <InputError id="category-error" message={errors.category} />
+                        <InputError
+                            id="category-error"
+                            message={errors.category}
+                        />
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -133,7 +140,9 @@ export default function AppealCreate({
                                     form.setData('name', e.target.value)
                                 }
                                 aria-invalid={!!errors.name}
-                                aria-describedby={errors.name ? 'name-error' : undefined}
+                                aria-describedby={
+                                    errors.name ? 'name-error' : undefined
+                                }
                             />
                             <InputError id="name-error" message={errors.name} />
                         </div>
@@ -147,9 +156,14 @@ export default function AppealCreate({
                                     form.setData('email', e.target.value)
                                 }
                                 aria-invalid={!!errors.email}
-                                aria-describedby={errors.email ? 'email-error' : undefined}
+                                aria-describedby={
+                                    errors.email ? 'email-error' : undefined
+                                }
                             />
-                            <InputError id="email-error" message={errors.email} />
+                            <InputError
+                                id="email-error"
+                                message={errors.email}
+                            />
                         </div>
                     </div>
 
@@ -164,7 +178,9 @@ export default function AppealCreate({
                                 form.setData('phone', e.target.value)
                             }
                             aria-invalid={!!errors.phone}
-                            aria-describedby={errors.phone ? 'phone-error' : undefined}
+                            aria-describedby={
+                                errors.phone ? 'phone-error' : undefined
+                            }
                         />
                         <InputError id="phone-error" message={errors.phone} />
                     </div>
@@ -180,9 +196,14 @@ export default function AppealCreate({
                                 form.setData('subject', e.target.value)
                             }
                             aria-invalid={!!errors.subject}
-                            aria-describedby={errors.subject ? 'subject-error' : undefined}
+                            aria-describedby={
+                                errors.subject ? 'subject-error' : undefined
+                            }
                         />
-                        <InputError id="subject-error" message={errors.subject} />
+                        <InputError
+                            id="subject-error"
+                            message={errors.subject}
+                        />
                     </div>
 
                     <div className="space-y-2">
@@ -197,9 +218,14 @@ export default function AppealCreate({
                                 form.setData('message', e.target.value)
                             }
                             aria-invalid={!!errors.message}
-                            aria-describedby={errors.message ? 'message-error' : undefined}
+                            aria-describedby={
+                                errors.message ? 'message-error' : undefined
+                            }
                         />
-                        <InputError id="message-error" message={errors.message} />
+                        <InputError
+                            id="message-error"
+                            message={errors.message}
+                        />
                     </div>
 
                     {/* Honeypot — hidden from users, traps bots (ТЗ §12.4). */}

@@ -96,13 +96,33 @@ export function GlobalSearchModal({
     const getIcon = (type: string) => {
         switch (type) {
             case 'post':
-                return <AlertCircle className="size-4 text-blue-500" aria-hidden="true" />;
+                return (
+                    <AlertCircle
+                        className="size-4 text-blue-500"
+                        aria-hidden="true"
+                    />
+                );
             case 'page':
-                return <Info className="size-4 text-green-500" aria-hidden="true" />;
+                return (
+                    <Info
+                        className="size-4 text-green-500"
+                        aria-hidden="true"
+                    />
+                );
             case 'document':
-                return <FileText className="size-4 text-orange-500" aria-hidden="true" />;
+                return (
+                    <FileText
+                        className="size-4 text-orange-500"
+                        aria-hidden="true"
+                    />
+                );
             case 'guide':
-                return <BookOpen className="size-4 text-purple-500" aria-hidden="true" />;
+                return (
+                    <BookOpen
+                        className="size-4 text-purple-500"
+                        aria-hidden="true"
+                    />
+                );
             default:
                 return <FileText className="size-4" aria-hidden="true" />;
         }
@@ -131,7 +151,10 @@ export function GlobalSearchModal({
                         {t('actions.search')}
                     </DialogTitle>
                     <div className="flex items-center gap-3">
-                        <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                        <Search
+                            className="size-5 shrink-0 text-muted-foreground"
+                            aria-hidden="true"
+                        />
                         <input
                             type="text"
                             autoFocus
@@ -142,7 +165,10 @@ export function GlobalSearchModal({
                             onChange={(e) => setQuery(e.target.value)}
                         />
                         {isLoading && (
-                            <Loader2 className="size-5 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" />
+                            <Loader2
+                                className="size-5 shrink-0 animate-spin text-muted-foreground"
+                                aria-hidden="true"
+                            />
                         )}
                     </div>
                 </DialogHeader>

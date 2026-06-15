@@ -112,12 +112,17 @@ export function CpAssetsField({
     };
 
     const q = query.trim().toLowerCase();
-    const filtered = q === '' ? items : items.filter((item) => item.name.toLowerCase().includes(q));
+    const filtered =
+        q === ''
+            ? items
+            : items.filter((item) => item.name.toLowerCase().includes(q));
 
     return (
         <div className="space-y-2">
             <Label>{label}</Label>
-            {instructions && <p className="text-xs text-muted-foreground">{instructions}</p>}
+            {instructions && (
+                <p className="text-xs text-muted-foreground">{instructions}</p>
+            )}
 
             {preview ? (
                 <div className="relative w-fit">
@@ -150,7 +155,12 @@ export function CpAssetsField({
                 >
                     <Upload className="size-4" /> Загрузить
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={openLibrary}>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={openLibrary}
+                >
                     <ImageIcon className="size-4" /> Медиатека
                 </Button>
             </div>
@@ -178,7 +188,9 @@ export function CpAssetsField({
                     </div>
 
                     {loading ? (
-                        <p className="py-8 text-center text-sm text-muted-foreground">Загрузка…</p>
+                        <p className="py-8 text-center text-sm text-muted-foreground">
+                            Загрузка…
+                        </p>
                     ) : filtered.length === 0 ? (
                         <p className="py-8 text-center text-sm text-muted-foreground">
                             Файлов не найдено

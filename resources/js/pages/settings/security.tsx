@@ -1,7 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
 import { useRef } from 'react';
+import { motion } from 'framer-motion';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
-import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import type { Props as ManagePasskeysProps } from '@/components/manage-passkeys';
 import ManagePasskeys from '@/components/manage-passkeys';
@@ -10,12 +10,33 @@ import ManageTwoFactor from '@/components/manage-two-factor';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { edit } from '@/routes/security';
 
 type Props = {
     passwordRules: string;
 } & ManagePasskeysProps &
     ManageTwoFactorProps;
+
+const container = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } },
+};
+
+const item = {
+    hidden: { opacity: 0, y: 10 },
+    show: {
+        opacity: 1,
+        y: 0,
+        transition: { type: 'spring', stiffness: 300, damping: 24 },
+    },
+};
 
 export default function Security(props: Props) {
     const passwordInput = useRef<HTMLInputElement>(null);
@@ -24,115 +45,148 @@ export default function Security(props: Props) {
     return (
         <>
             <Head title="Security settings" />
-
             <h1 className="sr-only">Security settings</h1>
 
-            <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title="Update password"
-                    description="Ensure your account is using a long, random password to stay secure"
-                />
+            <motion.div
+                className="mx-auto flex w-full max-w-4xl flex-col gap-8 p-6 lg:p-8"
+                variants={container}
+                initial="hidden"
+                animate="show"
+            >
+                <motion.div variants={item}>
+                    <Card className="border-border/50 shadow-sm transition-all hover:shadow-md">
+                        <CardHeader>
+                            <CardTitle>Update Password</CardTitle>
+                            <CardDescription>
+                                Ensure your account is using a long, random
+                                password to stay secure.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Form
+                                {...SecurityController.update.form()}
+                                options={{
+                                    preserveScroll: true,
+                                }}
+                                resetOnError={[
+                                    'password',
+                                    'password_confirmation',
+                                    'current_password',
+                                ]}
+                                resetOnSuccess
+                                onError={(errors) => {
+                                    if (errors.password) {
+                                        passwordInput.current?.focus();
+                                    }
 
-                <Form
-                    {...SecurityController.update.form()}
-                    options={{
-                        preserveScroll: true,
-                    }}
-                    resetOnError={[
-                        'password',
-                        'password_confirmation',
-                        'current_password',
-                    ]}
-                    resetOnSuccess
-                    onError={(errors) => {
-                        if (errors.password) {
-                            passwordInput.current?.focus();
-                        }
+                                    if (errors.current_password) {
+                                        currentPasswordInput.current?.focus();
+                                    }
+                                }}
+                                className="space-y-6"
+                            >
+                                {({ errors, processing }) => (
+                                    <>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="current_password">
+                                                Current Password
+                                            </Label>
+                                            <PasswordInput
+                                                id="current_password"
+                                                ref={currentPasswordInput}
+                                                name="current_password"
+                                                className="mt-1 block w-full bg-muted/30 focus-visible:bg-transparent"
+                                                autoComplete="current-password"
+                                                placeholder="Enter your current password"
+                                            />
+                                            <InputError
+                                                message={
+                                                    errors.current_password
+                                                }
+                                            />
+                                        </div>
 
-                        if (errors.current_password) {
-                            currentPasswordInput.current?.focus();
-                        }
-                    }}
-                    className="space-y-6"
-                >
-                    {({ errors, processing }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="current_password">
-                                    Current password
-                                </Label>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="password">
+                                                New Password
+                                            </Label>
+                                            <PasswordInput
+                                                id="password"
+                                                ref={passwordInput}
+                                                name="password"
+                                                className="mt-1 block w-full bg-muted/30 focus-visible:bg-transparent"
+                                                autoComplete="new-password"
+                                                placeholder="Enter new password"
+                                                passwordrules={
+                                                    props.passwordRules
+                                                }
+                                            />
+                                            <InputError
+                                                message={errors.password}
+                                            />
+                                        </div>
 
-                                <PasswordInput
-                                    id="current_password"
-                                    ref={currentPasswordInput}
-                                    name="current_password"
-                                    className="mt-1 block w-full"
-                                    autoComplete="current-password"
-                                    placeholder="Current password"
-                                />
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="password_confirmation">
+                                                Confirm Password
+                                            </Label>
+                                            <PasswordInput
+                                                id="password_confirmation"
+                                                name="password_confirmation"
+                                                className="mt-1 block w-full bg-muted/30 focus-visible:bg-transparent"
+                                                autoComplete="new-password"
+                                                placeholder="Confirm new password"
+                                                passwordrules={
+                                                    props.passwordRules
+                                                }
+                                            />
+                                            <InputError
+                                                message={
+                                                    errors.password_confirmation
+                                                }
+                                            />
+                                        </div>
 
-                                <InputError message={errors.current_password} />
-                            </div>
+                                        <div className="flex items-center gap-4 pt-4">
+                                            <Button
+                                                disabled={processing}
+                                                data-test="update-password-button"
+                                            >
+                                                Save Changes
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
+                            </Form>
+                        </CardContent>
+                    </Card>
+                </motion.div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="password">New password</Label>
+                <motion.div variants={item}>
+                    <Card className="border-border/50 shadow-sm transition-all hover:shadow-md">
+                        <CardContent className="pt-6">
+                            <ManageTwoFactor
+                                canManageTwoFactor={props.canManageTwoFactor}
+                                requiresConfirmation={
+                                    props.requiresConfirmation
+                                }
+                                twoFactorEnabled={props.twoFactorEnabled}
+                            />
+                        </CardContent>
+                    </Card>
+                </motion.div>
 
-                                <PasswordInput
-                                    id="password"
-                                    ref={passwordInput}
-                                    name="password"
-                                    className="mt-1 block w-full"
-                                    autoComplete="new-password"
-                                    placeholder="New password"
-                                    passwordrules={props.passwordRules}
-                                />
-
-                                <InputError message={errors.password} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">
-                                    Confirm password
-                                </Label>
-
-                                <PasswordInput
-                                    id="password_confirmation"
-                                    name="password_confirmation"
-                                    className="mt-1 block w-full"
-                                    autoComplete="new-password"
-                                    placeholder="Confirm password"
-                                    passwordrules={props.passwordRules}
-                                />
-
-                                <InputError
-                                    message={errors.password_confirmation}
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                                <Button
-                                    disabled={processing}
-                                    data-test="update-password-button"
-                                >
-                                    Save
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
-            </div>
-
-            <ManageTwoFactor
-                canManageTwoFactor={props.canManageTwoFactor}
-                requiresConfirmation={props.requiresConfirmation}
-                twoFactorEnabled={props.twoFactorEnabled}
-            />
-
-            <ManagePasskeys
-                canManagePasskeys={props.canManagePasskeys}
-                passkeys={props.passkeys}
-            />
+                <motion.div variants={item}>
+                    <Card className="border-border/50 shadow-sm transition-all hover:shadow-md">
+                        <CardContent className="pt-6">
+                            <ManagePasskeys
+                                canManagePasskeys={props.canManagePasskeys}
+                                passkeys={props.passkeys}
+                            />
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </motion.div>
         </>
     );
 }

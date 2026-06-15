@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import type { ShieldAlert } from 'lucide-react';
+import { motion } from 'framer-motion';
 import {
     ArrowRight,
     Bell,
@@ -13,7 +14,6 @@ import {
     Siren,
     Users,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard as adminDashboard } from '@/routes/admin';
@@ -76,26 +76,58 @@ type DashboardProps = {
 };
 
 const statusToneClass: Record<string, string> = {
-    new: 'bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300',
-    active: 'bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300',
+    new: 'border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400',
+    active: 'border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400',
     in_progress:
-        'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300',
+        'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400',
     controlled:
-        'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300',
+        'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400',
     answered:
-        'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
+        'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
     resolved:
-        'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
-    closed: 'bg-muted text-muted-foreground',
+        'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+    closed: 'border-muted/50 bg-muted/30 text-muted-foreground',
+};
+
+const statusDotClass: Record<string, string> = {
+    new: 'bg-red-500',
+    active: 'bg-red-500',
+    in_progress: 'bg-amber-500',
+    controlled: 'bg-amber-500',
+    answered: 'bg-emerald-500',
+    resolved: 'bg-emerald-500',
+    closed: 'bg-muted-foreground',
 };
 
 function StatusBadge({ status, label }: { status: string; label: string }) {
     return (
-        <Badge variant="secondary" className={statusToneClass[status] ?? ''}>
+        <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium tracking-wide ${statusToneClass[status] ?? 'border-border bg-muted/50 text-muted-foreground'}`}
+        >
+            <span
+                className={`size-1.5 rounded-full ${statusDotClass[status] ?? 'bg-muted-foreground/50'}`}
+            ></span>
             {label}
-        </Badge>
+        </span>
     );
 }
+
+const container = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.1 },
+    },
+};
+
+const item = {
+    hidden: { opacity: 0, y: 10 },
+    show: {
+        opacity: 1,
+        y: 0,
+        transition: { type: 'spring', stiffness: 300, damping: 24 },
+    },
+};
 
 export default function AdminDashboard({
     stats,
@@ -162,62 +194,84 @@ export default function AdminDashboard({
         <>
             <Head title="Панель управления" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 p-4">
-                <div className="flex flex-wrap items-end justify-between gap-4">
+            <motion.div
+                className="flex h-full flex-1 flex-col gap-8 p-6 lg:p-8"
+                variants={container}
+                initial="hidden"
+                animate="show"
+            >
+                <motion.div
+                    variants={item}
+                    className="flex flex-wrap items-end justify-between gap-4"
+                >
                     <div>
-                        <h1 className="text-2xl font-semibold">
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">
                             Панель управления
                         </h1>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Оперативный обзор системы КЧС
                         </p>
                     </div>
                     {quickActions.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-3">
                             {quickActions.map((action) => (
-                                <Button key={action.label} size="sm" asChild>
+                                <Button
+                                    key={action.label}
+                                    size="sm"
+                                    asChild
+                                    className="rounded-full shadow-sm transition-shadow hover:shadow-md"
+                                >
                                     <Link href={action.href}>
-                                        <Plus className="size-4" />
+                                        <Plus className="mr-1 size-4" />
                                         {action.label}
                                     </Link>
                                 </Button>
                             ))}
                         </div>
                     )}
-                </div>
+                </motion.div>
 
                 {/* Needs attention */}
                 {attention.length > 0 ? (
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <motion.div
+                        variants={item}
+                        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+                    >
                         {attention.map((item) => (
                             <Link
                                 key={item.key}
                                 href={item.href}
-                                className="group flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 transition-colors hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:hover:bg-red-950/50"
+                                className="group flex items-center gap-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-5 transition-all hover:bg-red-500/10 hover:shadow-sm dark:border-red-900/40 dark:bg-red-950/20"
                             >
-                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-red-600 text-white">
+                                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-red-500 text-white shadow-sm transition-transform group-hover:scale-105">
                                     <item.icon className="size-5" />
                                 </span>
                                 <span className="min-w-0">
-                                    <span className="block text-2xl leading-none font-bold text-red-700 dark:text-red-300">
+                                    <span className="block text-2xl font-bold tracking-tight text-red-600 dark:text-red-400">
                                         {item.count}
                                     </span>
-                                    <span className="mt-1 block truncate text-xs font-medium text-red-700/80 dark:text-red-300/80">
+                                    <span className="mt-1 block truncate text-xs font-medium text-red-600/80 dark:text-red-400/80">
                                         {item.label}
                                     </span>
                                 </span>
                             </Link>
                         ))}
-                    </div>
+                    </motion.div>
                 ) : (
-                    <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300">
+                    <motion.div
+                        variants={item}
+                        className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5 text-sm font-medium text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-400"
+                    >
                         <CheckCircle2 className="size-5 shrink-0" />
                         Срочных задач нет — всё под контролем.
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* KPI cards */}
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <motion.div
+                    variants={item}
+                    className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                >
                     {stats.appeals && (
                         <StatCard
                             label="Обращения"
@@ -272,14 +326,17 @@ export default function AdminDashboard({
                             href={postsIndex().url}
                         />
                     )}
-                </div>
+                </motion.div>
 
                 {/* Recent activity */}
-                <div className="grid gap-4 lg:grid-cols-2">
+                <motion.div
+                    variants={item}
+                    className="grid gap-6 lg:grid-cols-2"
+                >
                     {stats.appeals && (
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                                <CardTitle className="text-base">
+                        <Card className="flex flex-col rounded-2xl border-border/50 shadow-sm transition-all hover:shadow-md">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/50 pb-4">
+                                <CardTitle className="text-base font-semibold">
                                     Последние обращения
                                 </CardTitle>
                                 <Link
@@ -290,21 +347,21 @@ export default function AdminDashboard({
                                     <ArrowRight className="size-3.5" />
                                 </Link>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="flex-1 p-0">
                                 {recentAppeals.length === 0 ? (
                                     <EmptyRow text="Обращений пока нет." />
                                 ) : (
-                                    <ul className="divide-y">
+                                    <ul className="divide-y divide-border/50">
                                         {recentAppeals.map((appeal) => (
                                             <li
                                                 key={appeal.id}
-                                                className="flex items-center justify-between gap-3 py-2.5"
+                                                className="group flex items-center justify-between gap-4 p-4 transition-colors hover:bg-muted/30"
                                             >
                                                 <div className="min-w-0">
-                                                    <p className="truncate text-sm font-medium">
+                                                    <p className="truncate text-sm font-medium text-foreground">
                                                         {appeal.subject}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">
+                                                    <p className="mt-1 text-xs text-muted-foreground transition-colors group-hover:text-muted-foreground/80">
                                                         {appeal.reference}
                                                         {appeal.created_at
                                                             ? ` · ${appeal.created_at}`
@@ -324,9 +381,9 @@ export default function AdminDashboard({
                     )}
 
                     {stats.incidents && (
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                                <CardTitle className="text-base">
+                        <Card className="flex flex-col rounded-2xl border-border/50 shadow-sm transition-all hover:shadow-md">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/50 pb-4">
+                                <CardTitle className="text-base font-semibold">
                                     Последние события ЧС
                                 </CardTitle>
                                 <Link
@@ -337,22 +394,22 @@ export default function AdminDashboard({
                                     <ArrowRight className="size-3.5" />
                                 </Link>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="flex-1 p-0">
                                 {recentIncidents.length === 0 ? (
                                     <EmptyRow text="Событий пока нет." />
                                 ) : (
-                                    <ul className="divide-y">
+                                    <ul className="divide-y divide-border/50">
                                         {recentIncidents.map((incident) => (
                                             <li
                                                 key={incident.id}
-                                                className="flex items-center justify-between gap-3 py-2.5"
+                                                className="group flex items-center justify-between gap-4 p-4 transition-colors hover:bg-muted/30"
                                             >
                                                 <div className="min-w-0">
-                                                    <p className="truncate text-sm font-medium">
+                                                    <p className="truncate text-sm font-medium text-foreground">
                                                         {incident.title ??
                                                             'Без названия'}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">
+                                                    <p className="mt-1 text-xs text-muted-foreground transition-colors group-hover:text-muted-foreground/80">
                                                         {incident.occurred_at ??
                                                             ''}
                                                     </p>
@@ -370,11 +427,14 @@ export default function AdminDashboard({
                             </CardContent>
                         </Card>
                     )}
-                </div>
+                </motion.div>
 
                 {/* System (super-admin only) */}
                 {stats.system && (
-                    <div className="grid gap-4 sm:grid-cols-3">
+                    <motion.div
+                        variants={item}
+                        className="grid gap-6 sm:grid-cols-3"
+                    >
                         <StatCard
                             label="Пользователи"
                             value={stats.system.users}
@@ -391,9 +451,9 @@ export default function AdminDashboard({
                             value={stats.system.roles}
                             icon={ShieldCheck}
                         />
-                    </div>
+                    </motion.div>
                 )}
-            </div>
+            </motion.div>
         </>
     );
 }
@@ -412,34 +472,32 @@ function StatCard({
     href?: string;
 }) {
     const body = (
-        <Card
-            className={
-                href
-                    ? 'h-full transition-colors hover:border-primary/40'
-                    : 'h-full'
-            }
+        <div
+            className={`group flex h-full flex-col gap-2 rounded-2xl border border-border/50 bg-card p-6 shadow-sm transition-all hover:border-border hover:shadow-md ${href ? 'cursor-pointer' : ''}`}
         >
-            <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-2">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex items-center gap-4">
+                <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-105 dark:bg-primary/20">
                     <Icon className="size-5" />
-                </span>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {label}
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="text-3xl font-semibold tracking-tight">
-                    {value}
                 </div>
-                {hint && (
-                    <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-                )}
-            </CardContent>
-        </Card>
+                <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                        {label}
+                    </p>
+                    <div className="text-3xl font-bold tracking-tight text-foreground">
+                        {value}
+                    </div>
+                </div>
+            </div>
+            {hint && (
+                <p className="mt-3 border-t border-border/50 pt-3 text-xs text-muted-foreground">
+                    {hint}
+                </p>
+            )}
+        </div>
     );
 
     return href ? (
-        <Link href={href} className="block">
+        <Link href={href} className="block h-full">
             {body}
         </Link>
     ) : (
@@ -449,7 +507,9 @@ function StatCard({
 
 function EmptyRow({ text }: { text: string }) {
     return (
-        <p className="py-6 text-center text-sm text-muted-foreground">{text}</p>
+        <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+            <p className="text-sm">{text}</p>
+        </div>
     );
 }
 

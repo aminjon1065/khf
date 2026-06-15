@@ -132,14 +132,19 @@ export default function PostForm({
                                 <Label htmlFor="status">Статус</Label>
                                 <Select
                                     value={form.data.status}
-                                    onValueChange={(value) => form.setData('status', value)}
+                                    onValueChange={(value) =>
+                                        form.setData('status', value)
+                                    }
                                 >
                                     <SelectTrigger id="status">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {statuses.map((status) => (
-                                            <SelectItem key={status.value} value={status.value}>
+                                            <SelectItem
+                                                key={status.value}
+                                                value={status.value}
+                                            >
                                                 {status.label}
                                             </SelectItem>
                                         ))}
@@ -151,14 +156,19 @@ export default function PostForm({
                                 <Label htmlFor="type">Тип</Label>
                                 <Select
                                     value={form.data.type}
-                                    onValueChange={(value) => form.setData('type', value)}
+                                    onValueChange={(value) =>
+                                        form.setData('type', value)
+                                    }
                                 >
                                     <SelectTrigger id="type">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {types.map((type) => (
-                                            <SelectItem key={type.value} value={type.value}>
+                                            <SelectItem
+                                                key={type.value}
+                                                value={type.value}
+                                            >
                                                 {type.label}
                                             </SelectItem>
                                         ))}
@@ -171,17 +181,26 @@ export default function PostForm({
                                 label="Рубрика"
                                 value={form.data.category_id}
                                 options={categories}
-                                onChange={(value) => form.setData('category_id', value)}
+                                onChange={(value) =>
+                                    form.setData('category_id', value)
+                                }
                                 placeholder="— Нет —"
                                 error={errors.category_id}
                             />
                             <div className="space-y-2">
-                                <Label htmlFor="published_at">Дата публикации</Label>
+                                <Label htmlFor="published_at">
+                                    Дата публикации
+                                </Label>
                                 <Input
                                     id="published_at"
                                     type="datetime-local"
                                     value={form.data.published_at}
-                                    onChange={(event) => form.setData('published_at', event.target.value)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'published_at',
+                                            event.target.value,
+                                        )
+                                    }
                                 />
                                 <InputError message={errors.published_at} />
                             </div>
@@ -229,18 +248,28 @@ export default function PostForm({
                     locales={locales}
                     active={activeLocale}
                     onChange={setActiveLocale}
-                    isComplete={(code) => Boolean(form.data.translations[code]?.title)}
+                    isComplete={(code) =>
+                        Boolean(form.data.translations[code]?.title)
+                    }
                 />
 
                 <div>
                     <input
                         aria-label="Заголовок"
                         value={active.title}
-                        onChange={(event) => setTranslation(activeLocale, 'title', event.target.value)}
+                        onChange={(event) =>
+                            setTranslation(
+                                activeLocale,
+                                'title',
+                                event.target.value,
+                            )
+                        }
                         placeholder="Заголовок"
-                        className="w-full border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                        className="w-full rounded-sm border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
-                    <InputError message={errors[`translations.${activeLocale}.title`]} />
+                    <InputError
+                        message={errors[`translations.${activeLocale}.title`]}
+                    />
                 </div>
 
                 <CpPanel title="Содержание">
@@ -249,10 +278,20 @@ export default function PostForm({
                         <Input
                             id="slug"
                             value={active.slug}
-                            onChange={(event) => setTranslation(activeLocale, 'slug', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'slug',
+                                    event.target.value,
+                                )
+                            }
                             placeholder="оставьте пустым для авто"
                         />
-                        <InputError message={errors[`translations.${activeLocale}.slug`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.slug`]
+                            }
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="excerpt">Анонс</Label>
@@ -260,15 +299,27 @@ export default function PostForm({
                             id="excerpt"
                             rows={2}
                             value={active.excerpt}
-                            onChange={(event) => setTranslation(activeLocale, 'excerpt', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'excerpt',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.excerpt`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.excerpt`]
+                            }
+                        />
                     </div>
                     <CpRichTextField
                         label="Полный текст"
                         editorKey={activeLocale}
                         value={active.body}
-                        onChange={(html) => setTranslation(activeLocale, 'body', html)}
+                        onChange={(html) =>
+                            setTranslation(activeLocale, 'body', html)
+                        }
                         error={errors[`translations.${activeLocale}.body`]}
                     />
                 </CpPanel>
@@ -279,7 +330,13 @@ export default function PostForm({
                         <Input
                             id="seo_title"
                             value={active.seo_title}
-                            onChange={(event) => setTranslation(activeLocale, 'seo_title', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'seo_title',
+                                    event.target.value,
+                                )
+                            }
                         />
                     </div>
                     <div className="space-y-2">
@@ -287,7 +344,13 @@ export default function PostForm({
                         <Input
                             id="seo_description"
                             value={active.seo_description}
-                            onChange={(event) => setTranslation(activeLocale, 'seo_description', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'seo_description',
+                                    event.target.value,
+                                )
+                            }
                         />
                     </div>
                 </CpPanel>

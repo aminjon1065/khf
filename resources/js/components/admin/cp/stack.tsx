@@ -31,20 +31,27 @@ export function CpStack({
 }) {
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+            <SheetContent
+                side="right"
+                className="flex w-full flex-col gap-0 p-0 sm:max-w-md"
+            >
                 <SheetHeader className="space-y-1 border-b border-border px-4 py-3 text-left">
                     <SheetTitle>{title}</SheetTitle>
                     {description ? (
                         <SheetDescription>{description}</SheetDescription>
                     ) : (
-                        <SheetDescription className="sr-only">{title}</SheetDescription>
+                        <SheetDescription className="sr-only">
+                            {title}
+                        </SheetDescription>
                     )}
                 </SheetHeader>
 
                 <div className="flex-1 overflow-y-auto p-4">{children}</div>
 
                 {footer && (
-                    <SheetFooter className="border-t border-border p-4">{footer}</SheetFooter>
+                    <SheetFooter className="border-t border-border p-4">
+                        {footer}
+                    </SheetFooter>
                 )}
             </SheetContent>
         </Sheet>

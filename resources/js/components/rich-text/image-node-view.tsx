@@ -8,13 +8,20 @@ export function ImageNodeView({ node, updateAttributes, selected }: any) {
     const imageRef = useRef<HTMLImageElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [, setIsResizing] = useState(false);
-    
+
     // Fallbacks for display depending on alignment
     const wrapperStyle: React.CSSProperties = {
         position: 'relative',
         display: float === 'none' || !float ? 'block' : 'inline-block',
         float: float !== 'none' ? float : undefined,
-        margin: float === 'left' ? '0 1em 1em 0' : float === 'right' ? '0 0 1em 1em' : float === 'center' ? '0 auto 1em auto' : '0 0 1em 0',
+        margin:
+            float === 'left'
+                ? '0 1em 1em 0'
+                : float === 'right'
+                  ? '0 0 1em 1em'
+                  : float === 'center'
+                    ? '0 auto 1em auto'
+                    : '0 0 1em 0',
         textAlign: float === 'center' ? 'center' : undefined,
         clear: 'both',
         maxWidth: '100%',
@@ -47,27 +54,30 @@ export function ImageNodeView({ node, updateAttributes, selected }: any) {
             let newHeight = startHeight;
 
             if (corner.includes('right')) {
-newWidth += dx;
-}
+                newWidth += dx;
+            }
 
             if (corner.includes('left')) {
-newWidth -= dx;
-}
+                newWidth -= dx;
+            }
 
             if (corner.includes('bottom')) {
-newHeight += dy;
-}
+                newHeight += dy;
+            }
 
             if (corner.includes('top')) {
-newHeight -= dy;
-}
+                newHeight -= dy;
+            }
 
             // Maintain aspect ratio approximately
             const ratio = startWidth / startHeight;
             newHeight = newWidth / ratio;
 
             if (newWidth > 50) {
-                updateAttributes({ width: Math.round(newWidth), height: Math.round(newHeight) });
+                updateAttributes({
+                    width: Math.round(newWidth),
+                    height: Math.round(newHeight),
+                });
             }
         };
 
@@ -83,16 +93,35 @@ newHeight -= dy;
 
     const setAlignment = (align: 'left' | 'center' | 'right' | 'none') => {
         if (align === 'center') {
-            updateAttributes({ float: 'none', display: 'block', margin: '0 auto 1em auto' });
+            updateAttributes({
+                float: 'none',
+                display: 'block',
+                margin: '0 auto 1em auto',
+            });
         } else if (align === 'left' || align === 'right') {
-            updateAttributes({ float: align, display: 'inline-block', margin: align === 'left' ? '0 1em 1em 0' : '0 0 1em 1em' });
+            updateAttributes({
+                float: align,
+                display: 'inline-block',
+                margin: align === 'left' ? '0 1em 1em 0' : '0 0 1em 1em',
+            });
         } else {
-            updateAttributes({ float: 'none', display: 'block', margin: '0 0 1em 0' });
+            updateAttributes({
+                float: 'none',
+                display: 'block',
+                margin: '0 0 1em 0',
+            });
         }
     };
 
     return (
-        <NodeViewWrapper as="span" style={{ display: 'inline-block', width: float === 'none' ? '100%' : 'auto', float: float !== 'none' ? float as any : undefined }}>
+        <NodeViewWrapper
+            as="span"
+            style={{
+                display: 'inline-block',
+                width: float === 'none' ? '100%' : 'auto',
+                float: float !== 'none' ? (float as any) : undefined,
+            }}
+        >
             <div
                 ref={wrapperRef}
                 style={wrapperStyle}
@@ -111,18 +140,28 @@ newHeight -= dy;
                 {selected && (
                     <>
                         {/* Alignment Toolbar */}
-                        <div className="absolute top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-background/90 backdrop-blur-sm border shadow-md rounded-md p-1 z-50">
+                        <div className="absolute top-2 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-md border bg-background/90 p-1 shadow-md backdrop-blur-sm">
                             <Toggle
                                 size="sm"
                                 pressed={float === 'left'}
-                                onPressedChange={() => setAlignment(float === 'left' ? 'none' : 'left')}
+                                onPressedChange={() =>
+                                    setAlignment(
+                                        float === 'left' ? 'none' : 'left',
+                                    )
+                                }
                                 aria-label="Обтекание слева"
                             >
                                 <AlignLeft className="size-4" />
                             </Toggle>
                             <Toggle
                                 size="sm"
-                                pressed={float === 'center' || (!float && wrapperStyle.margin?.toString().includes('auto'))}
+                                pressed={
+                                    float === 'center' ||
+                                    (!float &&
+                                        wrapperStyle.margin
+                                            ?.toString()
+                                            .includes('auto'))
+                                }
                                 onPressedChange={() => setAlignment('center')}
                                 aria-label="По центру"
                             >
@@ -131,7 +170,11 @@ newHeight -= dy;
                             <Toggle
                                 size="sm"
                                 pressed={float === 'right'}
-                                onPressedChange={() => setAlignment(float === 'right' ? 'none' : 'right')}
+                                onPressedChange={() =>
+                                    setAlignment(
+                                        float === 'right' ? 'none' : 'right',
+                                    )
+                                }
                                 aria-label="Обтекание справа"
                             >
                                 <AlignRight className="size-4" />
@@ -140,19 +183,23 @@ newHeight -= dy;
 
                         {/* Resize Handles */}
                         <div
-                            className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-primary border-2 border-background cursor-se-resize rounded-full shadow-sm z-50"
-                            onMouseDown={(e) => handleMouseDown(e, 'bottom-right')}
+                            className="absolute -right-1.5 -bottom-1.5 z-50 h-3 w-3 cursor-se-resize rounded-full border-2 border-background bg-primary shadow-sm"
+                            onMouseDown={(e) =>
+                                handleMouseDown(e, 'bottom-right')
+                            }
                         />
                         <div
-                            className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-primary border-2 border-background cursor-sw-resize rounded-full shadow-sm z-50"
-                            onMouseDown={(e) => handleMouseDown(e, 'bottom-left')}
+                            className="absolute -bottom-1.5 -left-1.5 z-50 h-3 w-3 cursor-sw-resize rounded-full border-2 border-background bg-primary shadow-sm"
+                            onMouseDown={(e) =>
+                                handleMouseDown(e, 'bottom-left')
+                            }
                         />
                         <div
-                            className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary border-2 border-background cursor-ne-resize rounded-full shadow-sm z-50"
+                            className="absolute -top-1.5 -right-1.5 z-50 h-3 w-3 cursor-ne-resize rounded-full border-2 border-background bg-primary shadow-sm"
                             onMouseDown={(e) => handleMouseDown(e, 'top-right')}
                         />
                         <div
-                            className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-primary border-2 border-background cursor-nw-resize rounded-full shadow-sm z-50"
+                            className="absolute -top-1.5 -left-1.5 z-50 h-3 w-3 cursor-nw-resize rounded-full border-2 border-background bg-primary shadow-sm"
                             onMouseDown={(e) => handleMouseDown(e, 'top-left')}
                         />
                     </>

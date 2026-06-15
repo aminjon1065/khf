@@ -86,53 +86,53 @@
  * for CTAs, deep-navy brand chrome (gov bar / hero / footer).
  */
 :root {
-    --background: #f8fafc;
-    --foreground: #0f172a;
+    --background: #fafafa;
+    --foreground: #171717;
     --card: #ffffff;
-    --card-foreground: #0f172a;
+    --card-foreground: #171717;
     --popover: #ffffff;
-    --popover-foreground: #0f172a;
-    --primary: #1f4e8c;
+    --popover-foreground: #171717;
+    --primary: #2563eb;
     --primary-foreground: #ffffff;
-    --secondary: #f1f5f9;
-    --secondary-foreground: #1f4e8c;
-    --muted: #f1f5f9;
-    --muted-foreground: #64748b;
-    --accent: #f1f5f9;
-    --accent-foreground: #1f4e8c;
+    --secondary: #f4f4f5;
+    --secondary-foreground: #171717;
+    --muted: #f4f4f5;
+    --muted-foreground: #737373;
+    --accent: #f4f4f5;
+    --accent-foreground: #171717;
     --signal: #ea580c;
     --signal-foreground: #ffffff;
-    --brand: #1f4e8c;
+    --brand: #2563eb;
     --brand-foreground: #ffffff;
-    --brand-strong: #0f2f5e;
+    --brand-strong: #1d4ed8;
     --brand-strong-foreground: #ffffff;
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
-    --border: #e2e8f0;
-    --input: #e2e8f0;
-    --ring: #1f4e8c;
-    --chart-1: #1f4e8c;
+    --border: #e5e5e5;
+    --input: #e5e5e5;
+    --ring: #2563eb;
+    --chart-1: #2563eb;
     --chart-2: #ea580c;
     --chart-3: #10b981;
     --chart-4: #f59e0b;
     --chart-5: #ef4444;
-    --radius: 0.75rem; /* softer, more modern radius */
+    --radius: 0.75rem;
 
-    /* WordPress-like dark sidebar for admin */
-    --sidebar: #1e293b;
-    --sidebar-foreground: #f8fafc;
-    --sidebar-primary: #3b82f6;
+    /* Clean, light sidebar matching modern edge-to-edge aesthetics */
+    --sidebar: #fafafa;
+    --sidebar-foreground: #171717;
+    --sidebar-primary: #2563eb;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #334155;
-    --sidebar-accent-foreground: #f8fafc;
-    --sidebar-border: #334155;
-    --sidebar-ring: #3b82f6;
+    --sidebar-accent: #e5e5e5;
+    --sidebar-accent-foreground: #171717;
+    --sidebar-border: #e5e5e5;
+    --sidebar-ring: #2563eb;
 
     /* Hazard levels (ТЗ Приложение Г). */
     --hazard-normal: #10b981;
     --hazard-normal-foreground: #ffffff;
     --hazard-elevated: #f59e0b;
-    --hazard-elevated-foreground: #0f172a;
+    --hazard-elevated-foreground: #171717;
     --hazard-danger: #f97316;
     --hazard-danger-foreground: #ffffff;
     --hazard-critical: #ef4444;
@@ -141,30 +141,30 @@
 
 /* Dark theme */
 .dark {
-    --background: #0b1120;
-    --foreground: #f8fafc;
-    --card: #0f172a;
-    --card-foreground: #f8fafc;
-    --popover: #0f172a;
-    --popover-foreground: #f8fafc;
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --card: #141414;
+    --card-foreground: #ededed;
+    --popover: #141414;
+    --popover-foreground: #ededed;
     --primary: #3b82f6;
-    --primary-foreground: #0f172a;
-    --secondary: #1e293b;
-    --secondary-foreground: #f8fafc;
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-    --accent: #1e293b;
-    --accent-foreground: #f8fafc;
+    --primary-foreground: #ffffff;
+    --secondary: #262626;
+    --secondary-foreground: #ededed;
+    --muted: #262626;
+    --muted-foreground: #a3a3a3;
+    --accent: #262626;
+    --accent-foreground: #ededed;
     --signal: #fb923c;
-    --signal-foreground: #0f172a;
-    --brand: #1f4e8c;
+    --signal-foreground: #0a0a0a;
+    --brand: #3b82f6;
     --brand-foreground: #ffffff;
-    --brand-strong: #0a2348;
+    --brand-strong: #2563eb;
     --brand-strong-foreground: #ffffff;
     --destructive: #f87171;
-    --destructive-foreground: #0f172a;
-    --border: #1e293b;
-    --input: #1e293b;
+    --destructive-foreground: #0a0a0a;
+    --border: #262626;
+    --input: #262626;
     --ring: #3b82f6;
     --chart-1: #3b82f6;
     --chart-2: #fb923c;
@@ -172,14 +172,14 @@
     --chart-4: #fbbf24;
     --chart-5: #f87171;
 
-    /* Dark mode sidebar */
-    --sidebar: #0b1120;
-    --sidebar-foreground: #f8fafc;
+    /* Dark mode sidebar (Vercel/Linear style) */
+    --sidebar: #0a0a0a;
+    --sidebar-foreground: #ededed;
     --sidebar-primary: #3b82f6;
-    --sidebar-primary-foreground: #0f172a;
-    --sidebar-accent: #1e293b;
-    --sidebar-accent-foreground: #f8fafc;
-    --sidebar-border: #1e293b;
+    --sidebar-primary-foreground: #0a0a0a;
+    --sidebar-accent: #262626;
+    --sidebar-accent-foreground: #ededed;
+    --sidebar-border: #262626;
     --sidebar-ring: #3b82f6;
 }
 

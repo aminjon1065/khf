@@ -96,7 +96,8 @@ export default function AuditLogsIndex({ logs, filters, events }: PageProps) {
                         Журнал аудита
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Действия в CMS и события безопасности — только для чтения
+                        Действия в CMS и события безопасности — только для
+                        чтения
                     </p>
                 </div>
 
@@ -121,7 +122,9 @@ export default function AuditLogsIndex({ logs, filters, events }: PageProps) {
                     <Select
                         value={filters.event ?? 'all'}
                         onValueChange={(value) =>
-                            apply({ event: value === 'all' ? undefined : value })
+                            apply({
+                                event: value === 'all' ? undefined : value,
+                            })
                         }
                     >
                         <SelectTrigger className="bg-card sm:max-w-[200px]">
@@ -130,7 +133,10 @@ export default function AuditLogsIndex({ logs, filters, events }: PageProps) {
                         <SelectContent>
                             <SelectItem value="all">Все события</SelectItem>
                             {events.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
+                                <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                >
                                     {option.label}
                                 </SelectItem>
                             ))}
@@ -148,7 +154,10 @@ export default function AuditLogsIndex({ logs, filters, events }: PageProps) {
                         <SelectContent>
                             <SelectItem value="all">Все типы</SelectItem>
                             {logOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
+                                <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                >
                                     {option.label}
                                 </SelectItem>
                             ))}
@@ -160,19 +169,19 @@ export default function AuditLogsIndex({ logs, filters, events }: PageProps) {
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-muted/40 hover:bg-muted/40">
-                                <TableHead className="text-xs uppercase tracking-wide">
+                                <TableHead className="text-xs tracking-wide uppercase">
                                     Время
                                 </TableHead>
-                                <TableHead className="text-xs uppercase tracking-wide">
+                                <TableHead className="text-xs tracking-wide uppercase">
                                     Событие
                                 </TableHead>
-                                <TableHead className="text-xs uppercase tracking-wide">
+                                <TableHead className="text-xs tracking-wide uppercase">
                                     Детали
                                 </TableHead>
-                                <TableHead className="text-xs uppercase tracking-wide">
+                                <TableHead className="text-xs tracking-wide uppercase">
                                     Пользователь
                                 </TableHead>
-                                <TableHead className="hidden text-xs uppercase tracking-wide lg:table-cell">
+                                <TableHead className="hidden text-xs tracking-wide uppercase lg:table-cell">
                                     IP
                                 </TableHead>
                             </TableRow>
@@ -189,8 +198,11 @@ export default function AuditLogsIndex({ logs, filters, events }: PageProps) {
                                 </TableRow>
                             ) : (
                                 logs.data.map((log) => (
-                                    <TableRow key={log.id} className="hover:bg-muted/40">
-                                        <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                                    <TableRow
+                                        key={log.id}
+                                        className="hover:bg-muted/40"
+                                    >
+                                        <TableCell className="text-sm whitespace-nowrap text-muted-foreground">
                                             {log.created_at}
                                         </TableCell>
                                         <TableCell>
@@ -208,16 +220,20 @@ export default function AuditLogsIndex({ logs, filters, events }: PageProps) {
                                                 <div className="space-y-0.5">
                                                     <span className="text-sm">
                                                         {log.subject_label}
-                                                        {log.subject_id !== null && (
+                                                        {log.subject_id !==
+                                                            null && (
                                                             <span className="text-muted-foreground">
                                                                 {' '}
-                                                                #{log.subject_id}
+                                                                #
+                                                                {log.subject_id}
                                                             </span>
                                                         )}
                                                     </span>
                                                     {log.changes.length > 0 && (
                                                         <p className="text-xs text-muted-foreground">
-                                                            {log.changes.join(', ')}
+                                                            {log.changes.join(
+                                                                ', ',
+                                                            )}
                                                         </p>
                                                     )}
                                                 </div>
@@ -262,7 +278,8 @@ export default function AuditLogsIndex({ logs, filters, events }: PageProps) {
                             size="sm"
                             disabled={!logs.prev_page_url}
                             onClick={() =>
-                                logs.prev_page_url && router.get(logs.prev_page_url)
+                                logs.prev_page_url &&
+                                router.get(logs.prev_page_url)
                             }
                         >
                             Назад
@@ -272,7 +289,8 @@ export default function AuditLogsIndex({ logs, filters, events }: PageProps) {
                             size="sm"
                             disabled={!logs.next_page_url}
                             onClick={() =>
-                                logs.next_page_url && router.get(logs.next_page_url)
+                                logs.next_page_url &&
+                                router.get(logs.next_page_url)
                             }
                         >
                             Вперёд

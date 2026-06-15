@@ -19,7 +19,12 @@ type ImageCropModalProps = {
     onCropComplete: (croppedBlob: Blob) => void;
 };
 
-export function ImageCropModal({ isOpen, onClose, imageUrl, onCropComplete }: ImageCropModalProps) {
+export function ImageCropModal({
+    isOpen,
+    onClose,
+    imageUrl,
+    onCropComplete,
+}: ImageCropModalProps) {
     const [crop, setCrop] = useState<Crop>({
         unit: '%',
         x: 10,
@@ -31,7 +36,10 @@ export function ImageCropModal({ isOpen, onClose, imageUrl, onCropComplete }: Im
     const imgRef = useRef<HTMLImageElement>(null);
     const [isCropping, setIsCropping] = useState(false);
 
-    const getCroppedImg = async (image: HTMLImageElement, crop: PixelCrop): Promise<Blob> => {
+    const getCroppedImg = async (
+        image: HTMLImageElement,
+        crop: PixelCrop,
+    ): Promise<Blob> => {
         const canvas = document.createElement('canvas');
         const scaleX = image.naturalWidth / image.width;
         const scaleY = image.naturalHeight / image.height;
@@ -52,7 +60,7 @@ export function ImageCropModal({ isOpen, onClose, imageUrl, onCropComplete }: Im
             0,
             0,
             crop.width,
-            crop.height
+            crop.height,
         );
 
         return new Promise((resolve, reject) => {
@@ -67,15 +75,15 @@ export function ImageCropModal({ isOpen, onClose, imageUrl, onCropComplete }: Im
                     resolve(blob);
                 },
                 'image/jpeg',
-                0.95
+                0.95,
             );
         });
     };
 
     const handleSave = async () => {
         if (!completedCrop || !imgRef.current) {
-return;
-}
+            return;
+        }
 
         setIsCropping(true);
 
@@ -92,12 +100,12 @@ return;
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col">
+            <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Обрезать изображение</DialogTitle>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-auto bg-muted/50 flex items-center justify-center p-4 rounded-md">
+                <div className="flex flex-1 items-center justify-center overflow-auto rounded-md bg-muted/50 p-4">
                     {imageUrl ? (
                         <ReactCrop
                             crop={crop}
@@ -108,7 +116,7 @@ return;
                                 ref={imgRef}
                                 alt="Crop me"
                                 src={imageUrl}
-                                className="max-w-full max-h-[60vh] object-contain"
+                                className="max-h-[60vh] max-w-full object-contain"
                                 crossOrigin="anonymous" // needed if images are on different domains/CORS
                             />
                         </ReactCrop>
@@ -118,11 +126,20 @@ return;
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose} disabled={isCropping}>
+                    <Button
+                        variant="outline"
+                        onClick={onClose}
+                        disabled={isCropping}
+                    >
                         Отмена
                     </Button>
-                    <Button onClick={handleSave} disabled={!completedCrop || isCropping}>
-                        {isCropping && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button
+                        onClick={handleSave}
+                        disabled={!completedCrop || isCropping}
+                    >
+                        {isCropping && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
                         Сохранить копию
                     </Button>
                 </DialogFooter>

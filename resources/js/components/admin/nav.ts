@@ -46,41 +46,110 @@ export const navGroups: AdminNavGroup[] = [
     {
         label: 'Обзор',
         items: [
-            { title: 'Панель управления', href: adminDashboard(), icon: LayoutDashboard },
+            {
+                title: 'Панель управления',
+                href: adminDashboard(),
+                icon: LayoutDashboard,
+            },
         ],
     },
     {
         label: 'Контент',
         items: [
-            { title: 'Новости', href: postsIndex(), icon: Newspaper, permission: 'posts.manage' },
-            { title: 'Страницы', href: pagesIndex(), icon: FileText, permission: 'pages.manage' },
-            { title: 'Рубрики', href: categoriesIndex(), icon: FolderTree, permission: 'categories.manage' },
+            {
+                title: 'Новости',
+                href: postsIndex(),
+                icon: Newspaper,
+                permission: 'posts.manage',
+            },
+            {
+                title: 'Страницы',
+                href: pagesIndex(),
+                icon: FileText,
+                permission: 'pages.manage',
+            },
+            {
+                title: 'Рубрики',
+                href: categoriesIndex(),
+                icon: FolderTree,
+                permission: 'categories.manage',
+            },
             { title: 'Медиабиблиотека', href: mediaIndex(), icon: Image },
-            { title: 'Документы', href: documentsIndex(), icon: FileText, permission: 'documents.manage' },
-            { title: 'Памятки', href: guidesIndex(), icon: BookOpen, permission: 'guides.manage' },
+            {
+                title: 'Документы',
+                href: documentsIndex(),
+                icon: FileText,
+                permission: 'documents.manage',
+            },
+            {
+                title: 'Памятки',
+                href: guidesIndex(),
+                icon: BookOpen,
+                permission: 'guides.manage',
+            },
         ],
     },
     {
         label: 'Чрезвычайные ситуации',
         items: [
-            { title: 'События ЧС', href: incidentsIndex(), icon: TriangleAlert, permission: 'incidents.manage' },
-            { title: 'Оповещения', href: alertsIndex(), icon: Bell, permission: 'alerts.manage' },
+            {
+                title: 'События ЧС',
+                href: incidentsIndex(),
+                icon: TriangleAlert,
+                permission: 'incidents.manage',
+            },
+            {
+                title: 'Оповещения',
+                href: alertsIndex(),
+                icon: Bell,
+                permission: 'alerts.manage',
+            },
         ],
     },
     {
         label: 'Сервисы',
         items: [
-            { title: 'Обращения', href: appealsIndex(), icon: Inbox, permission: 'appeals.manage' },
-            { title: 'Тургруппы', href: touristGroupsIndex(), icon: Mountain, permission: 'tourist-groups.manage' },
-            { title: 'Подписчики', href: subscribersIndex(), icon: Mail, permission: 'subscribers.manage' },
+            {
+                title: 'Обращения',
+                href: appealsIndex(),
+                icon: Inbox,
+                permission: 'appeals.manage',
+            },
+            {
+                title: 'Тургруппы',
+                href: touristGroupsIndex(),
+                icon: Mountain,
+                permission: 'tourist-groups.manage',
+            },
+            {
+                title: 'Подписчики',
+                href: subscribersIndex(),
+                icon: Mail,
+                permission: 'subscribers.manage',
+            },
         ],
     },
     {
         label: 'Система',
         items: [
-            { title: 'Пользователи', href: usersIndex(), icon: Users, permission: 'users.manage' },
-            { title: 'Языки', href: languagesIndex(), icon: Languages, permission: 'settings.manage' },
-            { title: 'Журнал аудита', href: auditLogsIndex(), icon: ScrollText, permission: 'audit.view' },
+            {
+                title: 'Пользователи',
+                href: usersIndex(),
+                icon: Users,
+                permission: 'users.manage',
+            },
+            {
+                title: 'Языки',
+                href: languagesIndex(),
+                icon: Languages,
+                permission: 'settings.manage',
+            },
+            {
+                title: 'Журнал аудита',
+                href: auditLogsIndex(),
+                icon: ScrollText,
+                permission: 'audit.view',
+            },
         ],
     },
 ];

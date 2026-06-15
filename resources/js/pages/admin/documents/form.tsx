@@ -119,13 +119,21 @@ export default function DocumentForm({
                         <CpPanel title="Публикация">
                             <div className="space-y-2">
                                 <Label htmlFor="type">Тип</Label>
-                                <Select value={form.data.type} onValueChange={(value) => form.setData('type', value)}>
+                                <Select
+                                    value={form.data.type}
+                                    onValueChange={(value) =>
+                                        form.setData('type', value)
+                                    }
+                                >
                                     <SelectTrigger id="type">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {types.map((type) => (
-                                            <SelectItem key={type.value} value={type.value}>
+                                            <SelectItem
+                                                key={type.value}
+                                                value={type.value}
+                                            >
                                                 {type.label}
                                             </SelectItem>
                                         ))}
@@ -135,13 +143,21 @@ export default function DocumentForm({
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="status">Статус</Label>
-                                <Select value={form.data.status} onValueChange={(value) => form.setData('status', value)}>
+                                <Select
+                                    value={form.data.status}
+                                    onValueChange={(value) =>
+                                        form.setData('status', value)
+                                    }
+                                >
                                     <SelectTrigger id="status">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {statuses.map((status) => (
-                                            <SelectItem key={status.value} value={status.value}>
+                                            <SelectItem
+                                                key={status.value}
+                                                value={status.value}
+                                            >
                                                 {status.label}
                                             </SelectItem>
                                         ))}
@@ -150,12 +166,19 @@ export default function DocumentForm({
                                 <InputError message={errors.status} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="document_date">Дата документа</Label>
+                                <Label htmlFor="document_date">
+                                    Дата документа
+                                </Label>
                                 <Input
                                     id="document_date"
                                     type="date"
                                     value={form.data.document_date}
-                                    onChange={(event) => form.setData('document_date', event.target.value)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'document_date',
+                                            event.target.value,
+                                        )
+                                    }
                                 />
                                 <InputError message={errors.document_date} />
                             </div>
@@ -164,7 +187,12 @@ export default function DocumentForm({
                                 <Input
                                     id="source"
                                     value={form.data.source}
-                                    onChange={(event) => form.setData('source', event.target.value)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'source',
+                                            event.target.value,
+                                        )
+                                    }
                                 />
                                 <InputError message={errors.source} />
                             </div>
@@ -187,14 +215,23 @@ export default function DocumentForm({
                                             >
                                                 {file.name}
                                             </a>
-                                            <span className="text-muted-foreground">{file.size}</span>
+                                            <span className="text-muted-foreground">
+                                                {file.size}
+                                            </span>
                                             <Button
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon"
                                                 aria-label="Убрать файл"
                                                 onClick={() =>
-                                                    form.setData('remove_files', [...form.data.remove_files, file.id])
+                                                    form.setData(
+                                                        'remove_files',
+                                                        [
+                                                            ...form.data
+                                                                .remove_files,
+                                                            file.id,
+                                                        ],
+                                                    )
                                                 }
                                             >
                                                 <X className="size-4" />
@@ -207,11 +244,19 @@ export default function DocumentForm({
                                 type="file"
                                 multiple
                                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.jpg,.jpeg,.png"
-                                onChange={(event) => form.setData('files', Array.from(event.target.files ?? []))}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'files',
+                                        Array.from(event.target.files ?? []),
+                                    )
+                                }
                             />
-                            <InputError message={errors['files.0'] ?? errors.files} />
+                            <InputError
+                                message={errors['files.0'] ?? errors.files}
+                            />
                             <p className="text-xs text-muted-foreground">
-                                До 20 МБ на файл. PDF, Word, Excel, PowerPoint, изображения, архивы.
+                                До 20 МБ на файл. PDF, Word, Excel, PowerPoint,
+                                изображения, архивы.
                             </p>
                         </CpPanel>
                     </>
@@ -221,18 +266,28 @@ export default function DocumentForm({
                     locales={locales}
                     active={activeLocale}
                     onChange={setActiveLocale}
-                    isComplete={(code) => Boolean(form.data.translations[code]?.name)}
+                    isComplete={(code) =>
+                        Boolean(form.data.translations[code]?.name)
+                    }
                 />
 
                 <div>
                     <input
                         aria-label="Наименование"
                         value={active.name}
-                        onChange={(event) => setTranslation(activeLocale, 'name', event.target.value)}
+                        onChange={(event) =>
+                            setTranslation(
+                                activeLocale,
+                                'name',
+                                event.target.value,
+                            )
+                        }
                         placeholder="Наименование документа"
-                        className="w-full border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                        className="w-full rounded-sm border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
-                    <InputError message={errors[`translations.${activeLocale}.name`]} />
+                    <InputError
+                        message={errors[`translations.${activeLocale}.name`]}
+                    />
                 </div>
 
                 <CpPanel title="Описание">
@@ -242,9 +297,21 @@ export default function DocumentForm({
                             id="description"
                             rows={5}
                             value={active.description}
-                            onChange={(event) => setTranslation(activeLocale, 'description', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'description',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.description`]} />
+                        <InputError
+                            message={
+                                errors[
+                                    `translations.${activeLocale}.description`
+                                ]
+                            }
+                        />
                     </div>
                 </CpPanel>
             </CpPublishForm>

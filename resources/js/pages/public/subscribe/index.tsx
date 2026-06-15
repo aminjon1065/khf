@@ -270,7 +270,10 @@ export default function Subscribe({
                                     </label>
                                 ))}
                             </div>
-                            <InputError id="topics-error" message={errors.topics} />
+                            <InputError
+                                id="topics-error"
+                                message={errors.topics}
+                            />
                         </fieldset>
 
                         <div className="space-y-2">
@@ -342,9 +345,16 @@ export default function Subscribe({
                                         }
                                         placeholder="your@email.com"
                                         aria-invalid={!!errors.email}
-                                        aria-describedby={errors.email ? 'email-error' : undefined}
+                                        aria-describedby={
+                                            errors.email
+                                                ? 'email-error'
+                                                : undefined
+                                        }
                                     />
-                                    <InputError id="email-error" message={errors.email} />
+                                    <InputError
+                                        id="email-error"
+                                        message={errors.email}
+                                    />
                                 </div>
                                 <label className="flex items-start gap-2 text-sm">
                                     <Checkbox

@@ -5,7 +5,11 @@ import { toast } from 'sonner';
 import { ImageCropModal } from '@/components/admin/image-crop-modal';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes/admin';
-import { index as mediaIndex, store as mediaStore, destroy as mediaDestroy } from '@/routes/admin/media';
+import {
+    index as mediaIndex,
+    store as mediaStore,
+    destroy as mediaDestroy,
+} from '@/routes/admin/media';
 
 type MediaItem = {
     id: number;
@@ -29,7 +33,10 @@ type Props = {
 export default function MediaLibraryIndex({ mediaFiles }: Props) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
-    const [cropImage, setCropImage] = useState<{ id: number; url: string } | null>(null);
+    const [cropImage, setCropImage] = useState<{
+        id: number;
+        url: string;
+    } | null>(null);
 
     const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (!event.target.files || event.target.files.length === 0) {
@@ -66,7 +73,10 @@ export default function MediaLibraryIndex({ mediaFiles }: Props) {
 
     const handleCropComplete = (blob: Blob) => {
         const formData = new FormData();
-        formData.append('file', new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' }));
+        formData.append(
+            'file',
+            new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' }),
+        );
 
         router.post(mediaStore().url, formData, {
             preserveScroll: true,
@@ -84,16 +94,26 @@ export default function MediaLibraryIndex({ mediaFiles }: Props) {
 
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Медиабиблиотека</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                        Медиабиблиотека
+                    </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
                         Управление медиафайлами (изображения, документы)
                     </p>
                 </div>
-                <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                >
                     <UploadCloud className="size-4" />
                     {uploading ? 'Загрузка…' : 'Добавить файл'}
                 </Button>
-                <input type="file" className="hidden" ref={fileInputRef} onChange={handleUpload} />
+                <input
+                    type="file"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleUpload}
+                />
             </div>
 
             <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
@@ -111,7 +131,9 @@ export default function MediaLibraryIndex({ mediaFiles }: Props) {
                             }
 
                             const isImage =
-                                mediaItem.original_url.match(/\.(jpeg|jpg|gif|png|webp|avif)$/i) != null;
+                                mediaItem.original_url.match(
+                                    /\.(jpeg|jpg|gif|png|webp|avif)$/i,
+                                ) != null;
 
                             return (
                                 <div
@@ -125,8 +147,10 @@ export default function MediaLibraryIndex({ mediaFiles }: Props) {
                                             className="size-full object-cover transition-transform group-hover:scale-105"
                                         />
                                     ) : (
-                                        <div className="flex size-full flex-col items-center justify-center break-all p-2 text-center text-sm text-muted-foreground">
-                                            <div className="mb-2 font-bold">DOC</div>
+                                        <div className="flex size-full flex-col items-center justify-center p-2 text-center text-sm break-all text-muted-foreground">
+                                            <div className="mb-2 font-bold">
+                                                DOC
+                                            </div>
                                             {file.name}
                                         </div>
                                     )}
@@ -137,7 +161,12 @@ export default function MediaLibraryIndex({ mediaFiles }: Props) {
                                                 variant="secondary"
                                                 size="sm"
                                                 className="w-24"
-                                                onClick={() => setCropImage({ id: file.id, url: mediaItem.original_url })}
+                                                onClick={() =>
+                                                    setCropImage({
+                                                        id: file.id,
+                                                        url: mediaItem.original_url,
+                                                    })
+                                                }
                                             >
                                                 <Scissors className="size-4" />
                                                 Кроп
@@ -147,7 +176,9 @@ export default function MediaLibraryIndex({ mediaFiles }: Props) {
                                             variant="destructive"
                                             size="sm"
                                             className="w-24"
-                                            onClick={() => handleDelete(file.id)}
+                                            onClick={() =>
+                                                handleDelete(file.id)
+                                            }
                                         >
                                             <Trash2 className="size-4" />
                                             Удалить

@@ -10,14 +10,15 @@ type SeoMetaFieldsProps = {
 
 export function SeoMetaFields({ data, setData, errors }: SeoMetaFieldsProps) {
     return (
-        <div className="space-y-4 rounded-md border p-4 bg-muted/50">
+        <div className="space-y-4 rounded-md border bg-muted/50 p-4">
             <div>
                 <h3 className="text-lg font-medium">SEO Настройки</h3>
                 <p className="text-sm text-muted-foreground">
-                    Оставьте поля пустыми, чтобы использовать автогенерацию из заголовка и контента.
+                    Оставьте поля пустыми, чтобы использовать автогенерацию из
+                    заголовка и контента.
                 </p>
             </div>
-            
+
             <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                     <Label htmlFor="meta_title">Meta Title</Label>
@@ -25,12 +26,17 @@ export function SeoMetaFields({ data, setData, errors }: SeoMetaFieldsProps) {
                         id="meta_title"
                         value={data.seo_meta?.meta_title ?? ''}
                         onChange={(e) =>
-                            setData('seo_meta', { ...data.seo_meta, meta_title: e.target.value })
+                            setData('seo_meta', {
+                                ...data.seo_meta,
+                                meta_title: e.target.value,
+                            })
                         }
                         placeholder="Оптимально 50-60 символов"
                     />
                     {errors['seo_meta.meta_title'] && (
-                        <p className="text-sm text-destructive">{errors['seo_meta.meta_title']}</p>
+                        <p className="text-sm text-destructive">
+                            {errors['seo_meta.meta_title']}
+                        </p>
                     )}
                 </div>
 
@@ -40,7 +46,10 @@ export function SeoMetaFields({ data, setData, errors }: SeoMetaFieldsProps) {
                         id="og_image"
                         value={data.seo_meta?.og_image ?? ''}
                         onChange={(e) =>
-                            setData('seo_meta', { ...data.seo_meta, og_image: e.target.value })
+                            setData('seo_meta', {
+                                ...data.seo_meta,
+                                og_image: e.target.value,
+                            })
                         }
                         placeholder="https://example.com/image.jpg"
                     />
@@ -53,7 +62,10 @@ export function SeoMetaFields({ data, setData, errors }: SeoMetaFieldsProps) {
                     id="meta_description"
                     value={data.seo_meta?.meta_description ?? ''}
                     onChange={(e) =>
-                        setData('seo_meta', { ...data.seo_meta, meta_description: e.target.value })
+                        setData('seo_meta', {
+                            ...data.seo_meta,
+                            meta_description: e.target.value,
+                        })
                     }
                     placeholder="Оптимально 150-160 символов"
                     rows={3}

@@ -25,7 +25,11 @@ type MediaLibraryModalProps = {
     onSelect: (url: string) => void;
 };
 
-export function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLibraryModalProps) {
+export function MediaLibraryModal({
+    isOpen,
+    onClose,
+    onSelect,
+}: MediaLibraryModalProps) {
     const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -50,8 +54,8 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLibraryMod
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) {
-return;
-}
+            return;
+        }
 
         const file = e.target.files[0];
 
@@ -64,8 +68,13 @@ return;
             const res = await fetch('/admin/media', {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN':
+                        (
+                            document.querySelector(
+                                'meta[name="csrf-token"]',
+                            ) as HTMLMetaElement
+                        )?.content || '',
                 },
                 body: formData,
             });
@@ -84,7 +93,7 @@ return;
 
     const handleInsert = () => {
         if (selectedId) {
-            const file = mediaFiles.find(m => m.id === selectedId);
+            const file = mediaFiles.find((m) => m.id === selectedId);
 
             if (file && file.media && file.media.length > 0) {
                 onSelect(file.media[0].original_url);
@@ -96,15 +105,23 @@ return;
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+            <DialogContent className="flex h-[80vh] max-w-4xl flex-col">
                 <DialogHeader>
                     <DialogTitle>Медиабиблиотека</DialogTitle>
                 </DialogHeader>
 
-                <div className="flex items-center justify-between py-2 border-b">
+                <div className="flex items-center justify-between border-b py-2">
                     <div>
-                        <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                            {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
+                        <Button
+                            variant="outline"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploading}
+                        >
+                            {uploading ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <UploadCloud className="mr-2 h-4 w-4" />
+                            )}
                             Загрузить файл
                         </Button>
                         <input
@@ -119,47 +136,54 @@ return;
 
                 <div className="flex-1 overflow-y-auto py-4">
                     {loading ? (
-                        <div className="flex items-center justify-center h-full">
+                        <div className="flex h-full items-center justify-center">
                             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                         </div>
                     ) : mediaFiles.length === 0 ? (
-                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                        <div className="flex h-full items-center justify-center text-muted-foreground">
                             Медиафайлы не найдены
                         </div>
                     ) : (
-                        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4">
+                        <div className="grid grid-cols-4 gap-4 sm:grid-cols-5 md:grid-cols-6">
                             {mediaFiles.map((file) => {
                                 const isSelected = selectedId === file.id;
                                 const mediaItem = file.media?.[0];
 
                                 if (!mediaItem) {
-return null;
-}
+                                    return null;
+                                }
 
-                                const isImage = mediaItem.original_url.match(/\.(jpeg|jpg|gif|png|webp|avif)$/i) != null;
+                                const isImage =
+                                    mediaItem.original_url.match(
+                                        /\.(jpeg|jpg|gif|png|webp|avif)$/i,
+                                    ) != null;
 
                                 return (
                                     <div
                                         key={file.id}
                                         onClick={() => setSelectedId(file.id)}
-                                        className={`relative cursor-pointer border-2 rounded-lg overflow-hidden aspect-square ${
-                                            isSelected ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-transparent hover:border-border'
+                                        className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg border-2 ${
+                                            isSelected
+                                                ? 'border-primary ring-2 ring-primary ring-offset-2'
+                                                : 'border-transparent hover:border-border'
                                         }`}
                                     >
                                         {isImage ? (
                                             <img
                                                 src={mediaItem.original_url}
                                                 alt={file.name}
-                                                className="w-full h-full object-cover"
+                                                className="h-full w-full object-cover"
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex flex-col items-center justify-center bg-muted text-muted-foreground p-2 text-center text-xs break-all">
-                                                <div className="font-bold mb-1 text-sm">DOC</div>
+                                            <div className="flex h-full w-full flex-col items-center justify-center bg-muted p-2 text-center text-xs break-all text-muted-foreground">
+                                                <div className="mb-1 text-sm font-bold">
+                                                    DOC
+                                                </div>
                                                 {file.name}
                                             </div>
                                         )}
                                         {isSelected && (
-                                            <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-0.5">
+                                            <div className="absolute top-1 right-1 rounded-full bg-primary p-0.5 text-primary-foreground">
                                                 <Check className="h-4 w-4" />
                                             </div>
                                         )}

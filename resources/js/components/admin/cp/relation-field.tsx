@@ -37,7 +37,10 @@ export function CpRelationField({
 
     const selected = options.find((option) => option.id === value) ?? null;
     const q = query.trim().toLowerCase();
-    const filtered = q === '' ? options : options.filter((option) => option.name.toLowerCase().includes(q));
+    const filtered =
+        q === ''
+            ? options
+            : options.filter((option) => option.name.toLowerCase().includes(q));
 
     const choose = (next: number | null) => {
         onChange(next);
@@ -47,7 +50,9 @@ export function CpRelationField({
     return (
         <div className="space-y-2">
             <Label htmlFor={id}>{label}</Label>
-            {instructions && <p className="text-xs text-muted-foreground">{instructions}</p>}
+            {instructions && (
+                <p className="text-xs text-muted-foreground">{instructions}</p>
+            )}
 
             <div className="flex items-center gap-2">
                 <button
@@ -59,7 +64,13 @@ export function CpRelationField({
                     }}
                     className="flex flex-1 items-center justify-between gap-2 rounded-md border border-input bg-card px-3 py-2 text-sm transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
-                    <span className={cn(selected ? 'text-foreground' : 'text-muted-foreground')}>
+                    <span
+                        className={cn(
+                            selected
+                                ? 'text-foreground'
+                                : 'text-muted-foreground',
+                        )}
+                    >
                         {selected ? selected.name : placeholder}
                     </span>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
@@ -98,7 +109,8 @@ export function CpRelationField({
                                 onClick={() => choose(null)}
                                 className={cn(
                                     'flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted',
-                                    value === null && 'bg-primary/10 text-primary',
+                                    value === null &&
+                                        'bg-primary/10 text-primary',
                                 )}
                             >
                                 — Не выбрано —
@@ -112,11 +124,14 @@ export function CpRelationField({
                                     onClick={() => choose(option.id)}
                                     className={cn(
                                         'flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted',
-                                        value === option.id && 'bg-primary/10 text-primary',
+                                        value === option.id &&
+                                            'bg-primary/10 text-primary',
                                     )}
                                 >
                                     {option.name}
-                                    {value === option.id && <Check className="size-4" />}
+                                    {value === option.id && (
+                                        <Check className="size-4" />
+                                    )}
                                 </button>
                             </li>
                         ))}

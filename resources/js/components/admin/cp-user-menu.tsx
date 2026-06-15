@@ -31,7 +31,11 @@ export function CpUserMenu() {
                     <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
                 </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 rounded-lg" align="end" side="top">
+            <DropdownMenuContent
+                className="w-56 rounded-lg"
+                align="end"
+                side="top"
+            >
                 <UserMenuContent user={auth.user} />
             </DropdownMenuContent>
         </DropdownMenu>

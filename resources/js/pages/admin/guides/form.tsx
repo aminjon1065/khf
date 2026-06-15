@@ -131,13 +131,21 @@ export default function GuideForm({
                         <CpPanel title="Публикация">
                             <div className="space-y-2">
                                 <Label htmlFor="status">Статус</Label>
-                                <Select value={form.data.status} onValueChange={(value) => form.setData('status', value)}>
+                                <Select
+                                    value={form.data.status}
+                                    onValueChange={(value) =>
+                                        form.setData('status', value)
+                                    }
+                                >
                                     <SelectTrigger id="status">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {statuses.map((status) => (
-                                            <SelectItem key={status.value} value={status.value}>
+                                            <SelectItem
+                                                key={status.value}
+                                                value={status.value}
+                                            >
                                                 {status.label}
                                             </SelectItem>
                                         ))}
@@ -148,16 +156,30 @@ export default function GuideForm({
                             <div className="space-y-2">
                                 <Label htmlFor="hazard_type">Тип ЧС</Label>
                                 <Select
-                                    value={form.data.hazard_type ? form.data.hazard_type : 'none'}
-                                    onValueChange={(value) => form.setData('hazard_type', value === 'none' ? '' : value)}
+                                    value={
+                                        form.data.hazard_type
+                                            ? form.data.hazard_type
+                                            : 'none'
+                                    }
+                                    onValueChange={(value) =>
+                                        form.setData(
+                                            'hazard_type',
+                                            value === 'none' ? '' : value,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger id="hazard_type">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="none">Без привязки</SelectItem>
+                                        <SelectItem value="none">
+                                            Без привязки
+                                        </SelectItem>
                                         {hazardTypes.map((hazardType) => (
-                                            <SelectItem key={hazardType.value} value={hazardType.value}>
+                                            <SelectItem
+                                                key={hazardType.value}
+                                                value={hazardType.value}
+                                            >
                                                 {hazardType.label}
                                             </SelectItem>
                                         ))}
@@ -167,13 +189,21 @@ export default function GuideForm({
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="audience">Аудитория</Label>
-                                <Select value={form.data.audience} onValueChange={(value) => form.setData('audience', value)}>
+                                <Select
+                                    value={form.data.audience}
+                                    onValueChange={(value) =>
+                                        form.setData('audience', value)
+                                    }
+                                >
                                     <SelectTrigger id="audience">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {audiences.map((audience) => (
-                                            <SelectItem key={audience.value} value={audience.value}>
+                                            <SelectItem
+                                                key={audience.value}
+                                                value={audience.value}
+                                            >
                                                 {audience.label}
                                             </SelectItem>
                                         ))}
@@ -187,7 +217,12 @@ export default function GuideForm({
                                     id="sort_order"
                                     type="number"
                                     value={form.data.sort_order}
-                                    onChange={(event) => form.setData('sort_order', Number(event.target.value))}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'sort_order',
+                                            Number(event.target.value),
+                                        )
+                                    }
                                 />
                                 <InputError message={errors.sort_order} />
                             </div>
@@ -210,14 +245,23 @@ export default function GuideForm({
                                             >
                                                 {file.name}
                                             </a>
-                                            <span className="text-muted-foreground">{file.size}</span>
+                                            <span className="text-muted-foreground">
+                                                {file.size}
+                                            </span>
                                             <Button
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon"
                                                 aria-label="Убрать файл"
                                                 onClick={() =>
-                                                    form.setData('remove_files', [...form.data.remove_files, file.id])
+                                                    form.setData(
+                                                        'remove_files',
+                                                        [
+                                                            ...form.data
+                                                                .remove_files,
+                                                            file.id,
+                                                        ],
+                                                    )
                                                 }
                                             >
                                                 <X className="size-4" />
@@ -230,10 +274,19 @@ export default function GuideForm({
                                 type="file"
                                 multiple
                                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                onChange={(event) => form.setData('files', Array.from(event.target.files ?? []))}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'files',
+                                        Array.from(event.target.files ?? []),
+                                    )
+                                }
                             />
-                            <InputError message={errors['files.0'] ?? errors.files} />
-                            <p className="text-xs text-muted-foreground">До 20 МБ на файл. PDF, Word, изображения.</p>
+                            <InputError
+                                message={errors['files.0'] ?? errors.files}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                До 20 МБ на файл. PDF, Word, изображения.
+                            </p>
                         </CpPanel>
                     </>
                 }
@@ -242,18 +295,28 @@ export default function GuideForm({
                     locales={locales}
                     active={activeLocale}
                     onChange={setActiveLocale}
-                    isComplete={(code) => Boolean(form.data.translations[code]?.title)}
+                    isComplete={(code) =>
+                        Boolean(form.data.translations[code]?.title)
+                    }
                 />
 
                 <div>
                     <input
                         aria-label="Заголовок"
                         value={active.title}
-                        onChange={(event) => setTranslation(activeLocale, 'title', event.target.value)}
+                        onChange={(event) =>
+                            setTranslation(
+                                activeLocale,
+                                'title',
+                                event.target.value,
+                            )
+                        }
                         placeholder="Заголовок памятки"
-                        className="w-full border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                        className="w-full rounded-sm border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
-                    <InputError message={errors[`translations.${activeLocale}.title`]} />
+                    <InputError
+                        message={errors[`translations.${activeLocale}.title`]}
+                    />
                 </div>
 
                 <CpPanel title="Содержание">
@@ -263,24 +326,46 @@ export default function GuideForm({
                             id="slug"
                             value={active.slug}
                             placeholder="оставьте пустым для авто"
-                            onChange={(event) => setTranslation(activeLocale, 'slug', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'slug',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.slug`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.slug`]
+                            }
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="summary">Краткое описание</Label>
                         <Input
                             id="summary"
                             value={active.summary}
-                            onChange={(event) => setTranslation(activeLocale, 'summary', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'summary',
+                                    event.target.value,
+                                )
+                            }
                         />
-                        <InputError message={errors[`translations.${activeLocale}.summary`]} />
+                        <InputError
+                            message={
+                                errors[`translations.${activeLocale}.summary`]
+                            }
+                        />
                     </div>
                     <CpRichTextField
                         label="Содержание"
                         editorKey={activeLocale}
                         value={active.content}
-                        onChange={(html) => setTranslation(activeLocale, 'content', html)}
+                        onChange={(html) =>
+                            setTranslation(activeLocale, 'content', html)
+                        }
                         error={errors[`translations.${activeLocale}.content`]}
                     />
                 </CpPanel>
@@ -291,7 +376,13 @@ export default function GuideForm({
                         <Input
                             id="seo_title"
                             value={active.seo_title}
-                            onChange={(event) => setTranslation(activeLocale, 'seo_title', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'seo_title',
+                                    event.target.value,
+                                )
+                            }
                         />
                     </div>
                     <div className="space-y-2">
@@ -299,7 +390,13 @@ export default function GuideForm({
                         <Input
                             id="seo_description"
                             value={active.seo_description}
-                            onChange={(event) => setTranslation(activeLocale, 'seo_description', event.target.value)}
+                            onChange={(event) =>
+                                setTranslation(
+                                    activeLocale,
+                                    'seo_description',
+                                    event.target.value,
+                                )
+                            }
                         />
                     </div>
                 </CpPanel>
