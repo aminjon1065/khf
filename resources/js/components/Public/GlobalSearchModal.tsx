@@ -4,6 +4,10 @@ import {
     FileText,
     Info,
     BookOpen,
+    Briefcase,
+    Gavel,
+    Users,
+    Building2,
     AlertCircle,
     Loader2,
 } from 'lucide-react';
@@ -123,6 +127,31 @@ export function GlobalSearchModal({
                         aria-hidden="true"
                     />
                 );
+            case 'vacancy':
+                return (
+                    <Briefcase
+                        className="size-4 text-primary"
+                        aria-hidden="true"
+                    />
+                );
+            case 'tender':
+                return (
+                    <Gavel
+                        className="size-4 text-amber-600"
+                        aria-hidden="true"
+                    />
+                );
+            case 'leader':
+                return (
+                    <Users className="size-4 text-sky-600" aria-hidden="true" />
+                );
+            case 'subdivision':
+                return (
+                    <Building2
+                        className="size-4 text-slate-600"
+                        aria-hidden="true"
+                    />
+                );
             default:
                 return <FileText className="size-4" aria-hidden="true" />;
         }
@@ -138,6 +167,14 @@ export function GlobalSearchModal({
                 return t('nav.documents');
             case 'guide':
                 return t('nav.guides');
+            case 'vacancy':
+                return t('nav.vacancies');
+            case 'tender':
+                return t('nav.tenders');
+            case 'leader':
+                return t('nav.leadership');
+            case 'subdivision':
+                return t('nav.structure');
             default:
                 return type;
         }

@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Phone } from 'lucide-react';
+import { AppEmblem } from '@/components/app-emblem';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/hooks/use-translations';
 import { welcome } from '@/routes';
@@ -25,6 +26,7 @@ export default function ErrorPage({ status }: PageProps) {
             <Head title={`${status} — ${title}`} />
 
             <div className="mx-auto flex max-w-xl flex-col items-center gap-4 py-16 text-center">
+                <AppEmblem className="size-20 mb-2" />
                 <p className="text-6xl font-semibold tracking-tight text-primary">
                     {status}
                 </p>

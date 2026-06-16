@@ -1,14 +1,20 @@
 import {
     Bell,
     BookOpen,
+    Briefcase,
+    ClipboardList,
+    Contact,
+    FileSignature,
     FileText,
     FolderTree,
+    Gavel,
     Image,
     Inbox,
     Languages,
     LayoutDashboard,
     Mail,
     Mountain,
+    Network,
     Newspaper,
     ScrollText,
     TriangleAlert,
@@ -23,12 +29,18 @@ import { index as documentsIndex } from '@/routes/admin/documents';
 import { index as guidesIndex } from '@/routes/admin/guides';
 import { index as incidentsIndex } from '@/routes/admin/incidents';
 import { index as languagesIndex } from '@/routes/admin/languages';
+import { index as leadershipIndex } from '@/routes/admin/leadership';
 import { index as mediaIndex } from '@/routes/admin/media';
 import { index as pagesIndex } from '@/routes/admin/pages';
 import { index as postsIndex } from '@/routes/admin/posts';
+import { index as structureIndex } from '@/routes/admin/structure';
 import { index as subscribersIndex } from '@/routes/admin/subscribers';
+import { index as tenderBidsIndex } from '@/routes/admin/tender-bids';
+import { index as tendersIndex } from '@/routes/admin/tenders';
 import { index as touristGroupsIndex } from '@/routes/admin/tourist-groups';
 import { index as usersIndex } from '@/routes/admin/users';
+import { index as vacanciesIndex } from '@/routes/admin/vacancies';
+import { index as vacancyApplicationsIndex } from '@/routes/admin/vacancy-applications';
 import type { NavItem } from '@/types';
 
 export type AdminNavItem = NavItem & { permission?: string };
@@ -50,6 +62,23 @@ export const navGroups: AdminNavGroup[] = [
                 title: 'Панель управления',
                 href: adminDashboard(),
                 icon: LayoutDashboard,
+            },
+        ],
+    },
+    {
+        label: 'Об организации',
+        items: [
+            {
+                title: 'Руководство',
+                href: leadershipIndex(),
+                icon: Contact,
+                permission: 'leadership.manage',
+            },
+            {
+                title: 'Структура',
+                href: structureIndex(),
+                icon: Network,
+                permission: 'structure.manage',
             },
         ],
     },
@@ -87,6 +116,18 @@ export const navGroups: AdminNavGroup[] = [
                 icon: BookOpen,
                 permission: 'guides.manage',
             },
+            {
+                title: 'Вакансии',
+                href: vacanciesIndex(),
+                icon: Briefcase,
+                permission: 'vacancies.manage',
+            },
+            {
+                title: 'Тендеры',
+                href: tendersIndex(),
+                icon: Gavel,
+                permission: 'tenders.manage',
+            },
         ],
     },
     {
@@ -120,6 +161,18 @@ export const navGroups: AdminNavGroup[] = [
                 href: touristGroupsIndex(),
                 icon: Mountain,
                 permission: 'tourist-groups.manage',
+            },
+            {
+                title: 'Заявки на вакансии',
+                href: vacancyApplicationsIndex(),
+                icon: ClipboardList,
+                permission: 'vacancy-applications.manage',
+            },
+            {
+                title: 'Заявки на тендеры',
+                href: tenderBidsIndex(),
+                icon: FileSignature,
+                permission: 'tender-bids.manage',
             },
             {
                 title: 'Подписчики',

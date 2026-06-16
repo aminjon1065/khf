@@ -115,7 +115,7 @@ export default function PublicContacts({ regions }: PageProps) {
                 </div>
             </section>
 
-            <section className="mb-10">
+            <section className="mb-10" id="regional-offices">
                 <h2 className="mb-4 text-xl font-semibold">
                     {t('contacts.regional_offices')}
                 </h2>

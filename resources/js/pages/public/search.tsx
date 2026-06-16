@@ -3,6 +3,10 @@ import {
     FileText,
     Info,
     BookOpen,
+    Briefcase,
+    Gavel,
+    Users,
+    Building2,
     AlertCircle,
     Search as SearchIcon,
 } from 'lucide-react';
@@ -37,6 +41,14 @@ export default function Search({
                 return <FileText className="size-5 text-orange-500" />;
             case 'guide':
                 return <BookOpen className="size-5 text-purple-500" />;
+            case 'vacancy':
+                return <Briefcase className="size-5 text-primary" />;
+            case 'tender':
+                return <Gavel className="size-5 text-amber-600" />;
+            case 'leader':
+                return <Users className="size-5 text-sky-600" />;
+            case 'subdivision':
+                return <Building2 className="size-5 text-slate-600" />;
             default:
                 return <FileText className="size-5" />;
         }
@@ -52,6 +64,14 @@ export default function Search({
                 return t('nav.documents');
             case 'guide':
                 return t('nav.guides');
+            case 'vacancy':
+                return t('nav.vacancies');
+            case 'tender':
+                return t('nav.tenders');
+            case 'leader':
+                return t('nav.leadership');
+            case 'subdivision':
+                return t('nav.structure');
             default:
                 return type;
         }

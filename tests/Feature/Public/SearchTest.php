@@ -1,9 +1,13 @@
 <?php
 
-use App\Models\Post;
-use App\Models\Page;
-
 use App\Enums\ContentStatus;
+use App\Models\Leader;
+use App\Models\Page;
+use App\Models\Post;
+use App\Models\Subdivision;
+use App\Models\Tender;
+use App\Models\Vacancy;
+use Inertia\Testing\AssertableInertia;
 
 it('returns search results from posts and pages', function () {
     $post = Post::factory()->create(['status' => ContentStatus::Published, 'published_at' => now()]);
@@ -51,7 +55,7 @@ it('filters out results that do not match the current locale', function () {
         'slug' => 'tornado-tj',
         'body' => 'Warning...',
     ]);
-    
+
     $post->translations()->create([
         'locale' => 'ru',
         'title' => 'Russian Tornado Warning',
@@ -77,11 +81,67 @@ it('returns short results if query is less than 2 characters', function () {
 
 it('renders the search page with inertia', function () {
     $response = $this->get('/tj/search?q=test');
-    
+
     $response->assertOk()
-        ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+        ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('public/search')
             ->has('results')
             ->where('query', 'test')
         );
+});
+
+it('returns published vacancies in search results', function () {
+    $vacancy = Vacancy::factory()->create(['status' => ContentStatus::Published, 'published_at' => now()]);
+    $vacancy->translations()->create([
+        'locale' => 'tj',
+        'title' => 'Rescue Inspector',
+        'slug' => 'rescue-inspector',
+        'summary' => 'Join the emergency service',
+        'description' => 'Full job description...',
+    ]);
+
+    $this->getJson('/tj/search/api?q=Inspector')
+        ->assertOk()
+        ->assertJsonFragment(['title' => 'Rescue Inspector', 'type' => 'vacancy']);
+});
+
+it('returns published tenders in search results', function () {
+    $tender = Tender::factory()->create(['status' => ContentStatus::Published, 'published_at' => now()]);
+    $tender->translations()->create([
+        'locale' => 'tj',
+        'title' => 'Excavator Procurement',
+        'slug' => 'excavator-procurement',
+        'summary' => 'Purchase of heavy machinery',
+        'description' => 'Full tender description...',
+    ]);
+
+    $this->getJson('/tj/search/api?q=Excavator')
+        ->assertOk()
+        ->assertJsonFragment(['title' => 'Excavator Procurement', 'type' => 'tender']);
+});
+
+it('returns published leaders in search results', function () {
+    $leader = Leader::factory()->create(['status' => ContentStatus::Published]);
+    $leader->translations()->create([
+        'locale' => 'tj',
+        'full_name' => 'Karim Rescuer',
+        'position' => 'Chief Inspector',
+    ]);
+
+    $this->getJson('/tj/search/api?q=Karim')
+        ->assertOk()
+        ->assertJsonFragment(['title' => 'Karim Rescuer', 'type' => 'leader']);
+});
+
+it('returns published subdivisions in search results', function () {
+    $subdivision = Subdivision::factory()->create(['status' => ContentStatus::Published]);
+    $subdivision->translations()->create([
+        'locale' => 'tj',
+        'name' => 'Rescue Operations Department',
+        'functions' => 'Coordinates rescue efforts',
+    ]);
+
+    $this->getJson('/tj/search/api?q=Rescue')
+        ->assertOk()
+        ->assertJsonFragment(['title' => 'Rescue Operations Department', 'type' => 'subdivision']);
 });

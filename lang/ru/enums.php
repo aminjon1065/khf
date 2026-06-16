@@ -43,6 +43,12 @@ return [
         'report' => 'Отчёты',
         'form' => 'Формы и бланки',
     ],
+    'employment_type' => [
+        'full_time' => 'Полная занятость',
+        'part_time' => 'Частичная занятость',
+        'contract' => 'По контракту',
+        'temporary' => 'Временная',
+    ],
     'hazard_level' => [
         'normal' => 'Норма',
         'elevated' => 'Повышенная готовность',
@@ -68,6 +74,12 @@ return [
         'press_release' => 'Пресс-релиз',
         'announcement' => 'Объявление',
         'summary' => 'Оперативная сводка',
+    ],
+    'tender_type' => [
+        'goods' => 'Товары',
+        'works' => 'Работы',
+        'services' => 'Услуги',
+        'consulting' => 'Консультационные услуги',
     ],
     'role' => [
         'super-admin' => 'Суперадминистратор',

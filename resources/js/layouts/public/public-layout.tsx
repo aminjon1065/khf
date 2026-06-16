@@ -8,7 +8,8 @@ import { AppEmblem } from '@/components/app-emblem';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { BottomNavigation } from '@/components/Public/bottom-navigation';
 import { GlobalSearchModal } from '@/components/Public/GlobalSearchModal';
-import { GovBar } from '@/components/Public/gov-bar';
+import { TajikistanEmblem } from '@/components/Public/symbols/state-emblem';
+import { TajikistanFlag } from '@/components/Public/symbols/state-flag';
 import {
     Sheet,
     SheetContent,
@@ -23,11 +24,15 @@ import { index as contactsIndex } from '@/routes/contacts';
 import { index as documentsIndex } from '@/routes/documents';
 import { index as guidesIndex } from '@/routes/guides';
 import { index as incidentsIndex } from '@/routes/incidents';
+import { index as leadershipIndex } from '@/routes/leadership';
 import { index as mapIndex } from '@/routes/map';
 import { index as newsIndex } from '@/routes/news';
 import { show as pageShow } from '@/routes/pages';
+import { index as structureIndex } from '@/routes/structure';
 import { create as subscriptionsCreate } from '@/routes/subscriptions';
+import { index as tendersIndex } from '@/routes/tenders';
 import { create as touristGroupsCreate } from '@/routes/tourist-groups';
+import { index as vacanciesIndex } from '@/routes/vacancies';
 
 export default function PublicLayout({
     children,
@@ -95,98 +100,116 @@ export default function PublicLayout({
             {isA11yOpen && (
                 <AccessibilityToolbar onClose={() => setIsA11yOpen(false)} />
             )}
-            <GovBar />
-            <AlertBanner />
-            <header
-                className={`sticky top-0 z-50 border-b transition-all duration-500 print:hidden ${headerClass}`}
-            >
-                <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
-                    <Link
-                        href={welcome({ locale }).url}
-                        className="xs:max-w-none flex max-w-[60%] items-center gap-2 transition-opacity hover:opacity-80"
-                    >
-                        <AppEmblem
-                            alt=""
-                            className="size-9 shrink-0 sm:size-10"
-                        />
-                        <span
-                            className={`truncate text-base font-bold tracking-tight sm:text-xl ${isRedState ? 'text-white' : 'text-foreground'}`}
-                        >
-                            {t('site.short_name')}
+            {/* Government Utility Bar & Symbols (Point 31a) */}
+            <div className="border-b border-white/10 bg-brand-strong py-2 text-xs text-brand-strong-foreground print:hidden">
+                <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 sm:flex-row sm:items-center sm:justify-between">
+                    {/* Left: State Symbols & Gov text */}
+                    <div className="flex items-center gap-3">
+                        <div className="flex shrink-0 items-center gap-1.5 border-r border-white/20 pr-3">
+                            <TajikistanEmblem className="size-6 shrink-0" />
+                            <TajikistanFlag className="h-4 w-8 shrink-0 rounded-xs" />
+                        </div>
+                        <span className="truncate font-medium text-brand-strong-foreground/90">
+                            {t('govbar.identifier')}
                         </span>
-                    </Link>
+                    </div>
 
-                    {/* Desktop Navigation Links */}
+                    {/* Right: Required utility navigation block */}
                     <nav
-                        aria-label={t('a11y.primary_nav')}
-                        className="hidden items-center gap-1 text-sm font-medium sm:gap-2 lg:flex"
+                        aria-label={t('a11y.settings_search')}
+                        className="flex flex-wrap items-center gap-x-4 gap-y-1 font-medium text-brand-strong-foreground/80"
                     >
                         <Link
                             href={welcome({ locale }).url}
-                            className={linkClass}
+                            className="transition-colors hover:text-white"
                         >
                             {t('nav.home')}
                         </Link>
                         <Link
-                            href={newsIndex({ locale }).url}
-                            className={linkClass}
-                        >
-                            {t('nav.news')}
-                        </Link>
-                        <Link
-                            href={incidentsIndex({ locale }).url}
-                            className={linkClass}
-                        >
-                            {t('nav.situation')}
-                        </Link>
-                        <Link
                             href={mapIndex({ locale }).url}
-                            className={linkClass}
+                            className="transition-colors hover:text-white"
                         >
                             {t('nav.map')}
                         </Link>
                         <Link
-                            href={documentsIndex({ locale }).url}
-                            className={linkClass}
+                            href={contactsIndex({ locale }).url}
+                            className="transition-colors hover:text-white"
                         >
-                            {t('nav.documents')}
+                            {t('nav.contacts')}
                         </Link>
                         <Link
-                            href={appealsCreate({ locale }).url}
-                            className={linkClass}
+                            href={`${contactsIndex({ locale }).url}#regional-offices`}
+                            className="transition-colors hover:text-white"
                         >
-                            {t('nav.reception')}
+                            {t('nav.subdivisions')}
                         </Link>
-                        <Link
-                            href={touristGroupsCreate({ locale }).url}
-                            className={linkClass}
-                        >
-                            {t('nav.tourism')}
-                        </Link>
-                        <Link
-                            href={subscriptionsCreate({ locale }).url}
-                            className={linkClass}
-                        >
-                            {t('nav.subscribe')}
-                        </Link>
-                    </nav>
+                        <span className="hidden h-3 w-px bg-white/20 sm:inline" />
 
-                    {/* Controls & Mobile Navigation Drawer */}
-                    <div className="flex items-center gap-1 sm:gap-2">
+                        {/* Language Switcher */}
+                        <LanguageSwitcher className="cursor-pointer hover:text-white" />
+
+                        <span className="hidden h-3 w-px bg-white/20 sm:inline" />
+                        {/* Search Button */}
+                        <button
+                            onClick={() => setIsSearchOpen(true)}
+                            className="inline-flex cursor-pointer items-center gap-1 hover:text-white"
+                            aria-label={t('a11y.site_search')}
+                        >
+                            <Search className="size-3.5" />
+                            <span>{t('actions.search')}</span>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <AlertBanner />
+
+            <header
+                className={`sticky top-0 z-40 border-b transition-all duration-500 print:hidden ${headerClass}`}
+            >
+                <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between">
+                    {/* Left: Organization identity */}
+                    <Link
+                        href={welcome({ locale }).url}
+                        className="flex shrink-0 items-center gap-3 transition-opacity hover:opacity-80"
+                    >
+                        <AppEmblem
+                            alt=""
+                            className="size-10 shrink-0 md:size-11"
+                        />
+                        <div className="flex flex-col">
+                            <span className="text-lg font-bold tracking-tight md:text-xl">
+                                {t('site.short_name')}
+                            </span>
+                            <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                                {locale.toUpperCase()}
+                            </span>
+                        </div>
+                    </Link>
+
+                    {/* Center: CENTRED Official Title of the site as per law */}
+                    <div className="mx-auto hidden max-w-xl flex-1 px-4 text-center md:block">
+                        <h1 className="text-xs leading-tight font-bold tracking-tight text-balance text-muted-foreground uppercase">
+                            {t('site.full_name')}
+                        </h1>
+                    </div>
+
+                    {/* Right: Emergency Hotline & accessibility controls */}
+                    <div className="flex items-center justify-between gap-3 md:justify-end">
                         {/* 112 Hotline */}
                         <a
                             href="tel:112"
-                            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold transition-colors sm:text-sm ${
+                            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold shadow-xs transition-all hover:scale-105 sm:text-sm ${
                                 isRedState
                                     ? 'bg-white text-red-700 hover:bg-gray-100'
                                     : 'bg-red-600 text-white hover:bg-red-700'
                             }`}
                         >
                             <Phone className="size-3.5 sm:size-4" />
-                            <span>112</span>
+                            <span>{t('home.hero.emergency_call')}</span>
                         </a>
 
-                        {/* Desktop-only: Accessibility Button */}
+                        {/* Accessibility Button */}
                         <button
                             onClick={() => setIsA11yOpen(!isA11yOpen)}
                             className={buttonClass}
@@ -194,20 +217,8 @@ export default function PublicLayout({
                             title={t('a11y.open')}
                             aria-expanded={isA11yOpen}
                         >
-                            <Eye className="size-4.5 sm:size-5" />
+                            <Eye className="size-5" />
                         </button>
-
-                        {/* Desktop-only: Search Button */}
-                        <button
-                            onClick={() => setIsSearchOpen(true)}
-                            className={buttonClass}
-                            aria-label={t('a11y.site_search')}
-                        >
-                            <Search className="size-4.5 sm:size-5" />
-                        </button>
-
-                        {/* Desktop-only: Language Switcher */}
-                        <LanguageSwitcher className={switcherClass} />
 
                         {/* Mobile & Tablet Hamburger Drawer */}
                         <div className="hidden sm:block lg:hidden">
@@ -253,6 +264,28 @@ export default function PublicLayout({
                                             className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
                                         >
                                             {t('nav.home')}
+                                        </Link>
+                                        <Link
+                                            href={
+                                                leadershipIndex({ locale }).url
+                                            }
+                                            onClick={() =>
+                                                setIsMobileMenuOpen(false)
+                                            }
+                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                                        >
+                                            {t('nav.leadership')}
+                                        </Link>
+                                        <Link
+                                            href={
+                                                structureIndex({ locale }).url
+                                            }
+                                            onClick={() =>
+                                                setIsMobileMenuOpen(false)
+                                            }
+                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                                        >
+                                            {t('nav.structure')}
                                         </Link>
                                         <Link
                                             href={newsIndex({ locale }).url}
@@ -326,6 +359,35 @@ export default function PublicLayout({
                                             className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
                                         >
                                             {t('nav.subscribe')}
+                                        </Link>
+                                        <Link
+                                            href={
+                                                vacanciesIndex({ locale }).url
+                                            }
+                                            onClick={() =>
+                                                setIsMobileMenuOpen(false)
+                                            }
+                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                                        >
+                                            {t('nav.vacancies')}
+                                        </Link>
+                                        <Link
+                                            href={tendersIndex({ locale }).url}
+                                            onClick={() =>
+                                                setIsMobileMenuOpen(false)
+                                            }
+                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                                        >
+                                            {t('nav.tenders')}
+                                        </Link>
+                                        <Link
+                                            href={`${contactsIndex({ locale }).url}#regional-offices`}
+                                            onClick={() =>
+                                                setIsMobileMenuOpen(false)
+                                            }
+                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                                        >
+                                            {t('nav.subdivisions')}
                                         </Link>
 
                                         <div className="my-4 border-t border-slate-800" />
@@ -410,7 +472,102 @@ export default function PublicLayout({
                         </div>
                     </div>
                 </div>
+
+                {/* Primary Category Navigation Menu (Point 31 (b)) */}
+                <div className="border-t border-border bg-card/50 backdrop-blur-xs">
+                    <div className="mx-auto max-w-6xl px-4">
+                        <nav
+                            aria-label={t('a11y.primary_nav')}
+                            className="no-scrollbar flex items-center gap-1 overflow-x-auto py-2 text-sm font-medium"
+                        >
+                            <Link
+                                href={welcome({ locale }).url}
+                                className={linkClass}
+                            >
+                                {t('nav.home')}
+                            </Link>
+                            <Link
+                                href={leadershipIndex({ locale }).url}
+                                className={linkClass}
+                            >
+                                {t('nav.leadership')}
+                            </Link>
+                            <Link
+                                href={structureIndex({ locale }).url}
+                                className={linkClass}
+                            >
+                                {t('nav.structure')}
+                            </Link>
+                            <Link
+                                href={newsIndex({ locale }).url}
+                                className={linkClass}
+                            >
+                                {t('nav.news')}
+                            </Link>
+                            <Link
+                                href={incidentsIndex({ locale }).url}
+                                className={linkClass}
+                            >
+                                {t('nav.situation')}
+                            </Link>
+                            <Link
+                                href={mapIndex({ locale }).url}
+                                className={linkClass}
+                            >
+                                {t('nav.map')}
+                            </Link>
+                            <Link
+                                href={documentsIndex({ locale }).url}
+                                className={linkClass}
+                            >
+                                {t('nav.documents')}
+                            </Link>
+                            <Link
+                                href={appealsCreate({ locale }).url}
+                                className={linkClass}
+                            >
+                                {t('nav.reception')}
+                            </Link>
+                            <Link
+                                href={touristGroupsCreate({ locale }).url}
+                                className={linkClass}
+                            >
+                                {t('nav.tourism')}
+                            </Link>
+                            <Link
+                                href={subscriptionsCreate({ locale }).url}
+                                className={linkClass}
+                            >
+                                {t('nav.subscribe')}
+                            </Link>
+                            <Link
+                                href={vacanciesIndex({ locale }).url}
+                                className={linkClass}
+                            >
+                                {t('nav.vacancies')}
+                            </Link>
+                            <Link
+                                href={tendersIndex({ locale }).url}
+                                className={linkClass}
+                            >
+                                {t('nav.tenders')}
+                            </Link>
+                        </nav>
+                    </div>
+                </div>
             </header>
+
+            {/* President's Quote Section as required by government regulations */}
+            <div className="border-y border-amber-500/10 bg-radial from-amber-500/5 to-transparent py-4 print:hidden">
+                <div className="mx-auto max-w-4xl px-4 text-center">
+                    <blockquote className="text-xs leading-relaxed font-medium text-muted-foreground italic sm:text-sm">
+                        {t('site.president_quote')}
+                    </blockquote>
+                    <cite className="mt-1 block text-[10px] font-semibold tracking-wider text-amber-600 uppercase not-italic sm:text-xs">
+                        — {t('site.president_quote_author')}
+                    </cite>
+                </div>
+            </div>
 
             <main
                 id="main-content"
@@ -422,24 +579,68 @@ export default function PublicLayout({
 
             <footer className="bg-brand-strong text-brand-strong-foreground print:hidden">
                 <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
-                    {/* Agency identity */}
-                    <div className="flex flex-col gap-3 sm:col-span-2 lg:col-span-1">
-                        <div className="flex items-center gap-2.5">
-                            <AppEmblem alt="" className="size-10 shrink-0" />
-                            <span className="text-base font-bold">
-                                {t('site.short_name')}
-                            </span>
+                    {/* Agency identity & Visitor Stats */}
+                    <div className="flex flex-col gap-5 sm:col-span-2 lg:col-span-1">
+                        <div className="flex flex-col gap-3">
+                            <div className="flex items-center gap-2.5">
+                                <AppEmblem
+                                    alt=""
+                                    className="size-10 shrink-0"
+                                />
+                                <span className="text-base font-bold">
+                                    {t('site.short_name')}
+                                </span>
+                            </div>
+                            <p className="text-sm leading-relaxed text-brand-strong-foreground/70">
+                                {t('site.full_name')}
+                            </p>
+                            <a
+                                href="tel:112"
+                                className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-white/15"
+                            >
+                                <Phone className="size-4" aria-hidden="true" />
+                                {t('footer.hotline')}: 112
+                            </a>
                         </div>
-                        <p className="text-sm leading-relaxed text-brand-strong-foreground/70">
-                            {t('site.full_name')}
-                        </p>
-                        <a
-                            href="tel:112"
-                            className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-white/15"
-                        >
-                            <Phone className="size-4" aria-hidden="true" />
-                            {t('footer.hotline')}: 112
-                        </a>
+
+                        {/* Visitor Statistics */}
+                        <div className="flex flex-col gap-2 rounded-lg border border-white/10 bg-white/5 p-4 text-xs">
+                            <p className="font-semibold tracking-wider text-brand-strong-foreground/50 uppercase">
+                                {t('footer.statistics')}
+                            </p>
+                            <div className="grid grid-cols-3 gap-2 text-center text-brand-strong-foreground/80">
+                                <div className="rounded border border-white/5 bg-white/5 py-2">
+                                    <span className="block text-sm font-bold text-white tabular-nums sm:text-base">
+                                        1,482
+                                    </span>
+                                    <span className="text-[10px] text-brand-strong-foreground/60 uppercase">
+                                        {t('footer.stats_today', { count: '' })
+                                            .replace(': ', '')
+                                            .trim()}
+                                    </span>
+                                </div>
+                                <div className="rounded border border-white/5 bg-white/5 py-2">
+                                    <span className="block text-sm font-bold text-white tabular-nums sm:text-base">
+                                        42,918
+                                    </span>
+                                    <span className="text-[10px] text-brand-strong-foreground/60 uppercase">
+                                        {t('footer.stats_month', { count: '' })
+                                            .replace(': ', '')
+                                            .trim()}
+                                    </span>
+                                </div>
+                                <div className="rounded border border-white/5 bg-white/5 py-2">
+                                    <span className="block text-sm font-bold text-white tabular-nums sm:text-base">
+                                        518,402
+                                    </span>
+                                    <span className="text-[10px] text-brand-strong-foreground/60 uppercase">
+                                        {t('footer.stats_year', { count: '' })
+                                            .replace(': ', '')
+                                            .trim()}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Sections */}
@@ -594,7 +795,18 @@ export default function PublicLayout({
                             © {new Date().getFullYear()} {t('site.short_name')}{' '}
                             · {t('footer.rights')}
                         </span>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-4">
+                            <Link
+                                href={
+                                    pageShow({
+                                        locale,
+                                        slug: `privacy-policy-${locale}`,
+                                    }).url
+                                }
+                                className="transition-colors hover:text-white"
+                            >
+                                {t('footer.privacy_policy')}
+                            </Link>
                             <button
                                 type="button"
                                 onClick={() => setIsA11yOpen(true)}

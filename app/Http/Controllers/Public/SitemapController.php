@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Guide;
 use App\Models\Page;
 use App\Models\Post;
+use App\Models\Tender;
+use App\Models\Vacancy;
 use App\Support\LocaleUrls;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
@@ -21,6 +23,8 @@ class SitemapController extends Controller
             Post::max('updated_at'),
             Guide::max('updated_at'),
             Page::max('updated_at'),
+            Vacancy::max('updated_at'),
+            Tender::max('updated_at'),
         ])->filter()->max() ?? 'empty';
 
         $xml = Cache::remember('sitemap.xml.'.$version, now()->addHour(), function () use ($localeUrls) {
@@ -77,6 +81,8 @@ class SitemapController extends Controller
                 'welcome', 'search.index', 'news.index', 'incidents.index',
                 'map.index', 'documents.index', 'guides.index', 'contacts.index',
                 'appeals.create', 'tourist-groups.create', 'subscriptions.create',
+                'vacancies.index', 'tenders.index',
+                'leadership.index', 'structure.index',
             ];
 
             foreach ($staticRoutes as $route) {
@@ -96,6 +102,16 @@ class SitemapController extends Controller
             // Pages
             Page::published()->with('translations')->each(function ($page) use ($addUrl) {
                 $addUrl('pages.show', ['_model' => $page], $page->updated_at);
+            });
+
+            // Vacancies (ТЗ §20 «н», §44 — civil-service postings in the hierarchical sitemap).
+            Vacancy::published()->with('translations')->each(function ($vacancy) use ($addUrl) {
+                $addUrl('vacancies.show', ['_model' => $vacancy], $vacancy->updated_at);
+            });
+
+            // Tenders (ТЗ §9, §44 — procurement notices in the hierarchical sitemap).
+            Tender::published()->with('translations')->each(function ($tender) use ($addUrl) {
+                $addUrl('tenders.show', ['_model' => $tender], $tender->updated_at);
             });
 
             return view('sitemap', compact('urls'))->render();

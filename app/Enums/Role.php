@@ -71,6 +71,10 @@ enum Role: string
                 Permission::ManageCategories,
                 Permission::ViewDocuments, Permission::ManageDocuments,
                 Permission::ViewGuides, Permission::ManageGuides,
+                Permission::ViewVacancies, Permission::ManageVacancies,
+                Permission::ViewTenders, Permission::ManageTenders,
+                Permission::ViewLeadership, Permission::ManageLeadership,
+                Permission::ViewStructure, Permission::ManageStructure,
                 Permission::ManageMedia, Permission::ManageBlocks, Permission::ManageMenus,
                 Permission::ManageTranslations,
                 // Emergencies, map & alerts
@@ -80,6 +84,8 @@ enum Role: string
                 // Services & personal data
                 Permission::ViewAppeals, Permission::ManageAppeals,
                 Permission::ViewTouristGroups, Permission::ManageTouristGroups,
+                Permission::ViewVacancyApplications, Permission::ManageVacancyApplications,
+                Permission::ViewTenderBids, Permission::ManageTenderBids,
                 Permission::ViewSubscribers, Permission::ManageSubscribers,
                 // Read-only system insight
                 Permission::ViewAudit, Permission::ViewAnalytics,

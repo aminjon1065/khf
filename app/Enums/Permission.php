@@ -19,6 +19,14 @@ enum Permission: string
     case ManageDocuments = 'documents.manage';
     case ViewGuides = 'guides.view';
     case ManageGuides = 'guides.manage';
+    case ViewVacancies = 'vacancies.view';
+    case ManageVacancies = 'vacancies.manage';
+    case ViewTenders = 'tenders.view';
+    case ManageTenders = 'tenders.manage';
+    case ViewLeadership = 'leadership.view';
+    case ManageLeadership = 'leadership.manage';
+    case ViewStructure = 'structure.view';
+    case ManageStructure = 'structure.manage';
     case ManageMedia = 'media.manage';
     case ManageBlocks = 'blocks.manage';
     case ManageMenus = 'menus.manage';
@@ -37,6 +45,10 @@ enum Permission: string
     case ManageAppeals = 'appeals.manage';
     case ViewTouristGroups = 'tourist-groups.view';
     case ManageTouristGroups = 'tourist-groups.manage';
+    case ViewVacancyApplications = 'vacancy-applications.view';
+    case ManageVacancyApplications = 'vacancy-applications.manage';
+    case ViewTenderBids = 'tender-bids.view';
+    case ManageTenderBids = 'tender-bids.manage';
     case ViewSubscribers = 'subscribers.view';
     case ManageSubscribers = 'subscribers.manage';
 

@@ -43,6 +43,12 @@ return [
         'report' => 'Reports',
         'form' => 'Forms and templates',
     ],
+    'employment_type' => [
+        'full_time' => 'Full-time',
+        'part_time' => 'Part-time',
+        'contract' => 'Contract',
+        'temporary' => 'Temporary',
+    ],
     'hazard_level' => [
         'normal' => 'Normal',
         'elevated' => 'Heightened alert',
@@ -68,6 +74,12 @@ return [
         'press_release' => 'Press release',
         'announcement' => 'Announcement',
         'summary' => 'Operational summary',
+    ],
+    'tender_type' => [
+        'goods' => 'Goods',
+        'works' => 'Works',
+        'services' => 'Services',
+        'consulting' => 'Consulting services',
     ],
     'role' => [
         'super-admin' => 'Super administrator',

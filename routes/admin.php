@@ -10,12 +10,18 @@ use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\IncidentController;
 use App\Http\Controllers\Admin\LanguageController;
+use App\Http\Controllers\Admin\LeaderController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\SubdivisionController;
 use App\Http\Controllers\Admin\SubscriberController;
+use App\Http\Controllers\Admin\TenderBidController;
+use App\Http\Controllers\Admin\TenderController;
 use App\Http\Controllers\Admin\TouristGroupController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VacancyApplicationController;
+use App\Http\Controllers\Admin\VacancyController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -121,6 +127,70 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::delete('guides/{guide}', [GuideController::class, 'destroy'])->name('guides.destroy');
             Route::patch('guides/{guide}/restore', [GuideController::class, 'restore'])->name('guides.restore')->withTrashed();
             Route::delete('guides/{guide}/force', [GuideController::class, 'forceDelete'])->name('guides.force-delete')->withTrashed();
+        });
+
+        // Content — leadership (leadership.manage).
+        Route::middleware('can:'.Permission::ManageLeadership->value)->group(function () {
+            Route::get('leadership', [LeaderController::class, 'index'])->name('leadership.index');
+            Route::get('leadership/create', [LeaderController::class, 'create'])->name('leadership.create');
+            Route::post('leadership', [LeaderController::class, 'store'])->name('leadership.store');
+            Route::get('leadership/{leader}/edit', [LeaderController::class, 'edit'])->name('leadership.edit');
+            Route::put('leadership/{leader}', [LeaderController::class, 'update'])->name('leadership.update');
+            Route::delete('leadership/{leader}', [LeaderController::class, 'destroy'])->name('leadership.destroy');
+        });
+
+        // Content — organisational structure (structure.manage).
+        Route::middleware('can:'.Permission::ManageStructure->value)->group(function () {
+            Route::get('structure', [SubdivisionController::class, 'index'])->name('structure.index');
+            Route::get('structure/create', [SubdivisionController::class, 'create'])->name('structure.create');
+            Route::post('structure', [SubdivisionController::class, 'store'])->name('structure.store');
+            Route::get('structure/{subdivision}/edit', [SubdivisionController::class, 'edit'])->name('structure.edit');
+            Route::put('structure/{subdivision}', [SubdivisionController::class, 'update'])->name('structure.update');
+            Route::delete('structure/{subdivision}', [SubdivisionController::class, 'destroy'])->name('structure.destroy');
+        });
+
+        // Content — civil-service vacancies (vacancies.manage).
+        Route::middleware('can:'.Permission::ManageVacancies->value)->group(function () {
+            Route::get('vacancies', [VacancyController::class, 'index'])->name('vacancies.index');
+            Route::get('vacancies/trash', [VacancyController::class, 'trash'])->name('vacancies.trash');
+            Route::get('vacancies/create', [VacancyController::class, 'create'])->name('vacancies.create');
+            Route::post('vacancies', [VacancyController::class, 'store'])->name('vacancies.store');
+            Route::get('vacancies/{vacancy}/edit', [VacancyController::class, 'edit'])->name('vacancies.edit');
+            Route::put('vacancies/{vacancy}', [VacancyController::class, 'update'])->name('vacancies.update');
+            Route::delete('vacancies/{vacancy}', [VacancyController::class, 'destroy'])->name('vacancies.destroy');
+            Route::patch('vacancies/{vacancy}/restore', [VacancyController::class, 'restore'])->name('vacancies.restore')->withTrashed();
+            Route::delete('vacancies/{vacancy}/force', [VacancyController::class, 'forceDelete'])->name('vacancies.force-delete')->withTrashed();
+        });
+
+        // Content — public procurement tenders (tenders.manage).
+        Route::middleware('can:'.Permission::ManageTenders->value)->group(function () {
+            Route::get('tenders', [TenderController::class, 'index'])->name('tenders.index');
+            Route::get('tenders/trash', [TenderController::class, 'trash'])->name('tenders.trash');
+            Route::get('tenders/create', [TenderController::class, 'create'])->name('tenders.create');
+            Route::post('tenders', [TenderController::class, 'store'])->name('tenders.store');
+            Route::get('tenders/{tender}/edit', [TenderController::class, 'edit'])->name('tenders.edit');
+            Route::put('tenders/{tender}', [TenderController::class, 'update'])->name('tenders.update');
+            Route::delete('tenders/{tender}', [TenderController::class, 'destroy'])->name('tenders.destroy');
+            Route::patch('tenders/{tender}/restore', [TenderController::class, 'restore'])->name('tenders.restore')->withTrashed();
+            Route::delete('tenders/{tender}/force', [TenderController::class, 'forceDelete'])->name('tenders.force-delete')->withTrashed();
+        });
+
+        // Services — vacancy applications (questionnaires) moderation (vacancy-applications.manage).
+        Route::middleware('can:'.Permission::ManageVacancyApplications->value)->group(function () {
+            Route::get('vacancy-applications', [VacancyApplicationController::class, 'index'])->name('vacancy-applications.index');
+            Route::get('vacancy-applications/{application}', [VacancyApplicationController::class, 'show'])->name('vacancy-applications.show');
+            Route::get('vacancy-applications/{application}/resume', [VacancyApplicationController::class, 'downloadResume'])->name('vacancy-applications.resume');
+            Route::put('vacancy-applications/{application}', [VacancyApplicationController::class, 'update'])->name('vacancy-applications.update');
+            Route::delete('vacancy-applications/{application}', [VacancyApplicationController::class, 'destroy'])->name('vacancy-applications.destroy');
+        });
+
+        // Services — tender bids moderation (tender-bids.manage).
+        Route::middleware('can:'.Permission::ManageTenderBids->value)->group(function () {
+            Route::get('tender-bids', [TenderBidController::class, 'index'])->name('tender-bids.index');
+            Route::get('tender-bids/{bid}', [TenderBidController::class, 'show'])->name('tender-bids.show');
+            Route::get('tender-bids/{bid}/document', [TenderBidController::class, 'downloadDocument'])->name('tender-bids.document');
+            Route::put('tender-bids/{bid}', [TenderBidController::class, 'update'])->name('tender-bids.update');
+            Route::delete('tender-bids/{bid}', [TenderBidController::class, 'destroy'])->name('tender-bids.destroy');
         });
 
         // Services — citizen appeals moderation queue (appeals.manage).

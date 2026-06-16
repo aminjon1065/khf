@@ -43,6 +43,12 @@ return [
         'report' => 'Ҳисоботҳо',
         'form' => 'Шаклҳо ва бланкҳо',
     ],
+    'employment_type' => [
+        'full_time' => 'Шуғли пурра',
+        'part_time' => 'Шуғли қисман',
+        'contract' => 'Шартномавӣ',
+        'temporary' => 'Муваққатӣ',
+    ],
     'hazard_level' => [
         'normal' => 'Меъёр',
         'elevated' => 'Омодабоши баланд',
@@ -68,6 +74,12 @@ return [
         'press_release' => 'Прессрелиз',
         'announcement' => 'Эълон',
         'summary' => 'Хулосаи фаврӣ',
+    ],
+    'tender_type' => [
+        'goods' => 'Молҳо',
+        'works' => 'Корҳо',
+        'services' => 'Хизматрасониҳо',
+        'consulting' => 'Хизматрасониҳои машваратӣ',
     ],
     'role' => [
         'super-admin' => 'Суперадминистратор',
