@@ -27,6 +27,12 @@ enum Permission: string
     case ManageLeadership = 'leadership.manage';
     case ViewStructure = 'structure.view';
     case ManageStructure = 'structure.manage';
+    case ViewGallery = 'gallery.view';
+    case ManageGallery = 'gallery.manage';
+    case ViewFaqs = 'faqs.view';
+    case ManageFaqs = 'faqs.manage';
+    case ViewStatistics = 'statistics.view';
+    case ManageStatistics = 'statistics.manage';
     case ManageMedia = 'media.manage';
     case ManageBlocks = 'blocks.manage';
     case ManageMenus = 'menus.manage';

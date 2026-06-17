@@ -86,50 +86,50 @@
  * for CTAs, deep-navy brand chrome (gov bar / hero / footer).
  */
 :root {
-    --background: #fafafa;
-    --foreground: #171717;
+    --background: #f7f9fc;
+    --foreground: #0f1b2d;
     --card: #ffffff;
-    --card-foreground: #171717;
+    --card-foreground: #0f1b2d;
     --popover: #ffffff;
-    --popover-foreground: #171717;
-    --primary: #2563eb;
+    --popover-foreground: #0f1b2d;
+    --primary: #1e4e8c;
     --primary-foreground: #ffffff;
-    --secondary: #f4f4f5;
-    --secondary-foreground: #171717;
-    --muted: #f4f4f5;
-    --muted-foreground: #737373;
-    --accent: #f4f4f5;
-    --accent-foreground: #171717;
-    --signal: #ea580c;
+    --secondary: #eef2f8;
+    --secondary-foreground: #0f1b2d;
+    --muted: #eef2f8;
+    --muted-foreground: #586677;
+    --accent: #e7edf6;
+    --accent-foreground: #163a6b;
+    --signal: #dc2626;
     --signal-foreground: #ffffff;
-    --brand: #2563eb;
+    --brand: #122f5c;
     --brand-foreground: #ffffff;
-    --brand-strong: #1d4ed8;
+    --brand-strong: #0b2347;
     --brand-strong-foreground: #ffffff;
-    --destructive: #ef4444;
+    --destructive: #dc2626;
     --destructive-foreground: #ffffff;
-    --border: #e5e5e5;
-    --input: #e5e5e5;
-    --ring: #2563eb;
-    --chart-1: #2563eb;
-    --chart-2: #ea580c;
-    --chart-3: #10b981;
+    --border: #e3e8f0;
+    --input: #e3e8f0;
+    --ring: #1e4e8c;
+    --chart-1: #1e4e8c;
+    --chart-2: #dc2626;
+    --chart-3: #0e9f6e;
     --chart-4: #f59e0b;
-    --chart-5: #ef4444;
-    --radius: 0.75rem;
+    --chart-5: #6d28d9;
+    --radius: 0.625rem;
 
     /* Clean, light sidebar matching modern edge-to-edge aesthetics */
-    --sidebar: #fafafa;
-    --sidebar-foreground: #171717;
-    --sidebar-primary: #2563eb;
+    --sidebar: #ffffff;
+    --sidebar-foreground: #0f1b2d;
+    --sidebar-primary: #1e4e8c;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #e5e5e5;
-    --sidebar-accent-foreground: #171717;
-    --sidebar-border: #e5e5e5;
-    --sidebar-ring: #2563eb;
+    --sidebar-accent: #eef2f8;
+    --sidebar-accent-foreground: #163a6b;
+    --sidebar-border: #e3e8f0;
+    --sidebar-ring: #1e4e8c;
 
     /* Hazard levels (ТЗ Приложение Г). */
-    --hazard-normal: #10b981;
+    --hazard-normal: #0e9f6e;
     --hazard-normal-foreground: #ffffff;
     --hazard-elevated: #f59e0b;
     --hazard-elevated-foreground: #171717;
@@ -141,46 +141,46 @@
 
 /* Dark theme */
 .dark {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card: #141414;
-    --card-foreground: #ededed;
-    --popover: #141414;
-    --popover-foreground: #ededed;
-    --primary: #3b82f6;
-    --primary-foreground: #ffffff;
-    --secondary: #262626;
-    --secondary-foreground: #ededed;
-    --muted: #262626;
-    --muted-foreground: #a3a3a3;
-    --accent: #262626;
-    --accent-foreground: #ededed;
-    --signal: #fb923c;
-    --signal-foreground: #0a0a0a;
-    --brand: #3b82f6;
+    --background: #0a1120;
+    --foreground: #e6ecf5;
+    --card: #0f1830;
+    --card-foreground: #e6ecf5;
+    --popover: #0f1830;
+    --popover-foreground: #e6ecf5;
+    --primary: #4f8bd9;
+    --primary-foreground: #06101f;
+    --secondary: #1a2740;
+    --secondary-foreground: #e6ecf5;
+    --muted: #1a2740;
+    --muted-foreground: #93a1b8;
+    --accent: #1a2740;
+    --accent-foreground: #e6ecf5;
+    --signal: #f26257;
+    --signal-foreground: #1a0606;
+    --brand: #122f5c;
     --brand-foreground: #ffffff;
-    --brand-strong: #2563eb;
+    --brand-strong: #0b2347;
     --brand-strong-foreground: #ffffff;
-    --destructive: #f87171;
-    --destructive-foreground: #0a0a0a;
-    --border: #262626;
-    --input: #262626;
-    --ring: #3b82f6;
-    --chart-1: #3b82f6;
-    --chart-2: #fb923c;
+    --destructive: #f26257;
+    --destructive-foreground: #1a0606;
+    --border: #1f2d46;
+    --input: #1f2d46;
+    --ring: #4f8bd9;
+    --chart-1: #4f8bd9;
+    --chart-2: #f26257;
     --chart-3: #34d399;
     --chart-4: #fbbf24;
-    --chart-5: #f87171;
+    --chart-5: #a78bfa;
 
     /* Dark mode sidebar (Vercel/Linear style) */
-    --sidebar: #0a0a0a;
-    --sidebar-foreground: #ededed;
-    --sidebar-primary: #3b82f6;
-    --sidebar-primary-foreground: #0a0a0a;
-    --sidebar-accent: #262626;
-    --sidebar-accent-foreground: #ededed;
-    --sidebar-border: #262626;
-    --sidebar-ring: #3b82f6;
+    --sidebar: #0a1120;
+    --sidebar-foreground: #e6ecf5;
+    --sidebar-primary: #4f8bd9;
+    --sidebar-primary-foreground: #06101f;
+    --sidebar-accent: #1a2740;
+    --sidebar-accent-foreground: #e6ecf5;
+    --sidebar-border: #1f2d46;
+    --sidebar-ring: #4f8bd9;
 }
 
 @layer base {
@@ -190,6 +190,9 @@
 
     body {
         @apply bg-background text-foreground;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: 'cv11', 'ss01';
     }
 }
 

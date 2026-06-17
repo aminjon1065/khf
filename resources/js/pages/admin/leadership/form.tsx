@@ -97,16 +97,9 @@ export default function LeaderForm({
         event.preventDefault();
 
         if (isEdit && leader) {
-            form.transform((data) => ({ ...data, _method: 'put' }));
-            form.post(update(leader.id).url, {
-                preserveScroll: true,
-                forceFormData: true,
-            });
+            form.put(update(leader.id).url, { preserveScroll: true });
         } else {
-            form.post(store().url, {
-                preserveScroll: true,
-                forceFormData: true,
-            });
+            form.post(store().url, { preserveScroll: true });
         }
     };
 

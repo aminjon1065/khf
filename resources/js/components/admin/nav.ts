@@ -1,4 +1,5 @@
 import {
+    BarChart3,
     Bell,
     BookOpen,
     Briefcase,
@@ -8,6 +9,7 @@ import {
     FileText,
     FolderTree,
     Gavel,
+    HelpCircle,
     Image,
     Inbox,
     Languages,
@@ -26,6 +28,8 @@ import { index as appealsIndex } from '@/routes/admin/appeals';
 import { index as auditLogsIndex } from '@/routes/admin/audit-logs';
 import { index as categoriesIndex } from '@/routes/admin/categories';
 import { index as documentsIndex } from '@/routes/admin/documents';
+import { index as faqsIndex } from '@/routes/admin/faqs';
+import { index as galleryIndex } from '@/routes/admin/gallery';
 import { index as guidesIndex } from '@/routes/admin/guides';
 import { index as incidentsIndex } from '@/routes/admin/incidents';
 import { index as languagesIndex } from '@/routes/admin/languages';
@@ -33,6 +37,7 @@ import { index as leadershipIndex } from '@/routes/admin/leadership';
 import { index as mediaIndex } from '@/routes/admin/media';
 import { index as pagesIndex } from '@/routes/admin/pages';
 import { index as postsIndex } from '@/routes/admin/posts';
+import { index as statisticsIndex } from '@/routes/admin/statistics';
 import { index as structureIndex } from '@/routes/admin/structure';
 import { index as subscribersIndex } from '@/routes/admin/subscribers';
 import { index as tenderBidsIndex } from '@/routes/admin/tender-bids';
@@ -127,6 +132,24 @@ export const navGroups: AdminNavGroup[] = [
                 href: tendersIndex(),
                 icon: Gavel,
                 permission: 'tenders.manage',
+            },
+            {
+                title: 'Фотогалерея',
+                href: galleryIndex(),
+                icon: Image,
+                permission: 'gallery.manage',
+            },
+            {
+                title: 'Вопросы и ответы',
+                href: faqsIndex(),
+                icon: HelpCircle,
+                permission: 'faqs.manage',
+            },
+            {
+                title: 'Статистика',
+                href: statisticsIndex(),
+                icon: BarChart3,
+                permission: 'statistics.manage',
             },
         ],
     },

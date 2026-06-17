@@ -8,6 +8,9 @@ import {
     Gavel,
     Users,
     Building2,
+    Image,
+    HelpCircle,
+    BarChart3,
     AlertCircle,
     Loader2,
 } from 'lucide-react';
@@ -152,6 +155,27 @@ export function GlobalSearchModal({
                         aria-hidden="true"
                     />
                 );
+            case 'gallery':
+                return (
+                    <Image
+                        className="size-4 text-pink-600"
+                        aria-hidden="true"
+                    />
+                );
+            case 'faq':
+                return (
+                    <HelpCircle
+                        className="size-4 text-teal-600"
+                        aria-hidden="true"
+                    />
+                );
+            case 'statistic':
+                return (
+                    <BarChart3
+                        className="size-4 text-indigo-600"
+                        aria-hidden="true"
+                    />
+                );
             default:
                 return <FileText className="size-4" aria-hidden="true" />;
         }
@@ -175,6 +199,12 @@ export function GlobalSearchModal({
                 return t('nav.leadership');
             case 'subdivision':
                 return t('nav.structure');
+            case 'gallery':
+                return t('nav.gallery');
+            case 'faq':
+                return t('nav.faq');
+            case 'statistic':
+                return t('nav.statistics');
             default:
                 return type;
         }

@@ -3,10 +3,13 @@
 namespace App\Services\Public;
 
 use App\Models\Document;
+use App\Models\Faq;
+use App\Models\Gallery;
 use App\Models\Guide;
 use App\Models\Leader;
 use App\Models\Page;
 use App\Models\Post;
+use App\Models\Statistic;
 use App\Models\Subdivision;
 use App\Models\Tender;
 use App\Models\Vacancy;
@@ -254,6 +257,83 @@ class SearchService
                 ];
             });
         $results = $results->concat($subdivisions);
+
+        // 9. Search Galleries (ТЗ §20 «ш», §38).
+        $galleries = Gallery::published()
+            ->whereHas('translations', function ($q) use ($locale, $likeQuery) {
+                $q->where('locale', $locale)
+                    ->where(function ($subQ) use ($likeQuery) {
+                        $subQ->where('title', 'like', $likeQuery)
+                            ->orWhere('description', 'like', $likeQuery);
+                    });
+            })
+            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
+            ->orderBy('sort_order')
+            ->take($limit)
+            ->get()
+            ->map(function (Gallery $gallery) use ($locale) {
+                $translation = $gallery->translations->first();
+
+                return [
+                    'id' => $gallery->id,
+                    'type' => 'gallery',
+                    'title' => $translation?->title ?? '',
+                    'excerpt' => $translation?->description,
+                    'url' => route('gallery.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
+                    'date' => null,
+                ];
+            });
+        $results = $results->concat($galleries);
+
+        // 10. Search FAQ (ТЗ §20 «й», §38).
+        $faqs = Faq::published()
+            ->whereHas('translations', function ($q) use ($locale, $likeQuery) {
+                $q->where('locale', $locale)
+                    ->where(function ($subQ) use ($likeQuery) {
+                        $subQ->where('question', 'like', $likeQuery)
+                            ->orWhere('answer', 'like', $likeQuery);
+                    });
+            })
+            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
+            ->orderBy('sort_order')
+            ->take($limit)
+            ->get()
+            ->map(function (Faq $faq) use ($locale) {
+                $translation = $faq->translations->first();
+
+                return [
+                    'id' => $faq->id,
+                    'type' => 'faq',
+                    'title' => $translation?->question ?? '',
+                    'excerpt' => $translation?->answer ? str(strip_tags($translation->answer))->limit(100)->toString() : null,
+                    'url' => route('faq.index', ['locale' => $locale]),
+                    'date' => null,
+                ];
+            });
+        $results = $results->concat($faqs);
+
+        // 11. Search Statistics (ТЗ §20 «у», §38).
+        $statistics = Statistic::published()
+            ->whereHas('translations', function ($q) use ($locale, $likeQuery) {
+                $q->where('locale', $locale)->where('label', 'like', $likeQuery);
+            })
+            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
+            ->orderBy('sort_order')
+            ->take($limit)
+            ->get()
+            ->map(function (Statistic $statistic) use ($locale) {
+                $translation = $statistic->translations->first();
+
+                return [
+                    'id' => $statistic->id,
+                    'type' => 'statistic',
+                    'title' => $translation?->label ?? '',
+                    'excerpt' => trim($statistic->value.' '.($translation?->unit ?? '')),
+                    'url' => route('statistics.index', ['locale' => $locale]),
+                    'date' => null,
+                ];
+            });
+        $results = $results->concat($statistics);
 
         return $results->sortByDesc('date')->take($limit)->values();
     }

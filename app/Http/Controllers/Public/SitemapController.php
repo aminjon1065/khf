@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\Faq;
+use App\Models\Gallery;
 use App\Models\Guide;
 use App\Models\Page;
 use App\Models\Post;
+use App\Models\Statistic;
 use App\Models\Tender;
 use App\Models\Vacancy;
 use App\Support\LocaleUrls;
@@ -25,6 +28,9 @@ class SitemapController extends Controller
             Page::max('updated_at'),
             Vacancy::max('updated_at'),
             Tender::max('updated_at'),
+            Gallery::max('updated_at'),
+            Faq::max('updated_at'),
+            Statistic::max('updated_at'),
         ])->filter()->max() ?? 'empty';
 
         $xml = Cache::remember('sitemap.xml.'.$version, now()->addHour(), function () use ($localeUrls) {
@@ -83,6 +89,7 @@ class SitemapController extends Controller
                 'appeals.create', 'tourist-groups.create', 'subscriptions.create',
                 'vacancies.index', 'tenders.index',
                 'leadership.index', 'structure.index',
+                'gallery.index', 'faq.index', 'statistics.index',
             ];
 
             foreach ($staticRoutes as $route) {
@@ -112,6 +119,11 @@ class SitemapController extends Controller
             // Tenders (ТЗ §9, §44 — procurement notices in the hierarchical sitemap).
             Tender::published()->with('translations')->each(function ($tender) use ($addUrl) {
                 $addUrl('tenders.show', ['_model' => $tender], $tender->updated_at);
+            });
+
+            // Photo galleries (ТЗ §20 «ш», §44).
+            Gallery::published()->with('translations')->each(function ($gallery) use ($addUrl) {
+                $addUrl('gallery.show', ['_model' => $gallery], $gallery->updated_at);
             });
 
             return view('sitemap', compact('urls'))->render();

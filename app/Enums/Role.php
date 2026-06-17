@@ -75,6 +75,9 @@ enum Role: string
                 Permission::ViewTenders, Permission::ManageTenders,
                 Permission::ViewLeadership, Permission::ManageLeadership,
                 Permission::ViewStructure, Permission::ManageStructure,
+                Permission::ViewGallery, Permission::ManageGallery,
+                Permission::ViewFaqs, Permission::ManageFaqs,
+                Permission::ViewStatistics, Permission::ManageStatistics,
                 Permission::ManageMedia, Permission::ManageBlocks, Permission::ManageMenus,
                 Permission::ManageTranslations,
                 // Emergencies, map & alerts

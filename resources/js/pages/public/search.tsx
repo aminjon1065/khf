@@ -7,6 +7,9 @@ import {
     Gavel,
     Users,
     Building2,
+    Image,
+    HelpCircle,
+    BarChart3,
     AlertCircle,
     Search as SearchIcon,
 } from 'lucide-react';
@@ -49,6 +52,12 @@ export default function Search({
                 return <Users className="size-5 text-sky-600" />;
             case 'subdivision':
                 return <Building2 className="size-5 text-slate-600" />;
+            case 'gallery':
+                return <Image className="size-5 text-pink-600" />;
+            case 'faq':
+                return <HelpCircle className="size-5 text-teal-600" />;
+            case 'statistic':
+                return <BarChart3 className="size-5 text-indigo-600" />;
             default:
                 return <FileText className="size-5" />;
         }
@@ -72,6 +81,12 @@ export default function Search({
                 return t('nav.leadership');
             case 'subdivision':
                 return t('nav.structure');
+            case 'gallery':
+                return t('nav.gallery');
+            case 'faq':
+                return t('nav.faq');
+            case 'statistic':
+                return t('nav.statistics');
             default:
                 return type;
         }

@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
+use App\Http\Controllers\Admin\FaqController;
+use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\IncidentController;
 use App\Http\Controllers\Admin\LanguageController;
@@ -14,6 +16,7 @@ use App\Http\Controllers\Admin\LeaderController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\StatisticController;
 use App\Http\Controllers\Admin\SubdivisionController;
 use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\TenderBidController;
@@ -147,6 +150,36 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::get('structure/{subdivision}/edit', [SubdivisionController::class, 'edit'])->name('structure.edit');
             Route::put('structure/{subdivision}', [SubdivisionController::class, 'update'])->name('structure.update');
             Route::delete('structure/{subdivision}', [SubdivisionController::class, 'destroy'])->name('structure.destroy');
+        });
+
+        // Content — photo galleries (gallery.manage).
+        Route::middleware('can:'.Permission::ManageGallery->value)->group(function () {
+            Route::get('gallery', [GalleryController::class, 'index'])->name('gallery.index');
+            Route::get('gallery/create', [GalleryController::class, 'create'])->name('gallery.create');
+            Route::post('gallery', [GalleryController::class, 'store'])->name('gallery.store');
+            Route::get('gallery/{gallery}/edit', [GalleryController::class, 'edit'])->name('gallery.edit');
+            Route::put('gallery/{gallery}', [GalleryController::class, 'update'])->name('gallery.update');
+            Route::delete('gallery/{gallery}', [GalleryController::class, 'destroy'])->name('gallery.destroy');
+        });
+
+        // Content — FAQ / questions & answers (faqs.manage).
+        Route::middleware('can:'.Permission::ManageFaqs->value)->group(function () {
+            Route::get('faqs', [FaqController::class, 'index'])->name('faqs.index');
+            Route::get('faqs/create', [FaqController::class, 'create'])->name('faqs.create');
+            Route::post('faqs', [FaqController::class, 'store'])->name('faqs.store');
+            Route::get('faqs/{faq}/edit', [FaqController::class, 'edit'])->name('faqs.edit');
+            Route::put('faqs/{faq}', [FaqController::class, 'update'])->name('faqs.update');
+            Route::delete('faqs/{faq}', [FaqController::class, 'destroy'])->name('faqs.destroy');
+        });
+
+        // Content — official statistics indicators (statistics.manage).
+        Route::middleware('can:'.Permission::ManageStatistics->value)->group(function () {
+            Route::get('statistics', [StatisticController::class, 'index'])->name('statistics.index');
+            Route::get('statistics/create', [StatisticController::class, 'create'])->name('statistics.create');
+            Route::post('statistics', [StatisticController::class, 'store'])->name('statistics.store');
+            Route::get('statistics/{statistic}/edit', [StatisticController::class, 'edit'])->name('statistics.edit');
+            Route::put('statistics/{statistic}', [StatisticController::class, 'update'])->name('statistics.update');
+            Route::delete('statistics/{statistic}', [StatisticController::class, 'destroy'])->name('statistics.destroy');
         });
 
         // Content — civil-service vacancies (vacancies.manage).

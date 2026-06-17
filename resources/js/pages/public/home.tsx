@@ -5,6 +5,9 @@ import type { ActiveAlert } from '@/components/Public/EmergencyHero';
 import { EmergencyHero } from '@/components/Public/EmergencyHero';
 import { GovHero } from '@/components/Public/gov-hero';
 import type { OperationalSummary } from '@/components/Public/gov-hero';
+import { NewsCarousel } from '@/components/Public/news-carousel';
+import { OperationalStrip } from '@/components/Public/operational-strip';
+import { PresidentCard } from '@/components/Public/president-card';
 import { useTranslations } from '@/hooks/use-translations';
 import { create as appealsCreate } from '@/routes/appeals';
 import { index as guidesIndex } from '@/routes/guides';
@@ -37,6 +40,12 @@ export default function Home({ latestPosts, operational }: PageProps) {
         (a) => a.level === 'critical',
     );
     const isRedState = criticalAlerts.length > 0;
+
+    // Featured posts lead the page as the carousel hero; the remainder fill the grid below (ТЗ §6.1).
+    const featuredPosts = latestPosts.slice(0, 3);
+    const gridPosts = latestPosts.slice(3);
+    // A critical emergency replaces the carousel with the EmergencyHero, so the grid keeps every post.
+    const newsGridPosts = isRedState ? latestPosts : gridPosts;
 
     // Task-first service grid (govtech): every tile is an actionable destination, not decoration.
     const tasks = [
@@ -76,6 +85,19 @@ export default function Home({ latestPosts, operational }: PageProps) {
 
             {isRedState ? (
                 <EmergencyHero alerts={criticalAlerts} />
+            ) : featuredPosts.length > 0 ? (
+                <>
+                    <div className="grid gap-4 lg:grid-cols-3 lg:items-stretch">
+                        <div className="lg:col-span-2">
+                            <NewsCarousel
+                                posts={featuredPosts}
+                                locale={locale}
+                            />
+                        </div>
+                        <PresidentCard />
+                    </div>
+                    <OperationalStrip operational={operational} />
+                </>
             ) : (
                 <GovHero operational={operational} />
             )}
@@ -110,8 +132,12 @@ export default function Home({ latestPosts, operational }: PageProps) {
             </section>
 
             <section className="mt-20">
-                <div className="mb-8 flex items-end justify-between border-b pb-4">
-                    <h2 className="text-3xl font-bold tracking-tight text-foreground">
+                <div className="mb-8 flex items-end justify-between border-b border-border pb-4">
+                    <h2 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                        <span
+                            className="h-7 w-1.5 rounded-full bg-signal"
+                            aria-hidden="true"
+                        />
                         {t('common.latest_news')}
                     </h2>
                     <Link
@@ -126,9 +152,9 @@ export default function Home({ latestPosts, operational }: PageProps) {
                     <div className="flex h-40 items-center justify-center rounded-xl border border-dashed text-muted-foreground">
                         <p>{t('common.no_publications')}</p>
                     </div>
-                ) : (
+                ) : newsGridPosts.length > 0 ? (
                     <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                        {latestPosts.map((post) => (
+                        {newsGridPosts.map((post) => (
                             <Link
                                 key={post.slug}
                                 href={
@@ -172,7 +198,7 @@ export default function Home({ latestPosts, operational }: PageProps) {
                             </Link>
                         ))}
                     </div>
-                )}
+                ) : null}
             </section>
         </>
     );

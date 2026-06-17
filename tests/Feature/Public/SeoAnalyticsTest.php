@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ContentStatus;
+use App\Models\Gallery;
 use App\Models\Post;
 use App\Models\Tender;
 use App\Models\Vacancy;
@@ -88,4 +89,23 @@ it('includes the leadership and structure pages in the sitemap', function () {
     $response->assertStatus(200);
     $response->assertSee('href="'.url('/tj/leadership').'"', false);
     $response->assertSee('href="'.url('/tj/structure').'"', false);
+});
+
+it('includes the gallery, faq pages and published galleries in the sitemap', function () {
+    $gallery = Gallery::factory()->create(['status' => ContentStatus::Published]);
+    $gallery->translations()->create(['locale' => 'tj', 'title' => 'Album', 'slug' => 'gal-sitemap']);
+
+    $response = $this->get('/sitemap.xml');
+
+    $response->assertStatus(200);
+    $response->assertSee('href="'.url('/tj/gallery').'"', false);
+    $response->assertSee('href="'.url('/tj/faq').'"', false);
+    $response->assertSee('href="'.url('/tj/gallery/gal-sitemap').'"', false);
+});
+
+it('includes the statistics page in the sitemap', function () {
+    $response = $this->get('/sitemap.xml');
+
+    $response->assertStatus(200);
+    $response->assertSee('href="'.url('/tj/statistics').'"', false);
 });

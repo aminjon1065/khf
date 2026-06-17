@@ -1,5 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ExternalLink, Eye, Menu, Phone, Search } from 'lucide-react';
+import {
+    ChevronDown,
+    ExternalLink,
+    Eye,
+    Menu,
+    Phone,
+    Search,
+} from 'lucide-react';
 import { useState } from 'react';
 import { AccessibilityToolbar } from '@/components/accessibility-toolbar';
 import { AdminBar } from '@/components/admin-bar';
@@ -11,6 +18,12 @@ import { GlobalSearchModal } from '@/components/Public/GlobalSearchModal';
 import { TajikistanEmblem } from '@/components/Public/symbols/state-emblem';
 import { TajikistanFlag } from '@/components/Public/symbols/state-flag';
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
     Sheet,
     SheetContent,
     SheetHeader,
@@ -18,21 +31,28 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { useTranslations } from '@/hooks/use-translations';
+import { cn } from '@/lib/utils';
 import { welcome } from '@/routes';
 import { create as appealsCreate } from '@/routes/appeals';
 import { index as contactsIndex } from '@/routes/contacts';
 import { index as documentsIndex } from '@/routes/documents';
+import { index as faqIndex } from '@/routes/faq';
+import { index as galleryIndex } from '@/routes/gallery';
 import { index as guidesIndex } from '@/routes/guides';
 import { index as incidentsIndex } from '@/routes/incidents';
 import { index as leadershipIndex } from '@/routes/leadership';
 import { index as mapIndex } from '@/routes/map';
 import { index as newsIndex } from '@/routes/news';
 import { show as pageShow } from '@/routes/pages';
+import { index as statisticsIndex } from '@/routes/statistics';
 import { index as structureIndex } from '@/routes/structure';
 import { create as subscriptionsCreate } from '@/routes/subscriptions';
 import { index as tendersIndex } from '@/routes/tenders';
 import { create as touristGroupsCreate } from '@/routes/tourist-groups';
 import { index as vacanciesIndex } from '@/routes/vacancies';
+
+type NavLeaf = { label: string; href: string };
+type NavEntry = NavLeaf | { label: string; items: NavLeaf[] };
 
 export default function PublicLayout({
     children,
@@ -40,6 +60,7 @@ export default function PublicLayout({
     children: React.ReactNode;
 }) {
     const props = usePage().props;
+    const currentUrl = usePage().url;
     // Defensive defaults: error pages for unmatched URLs may render before shared props are set.
     const locale = props.locale ?? 'tj';
     const auth = props.auth;
@@ -62,20 +83,12 @@ export default function PublicLayout({
     const isRedState = activeAlerts.some((a) => a.level === 'critical');
 
     const headerClass = isRedState
-        ? 'bg-red-900 text-white border-red-700 shadow-lg'
-        : 'bg-card text-foreground border-border shadow-xs';
-
-    const linkClass = isRedState
-        ? 'rounded-md px-3 py-2 text-red-100 hover:bg-red-800 hover:text-white transition-colors'
-        : 'rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors';
+        ? 'bg-red-900 text-white border-red-700'
+        : 'bg-card text-foreground border-border';
 
     const buttonClass = isRedState
-        ? 'p-1.5 sm:p-2 rounded-md text-red-100 hover:bg-red-800 hover:text-white transition-colors cursor-pointer'
-        : 'p-1.5 sm:p-2 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer';
-
-    const switcherClass = isRedState
-        ? 'text-red-100 hover:bg-red-800 hover:text-white px-1.5 sm:px-3 text-xs sm:text-sm'
-        : 'text-muted-foreground hover:bg-muted hover:text-foreground px-1.5 sm:px-3 text-xs sm:text-sm';
+        ? 'rounded-md p-2 text-red-100 transition-colors hover:bg-red-800 hover:text-white cursor-pointer'
+        : 'rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer';
 
     // Admin privileges check for WordPress-style AdminBar
     const canManage =
@@ -88,8 +101,101 @@ export default function PublicLayout({
     const pageId = (props.page as { id?: number })?.id;
     const postId = (props.post as { id?: number })?.id;
 
+    // Grouped navigation (≤6 top-level entries; the rest live in dropdowns) — ТЗ §31(b).
+    const navEntries: NavEntry[] = [
+        { label: t('nav.home'), href: welcome({ locale }).url },
+        {
+            label: t('groups.about'),
+            items: [
+                {
+                    label: t('nav.leadership'),
+                    href: leadershipIndex({ locale }).url,
+                },
+                {
+                    label: t('nav.structure'),
+                    href: structureIndex({ locale }).url,
+                },
+                {
+                    label: t('nav.documents'),
+                    href: documentsIndex({ locale }).url,
+                },
+                {
+                    label: t('nav.statistics'),
+                    href: statisticsIndex({ locale }).url,
+                },
+                { label: t('nav.faq'), href: faqIndex({ locale }).url },
+            ],
+        },
+        {
+            label: t('groups.emergency'),
+            items: [
+                {
+                    label: t('nav.situation'),
+                    href: incidentsIndex({ locale }).url,
+                },
+                { label: t('nav.map'), href: mapIndex({ locale }).url },
+                { label: t('nav.guides'), href: guidesIndex({ locale }).url },
+            ],
+        },
+        {
+            label: t('groups.press'),
+            items: [
+                { label: t('nav.news'), href: newsIndex({ locale }).url },
+                { label: t('nav.gallery'), href: galleryIndex({ locale }).url },
+            ],
+        },
+        {
+            label: t('groups.services'),
+            items: [
+                {
+                    label: t('nav.reception'),
+                    href: appealsCreate({ locale }).url,
+                },
+                {
+                    label: t('nav.tourism'),
+                    href: touristGroupsCreate({ locale }).url,
+                },
+                {
+                    label: t('nav.vacancies'),
+                    href: vacanciesIndex({ locale }).url,
+                },
+                { label: t('nav.tenders'), href: tendersIndex({ locale }).url },
+                {
+                    label: t('nav.subscribe'),
+                    href: subscriptionsCreate({ locale }).url,
+                },
+            ],
+        },
+        { label: t('nav.contacts'), href: contactsIndex({ locale }).url },
+    ];
+
+    const pathOf = (href: string) => {
+        try {
+            return new URL(href, 'http://h').pathname;
+        } catch {
+            return href;
+        }
+    };
+    const homePath = pathOf(welcome({ locale }).url);
+    const isActive = (href: string) => {
+        const target = pathOf(href);
+        const current = pathOf(currentUrl);
+
+        if (target === homePath) {
+            return current === homePath;
+        }
+
+        return current === target || current.startsWith(`${target}/`);
+    };
+    const groupActive = (items: NavLeaf[]) =>
+        items.some((i) => isActive(i.href));
+
+    const navTrigger =
+        'inline-flex cursor-pointer items-center gap-1 rounded-md px-3.5 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none';
+    const navActive = 'bg-primary/10 text-primary';
+
     return (
-        <div className="flex min-h-screen flex-col bg-card font-sans text-foreground antialiased selection:bg-primary/20">
+        <div className="flex min-h-screen flex-col bg-background font-sans text-foreground antialiased selection:bg-primary/20">
             <a
                 href="#main-content"
                 className="sr-only rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100]"
@@ -100,75 +206,44 @@ export default function PublicLayout({
             {isA11yOpen && (
                 <AccessibilityToolbar onClose={() => setIsA11yOpen(false)} />
             )}
-            {/* Government Utility Bar & Symbols (Point 31a) */}
-            <div className="border-b border-white/10 bg-brand-strong py-2 text-xs text-brand-strong-foreground print:hidden">
-                <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 sm:flex-row sm:items-center sm:justify-between">
-                    {/* Left: State Symbols & Gov text */}
-                    <div className="flex items-center gap-3">
-                        <div className="flex shrink-0 items-center gap-1.5 border-r border-white/20 pr-3">
-                            <TajikistanEmblem className="size-6 shrink-0" />
-                            <TajikistanFlag className="h-4 w-8 shrink-0 rounded-xs" />
-                        </div>
-                        <span className="truncate font-medium text-brand-strong-foreground/90">
+
+            {/* Brand signature rule (ТЗ §6.1) */}
+            <div className="h-[3px] bg-signal print:hidden" />
+
+            {/* Government utility strip — state symbols + identifier, language + search (ТЗ §31a) */}
+            <div className="border-b border-border bg-card text-muted-foreground print:hidden">
+                <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-1.5 text-xs">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                        <TajikistanEmblem className="size-5 shrink-0" />
+                        <TajikistanFlag className="h-3.5 w-7 shrink-0 rounded-xs" />
+                        <span className="truncate">
                             {t('govbar.identifier')}
                         </span>
                     </div>
-
-                    {/* Right: Required utility navigation block */}
-                    <nav
-                        aria-label={t('a11y.settings_search')}
-                        className="flex flex-wrap items-center gap-x-4 gap-y-1 font-medium text-brand-strong-foreground/80"
-                    >
-                        <Link
-                            href={welcome({ locale }).url}
-                            className="transition-colors hover:text-white"
-                        >
-                            {t('nav.home')}
-                        </Link>
-                        <Link
-                            href={mapIndex({ locale }).url}
-                            className="transition-colors hover:text-white"
-                        >
-                            {t('nav.map')}
-                        </Link>
-                        <Link
-                            href={contactsIndex({ locale }).url}
-                            className="transition-colors hover:text-white"
-                        >
-                            {t('nav.contacts')}
-                        </Link>
-                        <Link
-                            href={`${contactsIndex({ locale }).url}#regional-offices`}
-                            className="transition-colors hover:text-white"
-                        >
-                            {t('nav.subdivisions')}
-                        </Link>
-                        <span className="hidden h-3 w-px bg-white/20 sm:inline" />
-
-                        {/* Language Switcher */}
-                        <LanguageSwitcher className="cursor-pointer hover:text-white" />
-
-                        <span className="hidden h-3 w-px bg-white/20 sm:inline" />
-                        {/* Search Button */}
+                    <div className="flex shrink-0 items-center gap-1">
+                        <LanguageSwitcher className="text-muted-foreground hover:text-foreground" />
+                        <span className="mx-1 hidden h-3 w-px bg-border sm:inline" />
                         <button
                             onClick={() => setIsSearchOpen(true)}
-                            className="inline-flex cursor-pointer items-center gap-1 hover:text-white"
+                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                             aria-label={t('a11y.site_search')}
                         >
-                            <Search className="size-3.5" />
-                            <span>{t('actions.search')}</span>
+                            <Search className="size-3.5" aria-hidden="true" />
+                            <span className="hidden sm:inline">
+                                {t('actions.search')}
+                            </span>
                         </button>
-                    </nav>
+                    </div>
                 </div>
             </div>
 
             <AlertBanner />
 
             <header
-                className={`sticky top-0 z-40 border-b transition-all duration-500 print:hidden ${headerClass}`}
+                className={`sticky top-0 z-40 border-b transition-colors duration-300 print:hidden ${headerClass}`}
             >
-                <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between">
-                    {/* Left: Organization identity */}
+                {/* Main bar: identity · official title · hotline + controls */}
+                <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3.5">
                     <Link
                         href={welcome({ locale }).url}
                         className="flex shrink-0 items-center gap-3 transition-opacity hover:opacity-80"
@@ -177,39 +252,33 @@ export default function PublicLayout({
                             alt=""
                             className="size-10 shrink-0 md:size-11"
                         />
-                        <div className="flex flex-col">
-                            <span className="text-lg font-bold tracking-tight md:text-xl">
-                                {t('site.short_name')}
-                            </span>
-                            <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                                {locale.toUpperCase()}
-                            </span>
-                        </div>
+                        <span className="text-lg font-bold tracking-tight md:text-xl">
+                            {t('site.short_name')}
+                        </span>
                     </Link>
 
-                    {/* Center: CENTRED Official Title of the site as per law */}
-                    <div className="mx-auto hidden max-w-xl flex-1 px-4 text-center md:block">
-                        <h1 className="text-xs leading-tight font-bold tracking-tight text-balance text-muted-foreground uppercase">
+                    <div className="mx-auto hidden max-w-md flex-1 px-4 text-center lg:block">
+                        <h1 className="text-xs leading-snug font-bold tracking-tight text-balance text-muted-foreground uppercase">
                             {t('site.full_name')}
                         </h1>
                     </div>
 
-                    {/* Right: Emergency Hotline & accessibility controls */}
-                    <div className="flex items-center justify-between gap-3 md:justify-end">
-                        {/* 112 Hotline */}
+                    <div className="ml-auto flex items-center gap-2 lg:ml-0">
                         <a
                             href="tel:112"
-                            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold shadow-xs transition-all hover:scale-105 sm:text-sm ${
+                            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-colors ${
                                 isRedState
-                                    ? 'bg-white text-red-700 hover:bg-gray-100'
-                                    : 'bg-red-600 text-white hover:bg-red-700'
+                                    ? 'bg-white text-red-700 hover:bg-white/90'
+                                    : 'border border-signal/30 text-signal hover:bg-signal/10'
                             }`}
                         >
-                            <Phone className="size-3.5 sm:size-4" />
-                            <span>{t('home.hero.emergency_call')}</span>
+                            <Phone className="size-4" aria-hidden="true" />
+                            <span className="hidden tabular-nums sm:inline">
+                                {t('home.hero.emergency_call')}
+                            </span>
+                            <span className="tabular-nums sm:hidden">112</span>
                         </a>
 
-                        {/* Accessibility Button */}
                         <button
                             onClick={() => setIsA11yOpen(!isA11yOpen)}
                             className={buttonClass}
@@ -220,8 +289,8 @@ export default function PublicLayout({
                             <Eye className="size-5" />
                         </button>
 
-                        {/* Mobile & Tablet Hamburger Drawer */}
-                        <div className="hidden sm:block lg:hidden">
+                        {/* Hamburger drawer (mobile + tablet, below lg) */}
+                        <div className="lg:hidden">
                             <Sheet
                                 open={isMobileMenuOpen}
                                 onOpenChange={setIsMobileMenuOpen}
@@ -232,14 +301,14 @@ export default function PublicLayout({
                                         aria-label={t('a11y.menu')}
                                     >
                                         <Menu
-                                            className="size-5 sm:size-5.5"
+                                            className="size-5"
                                             aria-hidden="true"
                                         />
                                     </button>
                                 </SheetTrigger>
                                 <SheetContent
                                     side="right"
-                                    className="flex w-full max-w-xs flex-col gap-6 border-slate-800 bg-[#0f172a] p-6 text-white sm:max-w-sm"
+                                    className="flex w-full max-w-xs flex-col gap-4 border-slate-800 bg-[#0b1220] p-6 text-white sm:max-w-sm"
                                 >
                                     <SheetHeader className="flex justify-start border-b border-slate-800 pb-4 text-left">
                                         <SheetTitle className="flex items-center gap-2 text-lg font-bold text-white">
@@ -254,147 +323,49 @@ export default function PublicLayout({
                                     </SheetHeader>
                                     <nav
                                         aria-label={t('a11y.menu')}
-                                        className="flex flex-1 flex-col gap-1 overflow-y-auto text-base font-medium"
+                                        className="flex flex-1 flex-col gap-0.5 overflow-y-auto text-base"
                                     >
-                                        <Link
-                                            href={welcome({ locale }).url}
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.home')}
-                                        </Link>
-                                        <Link
-                                            href={
-                                                leadershipIndex({ locale }).url
-                                            }
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.leadership')}
-                                        </Link>
-                                        <Link
-                                            href={
-                                                structureIndex({ locale }).url
-                                            }
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.structure')}
-                                        </Link>
-                                        <Link
-                                            href={newsIndex({ locale }).url}
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.news')}
-                                        </Link>
-                                        <Link
-                                            href={
-                                                incidentsIndex({ locale }).url
-                                            }
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.situation')}
-                                        </Link>
-                                        <Link
-                                            href={mapIndex({ locale }).url}
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.map')}
-                                        </Link>
-                                        <Link
-                                            href={
-                                                documentsIndex({ locale }).url
-                                            }
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.documents')}
-                                        </Link>
-                                        <Link
-                                            href={appealsCreate({ locale }).url}
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.reception')}
-                                        </Link>
-                                        <Link
-                                            href={
-                                                touristGroupsCreate({ locale })
-                                                    .url
-                                            }
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.tourism')}
-                                        </Link>
-                                        <Link
-                                            href={
-                                                subscriptionsCreate({ locale })
-                                                    .url
-                                            }
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.subscribe')}
-                                        </Link>
-                                        <Link
-                                            href={
-                                                vacanciesIndex({ locale }).url
-                                            }
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.vacancies')}
-                                        </Link>
-                                        <Link
-                                            href={tendersIndex({ locale }).url}
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.tenders')}
-                                        </Link>
-                                        <Link
-                                            href={`${contactsIndex({ locale }).url}#regional-offices`}
-                                            onClick={() =>
-                                                setIsMobileMenuOpen(false)
-                                            }
-                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-                                        >
-                                            {t('nav.subdivisions')}
-                                        </Link>
+                                        {navEntries.map((entry) =>
+                                            'items' in entry ? (
+                                                <div
+                                                    key={entry.label}
+                                                    className="flex flex-col"
+                                                >
+                                                    <span className="px-3 pt-4 pb-1 text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                                        {entry.label}
+                                                    </span>
+                                                    {entry.items.map((sub) => (
+                                                        <Link
+                                                            key={sub.href}
+                                                            href={sub.href}
+                                                            onClick={() =>
+                                                                setIsMobileMenuOpen(
+                                                                    false,
+                                                                )
+                                                            }
+                                                            className="rounded-md px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                                                        >
+                                                            {sub.label}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <Link
+                                                    key={entry.href}
+                                                    href={entry.href}
+                                                    onClick={() =>
+                                                        setIsMobileMenuOpen(
+                                                            false,
+                                                        )
+                                                    }
+                                                    className="rounded-md px-3 py-2 font-semibold text-slate-100 transition-colors hover:bg-slate-800 hover:text-white"
+                                                >
+                                                    {entry.label}
+                                                </Link>
+                                            ),
+                                        )}
 
-                                        <div className="my-4 border-t border-slate-800" />
-
-                                        <span className="px-3 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                            {t('a11y.settings_search')}
-                                        </span>
+                                        <div className="my-3 border-t border-slate-800" />
 
                                         <button
                                             onClick={() => {
@@ -420,7 +391,7 @@ export default function PublicLayout({
 
                                         {locales.length > 1 && (
                                             <>
-                                                <div className="my-4 border-t border-slate-800" />
+                                                <div className="my-3 border-t border-slate-800" />
                                                 <div className="flex flex-col gap-2 px-3">
                                                     <span className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
                                                         {t('lang.label')}
@@ -452,7 +423,7 @@ export default function PublicLayout({
                                                                     className={`flex-1 rounded py-1.5 text-center text-xs font-semibold transition-all ${
                                                                         language.code ===
                                                                         locale
-                                                                            ? 'bg-blue-600 font-bold text-white shadow-sm'
+                                                                            ? 'bg-primary font-bold text-primary-foreground shadow-sm'
                                                                             : 'text-slate-400 hover:text-white'
                                                                     }`}
                                                                 >
@@ -473,101 +444,67 @@ export default function PublicLayout({
                     </div>
                 </div>
 
-                {/* Primary Category Navigation Menu (Point 31 (b)) */}
-                <div className="border-t border-border bg-card/50 backdrop-blur-xs">
-                    <div className="mx-auto max-w-6xl px-4">
-                        <nav
-                            aria-label={t('a11y.primary_nav')}
-                            className="no-scrollbar flex items-center gap-1 overflow-x-auto py-2 text-sm font-medium"
-                        >
-                            <Link
-                                href={welcome({ locale }).url}
-                                className={linkClass}
-                            >
-                                {t('nav.home')}
-                            </Link>
-                            <Link
-                                href={leadershipIndex({ locale }).url}
-                                className={linkClass}
-                            >
-                                {t('nav.leadership')}
-                            </Link>
-                            <Link
-                                href={structureIndex({ locale }).url}
-                                className={linkClass}
-                            >
-                                {t('nav.structure')}
-                            </Link>
-                            <Link
-                                href={newsIndex({ locale }).url}
-                                className={linkClass}
-                            >
-                                {t('nav.news')}
-                            </Link>
-                            <Link
-                                href={incidentsIndex({ locale }).url}
-                                className={linkClass}
-                            >
-                                {t('nav.situation')}
-                            </Link>
-                            <Link
-                                href={mapIndex({ locale }).url}
-                                className={linkClass}
-                            >
-                                {t('nav.map')}
-                            </Link>
-                            <Link
-                                href={documentsIndex({ locale }).url}
-                                className={linkClass}
-                            >
-                                {t('nav.documents')}
-                            </Link>
-                            <Link
-                                href={appealsCreate({ locale }).url}
-                                className={linkClass}
-                            >
-                                {t('nav.reception')}
-                            </Link>
-                            <Link
-                                href={touristGroupsCreate({ locale }).url}
-                                className={linkClass}
-                            >
-                                {t('nav.tourism')}
-                            </Link>
-                            <Link
-                                href={subscriptionsCreate({ locale }).url}
-                                className={linkClass}
-                            >
-                                {t('nav.subscribe')}
-                            </Link>
-                            <Link
-                                href={vacanciesIndex({ locale }).url}
-                                className={linkClass}
-                            >
-                                {t('nav.vacancies')}
-                            </Link>
-                            <Link
-                                href={tendersIndex({ locale }).url}
-                                className={linkClass}
-                            >
-                                {t('nav.tenders')}
-                            </Link>
-                        </nav>
-                    </div>
+                {/* Primary grouped navigation (desktop, lg+) — ТЗ §31(b) */}
+                <div className="hidden border-t border-border bg-card lg:block">
+                    <nav
+                        aria-label={t('a11y.primary_nav')}
+                        className="mx-auto flex max-w-6xl items-center gap-0.5 px-4 py-2"
+                    >
+                        {navEntries.map((entry) =>
+                            'items' in entry ? (
+                                <DropdownMenu key={entry.label}>
+                                    <DropdownMenuTrigger
+                                        className={cn(
+                                            navTrigger,
+                                            groupActive(entry.items) &&
+                                                navActive,
+                                        )}
+                                    >
+                                        {entry.label}
+                                        <ChevronDown
+                                            className="size-4 opacity-60"
+                                            aria-hidden="true"
+                                        />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                        align="start"
+                                        className="min-w-56"
+                                    >
+                                        {entry.items.map((sub) => (
+                                            <DropdownMenuItem
+                                                key={sub.href}
+                                                asChild
+                                            >
+                                                <Link
+                                                    href={sub.href}
+                                                    className={cn(
+                                                        'w-full cursor-pointer',
+                                                        isActive(sub.href) &&
+                                                            'text-primary',
+                                                    )}
+                                                >
+                                                    {sub.label}
+                                                </Link>
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            ) : (
+                                <Link
+                                    key={entry.href}
+                                    href={entry.href}
+                                    className={cn(
+                                        navTrigger,
+                                        isActive(entry.href) && navActive,
+                                    )}
+                                >
+                                    {entry.label}
+                                </Link>
+                            ),
+                        )}
+                    </nav>
                 </div>
             </header>
-
-            {/* President's Quote Section as required by government regulations */}
-            <div className="border-y border-amber-500/10 bg-radial from-amber-500/5 to-transparent py-4 print:hidden">
-                <div className="mx-auto max-w-4xl px-4 text-center">
-                    <blockquote className="text-xs leading-relaxed font-medium text-muted-foreground italic sm:text-sm">
-                        {t('site.president_quote')}
-                    </blockquote>
-                    <cite className="mt-1 block text-[10px] font-semibold tracking-wider text-amber-600 uppercase not-italic sm:text-xs">
-                        — {t('site.president_quote_author')}
-                    </cite>
-                </div>
-            </div>
 
             <main
                 id="main-content"

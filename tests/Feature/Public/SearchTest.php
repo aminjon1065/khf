@@ -1,9 +1,12 @@
 <?php
 
 use App\Enums\ContentStatus;
+use App\Models\Faq;
+use App\Models\Gallery;
 use App\Models\Leader;
 use App\Models\Page;
 use App\Models\Post;
+use App\Models\Statistic;
 use App\Models\Subdivision;
 use App\Models\Tender;
 use App\Models\Vacancy;
@@ -144,4 +147,44 @@ it('returns published subdivisions in search results', function () {
     $this->getJson('/tj/search/api?q=Rescue')
         ->assertOk()
         ->assertJsonFragment(['title' => 'Rescue Operations Department', 'type' => 'subdivision']);
+});
+
+it('returns published galleries in search results', function () {
+    $gallery = Gallery::factory()->create(['status' => ContentStatus::Published]);
+    $gallery->translations()->create([
+        'locale' => 'tj',
+        'title' => 'Earthquake Drill Photos',
+        'slug' => 'earthquake-drill-photos',
+        'description' => 'Photos from the drill',
+    ]);
+
+    $this->getJson('/tj/search/api?q=Drill')
+        ->assertOk()
+        ->assertJsonFragment(['title' => 'Earthquake Drill Photos', 'type' => 'gallery']);
+});
+
+it('returns published faqs in search results', function () {
+    $faq = Faq::factory()->create(['status' => ContentStatus::Published]);
+    $faq->translations()->create([
+        'locale' => 'tj',
+        'question' => 'How to report a wildfire?',
+        'answer' => 'Call the hotline immediately.',
+    ]);
+
+    $this->getJson('/tj/search/api?q=wildfire')
+        ->assertOk()
+        ->assertJsonFragment(['title' => 'How to report a wildfire?', 'type' => 'faq']);
+});
+
+it('returns published statistics in search results', function () {
+    $statistic = Statistic::factory()->create(['status' => ContentStatus::Published]);
+    $statistic->translations()->create([
+        'locale' => 'tj',
+        'label' => 'Rescue Operations Conducted',
+        'unit' => 'units',
+    ]);
+
+    $this->getJson('/tj/search/api?q=Operations')
+        ->assertOk()
+        ->assertJsonFragment(['title' => 'Rescue Operations Conducted', 'type' => 'statistic']);
 });

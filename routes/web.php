@@ -3,7 +3,9 @@
 use App\Http\Controllers\Public\AppealController;
 use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Public\DocumentController;
+use App\Http\Controllers\Public\FaqController;
 use App\Http\Controllers\Public\FeedController;
+use App\Http\Controllers\Public\GalleryController;
 use App\Http\Controllers\Public\GuideController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\IncidentController;
@@ -14,6 +16,7 @@ use App\Http\Controllers\Public\PostController;
 use App\Http\Controllers\Public\PushSubscriptionController;
 use App\Http\Controllers\Public\SearchController;
 use App\Http\Controllers\Public\SitemapController;
+use App\Http\Controllers\Public\StatisticController;
 use App\Http\Controllers\Public\StructureController;
 use App\Http\Controllers\Public\SubscriptionController;
 use App\Http\Controllers\Public\TenderController;
@@ -57,6 +60,16 @@ Route::prefix('{locale}')
         // About the organisation — leadership and structure (ТЗ §20 «г», «б»).
         Route::get('leadership', [LeadershipController::class, 'index'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('leadership.index');
         Route::get('structure', [StructureController::class, 'index'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('structure.index');
+
+        // Photo galleries (ТЗ §20 «ш»). `gallery` is registered before `{slug}`.
+        Route::get('gallery', [GalleryController::class, 'index'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('gallery.index');
+        Route::get('gallery/{slug}', [GalleryController::class, 'show'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('gallery.show');
+
+        // FAQ — questions & answers (ТЗ §20 «й»).
+        Route::get('faq', [FaqController::class, 'index'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('faq.index');
+
+        // Official statistics — key activity indicators (ТЗ §20 «у»).
+        Route::get('statistics', [StatisticController::class, 'index'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('statistics.index');
 
         // Civil-service vacancies + online application with receipt confirmation (ТЗ §20 «н», §21).
         // `track` is registered before `{slug}` so it is not captured as a vacancy slug.
