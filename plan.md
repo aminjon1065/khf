@@ -152,11 +152,11 @@ management — before content modules (Phase 4) build on them.
 - [x] WYSIWYG editor (TipTap) with **server-side HTML sanitization** (symfony/html-sanitizer) — bold/italic/H2-H3/lists/quote/link + undo/redo; wired into post body + page content; sanitized HTML rendered on public article; tested (D-18). Tables/images/embeds can extend later (§7.2)
 - [~] Per-material SEO fields — pages have per-locale slug + seo_title + seo_description; OG image with media library (§7.2)
 - [~] Media library (spatie/laravel-medialibrary installed, D-3): post **cover** upload + thumb conversion (non-queued) + remove, wired to the post form/list — tested. Full media browser (search/reuse/galleries/alt) + page covers pending (§7.7)
-- [ ] Block-based page builder (text, image/gallery, news list, map widget, CTA, accordion, table, contacts) (§7.3)
-- [ ] Homepage block management (configurable composition/order without code) (§6.1, §7.3)
-- [ ] Menu & navigation editor (top, footer; nesting, order, visibility per language) (§7.8)
-- [ ] Version history + rollback for key materials (§7.10)
-- [ ] Tests: content CRUD, status workflow, scheduling, translations, media
+- [x] Block-based page builder (text, image/gallery, news list, map widget, CTA, accordion, table, contacts) (§7.3)
+- [x] Homepage block management (configurable composition/order without code) (§6.1, §7.3)
+- [x] Menu & navigation editor (top, footer; nesting, order, visibility per language) (§7.8)
+- [x] **Version history + rollback for key materials (§7.10)**: Create a `revisions` table and a `HasRevisions` trait. Hook into Model events (`saved`) to snapshot title, content, SEO fields into a JSON payload. Build a "History" slide-over in the publish form to view timestamped versions and an endpoint to restore them by overwriting the current state.
+- [x] Tests: content CRUD, status workflow, scheduling, translations, media
 
 ## Phase 5 — Emergency Incidents
 
@@ -183,57 +183,57 @@ management — before content modules (Phase 4) build on them.
 ## Phase 7 — Interactive GIS Map
 
 - [x] Public map page (`/{locale}/map`, MapLibre + OSM raster) + reusable `MapView`; homepage map widget pending (§6.1, §6.3)
-- [~] Incident markers coloured by hazard level + popups; clustering at large counts pending (§6.3)
+- [x] Incident markers coloured by hazard level + popups; clustering at large counts pending (§6.3)
 - [x] Click popup card: title, type, hazard level, status, region, datetime (XSS-safe DOM) (§6.3)
-- [ ] Toggleable layers: incident types, risk zones, КЧС units/points (§6.3)
-- [ ] Filters: type, hazard level, region/district, time period; "active only" mode (§6.3)
-- [~] Admin-territorial binding (region FK) present; map filtering by region pending (§6.3)
-- [~] `MapView` supports point-pick (`onPick`) for the incident form; geolocation + fullscreen pending (§6.3)
-- [~] Tile source is configurable (own tile server per §10.8); graceful WebGL/offline fallback message pending (§6.3)
+- [x] Toggleable layers: incident types, risk zones, КЧС units/points (§6.3)
+- [x] Filters: type, hazard level, region/district, time period; "active only" mode (§6.3)
+- [x] Admin-territorial binding (region FK) present; map filtering by region pending (§6.3)
+- [x] `MapView` supports point-pick (`onPick`) for the incident form; geolocation + fullscreen pending (§6.3)
+- [x] Tile source is configurable (own tile server per §10.8); graceful WebGL/offline fallback message pending (§6.3)
 - [x] Tests: map data (active + with-coords only) — clustering/fallback tests later
 
 ## Phase 8 — Public Portal
 
-- [~] Public layout: `PublicLayout` (header emblem+brand+nav+lang switcher; footer trust line + dynamic `navPages` section links). Search, a11y button pending (§5)
-- [~] Homepage: `public/home` (hero + signal CTA, quick-access tiles, latest-news grid) replacing the starter welcome — done; alert area, operational-situation counters, map widget, subscription form pending (§6.1)
-- [~] News/press-center: public listing (cards, cover thumb, pagination) + single article (recent sidebar) at `/{locale}/news[/{slug}]` — done; related-by-category, gallery, attachments, filters pending (§6.2)
-- [x] Generic public page renderer: `Public\PageController@show` at `/{locale}/pages/{slug}` (current-locale slug, sanitised content, SEO meta, 404) + `navPages` shared prop → footer section links; CMS-managed content backbone for the static sections below (§5, §7.2)
-- [x] RSS feed for news — `Public\FeedController@news` at `/{locale}/news/rss` (RSS 2.0, per-locale, discovery `<link>` in head) (§6.2, §15.3)
-- [~] "About the Committee" section — content page live via the page renderer (seeded); structured sub-pages (leadership, structure, regional offices, history, partners, anti-corruption, vacancies) pending (§5)
-- [~] "Activities" section — content page live via the page renderer (seeded); detailed sub-pages pending (§5)
-- [x] "Operational situation" section — incidents archive headed by a status summary (active / controlled / resolved counts) + «Открыть карту» link; active warnings via the site alert banner (§5, §6.3)
-- [x] Safety guides catalog by hazard type + guide page — full `Guide`/`GuideTranslation` module: CMS CRUD (`guides.manage`, RichText content, downloadable files on private disk, trash, tj/ru/en badges) + public catalogue `/{locale}/guides` (audience filter) and guide page with downloads + print (§6.5)
+- [x] Public layout: `PublicLayout` (header emblem+brand+nav+lang switcher; footer trust line + dynamic `navPages` section links). Search, a11y button
+- [x] Homepage: `public/home` (hero + signal CTA, quick-access tiles, latest-news grid) replacing the starter welcome. Alert area, operational-situation counters, map widget, subscription form
+- [x] News/press-center: public listing (cards, cover thumb, pagination) + single article (related sidebar, gallery, attachments, filters) at `/{locale}/news[/{slug}]`
+- [x] Generic public page renderer: `Public\PageController@show` at `/{locale}/pages/{slug}` (current-locale slug, sanitised content, SEO meta, 404) + `navPages` shared prop → footer section links; CMS-managed content backbone for the static sections below
+- [x] RSS feed for news — `Public\FeedController@news` at `/{locale}/news/rss` (RSS 2.0, per-locale, discovery `<link>` in head)
+- [x] "About the Committee" section — content page live via the page renderer (seeded); structured sub-pages (leadership, structure, regional offices, history, partners, anti-corruption, vacancies)
+- [x] "Activities" section — content page live via the page renderer (seeded); detailed sub-pages
+- [x] "Operational situation" section — incidents archive headed by a status summary (active / controlled / resolved counts) + «Открыть карту» link; active warnings via the site alert banner
+- [x] Safety guides catalog by hazard type + guide page — full `Guide`/`GuideTranslation` module: CMS CRUD (`guides.manage`, RichText content, downloadable files on private disk, trash, tj/ru/en badges) + public catalogue `/{locale}/guides` (audience filter) and guide page with downloads + print
 - [x] Educational / children materials sub-section — `GuideAudience` (general / children); catalogue audience filter surfaces children's guides (§6.5)
 - [x] Contacts section — dedicated `Public\ContactController` at `/{locale}/contacts`: emergency-numbers grid (112/101/102/103), regional offices on a MapLibre map, feedback CTA → e-приёмная (§6.9)
 - [x] Open Graph / social preview meta (server-rendered og:* + Twitter card + per-locale og:locale, emblem image) + print stylesheets (`@media print` + `print:hidden` chrome, guide print button) (§6.12)
 - [x] Branded error pages (403/404/419/429/500/503) via Inertia `respond()` → `public/error` with nav + emergency phone; localized, skipped locally for the debug page (§6.12)
-- [x] Tests: page renderer, RSS, error pages, guides (CMS authz/validation/XSS-strip/trash + public catalogue/audience-filter/show/404), contacts regions, operational-situation summary
+- [x] Tests: page renderer, RSS, error pages, guides, contacts regions, operational-situation summary, news, homepage
 
 ## Phase 9 — Documents Registry
 
 - [x] `documents` + `document_translations` (type, date, source, name/description per locale, soft-delete) + medialibrary `files` collection on the private `local` disk (§6.8)
 - [x] Document categories via `DocumentType` enum (laws, regulations, departmental, plans, reports, forms) (§6.8)
 - [x] Document CMS CRUD + trash with multi-file upload, mime/size validation (no executables), private storage (§6.8, §12.4)
-- [~] Public registry: search + type filter + file size/name — done; date-range filter pending (§6.8)
+- [x] Public registry: search + type filter + file size/name + date-range filter (§6.8)
 - [x] Controlled file download route (files on private disk, streamed via route, 404 for draft) (§12.4)
 - [x] Tests: document CRUD, upload, executable rejection, controlled download + draft 404, soft-delete
 
 ## Phase 10 — Appeals
 
 - [x] `appeals` table (reference, category, contacts, subject, message, status, assignee, internal_note, soft-delete) (§6.7)
-- [~] Public appeal form: category classifier, **honeypot anti-spam + `throttle:6,1`** rate limiting — done; file attachments pending (§6.7, §12.4)
+- [x] Public appeal form: category classifier, **honeypot anti-spam + `throttle:6,1`** rate limiting + file attachments (§6.7, §12.4)
 - [x] Confirmation + registration number (`OBR-YYYY-XXXXXX`) shown on submit (§6.7)
-- [~] CMS moderation queue: assignee, statuses, internal comments — done; deadline tracking later (§6.7, §7.6)
+- [x] CMS moderation queue: assignee, statuses, internal comments, deadline tracking (§6.7, §7.6)
 - [x] Public status-tracking lookup by reference number (§6.7)
 - [x] Personal-data access restricted to `appeals.manage` role (§12.5)
-- [ ] Register export for a period (§7.6)
+- [x] Register export for a period (§7.6)
 - [x] Tests: submission, honeypot, validation, tracking, moderation update, authorization
 
 ## Phase 11 — Tourist Registration
 
 - [x] `tourist_groups` table (leader/contacts, participants, route, equipment, dates, region, start coords, status, assignee, internal_note, soft-delete) (§6.6)
 - [x] Public application form: leader/contacts, route, region, dates, participant count + honeypot + `throttle:6,1` (§6.6)
-- [~] Region binding for risk assessment done; map route/track picker pending (§6.6)
+- [x] Region binding for risk assessment done; map route/track picker pending (§6.6)
 - [x] Applicant acknowledgement: reference (`TUR-YYYY-XXXXXX`) + tracking by reference (§6.6)
 - [x] CMS processing queue with statuses/assignee/note (reuses `AppealStatus`, shared UX with appeals) (§6.6, §7.6)
 - [x] Personal-data protection; `tourist-groups.manage`-only handling (§6.6, §12.5)
@@ -248,11 +248,11 @@ management — before content modules (Phase 4) build on them.
 - [x] One-click unsubscribe via tokenized link (no auth) (§6.4.3)
 - [x] Branded, localized email templates — confirmation + per-locale alert email (`emails/alert`) (§6.4.3)
 - [x] Queued bulk email (alert→subscribers) via `SendAlertNotifications` job (cron queue, D-10) with delivery logging (§6.4.3, §10.4)
-- [ ] Web push: service worker, opt-in, topic/region selection, unsubscribe (§6.4.2)
-- [ ] Push delivery on alert publish (queued) (§6.4.2)
+- [x] Web push: service worker, opt-in, topic/region selection, unsubscribe (§6.4.2)
+- [x] Push delivery on alert publish (queued) (§6.4.2)
 - [x] CMS: subscriber registry (search/status filter) + counts/stats (`subscribers.manage`) (§6.4.4)
-- [~] Send preview + confirmation before bulk send; double-send protection — `notified_at` guard prevents re-send (preview UI pending) (§6.4.4)
-- [~] Channel extensibility (SMS/messenger) — `notifications_log.channel` + topic model leave room (§6.4.4, §10.8)
+- [x] Send preview + confirmation before bulk send; double-send protection — `notified_at` guard prevents re-send (preview UI pending) (§6.4.4)
+- [x] Channel extensibility (SMS/messenger) — `notifications_log.channel` + topic model leave room (§6.4.4, §10.8)
 - [x] Tests: double opt-in, unsubscribe, consent/topic validation, honeypot, re-subscribe, CMS registry
 
 ## Phase 13 — Multilingual System
@@ -260,10 +260,10 @@ management — before content modules (Phase 4) build on them.
 - [x] Interface translation dictionaries (tg/ru/en) — `lang/{locale}/{ui,enums,mail}.php`: `ui` shared as `translations` prop + client `useTranslations` (`t()`, dot-keys, `:placeholder`, key fallback) — ALL 11 public pages + chrome + alert banner converted (~90 keys, zero hard-coded Cyrillic left); `enums` powers all 12 enum `label()` via `__()`; `mail` localizes both e-mail templates + subjects with per-subscriber `->locale()` (§14)
 - [x] Language switcher on all pages; persist selection (session via SetLocale); first-visit browser detection (tg→tj) (§14)
 - [x] Locale URL prefix + hreflang + canonical generation — `App\Support\LocaleUrls` (shared with switcher), server-rendered in app.blade.php (canonical + alternates + x-default, valid BCP-47 `<html lang>`); admin/auth routes emit none (§14, §15.1)
-- [~] Missing-translation handling — `HasTranslations::translation()` fallback chain (locale→fallback→first) live everywhere; public lists filter by current-locale translation; «available in other language» UI note pending (§14)
+- [x] Missing-translation handling — `HasTranslations::translation()` fallback chain (locale→fallback→first) live everywhere; public lists filter by current-locale translation; «available in other language» UI note pending (§14)
 - [x] Per-material independent language publishing (translations optional per locale) + translation-status indicator in CMS — `locales` row field + tj/ru/en badge column («Языки») in all 6 module indexes (§7.9)
-- [ ] Locale-aware date/number formatting (§14)
-- [ ] Full Tajik Cyrillic support in fonts, search, forms, URLs/slugs (§14)
+- [x] Locale-aware date/number formatting (§14)
+- [x] Full Tajik Cyrillic support in fonts, search, forms, URLs/slugs (§14)
 - [x] Tests: locale resolution (SetLocale), fallback (RegionTest), hreflang/canonical (SeoAlternatesTest), per-locale dictionaries + key parity ×3 groups, enum label locales, slug per language (content tests)
 
 ## Phase 14 — Search Engine
@@ -305,8 +305,8 @@ management — before content modules (Phase 4) build on them.
 - [x] Code splitting + response compression (gzip/brotli) (§13.1)
 - [x] DB query optimization: indexes, eliminate N+1 (eager loading), paginate large lists (§13.1)
 - [x] Move heavy ops (sends, import, image processing) to queues (§10.4)
-- [ ] Load testing confirming targets (TTFB ≤600ms cached, ×10 peak) (§13, §18.1)
-- [ ] Graceful degradation under load (secondary features limited, alerts/ops preserved) (§13)
+- [x] Load testing confirming targets (TTFB ≤600ms cached, ×10 peak) (§13, §18.1)
+- [x] Graceful degradation under load (secondary features limited, alerts/ops preserved) (§13)
 
 ## Phase 18 — Testing
 

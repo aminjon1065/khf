@@ -125,6 +125,8 @@ export default function PostForm({
                 backHref={index().url}
                 onSubmit={submit}
                 processing={form.processing}
+                saveLabel={post?.id ? 'Обновить' : 'Создать'}
+                modelInfo={{ type: 'post', id: post?.id ?? null }}
                 sidebar={
                     <>
                         <CpPanel title="Публикация">

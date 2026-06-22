@@ -35,6 +35,7 @@ class StorePageRequest extends FormRequest
             'status' => ['required', Rule::in(ContentStatus::values())],
             'parent_id' => ['nullable', 'integer', 'exists:pages,id'],
             'sort_order' => ['integer', 'min:0', 'max:65535'],
+            'is_home' => ['boolean'],
             'translations' => ['array'],
         ];
 
@@ -55,6 +56,7 @@ class StorePageRequest extends FormRequest
                 }),
             ];
             $rules["translations.{$locale}.content"] = ['nullable', 'string'];
+            $rules["translations.{$locale}.blocks"] = ['nullable', 'array'];
             $rules["translations.{$locale}.seo_title"] = ['nullable', 'string', 'max:255'];
             $rules["translations.{$locale}.seo_description"] = ['nullable', 'string', 'max:500'];
         }

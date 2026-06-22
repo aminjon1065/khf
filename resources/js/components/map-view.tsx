@@ -25,6 +25,7 @@ type MapViewProps = {
 // for independence from external providers (ТЗ §10.8).
 const mapStyle: maplibregl.StyleSpecification = {
     version: 8,
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
     sources: {
         osm: {
             type: 'raster',
@@ -79,6 +80,11 @@ export function MapView({
         });
 
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
+        map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+        map.addControl(new maplibregl.GeolocateControl({
+            positionOptions: { enableHighAccuracy: true },
+            trackUserLocation: true
+        }), 'top-right');
 
         map.on('load', () => {
             map.resize();
@@ -112,48 +118,7 @@ export function MapView({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    useEffect(() => {
-        const map = mapRef.current;
-
-        if (!map) {
-            return;
-        }
-
-        const created = markers.map((marker) => {
-            const element = document.createElement('div');
-            element.style.width = '18px';
-            element.style.height = '18px';
-            element.style.borderRadius = '9999px';
-            element.style.background = marker.color;
-            element.style.border = '2px solid #ffffff';
-            element.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.25)';
-            element.style.cursor = 'pointer';
-
-            const popupContent = document.createElement('div');
-            const titleEl = document.createElement('strong');
-            titleEl.textContent = marker.title;
-            popupContent.appendChild(titleEl);
-            marker.lines?.forEach((line) => {
-                const lineEl = document.createElement('div');
-                lineEl.className = 'text-xs text-muted-foreground';
-                lineEl.textContent = line;
-                popupContent.appendChild(lineEl);
-            });
-
-            return new maplibregl.Marker({ element })
-                .setLngLat([marker.lng, marker.lat])
-                .setPopup(
-                    new maplibregl.Popup({ offset: 14 }).setDOMContent(
-                        popupContent,
-                    ),
-                )
-                .addTo(map);
-        });
-
-        return () => created.forEach((marker) => marker.remove());
-    }, [markers]);
-
-    // Pan to dynamic coordinate changes (e.g. region dropdown changes)
+    // Pan to dynamic coordinate changes
     useEffect(() => {
         const map = mapRef.current;
 
@@ -183,6 +148,164 @@ export function MapView({
                 .addTo(map);
         }
     }, [initialPickedCoords?.lat, initialPickedCoords?.lng]);
+
+    // Handle incoming markers via GeoJSON and Clustering
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map) return;
+
+        const loadData = () => {
+            const geojsonData: GeoJSON.FeatureCollection = {
+                type: 'FeatureCollection',
+                features: markers.map((m) => ({
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [m.lng, m.lat] },
+                    properties: { ...m },
+                })),
+            };
+
+            const source = map.getSource('incidents');
+            if (source) {
+                (source as maplibregl.GeoJSONSource).setData(geojsonData);
+            } else {
+                map.addSource('incidents', {
+                    type: 'geojson',
+                    data: geojsonData,
+                    cluster: true,
+                    clusterMaxZoom: 14,
+                    clusterRadius: 50,
+                });
+
+                map.addLayer({
+                    id: 'clusters',
+                    type: 'circle',
+                    source: 'incidents',
+                    filter: ['has', 'point_count'],
+                    paint: {
+                        'circle-color': [
+                            'step',
+                            ['get', 'point_count'],
+                            '#3b82f6', // blue-500
+                            10,
+                            '#eab308', // yellow-500
+                            50,
+                            '#ef4444', // red-500
+                        ],
+                        'circle-radius': [
+                            'step',
+                            ['get', 'point_count'],
+                            15,
+                            10,
+                            20,
+                            50,
+                            25,
+                        ],
+                        'circle-stroke-width': 2,
+                        'circle-stroke-color': '#fff',
+                    },
+                });
+
+                map.addLayer({
+                    id: 'cluster-count',
+                    type: 'symbol',
+                    source: 'incidents',
+                    filter: ['has', 'point_count'],
+                    layout: {
+                        'text-field': '{point_count_abbreviated}',
+                        'text-font': ['sans-serif'],
+                        'text-size': 12,
+                    },
+                    paint: {
+                        'text-color': '#ffffff',
+                    },
+                });
+
+                map.addLayer({
+                    id: 'unclustered-point',
+                    type: 'circle',
+                    source: 'incidents',
+                    filter: ['!', ['has', 'point_count']],
+                    paint: {
+                        'circle-color': ['get', 'color'],
+                        'circle-radius': 8,
+                        'circle-stroke-width': 2,
+                        'circle-stroke-color': '#fff',
+                    },
+                });
+
+                // Interaction
+                map.on('click', 'clusters', (e) => {
+                    const features = map.queryRenderedFeatures(e.point, {
+                        layers: ['clusters'],
+                    });
+                    const clusterId = features[0].properties.cluster_id;
+                    const source = map.getSource(
+                        'incidents',
+                    ) as maplibregl.GeoJSONSource;
+
+                    source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+                        if (err) return;
+                        const geom = features[0].geometry as GeoJSON.Point;
+                        map.easeTo({
+                            center: geom.coordinates as [number, number],
+                            zoom: zoom,
+                        });
+                    });
+                });
+
+                map.on('click', 'unclustered-point', (e) => {
+                    if (!e.features || !e.features[0]) return;
+                    const coordinates = (
+                        e.features[0].geometry as GeoJSON.Point
+                    ).coordinates.slice() as [number, number];
+                    const props = e.features[0].properties as any;
+
+                    const popupContent = document.createElement('div');
+                    const titleEl = document.createElement('strong');
+                    titleEl.textContent = props.title;
+                    popupContent.appendChild(titleEl);
+
+                    if (props.type) {
+                        const typeEl = document.createElement('div');
+                        typeEl.className = 'text-xs mt-1 text-muted-foreground';
+                        typeEl.textContent = `${props.type} • ${props.level}`;
+                        popupContent.appendChild(typeEl);
+                    }
+
+                    if (props.region) {
+                        const regEl = document.createElement('div');
+                        regEl.className = 'text-xs text-muted-foreground';
+                        regEl.textContent = props.region;
+                        popupContent.appendChild(regEl);
+                    }
+
+                    new maplibregl.Popup({ offset: 10 })
+                        .setLngLat(coordinates)
+                        .setDOMContent(popupContent)
+                        .addTo(map);
+                });
+
+                map.on('mouseenter', 'clusters', () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                });
+                map.on('mouseleave', 'clusters', () => {
+                    map.getCanvas().style.cursor = '';
+                });
+                map.on('mouseenter', 'unclustered-point', () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                });
+                map.on('mouseleave', 'unclustered-point', () => {
+                    map.getCanvas().style.cursor = '';
+                });
+            }
+        };
+
+        if (map.isStyleLoaded()) {
+            loadData();
+        } else {
+            map.once('style.load', loadData);
+        }
+    }, [markers]);
 
     useEffect(() => {
         const map = mapRef.current;

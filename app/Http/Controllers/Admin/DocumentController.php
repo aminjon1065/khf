@@ -72,6 +72,7 @@ class DocumentController extends Controller
         $document = Document::create($this->attributes($data));
         $document->upsertTranslations($this->translationsPayload($data));
         $this->syncFiles($request, $document);
+        $document->saveRevision();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Document created.')]);
 
@@ -92,6 +93,7 @@ class DocumentController extends Controller
         $document->update($this->attributes($data));
         $document->upsertTranslations($this->translationsPayload($data));
         $this->syncFiles($request, $document);
+        $document->saveRevision();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Document updated.')]);
 

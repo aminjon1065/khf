@@ -14,8 +14,11 @@ use App\Http\Controllers\Admin\IncidentController;
 use App\Http\Controllers\Admin\LanguageController;
 use App\Http\Controllers\Admin\LeaderController;
 use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\RevisionController;
 use App\Http\Controllers\Admin\StatisticController;
 use App\Http\Controllers\Admin\SubdivisionController;
 use App\Http\Controllers\Admin\SubscriberController;
@@ -80,6 +83,16 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
         });
 
+        // Menus (menus.manage).
+        Route::middleware('can:'.Permission::ManageMenus->value)->group(function () {
+            Route::get('menus', [MenuController::class, 'index'])->name('menus.index');
+            Route::get('menus/{menu}', [MenuController::class, 'show'])->name('menus.show');
+            Route::post('menus/{menu}/items', [MenuItemController::class, 'store'])->name('menus.items.store');
+            Route::put('menus/{menu}/items/{item}', [MenuItemController::class, 'update'])->name('menus.items.update');
+            Route::delete('menus/{menu}/items/{item}', [MenuItemController::class, 'destroy'])->name('menus.items.destroy');
+            Route::post('menus/{menu}/reorder', [MenuItemController::class, 'reorder'])->name('menus.reorder');
+        });
+
         // Emergencies — incidents (incidents.manage).
         Route::middleware('can:'.Permission::ManageIncidents->value)->group(function () {
             Route::get('incidents', [IncidentController::class, 'index'])->name('incidents.index');
@@ -97,6 +110,7 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
         Route::middleware('can:'.Permission::ManageAlerts->value)->group(function () {
             Route::get('alerts', [AlertController::class, 'index'])->name('alerts.index');
             Route::get('alerts/trash', [AlertController::class, 'trash'])->name('alerts.trash');
+            Route::get('alerts/estimate', [AlertController::class, 'estimateRecipients'])->name('alerts.estimate');
             Route::get('alerts/create', [AlertController::class, 'create'])->name('alerts.create');
             Route::post('alerts', [AlertController::class, 'store'])->name('alerts.store');
             Route::get('alerts/{alert}/edit', [AlertController::class, 'edit'])->name('alerts.edit');
@@ -229,6 +243,8 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
         // Services — citizen appeals moderation queue (appeals.manage).
         Route::middleware('can:'.Permission::ManageAppeals->value)->group(function () {
             Route::get('appeals', [AppealController::class, 'index'])->name('appeals.index');
+            Route::get('appeals/export', [AppealController::class, 'export'])->name('appeals.export');
+            Route::get('appeals/{appeal}/download/{media}', [AppealController::class, 'downloadAttachment'])->name('appeals.download-attachment');
             Route::get('appeals/{appeal}', [AppealController::class, 'show'])->name('appeals.show');
             Route::put('appeals/{appeal}', [AppealController::class, 'update'])->name('appeals.update');
             Route::delete('appeals/{appeal}', [AppealController::class, 'destroy'])->name('appeals.destroy');
@@ -269,4 +285,8 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
         Route::middleware('can:'.Permission::ViewAudit->value)->group(function () {
             Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
         });
+
+        // Revisions (rollback for key materials)
+        Route::get('revisions/{type}/{id}', [RevisionController::class, 'index'])->name('revisions.index');
+        Route::post('revisions/{revision}/restore', [RevisionController::class, 'restore'])->name('revisions.restore');
     });

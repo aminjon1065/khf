@@ -101,73 +101,32 @@ export default function PublicLayout({
     const pageId = (props.page as { id?: number })?.id;
     const postId = (props.post as { id?: number })?.id;
 
-    // Grouped navigation (≤6 top-level entries; the rest live in dropdowns) — ТЗ §31(b).
-    const navEntries: NavEntry[] = [
-        { label: t('nav.home'), href: welcome({ locale }).url },
-        {
-            label: t('groups.about'),
-            items: [
-                {
-                    label: t('nav.leadership'),
-                    href: leadershipIndex({ locale }).url,
-                },
-                {
-                    label: t('nav.structure'),
-                    href: structureIndex({ locale }).url,
-                },
-                {
-                    label: t('nav.documents'),
-                    href: documentsIndex({ locale }).url,
-                },
-                {
-                    label: t('nav.statistics'),
-                    href: statisticsIndex({ locale }).url,
-                },
-                { label: t('nav.faq'), href: faqIndex({ locale }).url },
-            ],
-        },
-        {
-            label: t('groups.emergency'),
-            items: [
-                {
-                    label: t('nav.situation'),
-                    href: incidentsIndex({ locale }).url,
-                },
-                { label: t('nav.map'), href: mapIndex({ locale }).url },
-                { label: t('nav.guides'), href: guidesIndex({ locale }).url },
-            ],
-        },
-        {
-            label: t('groups.press'),
-            items: [
-                { label: t('nav.news'), href: newsIndex({ locale }).url },
-                { label: t('nav.gallery'), href: galleryIndex({ locale }).url },
-            ],
-        },
-        {
-            label: t('groups.services'),
-            items: [
-                {
-                    label: t('nav.reception'),
-                    href: appealsCreate({ locale }).url,
-                },
-                {
-                    label: t('nav.tourism'),
-                    href: touristGroupsCreate({ locale }).url,
-                },
-                {
-                    label: t('nav.vacancies'),
-                    href: vacanciesIndex({ locale }).url,
-                },
-                { label: t('nav.tenders'), href: tendersIndex({ locale }).url },
-                {
-                    label: t('nav.subscribe'),
-                    href: subscriptionsCreate({ locale }).url,
-                },
-            ],
-        },
-        { label: t('nav.contacts'), href: contactsIndex({ locale }).url },
-    ];
+    const menus = (props.menus as Record<string, any[]>) ?? {};
+    const rawPrimary = menus.primary ?? [];
+    const rawFooter = menus.footer ?? [];
+
+    const mapMenuToNavEntry = (item: any): NavEntry => {
+        if (item.children && item.children.length > 0) {
+            return {
+                label: item.title,
+                items: item.children.map((child: any) => ({
+                    label: child.title,
+                    href: child.url || '#',
+                })),
+            };
+        }
+        return {
+            label: item.title,
+            href: item.url || '#',
+        };
+    };
+
+    const navEntries: NavEntry[] = rawPrimary.map(mapMenuToNavEntry);
+
+    // Fallback if no primary menu is seeded yet
+    if (navEntries.length === 0) {
+        navEntries.push({ label: t('nav.home'), href: welcome({ locale }).url });
+    }
 
     const pathOf = (href: string) => {
         try {
@@ -589,40 +548,13 @@ export default function PublicLayout({
                             {t('footer.sections')}
                         </p>
                         <div className="flex flex-col gap-2 text-sm text-brand-strong-foreground/80">
-                            <Link
-                                href={newsIndex({ locale }).url}
-                                className="transition-colors hover:text-white"
-                            >
-                                {t('nav.news')}
-                            </Link>
-                            <Link
-                                href={documentsIndex({ locale }).url}
-                                className="transition-colors hover:text-white"
-                            >
-                                {t('nav.documents')}
-                            </Link>
-                            <Link
-                                href={guidesIndex({ locale }).url}
-                                className="transition-colors hover:text-white"
-                            >
-                                {t('nav.guides')}
-                            </Link>
-                            <Link
-                                href={contactsIndex({ locale }).url}
-                                className="transition-colors hover:text-white"
-                            >
-                                {t('nav.contacts')}
-                            </Link>
-                            {navPages.map((page) => (
+                            {rawFooter.map((item) => (
                                 <Link
-                                    key={page.slug}
-                                    href={
-                                        pageShow({ locale, slug: page.slug })
-                                            .url
-                                    }
+                                    key={item.id}
+                                    href={item.url || '#'}
                                     className="transition-colors hover:text-white"
                                 >
-                                    {page.title}
+                                    {item.title}
                                 </Link>
                             ))}
                         </div>

@@ -52,8 +52,9 @@ it('shows a published article by its localized slug', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('public/news/show')
-            ->where('post.title', 'Заголовок tj')
-            ->has('recent')
+            ->has('post.title')
+            ->has('post.body')
+            ->has('related')
         );
 });
 

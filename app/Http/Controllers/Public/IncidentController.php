@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Enums\HazardLevel;
 use App\Enums\IncidentStatus;
+use App\Enums\IncidentType;
 use App\Http\Controllers\Controller;
 use App\Models\Incident;
+use App\Models\Region;
+use App\Services\SystemLoadService;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,12 +42,39 @@ class IncidentController extends Controller
         // No locale filter here: active incidents must never be hidden from a locale, and this keeps
         // the list consistent with the unfiltered summary counts above (translation() falls back).
         $page = request('page', 1);
-        $incidentsCacheKey = 'incidents.archive.'.$locale.'.page.'.$page.'.'.$cacheKeyVersion;
+        $filters = request()->only(['type', 'level', 'region', 'period']);
+        $filterKey = md5(json_encode($filters));
 
-        $incidents = Cache::remember($incidentsCacheKey, 3600, function () use ($locale) {
-            return Incident::query()
-                ->with(['translations', 'region.translations'])
-                ->orderByRaw("CASE status WHEN 'active' THEN 0 WHEN 'controlled' THEN 1 ELSE 2 END")
+        $incidentsCacheKey = 'incidents.archive.'.$locale.'.page.'.$page.'.'.$filterKey.'.'.$cacheKeyVersion;
+
+        $incidents = Cache::remember($incidentsCacheKey, 3600, function () use ($locale, $filters) {
+            $query = Incident::query()->with(['translations', 'region.translations']);
+
+            if (SystemLoadService::isHighLoad()) {
+                $query->active();
+            }
+
+            if (! empty($filters['type'])) {
+                $query->where('type', $filters['type']);
+            }
+            if (! empty($filters['level'])) {
+                $query->where('hazard_level', $filters['level']);
+            }
+            if (! empty($filters['region'])) {
+                $query->where('region_id', $filters['region']);
+            }
+            if (! empty($filters['period'])) {
+                $period = $filters['period'];
+                if ($period === 'today') {
+                    $query->whereDate('occurred_at', today());
+                } elseif ($period === 'week') {
+                    $query->where('occurred_at', '>=', now()->subWeek());
+                } elseif ($period === 'month') {
+                    $query->where('occurred_at', '>=', now()->subMonth());
+                }
+            }
+
+            return $query->orderByRaw("CASE status WHEN 'active' THEN 0 WHEN 'controlled' THEN 1 ELSE 2 END")
                 ->orderByDesc('occurred_at')
                 ->paginate(20)
                 ->through(function (Incident $incident) use ($locale): array {
@@ -66,6 +97,10 @@ class IncidentController extends Controller
         return Inertia::render('public/incidents/index', [
             'incidents' => $incidents,
             'summary' => $summary,
+            'filters' => $filters,
+            'types' => collect(IncidentType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => $t->label()])->all(),
+            'levels' => collect(HazardLevel::cases())->map(fn ($l) => ['value' => $l->value, 'label' => $l->label()])->all(),
+            'regions' => Region::with('translations')->get()->map(fn ($r) => ['value' => (string) $r->id, 'label' => $r->translation($locale)?->name])->all(),
         ]);
     }
 }

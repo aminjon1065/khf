@@ -1,8 +1,9 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -17,6 +18,7 @@ import { index, update } from '@/routes/admin/appeals';
 
 type Option = { value: string; label: string };
 type Staff = { id: number; name: string };
+type Attachment = { id: number; name: string; url: string; size: string };
 
 type Appeal = {
     id: number;
@@ -30,7 +32,9 @@ type Appeal = {
     status: string;
     assigned_to: number | null;
     internal_note: string | null;
+    deadline_at: string | null;
     created_at: string | null;
+    attachments: Attachment[];
 };
 
 type PageProps = {
@@ -44,6 +48,7 @@ export default function AppealShow({ appeal, statuses, staff }: PageProps) {
         status: appeal.status,
         assigned_to: appeal.assigned_to,
         internal_note: appeal.internal_note ?? '',
+        deadline_at: appeal.deadline_at ?? '',
     });
 
     const errors = form.errors as Record<string, string>;
@@ -61,7 +66,7 @@ export default function AppealShow({ appeal, statuses, staff }: PageProps) {
                 <div>
                     <Button variant="ghost" size="sm" asChild>
                         <Link href={index().url}>
-                            <ArrowLeft className="size-4" />К обращениям
+                            <ArrowLeft className="mr-2 size-4" />К обращениям
                         </Link>
                     </Button>
                 </div>
@@ -105,6 +110,35 @@ export default function AppealShow({ appeal, statuses, staff }: PageProps) {
                                 {appeal.message}
                             </p>
                         </div>
+
+                        {appeal.attachments.length > 0 && (
+                            <div className="mt-6 border-t pt-4">
+                                <h3 className="mb-3 text-sm font-medium text-muted-foreground">
+                                    Вложения
+                                </h3>
+                                <ul className="space-y-2">
+                                    {appeal.attachments.map((attachment) => (
+                                        <li
+                                            key={attachment.id}
+                                            className="flex items-center gap-2 text-sm"
+                                        >
+                                            <a
+                                                href={attachment.url}
+                                                target="_blank"
+                                                className="flex items-center gap-2 text-primary hover:underline"
+                                                download
+                                            >
+                                                <Download className="size-4" />
+                                                <span>{attachment.name}</span>
+                                            </a>
+                                            <span className="text-muted-foreground">
+                                                ({attachment.size})
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </div>
 
                     <form
@@ -169,6 +203,18 @@ export default function AppealShow({ appeal, statuses, staff }: PageProps) {
                                 </SelectContent>
                             </Select>
                             <InputError message={errors.assigned_to} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="deadline_at">Срок исполнения</Label>
+                            <Input
+                                id="deadline_at"
+                                type="date"
+                                value={form.data.deadline_at}
+                                onChange={(e) =>
+                                    form.setData('deadline_at', e.target.value)
+                                }
+                            />
+                            <InputError message={errors.deadline_at} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="internal_note">

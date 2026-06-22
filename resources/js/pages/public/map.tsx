@@ -1,8 +1,10 @@
-import { Head } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { useCallback, useMemo } from 'react';
 import { MapView } from '@/components/map-view';
 import type { MapMarker } from '@/components/map-view';
 import { useTranslations } from '@/hooks/use-translations';
+
+type Option = { value: string; label: string };
 
 type IncidentMarker = {
     id: number;
@@ -19,39 +21,40 @@ type IncidentMarker = {
 
 type PageProps = {
     incidents: IncidentMarker[];
+    filters: {
+        type?: string;
+        level?: string;
+        region?: string;
+        period?: string;
+    };
+    types: Option[];
+    levels: Option[];
+    regions: Option[];
 };
 
-export default function PublicMap({ incidents }: PageProps) {
+export default function PublicMap({
+    incidents,
+    filters,
+    types,
+    levels,
+    regions,
+}: PageProps) {
     const { t } = useTranslations();
-    const [selectedType, setSelectedType] = useState<string>('all');
-    const [selectedLevel, setSelectedLevel] = useState<string>('all');
 
-    const uniqueTypes = useMemo(() => {
-        const types = new Set(incidents.map((i) => i.type));
-
-        return ['all', ...Array.from(types)];
-    }, [incidents]);
-
-    const uniqueLevels = useMemo(() => {
-        const levels = new Set(incidents.map((i) => i.level));
-
-        return ['all', ...Array.from(levels)];
-    }, [incidents]);
-
-    const filteredIncidents = useMemo(() => {
-        return incidents.filter((incident) => {
-            const matchType =
-                selectedType === 'all' || incident.type === selectedType;
-            const matchLevel =
-                selectedLevel === 'all' || incident.level === selectedLevel;
-
-            return matchType && matchLevel;
-        });
-    }, [incidents, selectedType, selectedLevel]);
+    const applyFilter = useCallback(
+        (key: string, value: string) => {
+            router.get(
+                route('map.index'),
+                { ...filters, [key]: value === 'all' ? null : value },
+                { preserveState: true, replace: true }
+            );
+        },
+        [filters]
+    );
 
     const markers = useMemo<MapMarker[]>(
         () =>
-            filteredIncidents.map((incident) => ({
+            incidents.map((incident) => ({
                 id: incident.id,
                 lat: incident.lat,
                 lng: incident.lng,
@@ -65,7 +68,7 @@ export default function PublicMap({ incidents }: PageProps) {
                     incident.occurred_at ?? '',
                 ].filter(Boolean),
             })),
-        [filteredIncidents],
+        [incidents],
     );
 
     return (
@@ -90,20 +93,18 @@ export default function PublicMap({ incidents }: PageProps) {
                         </label>
                         <select
                             id="map-filter-type"
-                            value={selectedType}
-                            onChange={(e) => setSelectedType(e.target.value)}
+                            value={filters.type ?? 'all'}
+                            onChange={(e) => applyFilter('type', e.target.value)}
                             className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
                         >
                             <option value="all">
                                 {t('map.filter_type_all')}
                             </option>
-                            {uniqueTypes
-                                .filter((value) => value !== 'all')
-                                .map((type) => (
-                                    <option key={type} value={type}>
-                                        {type}
-                                    </option>
-                                ))}
+                            {types.map((type) => (
+                                <option key={type.value} value={type.value}>
+                                    {type.label}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
@@ -116,26 +117,69 @@ export default function PublicMap({ incidents }: PageProps) {
                         </label>
                         <select
                             id="map-filter-level"
-                            value={selectedLevel}
-                            onChange={(e) => setSelectedLevel(e.target.value)}
+                            value={filters.level ?? 'all'}
+                            onChange={(e) => applyFilter('level', e.target.value)}
                             className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
                         >
                             <option value="all">
                                 {t('map.filter_level_all')}
                             </option>
-                            {uniqueLevels
-                                .filter((value) => value !== 'all')
-                                .map((level) => (
-                                    <option key={level} value={level}>
-                                        {level}
-                                    </option>
-                                ))}
+                            {levels.map((level) => (
+                                <option key={level.value} value={level.value}>
+                                    {level.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="flex min-w-[160px] flex-col gap-1">
+                        <label
+                            htmlFor="map-filter-region"
+                            className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+                        >
+                            Регион
+                        </label>
+                        <select
+                            id="map-filter-region"
+                            value={filters.region ?? 'all'}
+                            onChange={(e) => applyFilter('region', e.target.value)}
+                            className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
+                        >
+                            <option value="all">
+                                Все регионы
+                            </option>
+                            {regions.map((region) => (
+                                <option key={region.value} value={region.value}>
+                                    {region.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    
+                    <div className="flex min-w-[160px] flex-col gap-1">
+                        <label
+                            htmlFor="map-filter-period"
+                            className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+                        >
+                            Период
+                        </label>
+                        <select
+                            id="map-filter-period"
+                            value={filters.period ?? 'all'}
+                            onChange={(e) => applyFilter('period', e.target.value)}
+                            className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
+                        >
+                            <option value="all">За все время</option>
+                            <option value="today">За сегодня</option>
+                            <option value="week">За неделю</option>
+                            <option value="month">За месяц</option>
                         </select>
                     </div>
                 </div>
             </div>
 
-            <div className="h-[70vh] overflow-hidden rounded-lg border">
+            <div className="h-[70vh] overflow-hidden rounded-lg border relative group">
+                {/* Optional overlay logic could go here */}
                 <MapView markers={markers} />
             </div>
         </>

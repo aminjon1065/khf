@@ -25,7 +25,6 @@ class PageController extends Controller
 
         $data = Cache::remember($cacheKey, 3600, function () use ($appLocale, $slug) {
             $translation = PageTranslation::query()
-                ->where('locale', $appLocale)
                 ->where('slug', $slug)
                 ->first();
 
@@ -39,6 +38,12 @@ class PageController extends Controller
                 return null;
             }
 
+            $resolved = $page->translation($appLocale);
+
+            if ($resolved === null) {
+                return null;
+            }
+
             $urls = app(LocaleUrls::class)->contentUrls(
                 'pages.show',
                 $page->translations->pluck('slug', 'locale')->all(),
@@ -47,13 +52,15 @@ class PageController extends Controller
             return [
                 'page' => [
                     'id' => $page->id,
-                    'title' => $translation->title,
-                    'content' => $translation->content,
+                    'title' => $resolved->title,
+                    'content' => $resolved->content,
+                    'blocks' => $resolved->blocks ?? [],
+                    'locale' => $resolved->locale,
                     'updated_at' => $page->updated_at?->format('d.m.Y'),
                 ],
                 'seo' => [
-                    'title' => $translation->seo_title ?: $translation->title,
-                    'description' => $translation->seo_description,
+                    'title' => $resolved->seo_title ?: $resolved->title,
+                    'description' => $resolved->seo_description,
                 ],
                 'localeSwitch' => $urls['switch'],
                 'seoAlternates' => $urls['alternates'],

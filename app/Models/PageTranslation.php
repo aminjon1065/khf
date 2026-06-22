@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use Database\Factories\PageTranslationFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Stevebauman\Purify\Facades\Purify;
 
 /**
@@ -18,6 +18,7 @@ use Stevebauman\Purify\Facades\Purify;
  * @property string $title
  * @property string $slug
  * @property string|null $content
+ * @property array|null $blocks
  * @property string|null $seo_title
  * @property string|null $seo_description
  */
@@ -33,9 +34,20 @@ class PageTranslation extends Model
         'title',
         'slug',
         'content',
+        'blocks',
         'seo_title',
         'seo_description',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'blocks' => 'array',
+        ];
+    }
 
     /**
      * @return BelongsTo<Page, $this>

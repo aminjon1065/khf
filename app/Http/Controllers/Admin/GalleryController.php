@@ -174,7 +174,7 @@ class GalleryController extends Controller
             ->filter(fn (array $translation) => filled($translation['title'] ?? null))
             ->map(fn (array $translation) => [
                 'title' => $translation['title'],
-                'slug' => $translation['slug'] ?? Str::slug($translation['title']),
+                'slug' => $translation['slug'] ?? Str::tajikSlug($translation['title']),
                 'description' => $translation['description'] ?? null,
             ])
             ->all();

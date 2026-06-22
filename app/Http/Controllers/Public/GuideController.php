@@ -60,7 +60,6 @@ class GuideController extends Controller
         $appLocale = app()->getLocale();
 
         $translation = GuideTranslation::query()
-            ->where('locale', $appLocale)
             ->where('slug', $slug)
             ->first();
 
@@ -73,6 +72,10 @@ class GuideController extends Controller
 
         abort_if($guide === null, 404);
 
+        $resolved = $guide->translation($appLocale);
+
+        abort_if($resolved === null, 404);
+
         $urls = app(LocaleUrls::class)->contentUrls(
             'guides.show',
             $guide->translations->pluck('slug', 'locale')->all(),
@@ -80,9 +83,10 @@ class GuideController extends Controller
 
         return Inertia::render('public/guides/show', [
             'guide' => [
-                'title' => $translation->title,
-                'summary' => $translation->summary,
-                'content' => $translation->content,
+                'title' => $resolved->title,
+                'summary' => $resolved->summary,
+                'content' => $resolved->content,
+                'locale' => $resolved->locale,
                 'hazard_label' => $guide->hazard_type?->label(),
                 'audience_label' => $guide->audience->label(),
                 'files' => $guide->getMedia(Guide::FILES_COLLECTION)->map(fn ($media) => [
@@ -92,8 +96,8 @@ class GuideController extends Controller
                 ])->all(),
             ],
             'seo' => [
-                'title' => $translation->seo_title ?: $translation->title,
-                'description' => $translation->seo_description ?: $translation->summary,
+                'title' => $resolved->seo_title ?: $resolved->title,
+                'description' => $resolved->seo_description ?: $resolved->summary,
             ],
             'localeSwitch' => $urls['switch'],
             'seoAlternates' => $urls['alternates'],

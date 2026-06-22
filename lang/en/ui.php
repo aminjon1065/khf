@@ -457,5 +457,6 @@ return [
         'results_for' => 'Results for «:query»',
         'enter_query' => 'Enter a query to search',
         'no_results_hint' => 'Try changing your search query or using different keywords.',
+        'disabled_high_load' => 'Search is temporarily disabled due to high server load during an emergency.',
     ],
 ];

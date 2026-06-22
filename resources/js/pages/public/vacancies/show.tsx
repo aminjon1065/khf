@@ -10,10 +10,13 @@ import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Icon } from '@/components/ui/icon';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/hooks/use-translations';
 import { apply, index as vacanciesIndex, track } from '@/routes/vacancies';
+import { MissingTranslationAlert } from '@/components/public/missing-translation-alert';
 
 type Vacancy = {
     id: number;
@@ -31,6 +34,7 @@ type Vacancy = {
     updated_at: string | null;
     deadline_at: string | null;
     is_open: boolean;
+    locale?: string;
 };
 
 type PageProps = {
@@ -74,8 +78,11 @@ export default function VacancyShow({
         <>
             <Head title={vacancy.title} />
 
-            <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-                <article className="min-w-0">
+            {vacancy.locale && <MissingTranslationAlert contentLocale={vacancy.locale} />}
+
+            <div className="grid gap-10 lg:grid-cols-[1fr_380px]">
+                {/* Left col: Details */}
+                <article className="min-w-0 space-y-8">
                     <Link
                         href={vacanciesIndex({ locale }).url}
                         className="text-sm text-primary hover:underline"

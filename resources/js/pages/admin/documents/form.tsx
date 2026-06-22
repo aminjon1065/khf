@@ -114,6 +114,8 @@ export default function DocumentForm({
                 backHref={index().url}
                 onSubmit={submit}
                 processing={form.processing}
+                saveLabel={document?.id ? 'Обновить' : 'Создать'}
+                modelInfo={{ type: 'document', id: document?.id ?? null }}
                 sidebar={
                     <>
                         <CpPanel title="Публикация">

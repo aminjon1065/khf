@@ -69,6 +69,8 @@ class TouristGroupController extends Controller
                 'region' => $touristGroup->region?->translation($locale)?->name,
                 'start_date' => $touristGroup->start_date?->format('d.m.Y'),
                 'end_date' => $touristGroup->end_date?->format('d.m.Y'),
+                'start_latitude' => $touristGroup->start_latitude,
+                'start_longitude' => $touristGroup->start_longitude,
                 'status' => $touristGroup->status->value,
                 'assigned_to' => $touristGroup->assigned_to,
                 'internal_note' => $touristGroup->internal_note,

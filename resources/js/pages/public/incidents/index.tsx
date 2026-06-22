@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, Map } from 'lucide-react';
+import { useCallback } from 'react';
 import type { Paginator } from '@/components/admin/data-table';
 import { HazardBadge } from '@/components/hazard-badge';
 import type { HazardLevel } from '@/components/hazard-badge';
@@ -7,6 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/hooks/use-translations';
 import { index as mapIndex } from '@/routes/map';
+import { formatDate } from '@/lib/utils';
+
+type Option = { value: string; label: string };
 
 type IncidentItem = {
     title: string | null;
@@ -32,9 +36,25 @@ type PageProps = {
         next_page_url: string | null;
     };
     summary: Summary;
+    filters: {
+        type?: string;
+        level?: string;
+        region?: string;
+        period?: string;
+    };
+    types: Option[];
+    levels: Option[];
+    regions: Option[];
 };
 
-export default function IncidentsArchive({ incidents, summary }: PageProps) {
+export default function IncidentsArchive({
+    incidents,
+    summary,
+    filters,
+    types,
+    levels,
+    regions,
+}: PageProps) {
     const { locale } = usePage().props;
     const { t } = useTranslations();
 
@@ -52,6 +72,17 @@ export default function IncidentsArchive({ incidents, summary }: PageProps) {
         },
     ] as const;
 
+    const applyFilter = useCallback(
+        (key: string, value: string) => {
+            router.get(
+                route('incidents.index', { locale }),
+                { ...filters, [key]: value === 'all' ? null : value, page: 1 },
+                { preserveState: true, replace: true }
+            );
+        },
+        [filters, locale]
+    );
+
     return (
         <>
             <Head title={t('common.operational_situation')} />
@@ -67,7 +98,7 @@ export default function IncidentsArchive({ incidents, summary }: PageProps) {
                 </div>
                 <Button variant="outline" asChild>
                     <Link href={mapIndex({ locale }).url}>
-                        <Map className="size-4" />
+                        <Map className="size-4 mr-2" />
                         {t('incidents.view_map')}
                     </Link>
                 </Button>
@@ -84,6 +115,98 @@ export default function IncidentsArchive({ incidents, summary }: PageProps) {
                         </p>
                     </div>
                 ))}
+            </div>
+
+            <div className="mb-6 flex flex-wrap items-center justify-start gap-3 rounded-lg border bg-muted/50 p-4">
+                <div className="flex min-w-[160px] flex-col gap-1">
+                    <label
+                        htmlFor="archive-filter-type"
+                        className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+                    >
+                        {t('map.filter_type')}
+                    </label>
+                    <select
+                        id="archive-filter-type"
+                        value={filters.type ?? 'all'}
+                        onChange={(e) => applyFilter('type', e.target.value)}
+                        className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
+                    >
+                        <option value="all">
+                            {t('map.filter_type_all')}
+                        </option>
+                        {types.map((type) => (
+                            <option key={type.value} value={type.value}>
+                                {type.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="flex min-w-[160px] flex-col gap-1">
+                    <label
+                        htmlFor="archive-filter-level"
+                        className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+                    >
+                        {t('map.filter_level')}
+                    </label>
+                    <select
+                        id="archive-filter-level"
+                        value={filters.level ?? 'all'}
+                        onChange={(e) => applyFilter('level', e.target.value)}
+                        className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
+                    >
+                        <option value="all">
+                            {t('map.filter_level_all')}
+                        </option>
+                        {levels.map((level) => (
+                            <option key={level.value} value={level.value}>
+                                {level.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="flex min-w-[160px] flex-col gap-1">
+                    <label
+                        htmlFor="archive-filter-region"
+                        className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+                    >
+                        Регион
+                    </label>
+                    <select
+                        id="archive-filter-region"
+                        value={filters.region ?? 'all'}
+                        onChange={(e) => applyFilter('region', e.target.value)}
+                        className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
+                    >
+                        <option value="all">Все регионы</option>
+                        {regions.map((region) => (
+                            <option key={region.value} value={region.value}>
+                                {region.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="flex min-w-[160px] flex-col gap-1">
+                    <label
+                        htmlFor="archive-filter-period"
+                        className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
+                    >
+                        Период
+                    </label>
+                    <select
+                        id="archive-filter-period"
+                        value={filters.period ?? 'all'}
+                        onChange={(e) => applyFilter('period', e.target.value)}
+                        className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
+                    >
+                        <option value="all">За все время</option>
+                        <option value="today">За сегодня</option>
+                        <option value="week">За неделю</option>
+                        <option value="month">За месяц</option>
+                    </select>
+                </div>
             </div>
 
             {incidents.data.length === 0 ? (
@@ -111,7 +234,7 @@ export default function IncidentsArchive({ incidents, summary }: PageProps) {
                                 )}
                                 {incident.occurred_at && (
                                     <span className="ml-auto text-sm text-muted-foreground">
-                                        {incident.occurred_at}
+                                        {formatDate(incident.occurred_at, locale)}
                                     </span>
                                 )}
                             </div>
@@ -139,7 +262,7 @@ export default function IncidentsArchive({ incidents, summary }: PageProps) {
                             router.get(incidents.prev_page_url)
                         }
                     >
-                        <ChevronLeft className="size-4" />
+                        <ChevronLeft className="size-4 mr-2" />
                         {t('common.back')}
                     </Button>
                     <Button
@@ -152,7 +275,7 @@ export default function IncidentsArchive({ incidents, summary }: PageProps) {
                         }
                     >
                         {t('common.next')}
-                        <ChevronRight className="size-4" />
+                        <ChevronRight className="size-4 ml-2" />
                     </Button>
                 </div>
             )}

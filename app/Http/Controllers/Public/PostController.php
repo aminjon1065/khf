@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Post;
 use App\Models\PostTranslation;
 use App\Support\LocaleUrls;
@@ -20,19 +21,35 @@ class PostController extends Controller
         $locale = app()->getLocale();
 
         $page = request('page', 1);
-        $cacheKey = 'posts.index.'.$locale.'.page.'.$page.'.'.(Post::max('updated_at') ?? 'empty');
+        $categoryId = request('category_id');
+        $cacheKey = 'posts.index.'.$locale.'.cat.'.$categoryId.'.page.'.$page.'.'.(Post::max('updated_at') ?? 'empty');
 
-        $posts = Cache::remember($cacheKey, 3600, function () use ($locale) {
+        $posts = Cache::remember($cacheKey, 3600, function () use ($locale, $categoryId) {
             return Post::published()
                 ->with(['translations', 'category.translations', 'media'])
                 ->whereHas('translations', fn ($query) => $query->where('locale', $locale))
+                ->when($categoryId, fn ($query) => $query->where('category_id', $categoryId))
                 ->orderByDesc('published_at')
                 ->paginate(12)
                 ->through(fn (Post $post) => $this->card($post, $locale));
         });
 
+        $categories = Cache::remember('posts.categories.'.$locale, 3600, function () use ($locale) {
+            return Category::with(['translations'])
+                ->get()
+                ->map(fn ($category) => [
+                    'id' => $category->id,
+                    'name' => $category->translation($locale)?->name,
+                ])
+                ->all();
+        });
+
         return Inertia::render('public/news/index', [
             'posts' => $posts,
+            'categories' => $categories,
+            'filters' => [
+                'category_id' => $categoryId,
+            ],
         ]);
     }
 
@@ -48,7 +65,6 @@ class PostController extends Controller
 
         $data = Cache::remember($cacheKey, 3600, function () use ($appLocale, $slug) {
             $translation = PostTranslation::query()
-                ->where('locale', $appLocale)
                 ->where('slug', $slug)
                 ->first();
 
@@ -65,6 +81,12 @@ class PostController extends Controller
                 return null;
             }
 
+            $resolved = $post->translation($appLocale);
+
+            if ($resolved === null) {
+                return null;
+            }
+
             $urls = app(LocaleUrls::class)->contentUrls(
                 'news.show',
                 $post->translations->pluck('slug', 'locale')->all(),
@@ -73,23 +95,35 @@ class PostController extends Controller
             return [
                 'post' => [
                     'id' => $post->id,
-                    'title' => $translation->title,
-                    'excerpt' => $translation->excerpt,
-                    'body' => $translation->body,
+                    'title' => $resolved->title,
+                    'excerpt' => $resolved->excerpt,
+                    'body' => $resolved->body,
+                    'locale' => $resolved->locale,
                     'type_label' => $post->type->label(),
                     'category' => $post->category?->translation($appLocale)?->name,
                     'cover_url' => $post->getFirstMediaUrl(Post::COVER_COLLECTION) ?: null,
+                    'gallery' => $post->getMedia(Post::GALLERY_COLLECTION)->map(fn ($media) => [
+                        'url' => $media->getUrl(),
+                        'thumb' => $media->getUrl('thumb'),
+                    ])->all(),
+                    'attachments' => $post->getMedia(Post::ATTACHMENTS_COLLECTION)->map(fn ($media) => [
+                        'name' => $media->file_name,
+                        'url' => $media->getUrl(),
+                        'size' => $media->human_readable_size,
+                        'ext' => pathinfo($media->file_name, PATHINFO_EXTENSION),
+                    ])->all(),
                     'author' => $post->author?->name,
                     'published_at' => $post->published_at?->format('d.m.Y'),
                 ],
-                'recent' => Post::published()
+                'related' => Post::published()
                     ->whereKeyNot($post->id)
+                    ->where('category_id', $post->category_id)
                     ->whereHas('translations', fn ($query) => $query->where('locale', $appLocale))
-                    ->with(['translations'])
+                    ->with(['translations', 'media'])
                     ->orderByDesc('published_at')
-                    ->limit(5)
+                    ->limit(3)
                     ->get()
-                    ->map(fn (Post $recent) => $this->card($recent, $appLocale))
+                    ->map(fn (Post $related) => $this->card($related, $appLocale))
                     ->all(),
                 'localeSwitch' => $urls['switch'],
                 'seoAlternates' => $urls['alternates'],

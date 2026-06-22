@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * Citizen appeal — electronic reception (ТЗ §6.7). Contains personal data: access is restricted to
@@ -26,13 +29,17 @@ use Illuminate\Support\Str;
  * @property AppealStatus $status
  * @property int|null $assigned_to
  * @property string|null $internal_note
+ * @property Carbon|null $deadline_at
  */
-class Appeal extends Model
+class Appeal extends Model implements HasMedia
 {
     /** @use HasFactory<AppealFactory> */
     use HasFactory;
 
+    use InteractsWithMedia;
     use SoftDeletes;
+
+    public const ATTACHMENTS_COLLECTION = 'attachments';
 
     /** @var list<string> */
     protected $fillable = [
@@ -46,6 +53,7 @@ class Appeal extends Model
         'status',
         'assigned_to',
         'internal_note',
+        'deadline_at',
     ];
 
     /**
@@ -56,7 +64,14 @@ class Appeal extends Model
         return [
             'category' => AppealCategory::class,
             'status' => AppealStatus::class,
+            'deadline_at' => 'date',
         ];
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(self::ATTACHMENTS_COLLECTION)
+            ->useDisk('local');
     }
 
     /**

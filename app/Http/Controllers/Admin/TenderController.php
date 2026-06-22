@@ -227,7 +227,7 @@ class TenderController extends Controller
             ->filter(fn (array $translation) => filled($translation['title'] ?? null))
             ->map(fn (array $translation) => [
                 'title' => $translation['title'],
-                'slug' => $translation['slug'] ?? Str::slug($translation['title']),
+                'slug' => $translation['slug'] ?? Str::tajikSlug($translation['title']),
                 'organizer' => $translation['organizer'] ?? null,
                 'summary' => $translation['summary'] ?? null,
                 'description' => $this->sanitizer->clean($translation['description'] ?? null),

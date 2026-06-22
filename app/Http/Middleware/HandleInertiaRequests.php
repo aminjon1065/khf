@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Alert;
 use App\Models\Language;
+use App\Models\Menu;
 use App\Models\Page;
 use App\Models\User;
 use App\Support\LocaleUrls;
@@ -52,7 +53,7 @@ class HandleInertiaRequests extends Middleware
             'locales' => $this->locales(),
             'localeSwitch' => $this->localeSwitch($request),
             'translations' => $this->translations(),
-            'navPages' => $this->navPages(),
+            'menus' => $this->menus(),
             'activeAlerts' => $this->activeAlerts(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
@@ -194,35 +195,43 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Published top-level static pages that have a translation in the active locale, for the footer
-     * section navigation (ТЗ §5). Only current-locale-translated pages are listed, so every link
-     * resolves (the public page renderer looks up by current-locale slug).
-     *
-     * @return list<array{title: string, slug: string}>
+     * Fetch active menus (primary and footer) and format them for the frontend.
      */
-    private function navPages(): array
+    private function menus(): array
     {
         try {
             $locale = app()->getLocale();
+            $menus = Menu::where('is_active', true)
+                ->with(['items' => function ($query) {
+                    $query->orderBy('sort_order')->with('translations');
+                }])
+                ->get();
 
-            return Page::published()
-                ->whereNull('parent_id')
-                ->with('translations')
-                ->orderBy('sort_order')
-                ->get()
-                ->map(function (Page $page) use ($locale): ?array {
-                    $translation = $page->translations->firstWhere('locale', $locale);
+            $formatted = [];
+            foreach ($menus as $menu) {
+                $formatted[$menu->location] = $this->formatMenuItems($menu->items->where('parent_id', null), $menu->items, $locale);
+            }
 
-                    return $translation === null
-                        ? null
-                        : ['title' => $translation->title, 'slug' => $translation->slug];
-                })
-                ->filter()
-                ->values()
-                ->all();
-        } catch (\Throwable) {
+            return $formatted;
+        } catch (\Throwable $e) {
             return [];
         }
+    }
+
+    private function formatMenuItems($items, $allItems, $locale): array
+    {
+        return $items->map(function ($item) use ($allItems, $locale) {
+            $translation = $item->translations->firstWhere('locale', $locale);
+
+            return [
+                'id' => $item->id,
+                'title' => $translation?->title,
+                'url' => $item->url,
+                'route' => $item->route,
+                'target' => $item->target,
+                'children' => $this->formatMenuItems($allItems->where('parent_id', $item->id), $allItems, $locale),
+            ];
+        })->values()->all();
     }
 
     /**

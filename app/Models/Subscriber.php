@@ -30,6 +30,7 @@ class Subscriber extends Model
 {
     /** @use HasFactory<SubscriberFactory> */
     use HasFactory;
+
     use HasPushSubscriptions;
 
     /** @var list<string> */

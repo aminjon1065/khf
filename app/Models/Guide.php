@@ -6,6 +6,7 @@ use App\Enums\ContentStatus;
 use App\Enums\GuideAudience;
 use App\Enums\IncidentType;
 use App\Models\Concerns\ClearsResponseCache;
+use App\Models\Concerns\HasRevisions;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\GuideFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -35,6 +36,7 @@ class Guide extends Model implements HasMedia
     /** @use HasFactory<GuideFactory> */
     use HasFactory;
 
+    use HasRevisions;
     use HasTranslations;
     use InteractsWithMedia;
     use LogsActivity;

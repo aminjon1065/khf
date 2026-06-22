@@ -25,6 +25,8 @@ function groupForm(array $overrides = []): array
         'start_date' => '2026-07-01',
         'end_date' => '2026-07-05',
         'region_id' => null,
+        'start_latitude' => 38.8,
+        'start_longitude' => 69.0,
         'website' => '',
     ], $overrides);
 }

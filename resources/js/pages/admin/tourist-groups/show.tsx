@@ -12,6 +12,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { MapView } from '@/components/map-view';
 import { dashboard } from '@/routes/admin';
 import { index, update } from '@/routes/admin/tourist-groups';
 
@@ -30,6 +31,8 @@ type Group = {
     region: string | null;
     start_date: string | null;
     end_date: string | null;
+    start_latitude: number | null;
+    start_longitude: number | null;
     status: string;
     assigned_to: number | null;
     internal_note: string | null;
@@ -130,6 +133,31 @@ export default function TouristGroupShow({
                                 <p className="mt-1 whitespace-pre-line">
                                     {group.equipment}
                                 </p>
+                            </div>
+                        )}
+                        {group.start_latitude && group.start_longitude && (
+                            <div>
+                                <p className="mb-2 text-sm text-muted-foreground">
+                                    Начальная точка маршрута
+                                </p>
+                                <div className="h-[250px] w-full overflow-hidden rounded-md border">
+                                    <MapView
+                                        center={[
+                                            group.start_longitude,
+                                            group.start_latitude,
+                                        ]}
+                                        zoom={10}
+                                        markers={[
+                                            {
+                                                id: 'start',
+                                                lat: group.start_latitude,
+                                                lng: group.start_longitude,
+                                                color: '#1f4e8c',
+                                                title: 'Начало маршрута',
+                                            },
+                                        ]}
+                                    />
+                                </div>
                             </div>
                         )}
                     </div>

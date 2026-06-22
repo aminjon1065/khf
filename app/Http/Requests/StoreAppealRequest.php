@@ -31,6 +31,8 @@ class StoreAppealRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:50'],
             'subject' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:5000'],
+            'attachments' => ['nullable', 'array', 'max:5'],
+            'attachments.*' => ['file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:5120'],
             // Honeypot — must stay empty; bots that fill it are rejected (ТЗ §12.4 anti-spam).
             'website' => ['prohibited'],
         ];

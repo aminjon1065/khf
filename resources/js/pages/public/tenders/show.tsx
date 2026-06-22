@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/hooks/use-translations';
 import { bid, index as tendersIndex, track } from '@/routes/tenders';
+import { MissingTranslationAlert } from '@/components/public/missing-translation-alert';
 
 type Tender = {
     id: number;
@@ -66,8 +67,11 @@ export default function TenderShow({ tender, submittedReference }: PageProps) {
         <>
             <Head title={tender.title} />
 
-            <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-                <article className="min-w-0">
+            {tender.locale && <MissingTranslationAlert contentLocale={tender.locale} />}
+
+            <div className="grid gap-10 lg:grid-cols-[1fr_380px]">
+                {/* Left col: Details */}
+                <article className="min-w-0 space-y-8">
                     <Link
                         href={tendersIndex({ locale }).url}
                         className="text-sm text-primary hover:underline"

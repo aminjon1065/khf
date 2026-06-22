@@ -6,6 +6,7 @@ use App\Models\Appeal;
 use App\Models\User;
 use Database\Seeders\LanguageSeeder;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Http\UploadedFile;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -93,9 +94,37 @@ it('lets a moderator view and update an appeal', function () {
             'status' => 'in_progress',
             'assigned_to' => $moderator->id,
             'internal_note' => 'Взято в работу',
+            'deadline_at' => '2026-07-01',
         ])
         ->assertRedirect(route('admin.appeals.show', $appeal));
 
     expect($appeal->fresh()->status)->toBe(AppealStatus::InProgress)
-        ->and($appeal->fresh()->assigned_to)->toBe($moderator->id);
+        ->and($appeal->fresh()->assigned_to)->toBe($moderator->id)
+        ->and($appeal->fresh()->deadline_at->format('Y-m-d'))->toBe('2026-07-01');
+});
+
+it('accepts file attachments', function () {
+    Storage::fake('local');
+    $file = UploadedFile::fake()->create('document.pdf', 100);
+
+    $data = appealForm(['attachments' => [$file]]);
+
+    $this->post(route('appeals.store', ['locale' => 'tj']), $data)
+        ->assertRedirect();
+
+    $appeal = Appeal::first();
+    expect($appeal->getMedia(Appeal::ATTACHMENTS_COLLECTION))->toHaveCount(1);
+});
+
+it('exports appeals to csv', function () {
+    $moderator = User::factory()->withTwoFactor()->create();
+    $moderator->assignRole(Role::Moderator->value);
+    Appeal::factory()->count(3)->create();
+
+    $response = $this->actingAs($moderator)
+        ->get(route('admin.appeals.export'))
+        ->assertOk();
+
+    expect($response->headers->get('Content-type'))->toStartWith('text/csv')
+        ->and($response->headers->get('Content-Disposition'))->toContain('attachment; filename="appeals-export-');
 });

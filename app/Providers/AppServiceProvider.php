@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
@@ -83,6 +84,34 @@ class AppServiceProvider extends ServiceProvider
         );
 
         Model::preventLazyLoading(! app()->isProduction());
+
+        Str::macro('tajikSlug', function (string $title, string $separator = '-', ?string $language = 'en') {
+            // First pass: replace specific Tajik/Cyrillic characters
+            $replacements = [
+                'ғ' => 'gh', 'Ғ' => 'Gh',
+                'ӣ' => 'i',  'Ӣ' => 'I',
+                'қ' => 'q',  'Қ' => 'Q',
+                'ӯ' => 'u',  'Ӯ' => 'U',
+                'ҳ' => 'h',  'Ҳ' => 'H',
+                'ҷ' => 'j',  'Ҷ' => 'J',
+                'ё' => 'yo', 'Ё' => 'Yo',
+                'ж' => 'zh', 'Ж' => 'Zh',
+                'х' => 'kh', 'Х' => 'Kh',
+                'ч' => 'ch', 'Ч' => 'Ch',
+                'ш' => 'sh', 'Ш' => 'Sh',
+                'щ' => 'shch', 'Щ' => 'Shch',
+                'э' => 'e',  'Э' => 'E',
+                'ю' => 'yu', 'Ю' => 'Yu',
+                'я' => 'ya', 'Я' => 'Ya',
+                'ъ' => '',   'Ъ' => '',
+                'ь' => '',   'Ь' => '',
+            ];
+
+            $transliterated = strtr($title, $replacements);
+
+            // Second pass: fallback to Laravel's default slugger for remaining chars (ru, etc.)
+            return Str::slug($transliterated, $separator, $language);
+        });
 
         Password::defaults(function () {
             $rule = Password::min(12)

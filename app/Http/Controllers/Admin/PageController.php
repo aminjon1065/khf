@@ -76,8 +76,16 @@ class PageController extends Controller
             'parent_id' => $data['parent_id'] ?? null,
             'status' => $data['status'],
             'sort_order' => $data['sort_order'] ?? 0,
+            'is_home' => $data['is_home'] ?? false,
         ]);
+
+        // If this page is set as home, reset others
+        if ($page->is_home) {
+            Page::where('id', '!=', $page->id)->update(['is_home' => false]);
+        }
+
         $page->upsertTranslations($this->translationsPayload($data));
+        $page->saveRevision();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Page created.')]);
 
@@ -99,8 +107,15 @@ class PageController extends Controller
             'parent_id' => $data['parent_id'] ?? null,
             'status' => $data['status'],
             'sort_order' => $data['sort_order'] ?? 0,
+            'is_home' => $data['is_home'] ?? false,
         ]);
+
+        if ($page->is_home) {
+            Page::where('id', '!=', $page->id)->update(['is_home' => false]);
+        }
+
         $page->upsertTranslations($this->translationsPayload($data));
+        $page->saveRevision();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Page updated.')]);
 
@@ -163,6 +178,7 @@ class PageController extends Controller
                     'title' => $translation->title,
                     'slug' => $translation->slug,
                     'content' => $translation->content,
+                    'blocks' => $translation->blocks ?? [],
                     'seo_title' => $translation->seo_title,
                     'seo_description' => $translation->seo_description,
                 ];
@@ -175,6 +191,7 @@ class PageController extends Controller
                 'parent_id' => $page->parent_id,
                 'status' => $page->status->value,
                 'sort_order' => $page->sort_order,
+                'is_home' => $page->is_home,
                 'translations' => $translations,
             ] : null,
             'locales' => Language::active()
@@ -206,8 +223,9 @@ class PageController extends Controller
             ->filter(fn (array $translation) => filled($translation['title'] ?? null))
             ->map(fn (array $translation) => [
                 'title' => $translation['title'],
-                'slug' => $translation['slug'] ?? Str::slug($translation['title']),
+                'slug' => $translation['slug'] ?? Str::tajikSlug($translation['title']),
                 'content' => $this->sanitizer->clean($translation['content'] ?? null),
+                'blocks' => $translation['blocks'] ?? null,
                 'seo_title' => $translation['seo_title'] ?? null,
                 'seo_description' => $translation['seo_description'] ?? null,
             ])

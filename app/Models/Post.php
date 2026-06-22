@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ContentStatus;
 use App\Enums\PostType;
 use App\Models\Concerns\ClearsResponseCache;
+use App\Models\Concerns\HasRevisions;
 use App\Models\Concerns\HasSeoMeta;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\PostFactory;
@@ -38,6 +39,8 @@ class Post extends Model implements HasMedia
 
     /** @use HasFactory<PostFactory> */
     use HasFactory;
+
+    use HasRevisions;
     use HasSeoMeta;
     use HasTranslations;
     use InteractsWithMedia;
@@ -45,6 +48,10 @@ class Post extends Model implements HasMedia
     use SoftDeletes;
 
     public const COVER_COLLECTION = 'cover';
+
+    public const GALLERY_COLLECTION = 'gallery';
+
+    public const ATTACHMENTS_COLLECTION = 'attachments';
 
     /** @var list<string> */
     protected $fillable = [
@@ -73,6 +80,8 @@ class Post extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection(self::COVER_COLLECTION)->singleFile();
+        $this->addMediaCollection(self::GALLERY_COLLECTION);
+        $this->addMediaCollection(self::ATTACHMENTS_COLLECTION);
     }
 
     public function registerMediaConversions(?Media $media = null): void

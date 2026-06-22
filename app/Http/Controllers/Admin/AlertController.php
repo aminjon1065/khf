@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\AlertStatus;
 use App\Enums\HazardLevel;
+use App\Enums\SubscriptionTopic;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreAlertRequest;
 use App\Http\Requests\Admin\UpdateAlertRequest;
@@ -11,7 +12,9 @@ use App\Jobs\SendAlertNotifications;
 use App\Models\Alert;
 use App\Models\Language;
 use App\Models\Region;
+use App\Models\Subscriber;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -125,6 +128,20 @@ class AlertController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Alert permanently deleted.')]);
 
         return to_route('admin.alerts.trash');
+    }
+
+    public function estimateRecipients(Request $request): JsonResponse
+    {
+        $regionId = $request->input('region_id');
+
+        $count = Subscriber::confirmed()
+            ->whereJsonContains('topics', SubscriptionTopic::Alerts->value)
+            ->when($regionId !== null, fn (Builder $query) => $query->where(
+                fn (Builder $inner) => $inner->whereNull('region_id')->orWhere('region_id', $regionId),
+            ))
+            ->count();
+
+        return response()->json(['count' => $count]);
     }
 
     /**

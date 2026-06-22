@@ -47,7 +47,6 @@ class VacancyController extends Controller
     public function show(string $locale, string $slug): Response
     {
         $translation = VacancyTranslation::query()
-            ->where('locale', $locale)
             ->where('slug', $slug)
             ->first();
 
@@ -60,6 +59,10 @@ class VacancyController extends Controller
 
         abort_if($vacancy === null, 404);
 
+        $resolved = $vacancy->translation($locale);
+
+        abort_if($resolved === null, 404);
+
         $urls = app(LocaleUrls::class)->contentUrls(
             'vacancies.show',
             $vacancy->translations->pluck('slug', 'locale')->all(),
@@ -68,14 +71,15 @@ class VacancyController extends Controller
         return Inertia::render('public/vacancies/show', [
             'vacancy' => [
                 'id' => $vacancy->id,
-                'title' => $translation->title,
-                'department' => $translation->department,
-                'location' => $translation->location,
-                'salary' => $translation->salary,
-                'summary' => $translation->summary,
-                'description' => $translation->description,
-                'requirements' => $translation->requirements,
-                'responsibilities' => $translation->responsibilities,
+                'title' => $resolved->title,
+                'department' => $resolved->department,
+                'location' => $resolved->location,
+                'salary' => $resolved->salary,
+                'summary' => $resolved->summary,
+                'description' => $resolved->description,
+                'requirements' => $resolved->requirements,
+                'responsibilities' => $resolved->responsibilities,
+                'locale' => $resolved->locale,
                 'employment_type_label' => $vacancy->employment_type->label(),
                 'positions_count' => $vacancy->positions_count,
                 'published_at' => $vacancy->published_at?->format('d.m.Y'),

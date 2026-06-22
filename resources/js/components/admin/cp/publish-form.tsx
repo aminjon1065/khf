@@ -1,8 +1,9 @@
 import { Link } from '@inertiajs/react';
-import { Check } from 'lucide-react';
-import type { FormEvent, ReactNode } from 'react';
+import { Check, History } from 'lucide-react';
+import { type FormEvent, type ReactNode, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { RevisionsSlideOver } from './revisions-slide-over';
 
 /**
  * Statamic-style two-column publish form: a main field column on the left and a sticky meta sidebar
@@ -26,7 +27,9 @@ export function CpPublishForm({
     saveLabel?: string;
     sidebar?: ReactNode;
     children: ReactNode;
+    modelInfo?: { type: string; id: number | null };
 }) {
+    const [historyOpen, setHistoryOpen] = useState(false);
     return (
         <form onSubmit={onSubmit} className="p-4 sm:p-6">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -34,6 +37,26 @@ export function CpPublishForm({
                     {title}
                 </h1>
                 <div className="flex items-center gap-2">
+                    {modelInfo && (
+                        <>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                title="История версий"
+                                disabled={!modelInfo.id}
+                                onClick={() => setHistoryOpen(true)}
+                            >
+                                <History className="size-4" />
+                            </Button>
+                            <RevisionsSlideOver
+                                open={historyOpen}
+                                onOpenChange={setHistoryOpen}
+                                modelType={modelInfo.type}
+                                modelId={modelInfo.id}
+                            />
+                        </>
+                    )}
                     <Button type="button" variant="outline" asChild>
                         <Link href={backHref}>Отмена</Link>
                     </Button>

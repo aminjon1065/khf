@@ -84,6 +84,13 @@
  * КЧС design tokens (ТЗ Приложение В — light theme).
  * Tuned for a modern govtech aesthetic: official navy primary (#1F4E8C), signal orange reserved
  * for CTAs, deep-navy brand chrome (gov bar / hero / footer).
+ * 
+ * --- Control Panel Design Tokens ---
+ * The CMS Control Panel strictly adheres to these tokens to mimic Statamic's professional aesthetic:
+ * - Typography: Tailwind's Inter (`text-sm` predominantly)
+ * - Radii: `rounded-md` (calc(0.625rem - 2px)) for inputs, buttons, and `rounded-lg` (0.625rem) for cards.
+ * - Shadows: `shadow-sm` for cards/panels.
+ * - Backgrounds: `bg-muted/40` for canvas, `bg-white` for cards and sidebars.
  */
 :root {
     --background: #f7f9fc;

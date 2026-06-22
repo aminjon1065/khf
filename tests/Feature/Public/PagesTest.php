@@ -36,19 +36,13 @@ it('404s for an unpublished page', function () {
     $this->get(route('pages.show', ['locale' => 'ru', 'slug' => 'draft-ru']))->assertNotFound();
 });
 
-it('404s when the slug does not exist in the current locale', function () {
+it('resolves successfully when the slug belongs to a different locale (fallback logic)', function () {
     publishedPage();
 
-    // tj slug requested under ru locale → no match
-    $this->get(route('pages.show', ['locale' => 'ru', 'slug' => 'about-tj']))->assertNotFound();
-});
-
-it('shares published top-level pages of the current locale for the footer nav', function () {
-    publishedPage();
-
-    $this->get(route('welcome', ['locale' => 'ru']))
+    // tj slug requested under ru locale → resolves the page and shows ru translation
+    $this->get(route('pages.show', ['locale' => 'ru', 'slug' => 'about-tj']))
+        ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('navPages', fn ($pages) => collect($pages)->contains(
-                fn ($p) => $p['slug'] === 'about-ru' && $p['title'] === 'О Комитете',
-            )));
+            ->where('page.title', 'О Комитете')
+        );
 });

@@ -30,7 +30,16 @@ export default function AppealCreate({
     const { locale } = usePage().props;
     const { t } = useTranslations();
 
-    const form = useForm({
+    const form = useForm<{
+        category: string;
+        name: string;
+        email: string;
+        phone: string;
+        subject: string;
+        message: string;
+        website: string;
+        attachments: File[];
+    }>({
         category: categories[0]?.value ?? '',
         name: '',
         email: '',
@@ -38,6 +47,7 @@ export default function AppealCreate({
         subject: '',
         message: '',
         website: '',
+        attachments: [],
     });
 
     const errors = form.errors as Record<string, string>;
@@ -226,6 +236,37 @@ export default function AppealCreate({
                             id="message-error"
                             message={errors.message}
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="attachments">
+                            {t('common.attachments') || 'Прикрепленные файлы'} <span className="text-muted-foreground font-normal">(Макс 5 файлов, до 5МБ каждый)</span>
+                        </Label>
+                        <Input
+                            id="attachments"
+                            type="file"
+                            multiple
+                            onChange={(e) => {
+                                if (e.target.files) {
+                                    form.setData('attachments', Array.from(e.target.files));
+                                }
+                            }}
+                            aria-invalid={!!errors.attachments}
+                            aria-describedby={
+                                errors.attachments ? 'attachments-error' : undefined
+                            }
+                        />
+                        <InputError
+                            id="attachments-error"
+                            message={errors.attachments}
+                        />
+                        {/* Display errors for individual files if any */}
+                        {Object.keys(errors).filter(k => k.startsWith('attachments.')).map(key => (
+                            <InputError
+                                key={key}
+                                message={errors[key]}
+                            />
+                        ))}
                     </div>
 
                     {/* Honeypot — hidden from users, traps bots (ТЗ §12.4). */}

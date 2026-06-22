@@ -42,7 +42,7 @@ class SendAlertNotifications implements ShouldQueue
                 foreach ($subscribers as $subscriber) {
                     $translation = $alert->translation($subscriber->locale);
 
-                    if (!empty($subscriber->email)) {
+                    if (! empty($subscriber->email)) {
                         Mail::to($subscriber->email)->locale($subscriber->locale)->queue(new AlertNotification(
                             $translation?->title ?? '',
                             $translation?->body ?? '',

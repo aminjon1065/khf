@@ -1,6 +1,15 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import {
     CpSelectField,
     CpTextField,
@@ -74,6 +83,10 @@ export default function AlertForm({
     const [activeLocale, setActiveLocale] = useState(defaultLocale);
     const errors = form.errors as Record<string, string>;
 
+    const [showModal, setShowModal] = useState(false);
+    const [estimatedCount, setEstimatedCount] = useState<number | null>(null);
+    const [isEstimating, setIsEstimating] = useState(false);
+
     const setTranslation = (
         locale: string,
         field: keyof Translation,
@@ -85,14 +98,45 @@ export default function AlertForm({
         });
     };
 
-    const submit = (event: FormEvent) => {
-        event.preventDefault();
-
+    const doSubmit = () => {
         if (isEdit && alert) {
             form.put(update(alert.id).url, { preserveScroll: true });
         } else {
             form.post(store().url, { preserveScroll: true });
         }
+        setShowModal(false);
+    };
+
+    const submit = async (event: FormEvent) => {
+        event.preventDefault();
+
+        if (form.data.status === 'published' && alert?.status !== 'published') {
+            setIsEstimating(true);
+            setShowModal(true);
+            try {
+                const url = new URL(
+                    '/admin/alerts/estimate',
+                    window.location.origin,
+                );
+                if (form.data.region_id) {
+                    url.searchParams.set(
+                        'region_id',
+                        String(form.data.region_id),
+                    );
+                }
+                const response = await fetch(url.toString());
+                const data = await response.json();
+                setEstimatedCount(data.count);
+            } catch (error) {
+                console.error('Failed to estimate recipients', error);
+                setEstimatedCount(0);
+            } finally {
+                setIsEstimating(false);
+            }
+            return;
+        }
+
+        doSubmit();
     };
 
     const active = form.data.translations[activeLocale];
@@ -209,6 +253,53 @@ export default function AlertForm({
                     />
                 </CpPanel>
             </CpPublishForm>
+
+            <Dialog open={showModal} onOpenChange={setShowModal}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Подтверждение публикации</DialogTitle>
+                        <DialogDescription>
+                            Вы собираетесь опубликовать это оповещение. После
+                            публикации оно будет немедленно отправлено
+                            подписчикам через Email и Push-уведомления. Отменить
+                            эту операцию невозможно.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="py-4">
+                        <p className="text-sm font-medium">
+                            Оценочное количество получателей:
+                        </p>
+                        <p className="mt-1 text-3xl font-bold text-primary">
+                            {isEstimating ? '...' : (estimatedCount ?? 0)}
+                        </p>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                            *Учитываются подтвержденные подписчики, выбравшие
+                            тему «Оповещения» и подходящие по региону.
+                        </p>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowModal(false)}
+                            disabled={form.processing}
+                        >
+                            Отмена
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={doSubmit}
+                            disabled={isEstimating || form.processing}
+                        >
+                            {form.processing
+                                ? 'Публикация...'
+                                : 'Опубликовать и отправить'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

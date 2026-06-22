@@ -3,7 +3,11 @@
 use App\Enums\AlertStatus;
 use App\Enums\HazardLevel;
 use App\Enums\Role;
+use App\Enums\SubscriptionStatus;
+use App\Enums\SubscriptionTopic;
 use App\Models\Alert;
+use App\Models\Region;
+use App\Models\Subscriber;
 use App\Models\User;
 use Database\Seeders\LanguageSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -121,4 +125,31 @@ it('soft deletes, restores and force deletes an alert', function () {
     $this->actingAs($this->operator)->delete(route('admin.alerts.destroy', $alert));
     $this->actingAs($this->operator)->delete(route('admin.alerts.force-delete', $alert));
     expect(Alert::withTrashed()->count())->toBe(0);
+});
+
+it('estimates recipients for an alert', function () {
+    $region = Region::factory()->create();
+
+    Subscriber::factory()->count(3)->create([
+        'status' => SubscriptionStatus::Confirmed,
+        'topics' => [SubscriptionTopic::Alerts->value],
+        'region_id' => $region->id,
+    ]);
+
+    Subscriber::factory()->count(2)->create([
+        'status' => SubscriptionStatus::Confirmed,
+        'topics' => [SubscriptionTopic::Alerts->value],
+        'region_id' => null,
+    ]);
+
+    Subscriber::factory()->count(1)->create([
+        'status' => SubscriptionStatus::Pending,
+        'topics' => [SubscriptionTopic::Alerts->value],
+        'region_id' => $region->id,
+    ]);
+
+    $response = $this->actingAs($this->operator)->getJson(route('admin.alerts.estimate', ['region_id' => $region->id]));
+
+    $response->assertOk()
+        ->assertJson(['count' => 5]); // 3 specific + 2 global
 });

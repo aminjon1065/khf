@@ -27,12 +27,18 @@ class AppealController extends Controller
     public function store(StoreAppealRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        unset($data['website']);
+        unset($data['website'], $data['attachments']);
 
         $appeal = Appeal::create([
             ...$data,
             'reference' => Appeal::generateReference(),
         ]);
+
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $appeal->addMedia($file)->toMediaCollection(Appeal::ATTACHMENTS_COLLECTION);
+            }
+        }
 
         return to_route('appeals.create', ['locale' => app()->getLocale()])
             ->with('appeal_reference', $appeal->reference);

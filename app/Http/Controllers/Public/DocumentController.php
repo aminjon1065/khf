@@ -23,6 +23,8 @@ class DocumentController extends Controller
         $type = in_array((string) $request->string('type'), DocumentType::values(), true)
             ? (string) $request->string('type')
             : null;
+        $dateFrom = $request->string('date_from')->toString();
+        $dateTo = $request->string('date_to')->toString();
 
         $documents = Document::published()
             ->with(['translations', 'media'])
@@ -32,6 +34,8 @@ class DocumentController extends Controller
                 fn (Builder $inner) => $inner->where('name', 'like', "%{$search}%"),
             ))
             ->when($type !== null, fn (Builder $query) => $query->where('type', $type))
+            ->when($dateFrom !== '', fn (Builder $query) => $query->whereDate('document_date', '>=', $dateFrom))
+            ->when($dateTo !== '', fn (Builder $query) => $query->whereDate('document_date', '<=', $dateTo))
             ->orderByDesc('document_date')
             ->paginate(20)
             ->withQueryString()
@@ -57,7 +61,12 @@ class DocumentController extends Controller
 
         return Inertia::render('public/documents/index', [
             'documents' => $documents,
-            'filters' => ['search' => $search, 'type' => $type],
+            'filters' => [
+                'search' => $search,
+                'type' => $type,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+            ],
             'types' => DocumentType::options(),
         ]);
     }

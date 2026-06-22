@@ -13,6 +13,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { MapView } from '@/components/map-view';
 import { useTranslations } from '@/hooks/use-translations';
 import { create, store, track } from '@/routes/tourist-groups';
 
@@ -311,6 +312,42 @@ export default function TouristGroupCreate({
                             }
                         />
                         <InputError id="route-error" message={errors.route} />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>
+                            Начальная точка маршрута (выберите на карте)
+                        </Label>
+                        <div className="h-[300px] w-full overflow-hidden rounded-md border">
+                            <MapView
+                                onPick={(coords) => {
+                                    form.setData({
+                                        ...form.data,
+                                        start_latitude: coords.lat,
+                                        start_longitude: coords.lng,
+                                    });
+                                }}
+                                initialPickedCoords={
+                                    form.data.start_latitude &&
+                                    form.data.start_longitude
+                                        ? {
+                                              lat: form.data.start_latitude,
+                                              lng: form.data.start_longitude,
+                                          }
+                                        : null
+                                }
+                            />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Кликните на карту, чтобы указать точку начала
+                            маршрута.
+                        </p>
+                        {errors.start_latitude && (
+                            <InputError message={errors.start_latitude} />
+                        )}
+                        {errors.start_longitude && (
+                            <InputError message={errors.start_longitude} />
+                        )}
                     </div>
 
                     <div className="space-y-2">

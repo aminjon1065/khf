@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ContentStatus;
 use App\Models\Concerns\ClearsResponseCache;
+use App\Models\Concerns\HasRevisions;
 use App\Models\Concerns\HasSeoMeta;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\PageFactory;
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * A static content page (ТЗ §6, §7.2). Multilingual fields live in `page_translations`.
@@ -23,16 +26,19 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property int|null $parent_id
  * @property ContentStatus $status
  * @property int $sort_order
+ * @property bool $is_home
  */
-class Page extends Model
+class Page extends Model implements HasMedia
 {
     use ClearsResponseCache;
 
     /** @use HasFactory<PageFactory> */
     use HasFactory;
 
+    use HasRevisions;
     use HasSeoMeta;
     use HasTranslations;
+    use InteractsWithMedia;
     use LogsActivity;
     use SoftDeletes;
 
@@ -41,6 +47,7 @@ class Page extends Model
         'parent_id',
         'status',
         'sort_order',
+        'is_home',
     ];
 
     /**
@@ -51,6 +58,7 @@ class Page extends Model
         return [
             'status' => ContentStatus::class,
             'sort_order' => 'integer',
+            'is_home' => 'boolean',
         ];
     }
 

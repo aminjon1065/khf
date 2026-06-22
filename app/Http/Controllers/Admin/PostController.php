@@ -84,6 +84,7 @@ class PostController extends Controller
         ]);
         $post->upsertTranslations($this->translationsPayload($data));
         $this->syncCover($request, $post);
+        $post->saveRevision();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Post created.')]);
 
@@ -109,6 +110,7 @@ class PostController extends Controller
         ]);
         $post->upsertTranslations($this->translationsPayload($data));
         $this->syncCover($request, $post);
+        $post->saveRevision();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Post updated.')]);
 
@@ -254,7 +256,7 @@ class PostController extends Controller
             ->filter(fn (array $translation) => filled($translation['title'] ?? null))
             ->map(fn (array $translation) => [
                 'title' => $translation['title'],
-                'slug' => $translation['slug'] ?? Str::slug($translation['title']),
+                'slug' => $translation['slug'] ?? Str::tajikSlug($translation['title']),
                 'excerpt' => $translation['excerpt'] ?? null,
                 'body' => $this->sanitizer->clean($translation['body'] ?? null),
                 'seo_title' => $translation['seo_title'] ?? null,

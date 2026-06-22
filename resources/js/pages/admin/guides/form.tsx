@@ -126,6 +126,8 @@ export default function GuideForm({
                 backHref={index().url}
                 onSubmit={submit}
                 processing={form.processing}
+                saveLabel={guide?.id ? 'Обновить' : 'Создать'}
+                modelInfo={{ type: 'guide', id: guide?.id ?? null }}
                 sidebar={
                     <>
                         <CpPanel title="Публикация">

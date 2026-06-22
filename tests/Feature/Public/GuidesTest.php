@@ -62,10 +62,19 @@ it('exposes per-locale switch URLs using each locale own slug', function () {
             ->where('localeSwitch.tj', fn ($url) => str_contains($url, '/tj/guides/eq-tj')));
 });
 
-it('404s for a draft or wrong-locale guide slug', function () {
+it('404s for a draft guide slug', function () {
     publishedGuide();
     Guide::factory()->draft()->create()->upsertTranslations(['ru' => ['title' => 'Ч', 'slug' => 'hidden-ru']]);
 
     $this->get(route('guides.show', ['locale' => 'ru', 'slug' => 'hidden-ru']))->assertNotFound();
-    $this->get(route('guides.show', ['locale' => 'ru', 'slug' => 'eq-tj']))->assertNotFound();
+});
+
+it('resolves the guide when using a slug from a different locale', function () {
+    publishedGuide();
+
+    $this->get(route('guides.show', ['locale' => 'ru', 'slug' => 'eq-tj']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('guide.title', 'Землетрясение')
+        );
 });

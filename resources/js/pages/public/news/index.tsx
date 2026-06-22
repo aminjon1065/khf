@@ -3,7 +3,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Paginator } from '@/components/admin/data-table';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/hooks/use-translations';
-import { show } from '@/routes/news';
+import { index as newsIndex, show } from '@/routes/news';
+import { formatDate } from '@/lib/utils';
 
 type NewsCard = {
     title: string | null;
@@ -19,17 +20,57 @@ type PageProps = {
         prev_page_url: string | null;
         next_page_url: string | null;
     };
+    categories: Array<{ id: number; name: string }>;
+    filters: {
+        category_id: string | null;
+    };
 };
 
-export default function NewsIndex({ posts }: PageProps) {
-    const { locale } = usePage().props;
+export default function NewsIndex({ posts, categories, filters }: PageProps) {
+    const { locale } = usePage().props as { locale: string };
     const { t } = useTranslations();
+
+    const handleCategoryFilter = (categoryId: number | null) => {
+        router.get(
+            newsIndex({ locale }).url,
+            categoryId ? { category_id: categoryId } : {},
+            { preserveState: true }
+        );
+    };
 
     return (
         <>
             <Head title={t('news.title')} />
 
             <h1 className="mb-6 text-3xl font-semibold">{t('news.heading')}</h1>
+
+            {categories && categories.length > 0 && (
+                <div className="mb-8 flex flex-wrap gap-2">
+                    <Button
+                        variant={!filters.category_id ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleCategoryFilter(null)}
+                        className="rounded-full"
+                    >
+                        {t('common.all_categories') || 'Все'}
+                    </Button>
+                    {categories.map((category) => (
+                        <Button
+                            key={category.id}
+                            variant={
+                                filters.category_id == category.id.toString()
+                                    ? 'default'
+                                    : 'outline'
+                            }
+                            size="sm"
+                            onClick={() => handleCategoryFilter(category.id)}
+                            className="rounded-full"
+                        >
+                            {category.name}
+                        </Button>
+                    ))}
+                </div>
+            )}
 
             {posts.data.length === 0 ? (
                 <p className="text-muted-foreground">
@@ -53,24 +94,24 @@ export default function NewsIndex({ posts }: PageProps) {
                                 )}
                             </div>
                             <div className="flex flex-1 flex-col gap-2 p-4">
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    {post.category && (
-                                        <span className="text-primary">
-                                            {post.category}
-                                        </span>
-                                    )}
-                                    {post.published_at && (
-                                        <span>{post.published_at}</span>
-                                    )}
-                                </div>
-                                <h2 className="leading-snug font-semibold group-hover:text-primary">
-                                    {post.title}
-                                </h2>
-                                {post.excerpt && (
-                                    <p className="line-clamp-3 text-sm text-muted-foreground">
-                                        {post.excerpt}
-                                    </p>
+                                {post.category && (
+                                    <span className="text-sm font-medium text-primary mb-2 block">
+                                        {post.category}
+                                    </span>
                                 )}
+                                <h3 className="text-xl font-bold leading-snug group-hover:underline">
+                                    {post.title}
+                                </h3>
+                                <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
+                                    {post.excerpt}
+                                </p>
+                                <div className="mt-4 flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    <span>
+                                        {post.published_at
+                                            ? formatDate(post.published_at, locale)
+                                            : null}
+                                    </span>
+                                </div>
                             </div>
                         </Link>
                     ))}

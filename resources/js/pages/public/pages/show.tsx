@@ -1,9 +1,15 @@
 import { Head } from '@inertiajs/react';
 import { useTranslations } from '@/hooks/use-translations';
+import { Layout } from '@/components/public/layout';
+import { Seo } from '@/components/public/seo';
+import { MissingTranslationAlert } from '@/components/public/missing-translation-alert';
+
+import { BlockRenderer } from '@/components/Public/block-renderer';
 
 type StaticPage = {
     title: string;
     content: string | null;
+    blocks?: any[];
     updated_at: string | null;
 };
 
@@ -19,6 +25,8 @@ export default function PageShow({ page }: PageProps) {
             <Head title={page.title} />
 
             <article className="mx-auto max-w-3xl">
+                {page.locale && <MissingTranslationAlert contentLocale={page.locale} />}
+                
                 <h1 className="text-3xl leading-tight font-semibold">
                     {page.title}
                 </h1>
@@ -29,6 +37,12 @@ export default function PageShow({ page }: PageProps) {
                         className="rte-content mt-6 leading-relaxed"
                         dangerouslySetInnerHTML={{ __html: page.content }}
                     />
+                )}
+
+                {page.blocks && page.blocks.length > 0 && (
+                    <div className="mt-8">
+                        <BlockRenderer blocks={page.blocks} />
+                    </div>
                 )}
 
                 {page.updated_at && (

@@ -3,7 +3,8 @@ import { ChevronLeft, FileText, Printer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/hooks/use-translations';
-import { index } from '@/routes/guides';
+import { index as guidesIndex } from '@/routes/guides';
+import { MissingTranslationAlert } from '@/components/public/missing-translation-alert';
 
 type GuideFile = {
     name: string;
@@ -18,6 +19,7 @@ type Guide = {
     hazard_label: string | null;
     audience_label: string;
     files: GuideFile[];
+    is_missing_translation?: boolean;
 };
 
 type PageProps = {
@@ -35,6 +37,8 @@ export default function GuideShow({ guide }: PageProps) {
     return (
         <>
             <Head title={guide.title} />
+
+            {guide.locale && <MissingTranslationAlert contentLocale={guide.locale} />}
 
             <article className="mx-auto max-w-3xl">
                 <Link

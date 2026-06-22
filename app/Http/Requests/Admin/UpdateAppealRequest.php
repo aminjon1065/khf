@@ -27,6 +27,7 @@ class UpdateAppealRequest extends FormRequest
             'status' => ['required', Rule::in(AppealStatus::values())],
             'assigned_to' => ['nullable', 'integer', 'exists:users,id'],
             'internal_note' => ['nullable', 'string', 'max:5000'],
+            'deadline_at' => ['nullable', 'date'],
         ];
     }
 }

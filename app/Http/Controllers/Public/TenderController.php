@@ -47,7 +47,6 @@ class TenderController extends Controller
     public function show(string $locale, string $slug): Response
     {
         $translation = TenderTranslation::query()
-            ->where('locale', $locale)
             ->where('slug', $slug)
             ->first();
 
@@ -60,6 +59,10 @@ class TenderController extends Controller
 
         abort_if($tender === null, 404);
 
+        $resolved = $tender->translation($locale);
+
+        abort_if($resolved === null, 404);
+
         $urls = app(LocaleUrls::class)->contentUrls(
             'tenders.show',
             $tender->translations->pluck('slug', 'locale')->all(),
@@ -69,12 +72,13 @@ class TenderController extends Controller
             'tender' => [
                 'id' => $tender->id,
                 'tender_number' => $tender->tender_number,
-                'title' => $translation->title,
-                'organizer' => $translation->organizer,
-                'summary' => $translation->summary,
-                'description' => $translation->description,
-                'requirements' => $translation->requirements,
-                'terms' => $translation->terms,
+                'title' => $resolved->title,
+                'organizer' => $resolved->organizer,
+                'summary' => $resolved->summary,
+                'description' => $resolved->description,
+                'requirements' => $resolved->requirements,
+                'terms' => $resolved->terms,
+                'locale' => $resolved->locale,
                 'type_label' => $tender->type->label(),
                 'budget' => $tender->budget !== null ? number_format((float) $tender->budget, 0, '.', ' ') : null,
                 'lots_count' => $tender->lots_count,

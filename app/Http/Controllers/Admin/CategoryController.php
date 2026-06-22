@@ -129,7 +129,7 @@ class CategoryController extends Controller
             ->filter(fn (array $translation) => filled($translation['name'] ?? null))
             ->map(fn (array $translation) => [
                 'name' => $translation['name'],
-                'slug' => $translation['slug'] ?? Str::slug($translation['name']),
+                'slug' => $translation['slug'] ?? Str::tajikSlug($translation['name']),
             ])
             ->all();
     }

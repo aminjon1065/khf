@@ -126,6 +126,14 @@ export default function AppealsIndex({
                             ))}
                         </SelectContent>
                     </Select>
+
+                    <Button variant="secondary" asChild>
+                        <a
+                            href={`/admin/appeals/export?search=${filters.search ?? ''}&status=${filters.status ?? ''}`}
+                        >
+                            Экспорт CSV
+                        </a>
+                    </Button>
                 </div>
 
                 <div className="rounded-md border">

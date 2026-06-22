@@ -22,6 +22,7 @@ use App\Models\TouristGroup;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
@@ -157,9 +158,9 @@ class DashboardController extends Controller
      * One grouped query instead of one COUNT per status.
      *
      * @param  Builder<covariant \Illuminate\Database\Eloquent\Model>  $query
-     * @return \Illuminate\Support\Collection<string, int>
+     * @return Collection<string, int>
      */
-    private function countByStatus(Builder $query): \Illuminate\Support\Collection
+    private function countByStatus(Builder $query): Collection
     {
         return $query->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')

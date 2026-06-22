@@ -33,7 +33,7 @@ type PageProps = {
         prev_page_url: string | null;
         next_page_url: string | null;
     };
-    filters: { search: string; type: string | null };
+    filters: { search: string; type: string | null; date_from: string; date_to: string };
     types: Option[];
 };
 
@@ -42,9 +42,11 @@ export default function DocumentsRegistry({
     filters,
     types,
 }: PageProps) {
-    const { locale } = usePage().props;
+    const { locale } = usePage().props as { locale: string };
     const { t } = useTranslations();
     const [search, setSearch] = useState(filters.search ?? '');
+    const [dateFrom, setDateFrom] = useState(filters.date_from ?? '');
+    const [dateTo, setDateTo] = useState(filters.date_to ?? '');
 
     const apply = (params: Record<string, string | undefined>) => {
         router.get(
@@ -52,6 +54,8 @@ export default function DocumentsRegistry({
             {
                 search: filters.search || undefined,
                 type: filters.type || undefined,
+                date_from: filters.date_from || undefined,
+                date_to: filters.date_to || undefined,
                 ...params,
             },
             { preserveState: true, preserveScroll: true, replace: true },
@@ -67,10 +71,10 @@ export default function DocumentsRegistry({
             </h1>
 
             <form
-                className="mb-6 flex flex-col gap-3 sm:flex-row"
+                className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center"
                 onSubmit={(event) => {
                     event.preventDefault();
-                    apply({ search: search || undefined });
+                    apply({ search: search || undefined, date_from: dateFrom || undefined, date_to: dateTo || undefined });
                 }}
             >
                 <Input
@@ -105,6 +109,25 @@ export default function DocumentsRegistry({
                         ))}
                     </SelectContent>
                 </Select>
+                
+                <div className="flex items-center gap-2">
+                    <Input
+                        type="date"
+                        value={dateFrom}
+                        onChange={(event) => setDateFrom(event.target.value)}
+                        aria-label={t('documents.form.date_from') || 'С даты'}
+                        className="w-full sm:w-[150px]"
+                    />
+                    <span className="text-muted-foreground">-</span>
+                    <Input
+                        type="date"
+                        value={dateTo}
+                        onChange={(event) => setDateTo(event.target.value)}
+                        aria-label={t('documents.form.date_to') || 'По дату'}
+                        className="w-full sm:w-[150px]"
+                    />
+                </div>
+
                 <Button type="submit">{t('common.find')}</Button>
             </form>
 

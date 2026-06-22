@@ -78,6 +78,7 @@ class GuideController extends Controller
         $guide = Guide::create($this->attributes($data));
         $guide->upsertTranslations($this->translationsPayload($data, $guide->id));
         $this->syncFiles($request, $guide);
+        $guide->saveRevision();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Guide created.')]);
 
@@ -98,6 +99,7 @@ class GuideController extends Controller
         $guide->update($this->attributes($data));
         $guide->upsertTranslations($this->translationsPayload($data, $guide->id));
         $this->syncFiles($request, $guide);
+        $guide->saveRevision();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Guide updated.')]);
 
@@ -251,7 +253,7 @@ class GuideController extends Controller
             ->map(fn (array $translation, string $locale) => [
                 'title' => $translation['title'],
                 'slug' => $this->uniqueSlug(
-                    filled($translation['slug'] ?? null) ? $translation['slug'] : Str::slug($translation['title']),
+                    filled($translation['slug'] ?? null) ? $translation['slug'] : Str::tajikSlug($translation['title']),
                     $locale,
                     $guideId,
                 ),

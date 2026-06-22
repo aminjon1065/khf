@@ -1,7 +1,9 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { CpRichTextField } from '@/components/admin/cp/fields';
+import { CpRichTextField, CpToggleField } from '@/components/admin/cp/fields';
+import { CpBlocksField } from '@/components/admin/cp/blocks-field';
+import type { BlockData } from '@/components/admin/cp/blocks-field';
 import {
     CpLocaleTabs,
     CpPanel,
@@ -24,6 +26,7 @@ type Translation = {
     title: string;
     slug: string;
     content: string;
+    blocks: BlockData[];
     seo_title: string;
     seo_description: string;
 };
@@ -37,6 +40,7 @@ type PageData = {
     parent_id: number | null;
     status: string;
     sort_order: number;
+    is_home: boolean;
     translations: Record<string, Partial<Translation>>;
 };
 
@@ -64,6 +68,7 @@ export default function PageForm({
             title: existing?.title ?? '',
             slug: existing?.slug ?? '',
             content: existing?.content ?? '',
+            blocks: existing?.blocks ?? [],
             seo_title: existing?.seo_title ?? '',
             seo_description: existing?.seo_description ?? '',
         };
@@ -73,6 +78,7 @@ export default function PageForm({
         status: page?.status ?? statuses[0]?.value ?? 'draft',
         parent_id: page?.parent_id ?? null,
         sort_order: page?.sort_order ?? 0,
+        is_home: page?.is_home ?? false,
         translations: initialTranslations,
     });
 
@@ -112,6 +118,8 @@ export default function PageForm({
                 backHref={index().url}
                 onSubmit={submit}
                 processing={form.processing}
+                saveLabel={page?.id ? 'Обновить' : 'Создать'}
+                modelInfo={{ type: 'page', id: page?.id ?? null }}
                 sidebar={
                     <CpPanel title="Публикация">
                         <div className="space-y-2">
@@ -190,6 +198,15 @@ export default function PageForm({
                             />
                             <InputError message={errors.sort_order} />
                         </div>
+                        <div className="pt-2">
+                            <CpToggleField
+                                id="is_home"
+                                label="Сделать главной страницей"
+                                instructions="Только одна страница может быть главной"
+                                checked={form.data.is_home}
+                                onChange={(checked) => form.setData('is_home', checked)}
+                            />
+                        </div>
                     </CpPanel>
                 }
             >
@@ -242,13 +259,23 @@ export default function PageForm({
                         />
                     </div>
                     <CpRichTextField
-                        label="Содержимое"
+                        label="Классическое содержимое (Legacy HTML)"
                         editorKey={activeLocale}
                         value={active.content}
                         onChange={(html) =>
                             setTranslation(activeLocale, 'content', html)
                         }
                         error={errors[`translations.${activeLocale}.content`]}
+                    />
+                </CpPanel>
+
+                <CpPanel title="Конструктор блоков">
+                    <CpBlocksField
+                        editorKey={activeLocale}
+                        value={active.blocks}
+                        onChange={(blocks) =>
+                            setTranslation(activeLocale, 'blocks', blocks as any)
+                        }
                     />
                 </CpPanel>
 

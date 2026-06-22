@@ -31,7 +31,7 @@ it('can subscribe to web push without email', function () {
         ->and($subscriber->topics)->toContain('alerts');
 
     expect($subscriber->pushSubscriptions()->count())->toBe(1);
-    
+
     $push = $subscriber->pushSubscriptions()->first();
     expect($push->endpoint)->toBe('https://fcm.googleapis.com/fcm/send/test');
 });
