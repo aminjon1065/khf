@@ -2,6 +2,7 @@ import { Head, useForm } from '@inertiajs/react';
 import { FileText, X } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { CpMultiRelationField } from '@/components/admin/cp/multi-relation-field';
 import {
     CpLocaleTabs,
     CpPanel,
@@ -25,6 +26,7 @@ import { index, store, update } from '@/routes/admin/documents';
 type Translation = { name: string; description: string };
 type Option = { value: string; label: string };
 type LocaleOption = { code: string; native_name: string };
+type TagOption = { id: number; name: string };
 type ExistingFile = { id: number; name: string; size: string; url: string };
 
 type DocumentData = {
@@ -34,6 +36,7 @@ type DocumentData = {
     document_date: string | null;
     status: string;
     sort_order: number;
+    tag_ids: number[];
     translations: Record<string, Partial<Translation>>;
     files: ExistingFile[];
 };
@@ -43,6 +46,7 @@ type PageProps = {
     types: Option[];
     statuses: Option[];
     locales: LocaleOption[];
+    tags: TagOption[];
     defaultLocale: string;
 };
 
@@ -51,6 +55,7 @@ export default function DocumentForm({
     types,
     statuses,
     locales,
+    tags,
     defaultLocale,
 }: PageProps) {
     const isEdit = Boolean(document);
@@ -70,6 +75,7 @@ export default function DocumentForm({
         document_date: document?.document_date ?? '',
         status: document?.status ?? statuses[0]?.value ?? 'published',
         sort_order: document?.sort_order ?? 0,
+        tag_ids: document?.tag_ids ?? [],
         files: [] as File[],
         remove_files: [] as number[],
         translations: initialTranslations,
@@ -198,6 +204,17 @@ export default function DocumentForm({
                                 />
                                 <InputError message={errors.source} />
                             </div>
+                            <CpMultiRelationField
+                                id="tags"
+                                label="Теги"
+                                value={form.data.tag_ids}
+                                options={tags}
+                                onChange={(value) =>
+                                    form.setData('tag_ids', value)
+                                }
+                                placeholder="— Нет —"
+                                error={errors.tag_ids}
+                            />
                         </CpPanel>
 
                         <CpPanel title="Файлы">

@@ -1,0 +1,95 @@
+name: deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: '22'
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Validate environment secrets
+        env:
+          APP_ENV: ${{ inputs.environment }}
+          APP_DEBUG: 'false'
+          APP_KEY: ${{ secrets.APP_KEY }}
+          APP_URL: ${{ secrets.APP_URL }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          MAIL_FROM_ADDRESS: ${{ secrets.MAIL_FROM_ADDRESS }}
+          MAIL_HOST: ${{ secrets.MAIL_HOST }}
+        run: php artisan deploy:env-check --env=${{ inputs.environment }}
+
+      - name: Package release artifact
+        run: |
+          tar czf khf-release.tar.gz \
+            --exclude=node_modules \
+            --exclude=.git \
+            --exclude=.github \
+            --exclude=tests \
+            --exclude=.env \
+            --exclude=.env.* \
+            .
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: khf-${{ inputs.environment }}-${{ github.sha }}
+          path: khf-release.tar.gz
+          retention-days: 14
+
+      # Uncomment when GitHub Environment secrets SSH_HOST, SSH_USER, SSH_PRIVATE_KEY,
+      # and DEPLOY_PATH are configured (see DEPLOY.md §7):
+      #
+      # - name: Deploy release to shared host
+      #   env:
+      #     SSH_HOST: ${{ secrets.SSH_HOST }}
+      #     SSH_USER: ${{ secrets.SSH_USER }}
+      #     DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      #   run: |
+      #     echo "$SSH_PRIVATE_KEY" > deploy_key
+      #     chmod 600 deploy_key
+      #     scp -i deploy_key -o StrictHostKeyChecking=no khf-release.tar.gz "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
+      #     ssh -i deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
+      #       "cd $DEPLOY_PATH && tar xzf khf-release.tar.gz && php artisan migrate --force && php artisan optimize"

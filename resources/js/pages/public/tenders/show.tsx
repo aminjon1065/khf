@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/hooks/use-translations';
 import { bid, index as tendersIndex, track } from '@/routes/tenders';
-import { MissingTranslationAlert } from '@/components/public/missing-translation-alert';
+import { MissingTranslationAlert } from '@/components/Public/missing-translation-alert';
 
 type Tender = {
     id: number;

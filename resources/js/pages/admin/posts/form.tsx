@@ -8,6 +8,8 @@ import {
     CpPanel,
     CpPublishForm,
 } from '@/components/admin/cp/publish-form';
+import { CpContentPublishPanel } from '@/components/admin/cp/content-publish-panel';
+import { CpMultiRelationField } from '@/components/admin/cp/multi-relation-field';
 import { CpRelationField } from '@/components/admin/cp/relation-field';
 import InputError from '@/components/input-error';
 import { Input } from '@/components/ui/input';
@@ -35,13 +37,16 @@ type Translation = {
 type Option = { value: string; label: string };
 type LocaleOption = { code: string; native_name: string };
 type CategoryOption = { id: number; name: string };
+type TagOption = { id: number; name: string };
 
 type PostData = {
     id: number;
     type: string;
     category_id: number | null;
+    tag_ids: number[];
     status: string;
     published_at: string | null;
+    unpublished_at: string | null;
     cover_url: string | null;
     translations: Record<string, Partial<Translation>>;
 };
@@ -51,7 +56,9 @@ type PageProps = {
     locales: LocaleOption[];
     types: Option[];
     statuses: Option[];
+    statusTransitions: Option[];
     categories: CategoryOption[];
+    tags: TagOption[];
     defaultLocale: string;
 };
 
@@ -60,7 +67,9 @@ export default function PostForm({
     locales,
     types,
     statuses,
+    statusTransitions,
     categories,
+    tags,
     defaultLocale,
 }: PageProps) {
     const isEdit = Boolean(post);
@@ -81,8 +90,10 @@ export default function PostForm({
     const form = useForm({
         type: post?.type ?? types[0]?.value ?? 'news',
         category_id: post?.category_id ?? null,
+        tag_ids: post?.tag_ids ?? [],
         status: post?.status ?? statuses[0]?.value ?? 'draft',
         published_at: post?.published_at ?? '',
+        unpublished_at: post?.unpublished_at ?? '',
         cover: null as File | null,
         cover_media_id: null as number | null,
         remove_cover: false,
@@ -130,30 +141,24 @@ export default function PostForm({
                 sidebar={
                     <>
                         <CpPanel title="Публикация">
-                            <div className="space-y-2">
-                                <Label htmlFor="status">Статус</Label>
-                                <Select
-                                    value={form.data.status}
-                                    onValueChange={(value) =>
-                                        form.setData('status', value)
-                                    }
-                                >
-                                    <SelectTrigger id="status">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {statuses.map((status) => (
-                                            <SelectItem
-                                                key={status.value}
-                                                value={status.value}
-                                            >
-                                                {status.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.status} />
-                            </div>
+                            <CpContentPublishPanel
+                                status={form.data.status}
+                                statuses={statuses}
+                                transitions={statusTransitions}
+                                publishedAt={form.data.published_at}
+                                unpublishedAt={form.data.unpublished_at}
+                                showSchedule
+                                onStatusChange={(value) =>
+                                    form.setData('status', value)
+                                }
+                                onPublishedAtChange={(value) =>
+                                    form.setData('published_at', value)
+                                }
+                                onUnpublishedAtChange={(value) =>
+                                    form.setData('unpublished_at', value)
+                                }
+                                errors={errors}
+                            />
                             <div className="space-y-2">
                                 <Label htmlFor="type">Тип</Label>
                                 <Select
@@ -189,23 +194,17 @@ export default function PostForm({
                                 placeholder="— Нет —"
                                 error={errors.category_id}
                             />
-                            <div className="space-y-2">
-                                <Label htmlFor="published_at">
-                                    Дата публикации
-                                </Label>
-                                <Input
-                                    id="published_at"
-                                    type="datetime-local"
-                                    value={form.data.published_at}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'published_at',
-                                            event.target.value,
-                                        )
-                                    }
-                                />
-                                <InputError message={errors.published_at} />
-                            </div>
+                            <CpMultiRelationField
+                                id="tags"
+                                label="Теги"
+                                value={form.data.tag_ids}
+                                options={tags}
+                                onChange={(value) =>
+                                    form.setData('tag_ids', value)
+                                }
+                                placeholder="— Нет —"
+                                error={errors.tag_ids}
+                            />
                         </CpPanel>
 
                         <CpPanel title="Обложка">

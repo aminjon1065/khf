@@ -22,6 +22,7 @@ type DocumentItem = {
     name: string | null;
     description: string | null;
     type_label: string;
+    tags: string[];
     document_date: string | null;
     files: DocFile[];
 };
@@ -140,10 +141,15 @@ export default function DocumentsRegistry({
                             key={document.id}
                             className="rounded-lg border p-4"
                         >
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <Badge variant="secondary">
                                     {document.type_label}
                                 </Badge>
+                                {document.tags.map((tag) => (
+                                    <Badge key={tag} variant="outline">
+                                        {tag}
+                                    </Badge>
+                                ))}
                                 {document.document_date && (
                                     <span className="text-sm text-muted-foreground">
                                         {document.document_date}

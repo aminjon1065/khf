@@ -60,6 +60,7 @@ class MenuController extends Controller
             'target' => $item->target,
             'sort_order' => $item->sort_order,
             'translations' => $translations,
+            'locales' => $item->translatedLocales(),
             'children' => $allItems->where('parent_id', $item->id)->map(function ($child) use ($allItems) {
                 return $this->formatItem($child, $allItems);
             })->values()->all(),

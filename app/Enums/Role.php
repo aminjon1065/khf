@@ -68,7 +68,7 @@ enum Role: string
                 // Content
                 Permission::ViewPages, Permission::ManagePages,
                 Permission::ViewPosts, Permission::ManagePosts, Permission::PublishPosts,
-                Permission::ManageCategories,
+                Permission::ManageCategories, Permission::ManageTags,
                 Permission::ViewDocuments, Permission::ManageDocuments,
                 Permission::ViewGuides, Permission::ManageGuides,
                 Permission::ViewVacancies, Permission::ManageVacancies,

@@ -1,6 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { CpContentPublishPanel } from '@/components/admin/cp/content-publish-panel';
 import { CpRichTextField } from '@/components/admin/cp/fields';
 import {
     CpLocaleTabs,
@@ -44,6 +45,7 @@ type VacancyData = {
     status: string;
     positions_count: number;
     published_at: string | null;
+    unpublished_at: string | null;
     deadline_at: string | null;
     translations: Record<string, Partial<Translation>>;
 };
@@ -53,6 +55,7 @@ type PageProps = {
     locales: LocaleOption[];
     employmentTypes: Option[];
     statuses: Option[];
+    statusTransitions: Option[];
     defaultLocale: string;
 };
 
@@ -75,6 +78,7 @@ export default function VacancyForm({
     locales,
     employmentTypes,
     statuses,
+    statusTransitions,
     defaultLocale,
 }: PageProps) {
     const isEdit = Boolean(vacancy);
@@ -96,6 +100,7 @@ export default function VacancyForm({
         status: vacancy?.status ?? statuses[0]?.value ?? 'draft',
         positions_count: vacancy?.positions_count ?? 1,
         published_at: vacancy?.published_at ?? '',
+        unpublished_at: vacancy?.unpublished_at ?? '',
         deadline_at: vacancy?.deadline_at ?? '',
         translations: initialTranslations,
     });
@@ -138,31 +143,25 @@ export default function VacancyForm({
                 processing={form.processing}
                 sidebar={
                     <CpPanel title="Публикация">
-                        <div className="space-y-2">
-                            <Label htmlFor="status">Статус</Label>
-                            <Select
-                                value={form.data.status}
-                                onValueChange={(value) =>
-                                    form.setData('status', value)
-                                }
-                            >
-                                <SelectTrigger id="status">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {statuses.map((status) => (
-                                        <SelectItem
-                                            key={status.value}
-                                            value={status.value}
-                                        >
-                                            {status.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError message={errors.status} />
-                        </div>
-                        <div className="space-y-2">
+                        <CpContentPublishPanel
+                            status={form.data.status}
+                            statuses={statuses}
+                            transitions={statusTransitions}
+                            publishedAt={form.data.published_at}
+                            unpublishedAt={form.data.unpublished_at}
+                            showSchedule
+                            onStatusChange={(value) =>
+                                form.setData('status', value)
+                            }
+                            onPublishedAtChange={(value) =>
+                                form.setData('published_at', value)
+                            }
+                            onUnpublishedAtChange={(value) =>
+                                form.setData('unpublished_at', value)
+                            }
+                            errors={errors}
+                        />
+                        <div className="mt-4 space-y-2">
                             <Label htmlFor="employment_type">
                                 Тип занятости
                             </Label>
@@ -205,23 +204,6 @@ export default function VacancyForm({
                                 }
                             />
                             <InputError message={errors.positions_count} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="published_at">
-                                Дата публикации
-                            </Label>
-                            <Input
-                                id="published_at"
-                                type="datetime-local"
-                                value={form.data.published_at}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'published_at',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                            <InputError message={errors.published_at} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="deadline_at">Срок подачи</Label>

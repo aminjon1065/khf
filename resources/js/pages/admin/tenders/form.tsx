@@ -1,6 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { CpContentPublishPanel } from '@/components/admin/cp/content-publish-panel';
 import { CpRichTextField } from '@/components/admin/cp/fields';
 import {
     CpLocaleTabs,
@@ -44,6 +45,7 @@ type TenderData = {
     budget: string | null;
     lots_count: number;
     published_at: string | null;
+    unpublished_at: string | null;
     deadline_at: string | null;
     translations: Record<string, Partial<Translation>>;
 };
@@ -53,6 +55,7 @@ type PageProps = {
     locales: LocaleOption[];
     tenderTypes: Option[];
     statuses: Option[];
+    statusTransitions: Option[];
     defaultLocale: string;
 };
 
@@ -73,6 +76,7 @@ export default function TenderForm({
     locales,
     tenderTypes,
     statuses,
+    statusTransitions,
     defaultLocale,
 }: PageProps) {
     const isEdit = Boolean(tender);
@@ -90,6 +94,7 @@ export default function TenderForm({
         budget: tender?.budget ?? '',
         lots_count: tender?.lots_count ?? 1,
         published_at: tender?.published_at ?? '',
+        unpublished_at: tender?.unpublished_at ?? '',
         deadline_at: tender?.deadline_at ?? '',
         translations: initialTranslations,
     });
@@ -132,31 +137,25 @@ export default function TenderForm({
                 processing={form.processing}
                 sidebar={
                     <CpPanel title="Публикация">
-                        <div className="space-y-2">
-                            <Label htmlFor="status">Статус</Label>
-                            <Select
-                                value={form.data.status}
-                                onValueChange={(value) =>
-                                    form.setData('status', value)
-                                }
-                            >
-                                <SelectTrigger id="status">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {statuses.map((status) => (
-                                        <SelectItem
-                                            key={status.value}
-                                            value={status.value}
-                                        >
-                                            {status.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError message={errors.status} />
-                        </div>
-                        <div className="space-y-2">
+                        <CpContentPublishPanel
+                            status={form.data.status}
+                            statuses={statuses}
+                            transitions={statusTransitions}
+                            publishedAt={form.data.published_at}
+                            unpublishedAt={form.data.unpublished_at}
+                            showSchedule
+                            onStatusChange={(value) =>
+                                form.setData('status', value)
+                            }
+                            onPublishedAtChange={(value) =>
+                                form.setData('published_at', value)
+                            }
+                            onUnpublishedAtChange={(value) =>
+                                form.setData('unpublished_at', value)
+                            }
+                            errors={errors}
+                        />
+                        <div className="mt-4 space-y-2">
                             <Label htmlFor="type">Тип закупки</Label>
                             <Select
                                 value={form.data.type}
@@ -225,23 +224,6 @@ export default function TenderForm({
                                 }
                             />
                             <InputError message={errors.lots_count} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="published_at">
-                                Дата публикации
-                            </Label>
-                            <Input
-                                id="published_at"
-                                type="datetime-local"
-                                value={form.data.published_at}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'published_at',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                            <InputError message={errors.published_at} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="deadline_at">Срок подачи</Label>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Public\AppealController;
 use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Public\DocumentController;
@@ -33,6 +34,10 @@ Route::get('/', fn () => redirect()->route('welcome', ['locale' => app()->getLoc
     ->name('home');
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
+
+Route::get('/health', HealthController::class)
+    ->middleware('cache.headers:no_cache;private')
+    ->name('health');
 
 /*
  * Public, locale-prefixed content (ТЗ §14, decision D-15). Every locale carries a prefix

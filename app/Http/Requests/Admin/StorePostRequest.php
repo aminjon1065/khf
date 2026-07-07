@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Enums\ContentStatus;
 use App\Enums\Permission;
 use App\Enums\PostType;
+use App\Http\Requests\Concerns\ValidatesContentStatusTransition;
 use App\Models\Language;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -12,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class StorePostRequest extends FormRequest
 {
+    use ValidatesContentStatusTransition;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -34,13 +36,17 @@ class StorePostRequest extends FormRequest
         $rules = [
             'type' => ['required', Rule::in(PostType::values())],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
-            'status' => ['required', Rule::in(ContentStatus::values())],
             'published_at' => ['nullable', 'date'],
+            'unpublished_at' => ['nullable', 'date', 'after:published_at'],
             'cover' => ['nullable', 'image', 'max:5120'],
             'cover_media_id' => ['nullable', 'integer', 'exists:media_files,id'],
             'remove_cover' => ['boolean'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['integer', 'exists:tags,id'],
             'translations' => ['array'],
         ];
+
+        $rules = array_merge($rules, $this->statusTransitionRules(null));
 
         foreach ($locales as $locale) {
             $rules["translations.{$locale}.title"] = [$locale === $default ? 'required' : 'nullable', 'string', 'max:255'];

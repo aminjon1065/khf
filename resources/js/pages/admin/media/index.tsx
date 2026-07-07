@@ -1,42 +1,72 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { Scissors, Trash2, UploadCloud } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import {
+    MediaBrowserDetail,
+    MediaBrowserFilters,
+    MediaBrowserGrid,
+    type MediaLibraryFilters,
+    type MediaLibraryItem,
+} from '@/components/admin/media-browser';
 import { ImageCropModal } from '@/components/admin/image-crop-modal';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes/admin';
 import {
+    destroy as mediaDestroy,
     index as mediaIndex,
     store as mediaStore,
-    destroy as mediaDestroy,
+    update as mediaUpdate,
 } from '@/routes/admin/media';
-
-type MediaItem = {
-    id: number;
-    original_url: string;
-    name: string;
-};
-
-type MediaFile = {
-    id: number;
-    name: string;
-    media: MediaItem[];
-};
 
 type Props = {
     mediaFiles: {
-        data: MediaFile[];
+        data: MediaLibraryItem[];
         links: { url: string | null; label: string; active: boolean }[];
+        meta?: {
+            current_page: number;
+            last_page: number;
+            total: number;
+        };
     };
+    filters: MediaLibraryFilters;
 };
 
-export default function MediaLibraryIndex({ mediaFiles }: Props) {
+export default function MediaLibraryIndex({ mediaFiles, filters }: Props) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
+    const [selected, setSelected] = useState<MediaLibraryItem | null>(null);
     const [cropImage, setCropImage] = useState<{
         id: number;
         url: string;
     } | null>(null);
+
+    const selectedItem = useMemo(() => {
+        if (selected === null) {
+            return null;
+        }
+
+        return mediaFiles.data.find((item) => item.id === selected.id) ?? selected;
+    }, [mediaFiles.data, selected]);
+
+    const detailForm = useForm({
+        name: selectedItem?.name ?? '',
+        alt_text: selectedItem?.alt_text ?? '',
+    });
+
+    const applyFilters = (next: Partial<MediaLibraryFilters>) => {
+        router.get(
+            mediaIndex().url,
+            {
+                search: next.search ?? filters.search,
+                type: next.type ?? filters.type,
+            },
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
 
     const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (!event.target.files || event.target.files.length === 0) {
@@ -63,12 +93,20 @@ export default function MediaLibraryIndex({ mediaFiles }: Props) {
     };
 
     const handleDelete = (id: number) => {
-        if (confirm('Удалить этот файл навсегда?')) {
-            router.delete(mediaDestroy(id).url, {
-                preserveScroll: true,
-                onSuccess: () => toast.success('Файл удалён'),
-            });
+        if (!confirm('Удалить этот файл навсегда?')) {
+            return;
         }
+
+        router.delete(mediaDestroy(id).url, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Файл удалён');
+
+                if (selected?.id === id) {
+                    setSelected(null);
+                }
+            },
+        });
     };
 
     const handleCropComplete = (blob: Blob) => {
@@ -88,6 +126,26 @@ export default function MediaLibraryIndex({ mediaFiles }: Props) {
         });
     };
 
+    const saveDetails = () => {
+        if (selectedItem === null) {
+            return;
+        }
+
+        detailForm.put(mediaUpdate(selectedItem.id).url, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Сохранено'),
+        });
+    };
+
+    const copyUrl = async (url: string) => {
+        try {
+            await navigator.clipboard.writeText(url);
+            toast.success('URL скопирован');
+        } catch {
+            toast.error('Не удалось скопировать URL');
+        }
+    };
+
     return (
         <div className="p-4 sm:p-6">
             <Head title="Медиабиблиотека" />
@@ -98,7 +156,7 @@ export default function MediaLibraryIndex({ mediaFiles }: Props) {
                         Медиабиблиотека
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Управление медиафайлами (изображения, документы)
+                        Поиск, повторное использование файлов и alt-тексты
                     </p>
                 </div>
                 <Button
@@ -116,79 +174,160 @@ export default function MediaLibraryIndex({ mediaFiles }: Props) {
                 />
             </div>
 
-            <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-                {mediaFiles.data.length === 0 ? (
-                    <div className="py-16 text-center text-muted-foreground">
-                        Файлов нет. Загрузите первый файл.
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                        {mediaFiles.data.map((file) => {
-                            const mediaItem = file.media?.[0];
+            <div className="mb-4">
+                <MediaBrowserFilters
+                    search={filters.search}
+                    type={filters.type}
+                    onSearchChange={(search) => applyFilters({ search })}
+                    onTypeChange={(type) => applyFilters({ type })}
+                />
+            </div>
 
-                            if (!mediaItem) {
-                                return null;
-                            }
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+                    <MediaBrowserGrid
+                        items={mediaFiles.data}
+                        selectedId={selectedItem?.id ?? null}
+                        onSelect={(item) => {
+                            setSelected(item);
+                            detailForm.setData({
+                                name: item.name,
+                                alt_text: item.alt_text ?? '',
+                            });
+                        }}
+                        emptyMessage={
+                            filters.search || filters.type
+                                ? 'По вашему запросу ничего не найдено'
+                                : 'Файлов нет. Загрузите первый файл.'
+                        }
+                    />
 
-                            const isImage =
-                                mediaItem.original_url.match(
-                                    /\.(jpeg|jpg|gif|png|webp|avif)$/i,
-                                ) != null;
+                    {mediaFiles.meta && mediaFiles.meta.last_page > 1 && (
+                        <div className="mt-6 flex items-center justify-between gap-3 text-sm text-muted-foreground">
+                            <span>
+                                Страница {mediaFiles.meta.current_page} из{' '}
+                                {mediaFiles.meta.last_page}
+                            </span>
+                            <div className="flex gap-2">
+                                {mediaFiles.links[0]?.url && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                            router.get(
+                                                mediaFiles.links[0].url!,
+                                                {},
+                                                {
+                                                    preserveState: true,
+                                                    preserveScroll: true,
+                                                },
+                                            )
+                                        }
+                                    >
+                                        Назад
+                                    </Button>
+                                )}
+                                {mediaFiles.links[
+                                    mediaFiles.links.length - 1
+                                ]?.url && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                            router.get(
+                                                mediaFiles.links[
+                                                    mediaFiles.links.length - 1
+                                                ].url!,
+                                                {},
+                                                {
+                                                    preserveState: true,
+                                                    preserveScroll: true,
+                                                },
+                                            )
+                                        }
+                                    >
+                                        Вперёд
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
 
-                            return (
-                                <div
-                                    key={file.id}
-                                    className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
+                <div className="space-y-4">
+                    <MediaBrowserDetail
+                        item={selectedItem}
+                        onCopyUrl={copyUrl}
+                    />
+
+                    {selectedItem && (
+                        <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="media-name">Название</Label>
+                                <Input
+                                    id="media-name"
+                                    value={detailForm.data.name}
+                                    onChange={(event) =>
+                                        detailForm.setData(
+                                            'name',
+                                            event.target.value,
+                                        )
+                                    }
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="media-alt">Alt-текст</Label>
+                                <Textarea
+                                    id="media-alt"
+                                    rows={3}
+                                    value={detailForm.data.alt_text}
+                                    onChange={(event) =>
+                                        detailForm.setData(
+                                            'alt_text',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Описание для доступности и SEO"
+                                />
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <Button
+                                    type="button"
+                                    onClick={saveDetails}
+                                    disabled={detailForm.processing}
                                 >
-                                    {isImage ? (
-                                        <img
-                                            src={mediaItem.original_url}
-                                            alt={file.name}
-                                            className="size-full object-cover transition-transform group-hover:scale-105"
-                                        />
-                                    ) : (
-                                        <div className="flex size-full flex-col items-center justify-center p-2 text-center text-sm break-all text-muted-foreground">
-                                            <div className="mb-2 font-bold">
-                                                DOC
-                                            </div>
-                                            {file.name}
-                                        </div>
-                                    )}
-
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                                        {isImage && (
-                                            <Button
-                                                variant="secondary"
-                                                size="sm"
-                                                className="w-24"
-                                                onClick={() =>
-                                                    setCropImage({
-                                                        id: file.id,
-                                                        url: mediaItem.original_url,
-                                                    })
-                                                }
-                                            >
-                                                <Scissors className="size-4" />
-                                                Кроп
-                                            </Button>
-                                        )}
+                                    Сохранить
+                                </Button>
+                                {selectedItem.is_image &&
+                                    selectedItem.original_url && (
                                         <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            className="w-24"
+                                            type="button"
+                                            variant="outline"
                                             onClick={() =>
-                                                handleDelete(file.id)
+                                                setCropImage({
+                                                    id: selectedItem.id,
+                                                    url: selectedItem.original_url!,
+                                                })
                                             }
                                         >
-                                            <Trash2 className="size-4" />
-                                            Удалить
+                                            <Scissors className="size-4" />
+                                            Кроп
                                         </Button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
+                                    )}
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    onClick={() =>
+                                        handleDelete(selectedItem.id)
+                                    }
+                                >
+                                    <Trash2 className="size-4" />
+                                    Удалить
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {cropImage && (

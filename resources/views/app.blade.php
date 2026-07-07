@@ -9,7 +9,7 @@
     $seoTitle = $seo['title'] ?? config('app.name', 'КЧС');
     $seoDescription = $seo['description'] ?? trans('ui.site.full_name');
     $canonicalUrl = collect($seoAlternates)->firstWhere('code', $locale)['url'] ?? request()->url();
-    $ogImage = url('/images/emblem-'.(in_array($locale, ['tj', 'ru', 'en'], true) ? $locale : 'tj').'.webp');
+    $ogImage = $seo['image'] ?? url('/images/emblem-'.(in_array($locale, ['tj', 'ru', 'en'], true) ? $locale : 'tj').'.webp');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $localeUrls->hreflang($locale) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
@@ -42,17 +42,17 @@
         @endif
 
         {{-- Matomo Analytics --}}
-        @if (config('services.matomo.url') && config('services.matomo.site_id'))
+        @if (config('matomo.url') && config('matomo.site_id'))
             <script>
                 var _paq = window._paq = window._paq || [];
                 /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
                 _paq.push(['trackPageView']);
                 _paq.push(['enableLinkTracking']);
                 (function() {
-                    var u="{{ config('services.matomo.url') }}";
+                    var u="{{ config('matomo.url') }}";
                     if (!u.endsWith('/')) { u += '/'; }
                     _paq.push(['setTrackerUrl', u+'matomo.php']);
-                    _paq.push(['setSiteId', '{{ config('services.matomo.site_id') }}']);
+                    _paq.push(['setSiteId', '{{ config('matomo.site_id') }}']);
                     var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
                     g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
                 })();

@@ -1,6 +1,8 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { CpAssetsField } from '@/components/admin/cp/assets-field';
+import { CpContentPublishPanel } from '@/components/admin/cp/content-publish-panel';
 import { CpRichTextField, CpToggleField } from '@/components/admin/cp/fields';
 import { CpBlocksField } from '@/components/admin/cp/blocks-field';
 import type { BlockData } from '@/components/admin/cp/blocks-field';
@@ -41,6 +43,7 @@ type PageData = {
     status: string;
     sort_order: number;
     is_home: boolean;
+    cover_url: string | null;
     translations: Record<string, Partial<Translation>>;
 };
 
@@ -48,6 +51,7 @@ type PageProps = {
     page: PageData | null;
     locales: LocaleOption[];
     statuses: StatusOption[];
+    statusTransitions: StatusOption[];
     parents: ParentOption[];
     defaultLocale: string;
 };
@@ -56,6 +60,7 @@ export default function PageForm({
     page,
     locales,
     statuses,
+    statusTransitions,
     parents,
     defaultLocale,
 }: PageProps) {
@@ -79,6 +84,9 @@ export default function PageForm({
         parent_id: page?.parent_id ?? null,
         sort_order: page?.sort_order ?? 0,
         is_home: page?.is_home ?? false,
+        cover: null as File | null,
+        cover_media_id: null as number | null,
+        remove_cover: false,
         translations: initialTranslations,
     });
 
@@ -122,31 +130,16 @@ export default function PageForm({
                 modelInfo={{ type: 'page', id: page?.id ?? null }}
                 sidebar={
                     <CpPanel title="Публикация">
-                        <div className="space-y-2">
-                            <Label htmlFor="status">Статус</Label>
-                            <Select
-                                value={form.data.status}
-                                onValueChange={(value) =>
-                                    form.setData('status', value)
-                                }
-                            >
-                                <SelectTrigger id="status">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {statuses.map((status) => (
-                                        <SelectItem
-                                            key={status.value}
-                                            value={status.value}
-                                        >
-                                            {status.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError message={errors.status} />
-                        </div>
-                        <div className="space-y-2">
+                        <CpContentPublishPanel
+                            status={form.data.status}
+                            statuses={statuses}
+                            transitions={statusTransitions}
+                            onStatusChange={(value) =>
+                                form.setData('status', value)
+                            }
+                            errors={errors}
+                        />
+                        <div className="mt-4 space-y-2">
                             <Label htmlFor="parent">
                                 Родительская страница
                             </Label>
@@ -280,7 +273,40 @@ export default function PageForm({
                 </CpPanel>
 
                 <CpPanel title="SEO">
-                    <div className="space-y-2">
+                    <CpAssetsField
+                        label="OG-изображение"
+                        instructions="Используется в соцсетях и превью ссылки. Можно загрузить или выбрать из медиатеки."
+                        currentUrl={page?.cover_url ?? null}
+                        file={form.data.cover}
+                        mediaId={form.data.cover_media_id}
+                        removed={form.data.remove_cover}
+                        onUpload={(file) =>
+                            form.setData({
+                                ...form.data,
+                                cover: file,
+                                cover_media_id: null,
+                                remove_cover: false,
+                            })
+                        }
+                        onPickAsset={(asset) =>
+                            form.setData({
+                                ...form.data,
+                                cover: null,
+                                cover_media_id: asset?.id ?? null,
+                                remove_cover: false,
+                            })
+                        }
+                        onClear={() =>
+                            form.setData({
+                                ...form.data,
+                                cover: null,
+                                cover_media_id: null,
+                                remove_cover: true,
+                            })
+                        }
+                        error={errors.cover ?? errors.cover_media_id}
+                    />
+                    <div className="mt-4 space-y-2">
                         <Label htmlFor="seo_title">SEO заголовок</Label>
                         <Input
                             id="seo_title"

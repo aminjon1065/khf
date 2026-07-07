@@ -1,10 +1,18 @@
 import { Head, router } from '@inertiajs/react';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { MapView } from '@/components/map-view';
-import type { MapMarker } from '@/components/map-view';
+import type { MapLayerVisibility, MapMarker, MapUnitMarker } from '@/components/map-view';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from '@/hooks/use-translations';
 
 type Option = { value: string; label: string };
+
+type IncidentTypeOption = {
+    value: string;
+    label: string;
+    color: string;
+    icon: string;
+};
 
 type IncidentMarker = {
     id: number;
@@ -12,6 +20,7 @@ type IncidentMarker = {
     lng: number;
     color: string;
     title: string;
+    type_key: string;
     type: string;
     level: string;
     status: string;
@@ -19,42 +28,75 @@ type IncidentMarker = {
     occurred_at: string | null;
 };
 
+type RiskZonesGeoJson = {
+    type: 'FeatureCollection';
+    features: Array<{
+        type: 'Feature';
+        properties: { id: string; name: string; color: string };
+        geometry: { type: 'Polygon'; coordinates: number[][][] };
+    }>;
+};
+
 type PageProps = {
     incidents: IncidentMarker[];
+    units: MapUnitMarker[];
+    riskZones: RiskZonesGeoJson;
     filters: {
         type?: string;
         level?: string;
         region?: string;
         period?: string;
     };
+    incidentTypes: IncidentTypeOption[];
     types: Option[];
     levels: Option[];
     regions: Option[];
 };
 
+function buildInitialTypeVisibility(
+    incidentTypes: IncidentTypeOption[],
+): Record<string, boolean> {
+    return Object.fromEntries(
+        incidentTypes.map((type) => [type.value, true]),
+    );
+}
+
 export default function PublicMap({
     incidents,
+    units,
+    riskZones,
     filters,
+    incidentTypes,
     types,
     levels,
     regions,
 }: PageProps) {
     const { t } = useTranslations();
+    const [typeVisibility, setTypeVisibility] = useState(() =>
+        buildInitialTypeVisibility(incidentTypes),
+    );
+    const [showUnits, setShowUnits] = useState(true);
+    const [showRiskZones, setShowRiskZones] = useState(false);
 
     const applyFilter = useCallback(
         (key: string, value: string) => {
             router.get(
                 route('map.index'),
                 { ...filters, [key]: value === 'all' ? null : value },
-                { preserveState: true, replace: true }
+                { preserveState: true, replace: true },
             );
         },
-        [filters]
+        [filters],
+    );
+
+    const visibleIncidents = useMemo(
+        () => incidents.filter((incident) => typeVisibility[incident.type_key] !== false),
+        [incidents, typeVisibility],
     );
 
     const markers = useMemo<MapMarker[]>(
         () =>
-            incidents.map((incident) => ({
+            visibleIncidents.map((incident) => ({
                 id: incident.id,
                 lat: incident.lat,
                 lng: incident.lng,
@@ -68,8 +110,21 @@ export default function PublicMap({
                     incident.occurred_at ?? '',
                 ].filter(Boolean),
             })),
-        [incidents],
+        [visibleIncidents],
     );
+
+    const layerVisibility = useMemo<MapLayerVisibility>(
+        () => ({
+            incidents: Object.values(typeVisibility).some(Boolean),
+            units: showUnits,
+            riskZones: showRiskZones,
+        }),
+        [typeVisibility, showUnits, showRiskZones],
+    );
+
+    const toggleIncidentType = useCallback((value: string, checked: boolean) => {
+        setTypeVisibility((current) => ({ ...current, [value]: checked }));
+    }, []);
 
     return (
         <>
@@ -137,7 +192,7 @@ export default function PublicMap({
                             htmlFor="map-filter-region"
                             className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
                         >
-                            Регион
+                            {t('map.filter_region')}
                         </label>
                         <select
                             id="map-filter-region"
@@ -146,7 +201,7 @@ export default function PublicMap({
                             className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
                         >
                             <option value="all">
-                                Все регионы
+                                {t('map.filter_region_all')}
                             </option>
                             {regions.map((region) => (
                                 <option key={region.value} value={region.value}>
@@ -155,13 +210,13 @@ export default function PublicMap({
                             ))}
                         </select>
                     </div>
-                    
+
                     <div className="flex min-w-[160px] flex-col gap-1">
                         <label
                             htmlFor="map-filter-period"
                             className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
                         >
-                            Период
+                            {t('map.filter_period')}
                         </label>
                         <select
                             id="map-filter-period"
@@ -169,18 +224,79 @@ export default function PublicMap({
                             onChange={(e) => applyFilter('period', e.target.value)}
                             className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
                         >
-                            <option value="all">За все время</option>
-                            <option value="today">За сегодня</option>
-                            <option value="week">За неделю</option>
-                            <option value="month">За месяц</option>
+                            <option value="all">{t('map.filter_period_all')}</option>
+                            <option value="today">{t('map.filter_period_today')}</option>
+                            <option value="week">{t('map.filter_period_week')}</option>
+                            <option value="month">{t('map.filter_period_month')}</option>
                         </select>
                     </div>
                 </div>
             </div>
 
-            <div className="h-[70vh] overflow-hidden rounded-lg border relative group">
-                {/* Optional overlay logic could go here */}
-                <MapView markers={markers} />
+            <div className="relative h-[70vh] overflow-hidden rounded-lg border">
+                <div className="absolute top-3 left-3 z-10 max-h-[calc(100%-1.5rem)] w-56 overflow-y-auto rounded-lg border border-border bg-card/95 p-3 shadow-md backdrop-blur-sm">
+                    <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        {t('map.layers_title')}
+                    </p>
+
+                    <div className="space-y-3">
+                        <label className="flex cursor-pointer items-center gap-2 text-sm">
+                            <Checkbox
+                                checked={showUnits}
+                                onCheckedChange={(checked) =>
+                                    setShowUnits(checked === true)
+                                }
+                            />
+                            <span>{t('map.layer_units')}</span>
+                        </label>
+
+                        <label className="flex cursor-pointer items-center gap-2 text-sm">
+                            <Checkbox
+                                checked={showRiskZones}
+                                onCheckedChange={(checked) =>
+                                    setShowRiskZones(checked === true)
+                                }
+                            />
+                            <span>{t('map.layer_risk_zones')}</span>
+                        </label>
+
+                        <div>
+                            <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                                {t('map.layer_incidents')}
+                            </p>
+                            <div className="space-y-1.5">
+                                {incidentTypes.map((type) => (
+                                    <label
+                                        key={type.value}
+                                        className="flex cursor-pointer items-center gap-2 text-sm"
+                                    >
+                                        <Checkbox
+                                            checked={typeVisibility[type.value] !== false}
+                                            onCheckedChange={(checked) =>
+                                                toggleIncidentType(
+                                                    type.value,
+                                                    checked === true,
+                                                )
+                                            }
+                                        />
+                                        <span
+                                            className="size-2.5 shrink-0 rounded-full"
+                                            style={{ backgroundColor: type.color }}
+                                        />
+                                        <span className="truncate">{type.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <MapView
+                    markers={markers}
+                    unitMarkers={units}
+                    riskZones={riskZones}
+                    layerVisibility={layerVisibility}
+                />
             </div>
         </>
     );

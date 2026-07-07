@@ -32,7 +32,7 @@ class PageController extends Controller
                 return null;
             }
 
-            $page = Page::published()->with('translations')->whereKey($translation->page_id)->first();
+            $page = Page::published()->with(['translations', 'media'])->whereKey($translation->page_id)->first();
 
             if ($page === null) {
                 return null;
@@ -61,6 +61,7 @@ class PageController extends Controller
                 'seo' => [
                     'title' => $resolved->seo_title ?: $resolved->title,
                     'description' => $resolved->seo_description,
+                    'image' => $page->getFirstMediaUrl(Page::COVER_COLLECTION) ?: null,
                 ],
                 'localeSwitch' => $urls['switch'],
                 'seoAlternates' => $urls['alternates'],

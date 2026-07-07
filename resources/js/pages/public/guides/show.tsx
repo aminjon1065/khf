@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/hooks/use-translations';
 import { index as guidesIndex } from '@/routes/guides';
-import { MissingTranslationAlert } from '@/components/public/missing-translation-alert';
+import { MissingTranslationAlert } from '@/components/Public/missing-translation-alert';
 
 type GuideFile = {
     name: string;

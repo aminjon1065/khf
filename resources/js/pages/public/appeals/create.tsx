@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/hooks/use-translations';
+import { useMatomoGoal } from '@/hooks/use-matomo-goal';
 import { create, store, track } from '@/routes/appeals';
 
 type Option = { value: string; label: string };
@@ -51,6 +52,8 @@ export default function AppealCreate({
     });
 
     const errors = form.errors as Record<string, string>;
+
+    useMatomoGoal('appeal', submittedReference !== null);
 
     const submit = (event: FormEvent) => {
         event.preventDefault();

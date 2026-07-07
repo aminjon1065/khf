@@ -7,6 +7,7 @@ use App\Enums\EmploymentType;
 use App\Models\Concerns\ClearsResponseCache;
 use App\Models\Concerns\HasSeoMeta;
 use App\Models\Concerns\HasTranslations;
+use App\Models\Concerns\ScopesPublicationWindow;
 use Database\Factories\VacancyFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,6 +28,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property EmploymentType $employment_type
  * @property int $positions_count
  * @property Carbon|null $published_at
+ * @property Carbon|null $unpublished_at
  * @property Carbon|null $deadline_at
  * @property int|null $created_by
  */
@@ -40,6 +42,7 @@ class Vacancy extends Model
     use HasSeoMeta;
     use HasTranslations;
     use LogsActivity;
+    use ScopesPublicationWindow;
     use SoftDeletes;
 
     /** @var list<string> */
@@ -48,6 +51,7 @@ class Vacancy extends Model
         'employment_type',
         'positions_count',
         'published_at',
+        'unpublished_at',
         'deadline_at',
         'created_by',
     ];
@@ -62,6 +66,7 @@ class Vacancy extends Model
             'employment_type' => EmploymentType::class,
             'positions_count' => 'integer',
             'published_at' => 'datetime',
+            'unpublished_at' => 'datetime',
             'deadline_at' => 'date',
         ];
     }
@@ -80,19 +85,6 @@ class Vacancy extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(VacancyApplication::class);
-    }
-
-    /**
-     * Published and past their publish time (ТЗ §20 «н» — scheduled publishing).
-     *
-     * @param  Builder<Vacancy>  $query
-     */
-    public function scopePublished(Builder $query): void
-    {
-        $query->where('status', ContentStatus::Published)
-            ->where(function (Builder $inner) {
-                $inner->whereNull('published_at')->orWhere('published_at', '<=', now());
-            });
     }
 
     /**

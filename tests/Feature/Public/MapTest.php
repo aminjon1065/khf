@@ -3,6 +3,8 @@
 use App\Enums\HazardLevel;
 use App\Enums\IncidentType;
 use App\Models\Incident;
+use App\Models\Region;
+use App\Services\Public\MapDataService;
 use Database\Seeders\LanguageSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -25,6 +27,16 @@ it('renders the map with active incidents that have coordinates', function () {
             ->has('incidents', 1)
             ->where('incidents.0.title', 'Заминларза')
             ->where('incidents.0.lat', 38.5)
+            ->where('incidents.0.type_key', $withCoords->type->value)
+            // The map popup card renders these (localised server-side); guard the payload
+            // contract the client popup depends on so a title-only regression is caught.
+            ->has('incidents.0.type')
+            ->has('incidents.0.level')
+            ->has('incidents.0.status')
+            ->has('incidents.0.occurred_at')
+            ->has('units')
+            ->has('riskZones.features')
+            ->has('incidentTypes', count(IncidentType::cases()))
         );
 });
 
@@ -48,4 +60,30 @@ it('filters map incidents by type and level', function () {
             ->has('incidents', 1)
             ->where('incidents.0.title', 'FL')
         );
+});
+
+it('includes regional kchs units from oblast centres', function () {
+    $region = Region::factory()->create([
+        'latitude' => 38.56,
+        'longitude' => 68.77,
+        'parent_id' => null,
+    ]);
+    $region->upsertTranslations(['ru' => ['name' => 'Душанбе']]);
+
+    $units = app(MapDataService::class)->regionalUnits('ru');
+
+    expect($units)->toHaveCount(1)
+        ->and($units[0]['lat'])->toBe(38.56)
+        ->and($units[0]['lng'])->toBe(68.77)
+        ->and($units[0]['title'])->toContain('Душанбе');
+});
+
+it('builds localised risk zone geojson from config', function () {
+    $geojson = app(MapDataService::class)->riskZonesGeoJson('en');
+
+    expect($geojson['type'])->toBe('FeatureCollection')
+        ->and($geojson['features'])->not->toBeEmpty()
+        ->and($geojson['features'][0]['properties']['name'])->toBeString()
+        ->and($geojson['features'][0]['properties']['color'])->toStartWith('#')
+        ->and($geojson['features'][0]['geometry']['type'])->toBe('Polygon');
 });

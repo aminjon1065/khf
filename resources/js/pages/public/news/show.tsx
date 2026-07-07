@@ -2,7 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { Paperclip, FileIcon } from 'lucide-react';
 import { useTranslations } from '@/hooks/use-translations';
 import { index as newsIndex, show } from '@/routes/news';
-import { MissingTranslationAlert } from '@/components/public/missing-translation-alert';
+import { MissingTranslationAlert } from '@/components/Public/missing-translation-alert';
 import { formatDate } from '@/lib/utils';
 
 type MediaItem = {
@@ -19,6 +19,7 @@ type Article = {
     body: string | null;
     type_label: string;
     category: string | null;
+    tags: string[];
     cover_url: string | null;
     author: string | null;
     published_at: string | null;
@@ -56,7 +57,7 @@ export default function NewsShow({ post, related }: PageProps) {
                         {t('news.back_to_list')}
                     </Link>
 
-                    <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                         <span className="text-primary">
                             {post.category ?? post.type_label}
                         </span>
@@ -64,6 +65,19 @@ export default function NewsShow({ post, related }: PageProps) {
                             <span>· {formatDate(post.published_at, locale)}</span>
                         )}
                     </div>
+
+                    {post.tags.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                            {post.tags.map((tag) => (
+                                <span
+                                    key={tag}
+                                    className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
+                                >
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    )}
 
                     <h1 className="mt-2 text-3xl leading-tight font-semibold">
                         {post.title}

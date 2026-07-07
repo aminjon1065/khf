@@ -19,6 +19,8 @@ declare module '@inertiajs/core' {
             translations: Translations;
             navPages: { title: string; slug: string }[];
             activeAlerts: ActiveAlert[];
+            matomo?: { enabled: boolean; goals: Record<string, number> };
+            socialLinks?: Array<{ platform: string; url: string }>;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

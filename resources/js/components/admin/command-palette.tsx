@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { create as createAlert } from '@/routes/admin/alerts';
 import { create as createCategory } from '@/routes/admin/categories';
 import { create as createDocument } from '@/routes/admin/documents';
+import { create as createTag } from '@/routes/admin/tags';
 import { create as createGuide } from '@/routes/admin/guides';
 import { create as createIncident } from '@/routes/admin/incidents';
 import { create as createPage } from '@/routes/admin/pages';
@@ -42,6 +43,12 @@ const createCommands: Omit<Command, 'icon' | 'group'>[] = [
         label: 'Создать рубрику',
         href: createCategory(),
         permission: 'categories.manage',
+    },
+    {
+        id: 'new:tag',
+        label: 'Создать тег',
+        href: createTag(),
+        permission: 'tags.manage',
     },
     {
         id: 'new:incident',

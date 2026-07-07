@@ -2,7 +2,7 @@ import { Head } from '@inertiajs/react';
 import { useTranslations } from '@/hooks/use-translations';
 import { Layout } from '@/components/public/layout';
 import { Seo } from '@/components/public/seo';
-import { MissingTranslationAlert } from '@/components/public/missing-translation-alert';
+import { MissingTranslationAlert } from '@/components/Public/missing-translation-alert';
 
 import { BlockRenderer } from '@/components/Public/block-renderer';
 

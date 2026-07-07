@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Enums\SearchContentType;
 use App\Http\Controllers\Controller;
 use App\Services\Public\SearchService;
 use App\Services\SystemLoadService;
@@ -26,7 +27,8 @@ class SearchController extends Controller
             ], 503);
         }
 
-        $results = $searchService->search($query, $locale, 10);
+        $type = SearchContentType::tryFromRequest($request->string('type')->toString());
+        $results = $searchService->search($query, $locale, 10, $type);
 
         return response()->json([
             'data' => $results,
@@ -34,21 +36,33 @@ class SearchController extends Controller
     }
 
     /**
-     * Full search results page.
+     * Full search results page with pagination, type filter, and highlighting (ТЗ §6.10).
      */
     public function index(Request $request, string $locale, SearchService $searchService): Response
     {
-        $query = $request->input('q', '');
+        $query = (string) $request->string('q');
+        $type = SearchContentType::tryFromRequest($request->string('type')->toString());
+        $page = max(1, (int) $request->integer('page', 1));
 
         if (SystemLoadService::isHighLoad()) {
             abort(503, __('ui.search.disabled_high_load', [], $locale));
         }
 
-        $results = $query ? $searchService->search($query, $locale, 50) : collect();
+        $paginator = $searchService->paginate($query, $locale, $type, $page, 20);
 
         return Inertia::render('public/search', [
             'query' => $query,
-            'results' => $results,
+            'results' => $paginator->items(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+            'filters' => [
+                'type' => $type?->value,
+            ],
+            'contentTypes' => SearchContentType::values(),
         ]);
     }
 }

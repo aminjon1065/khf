@@ -105,7 +105,10 @@ export default function MenuItemModal({
                                 <TabsContent key={locale.code} value={locale.code} className="space-y-4">
                                     <div className="space-y-2">
                                         <Label htmlFor={`title-${locale.code}`}>
-                                            {t('fields.title')} ({locale.code.toUpperCase()}) <span className="text-destructive">*</span>
+                                            {t('fields.title')} ({locale.code.toUpperCase()})
+                                            {locale.code === defaultLocale && (
+                                                <span className="text-destructive"> *</span>
+                                            )}
                                         </Label>
                                         <Input
                                             id={`title-${locale.code}`}

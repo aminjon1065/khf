@@ -2,10 +2,12 @@
 
 use App\Enums\ContentStatus;
 use App\Enums\Role;
+use App\Models\MediaFile;
 use App\Models\Page;
 use App\Models\User;
 use Database\Seeders\LanguageSeeder;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Http\UploadedFile;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -123,6 +125,24 @@ it('renders the list, create, edit and trash screens', function () {
     $this->actingAs($this->editor)->get(route('admin.pages.trash'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/pages/trash')->has('pages.data', 1));
+});
+
+it('attaches an og image picked from the media library', function () {
+    $page = Page::factory()->draft()->create();
+    $page->upsertTranslations(['tj' => ['title' => 'Тест', 'slug' => 'cover-page']]);
+
+    $mediaFile = MediaFile::create(['user_id' => $this->editor->id, 'name' => 'og.jpg']);
+    $mediaFile->addMedia(UploadedFile::fake()->image('og.jpg'))
+        ->toMediaCollection('default');
+
+    $payload = pagePayload();
+    $payload['cover_media_id'] = $mediaFile->getKey();
+
+    $this->actingAs($this->editor)
+        ->put(route('admin.pages.update', $page), $payload)
+        ->assertRedirect(route('admin.pages.index'));
+
+    expect($page->fresh()->getFirstMedia(Page::COVER_COLLECTION))->not->toBeNull();
 });
 
 it('soft deletes, restores and force deletes a page', function () {

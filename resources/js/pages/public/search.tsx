@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import {
     FileText,
     Info,
@@ -12,27 +12,71 @@ import {
     BarChart3,
     AlertCircle,
     Search as SearchIcon,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 import { useTranslations } from '@/hooks/use-translations';
 import PublicLayout from '@/layouts/public/public-layout';
+import type { SharedData } from '@/types';
 
 interface SearchResult {
     id: number;
     type: string;
     title: string;
     excerpt: string | null;
+    highlighted_title?: string | null;
+    highlighted_excerpt?: string | null;
     url: string;
     date: string | null;
 }
 
+type Pagination = {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+};
+
 export default function Search({
     query,
     results,
+    pagination,
+    filters,
+    contentTypes,
 }: {
     query: string;
     results: SearchResult[];
+    pagination?: Pagination;
+    filters?: { type?: string | null };
+    contentTypes?: string[];
 }) {
     const { t } = useTranslations();
+    const { locale } = usePage<SharedData>().props;
+    const activeType = filters?.type ?? null;
+
+    const buildSearchUrl = (overrides: { type?: string | null; page?: number }) => {
+        const params = new URLSearchParams();
+
+        if (query) {
+            params.set('q', query);
+        }
+
+        const type = overrides.type !== undefined ? overrides.type : activeType;
+
+        if (type) {
+            params.set('type', type);
+        }
+
+        const page = overrides.page ?? 1;
+
+        if (page > 1) {
+            params.set('page', String(page));
+        }
+
+        const qs = params.toString();
+
+        return `/${locale}/search${qs ? `?${qs}` : ''}`;
+    };
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -107,14 +151,45 @@ export default function Search({
                             ? t('search.results_for', { query })
                             : t('search.enter_query')}
                     </p>
+                    {pagination && pagination.total > 0 && (
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {t('search.results_count', { count: pagination.total })}
+                        </p>
+                    )}
                 </div>
+
+                {query && contentTypes && contentTypes.length > 0 && (
+                    <div className="mb-6 flex flex-wrap gap-2">
+                        <Link
+                            href={buildSearchUrl({ type: null, page: 1 })}
+                            className={`rounded-full border px-3 py-1 text-sm font-medium transition-colors ${
+                                !activeType
+                                    ? 'border-primary bg-primary text-primary-foreground'
+                                    : 'bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                            }`}
+                        >
+                            {t('search.filter_all')}
+                        </Link>
+                        {contentTypes.map((type) => (
+                            <Link
+                                key={type}
+                                href={buildSearchUrl({ type, page: 1 })}
+                                className={`rounded-full border px-3 py-1 text-sm font-medium transition-colors ${
+                                    activeType === type
+                                        ? 'border-primary bg-primary text-primary-foreground'
+                                        : 'bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                                }`}
+                            >
+                                {getTypeLabel(type)}
+                            </Link>
+                        ))}
+                    </div>
+                )}
 
                 {query && results.length === 0 && (
                     <div className="rounded-lg border bg-card py-16 text-center shadow-sm">
                         <SearchIcon className="mx-auto mb-4 size-12 text-muted-foreground/30" />
-                        <h3 className="text-lg font-medium">
-                            {t('table.empty')}
-                        </h3>
+                        <h3 className="text-lg font-medium">{t('table.empty')}</h3>
                         <p className="mt-1 text-muted-foreground">
                             {t('search.no_results_hint')}
                         </p>
@@ -144,19 +219,71 @@ export default function Search({
                                                 </span>
                                             )}
                                         </div>
-                                        <h2 className="text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
-                                            {result.title}
-                                        </h2>
-                                        {result.excerpt && (
-                                            <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                                                {result.excerpt}
-                                            </p>
+                                        <h2
+                                            className="text-lg font-semibold text-foreground transition-colors group-hover:text-primary"
+                                            dangerouslySetInnerHTML={{
+                                                __html:
+                                                    result.highlighted_title ??
+                                                    result.title,
+                                            }}
+                                        />
+                                        {(result.excerpt ||
+                                            result.highlighted_excerpt) && (
+                                            <p
+                                                className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base"
+                                                dangerouslySetInnerHTML={{
+                                                    __html:
+                                                        result.highlighted_excerpt ??
+                                                        result.excerpt ??
+                                                        '',
+                                                }}
+                                            />
                                         )}
                                     </div>
                                 </div>
                             </Link>
                         ))}
                     </div>
+                )}
+
+                {pagination && pagination.last_page > 1 && (
+                    <nav
+                        className="mt-8 flex items-center justify-between border-t pt-6"
+                        aria-label={t('search.pagination')}
+                    >
+                        {pagination.current_page > 1 ? (
+                            <Link
+                                href={buildSearchUrl({
+                                    page: pagination.current_page - 1,
+                                })}
+                                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                            >
+                                <ChevronLeft className="size-4" />
+                                {t('search.prev_page')}
+                            </Link>
+                        ) : (
+                            <span />
+                        )}
+                        <span className="text-sm text-muted-foreground">
+                            {t('search.page_of', {
+                                current: pagination.current_page,
+                                total: pagination.last_page,
+                            })}
+                        </span>
+                        {pagination.current_page < pagination.last_page ? (
+                            <Link
+                                href={buildSearchUrl({
+                                    page: pagination.current_page + 1,
+                                })}
+                                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                            >
+                                {t('search.next_page')}
+                                <ChevronRight className="size-4" />
+                            </Link>
+                        ) : (
+                            <span />
+                        )}
+                    </nav>
                 )}
             </div>
         </PublicLayout>

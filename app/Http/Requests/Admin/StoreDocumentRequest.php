@@ -41,6 +41,8 @@ class StoreDocumentRequest extends FormRequest
             'files.*' => ['file', 'max:20480', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,jpg,jpeg,png'],
             'remove_files' => ['nullable', 'array'],
             'remove_files.*' => ['integer'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['integer', 'exists:tags,id'],
             'translations' => ['array'],
         ];
 

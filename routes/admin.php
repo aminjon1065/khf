@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\RevisionController;
 use App\Http\Controllers\Admin\StatisticController;
 use App\Http\Controllers\Admin\SubdivisionController;
 use App\Http\Controllers\Admin\SubscriberController;
+use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\TenderBidController;
 use App\Http\Controllers\Admin\TenderController;
 use App\Http\Controllers\Admin\TouristGroupController;
@@ -45,6 +46,7 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
         Route::get('media', [MediaController::class, 'index'])->name('media.index');
         Route::get('api/media', [MediaController::class, 'apiIndex'])->name('api.media.index');
         Route::post('media', [MediaController::class, 'store'])->name('media.store');
+        Route::put('media/{mediaFile}', [MediaController::class, 'update'])->name('media.update');
         Route::delete('media/{mediaFile}', [MediaController::class, 'destroy'])->name('media.destroy');
 
         // Content — pages (content roles via pages.manage).
@@ -81,6 +83,16 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::get('categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
             Route::put('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
             Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+        });
+
+        // Content — tags.
+        Route::middleware('can:'.Permission::ManageTags->value)->group(function () {
+            Route::get('tags', [TagController::class, 'index'])->name('tags.index');
+            Route::get('tags/create', [TagController::class, 'create'])->name('tags.create');
+            Route::post('tags', [TagController::class, 'store'])->name('tags.store');
+            Route::get('tags/{tag}/edit', [TagController::class, 'edit'])->name('tags.edit');
+            Route::put('tags/{tag}', [TagController::class, 'update'])->name('tags.update');
+            Route::delete('tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
         });
 
         // Menus (menus.manage).

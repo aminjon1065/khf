@@ -15,6 +15,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { MapView } from '@/components/map-view';
 import { useTranslations } from '@/hooks/use-translations';
+import { useMatomoGoal } from '@/hooks/use-matomo-goal';
 import { create, store, track } from '@/routes/tourist-groups';
 
 type RegionOption = { id: number; name: string };
@@ -45,6 +46,8 @@ export default function TouristGroupCreate({
     });
 
     const errors = form.errors as Record<string, string>;
+
+    useMatomoGoal('tourist_group', submittedReference !== null);
 
     const submit = (event: FormEvent) => {
         event.preventDefault();

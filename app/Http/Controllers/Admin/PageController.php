@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ContentStatus;
+use App\Http\Controllers\Concerns\SyncsCoverFromLibrary;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePageRequest;
 use App\Http\Requests\Admin\UpdatePageRequest;
 use App\Models\Language;
 use App\Models\Page;
+use App\Support\BlockSanitizer;
 use App\Support\HtmlSanitizer;
+use App\Support\PublicationScheduler;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,10 +21,15 @@ use Inertia\Response;
 
 class PageController extends Controller
 {
+    use SyncsCoverFromLibrary;
+
     /** @var list<string> */
     private const SORTABLE = ['sort_order', 'status', 'created_at', 'updated_at'];
 
-    public function __construct(private HtmlSanitizer $sanitizer) {}
+    public function __construct(
+        private HtmlSanitizer $sanitizer,
+        private BlockSanitizer $blockSanitizer,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -85,6 +93,7 @@ class PageController extends Controller
         }
 
         $page->upsertTranslations($this->translationsPayload($data));
+        $this->syncCover($request, $page, Page::COVER_COLLECTION);
         $page->saveRevision();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Page created.')]);
@@ -94,7 +103,7 @@ class PageController extends Controller
 
     public function edit(Page $page): Response
     {
-        $page->load('translations');
+        $page->load(['translations', 'media']);
 
         return Inertia::render('admin/pages/form', $this->formData($page));
     }
@@ -115,6 +124,7 @@ class PageController extends Controller
         }
 
         $page->upsertTranslations($this->translationsPayload($data));
+        $this->syncCover($request, $page, Page::COVER_COLLECTION);
         $page->saveRevision();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Page updated.')]);
@@ -192,14 +202,15 @@ class PageController extends Controller
                 'status' => $page->status->value,
                 'sort_order' => $page->sort_order,
                 'is_home' => $page->is_home,
+                'cover_url' => $page->getFirstMediaUrl(Page::COVER_COLLECTION, 'thumb') ?: null,
                 'translations' => $translations,
             ] : null,
             'locales' => Language::active()
                 ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
                 ->all(),
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
+            'statuses' => PublicationScheduler::statusOptions(),
+            'statusTransitions' => PublicationScheduler::transitionOptions(
+                $page?->status ?? ContentStatus::Draft,
             ),
             'parents' => Page::query()
                 ->when($page, fn (Builder $query) => $query->whereKeyNot($page->id))
@@ -225,7 +236,7 @@ class PageController extends Controller
                 'title' => $translation['title'],
                 'slug' => $translation['slug'] ?? Str::tajikSlug($translation['title']),
                 'content' => $this->sanitizer->clean($translation['content'] ?? null),
-                'blocks' => $translation['blocks'] ?? null,
+                'blocks' => $this->blockSanitizer->sanitize($translation['blocks'] ?? null),
                 'seo_title' => $translation['seo_title'] ?? null,
                 'seo_description' => $translation['seo_description'] ?? null,
             ])

@@ -81,6 +81,24 @@ export default function MenuShow({ menu, items, locales, defaultLocale }: any) {
                                 <div className="font-medium">
                                     {node.translations[defaultLocale]?.title || '—'}
                                 </div>
+                                <div className="flex gap-1">
+                                    {locales.map((locale: { code: string }) => {
+                                        const hasTranslation = (node.locales ?? []).includes(locale.code);
+
+                                        return (
+                                            <span
+                                                key={locale.code}
+                                                className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
+                                                    hasTranslation
+                                                        ? 'bg-primary/10 text-primary'
+                                                        : 'bg-muted text-muted-foreground'
+                                                }`}
+                                            >
+                                                {locale.code}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
                                 {node.url && (
                                     <div className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
                                         {node.url}

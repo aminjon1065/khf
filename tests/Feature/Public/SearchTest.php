@@ -89,7 +89,85 @@ it('renders the search page with inertia', function () {
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('public/search')
             ->has('results')
+            ->has('pagination')
+            ->has('contentTypes', 11)
             ->where('query', 'test')
+        );
+});
+
+it('filters search results by content type', function () {
+    $post = Post::factory()->create(['status' => ContentStatus::Published, 'published_at' => now()]);
+    $post->translations()->create([
+        'locale' => 'ru',
+        'title' => 'Новость о пожаре',
+        'slug' => 'fire-news',
+        'body' => 'Текст',
+    ]);
+
+    $page = Page::factory()->create(['status' => ContentStatus::Published]);
+    $page->translations()->create([
+        'locale' => 'ru',
+        'title' => 'Страница о пожаре',
+        'slug' => 'fire-page',
+        'content' => 'Текст',
+    ]);
+
+    $this->get('/ru/search?q=пожар&type=post')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $inertia) => $inertia
+            ->has('results', 1)
+            ->where('results.0.type', 'post')
+            ->where('filters.type', 'post')
+        );
+});
+
+it('finds cyrillic queries in the current locale', function () {
+    $post = Post::factory()->create(['status' => ContentStatus::Published, 'published_at' => now()]);
+    $post->translations()->create([
+        'locale' => 'ru',
+        'title' => 'Землетрясение в Гиссаре',
+        'slug' => 'zemletryasenie-gissar',
+        'body' => 'Оперативная сводка',
+    ]);
+
+    $this->getJson('/ru/search/api?q=Землетрясение')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonFragment(['title' => 'Землетрясение в Гиссаре']);
+});
+
+it('highlights matches in api search results', function () {
+    $post = Post::factory()->create(['status' => ContentStatus::Published, 'published_at' => now()]);
+    $post->translations()->create([
+        'locale' => 'tj',
+        'title' => 'Заминларза',
+        'slug' => 'zaminlarza',
+        'body' => 'Маълумот',
+    ]);
+
+    $this->getJson('/tj/search/api?q=Замин')
+        ->assertOk()
+        ->assertJsonPath('data.0.highlighted_title', fn ($value) => str_contains($value, '<mark'));
+});
+
+it('paginates search results on the full page', function () {
+    for ($i = 1; $i <= 25; $i++) {
+        $post = Post::factory()->create(['status' => ContentStatus::Published, 'published_at' => now()->subDays($i)]);
+        $post->translations()->create([
+            'locale' => 'en',
+            'title' => "Emergency report {$i}",
+            'slug' => "emergency-report-{$i}",
+            'body' => 'Details',
+        ]);
+    }
+
+    $this->get('/en/search?q=Emergency&page=2')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $inertia) => $inertia
+            ->where('pagination.current_page', 2)
+            ->where('pagination.per_page', 20)
+            ->where('pagination.total', 25)
+            ->has('results', 5)
         );
 });
 

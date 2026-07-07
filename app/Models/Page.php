@@ -16,8 +16,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * A static content page (ТЗ §6, §7.2). Multilingual fields live in `page_translations`.
@@ -41,6 +43,8 @@ class Page extends Model implements HasMedia
     use InteractsWithMedia;
     use LogsActivity;
     use SoftDeletes;
+
+    public const COVER_COLLECTION = 'cover';
 
     /** @var list<string> */
     protected $fillable = [
@@ -84,6 +88,17 @@ class Page extends Model implements HasMedia
     public function scopePublished(Builder $query): void
     {
         $query->where('status', ContentStatus::Published);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(self::COVER_COLLECTION)->singleFile();
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->fit(Fit::Crop, 1200, 630);
     }
 
     public function getActivitylogOptions(): LogOptions

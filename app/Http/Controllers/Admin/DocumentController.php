@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\StoreDocumentRequest;
 use App\Http\Requests\Admin\UpdateDocumentRequest;
 use App\Models\Document;
 use App\Models\Language;
+use App\Models\Tag;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -71,6 +72,7 @@ class DocumentController extends Controller
 
         $document = Document::create($this->attributes($data));
         $document->upsertTranslations($this->translationsPayload($data));
+        $document->tags()->sync($data['tag_ids'] ?? []);
         $this->syncFiles($request, $document);
         $document->saveRevision();
 
@@ -81,7 +83,7 @@ class DocumentController extends Controller
 
     public function edit(Document $document): Response
     {
-        $document->load(['translations', 'media']);
+        $document->load(['translations', 'media', 'tags.translations']);
 
         return Inertia::render('admin/documents/form', $this->formData($document));
     }
@@ -92,6 +94,7 @@ class DocumentController extends Controller
 
         $document->update($this->attributes($data));
         $document->upsertTranslations($this->translationsPayload($data));
+        $document->tags()->sync($data['tag_ids'] ?? []);
         $this->syncFiles($request, $document);
         $document->saveRevision();
 
@@ -181,6 +184,7 @@ class DocumentController extends Controller
      */
     private function formData(?Document $document): array
     {
+        $locale = app()->getLocale();
         $translations = [];
         $files = [];
 
@@ -214,6 +218,7 @@ class DocumentController extends Controller
                 'document_date' => $document->document_date?->format('Y-m-d'),
                 'status' => $document->status->value,
                 'sort_order' => $document->sort_order,
+                'tag_ids' => $document->tags->pluck('id')->all(),
                 'translations' => $translations,
                 'files' => $files,
             ] : null,
@@ -224,6 +229,11 @@ class DocumentController extends Controller
             ),
             'locales' => Language::active()
                 ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
+                ->all(),
+            'tags' => Tag::query()
+                ->with('translations')
+                ->get()
+                ->map(fn (Tag $tag) => ['id' => $tag->id, 'name' => $tag->translation($locale)?->name ?? "#{$tag->id}"])
                 ->all(),
             'defaultLocale' => Language::defaultCode(),
         ];

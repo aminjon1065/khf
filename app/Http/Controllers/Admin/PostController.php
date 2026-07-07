@@ -4,14 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ContentStatus;
 use App\Enums\PostType;
+use App\Http\Controllers\Concerns\SyncsCoverFromLibrary;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePostRequest;
 use App\Http\Requests\Admin\UpdatePostRequest;
 use App\Models\Category;
 use App\Models\Language;
-use App\Models\MediaFile;
 use App\Models\Post;
+use App\Models\Tag;
 use App\Support\HtmlSanitizer;
+use App\Support\PublicationScheduler;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +23,8 @@ use Inertia\Response;
 
 class PostController extends Controller
 {
+    use SyncsCoverFromLibrary;
+
     /** @var list<string> */
     private const SORTABLE = ['status', 'type', 'published_at', 'created_at'];
 
@@ -73,7 +77,7 @@ class PostController extends Controller
 
     public function store(StorePostRequest $request): RedirectResponse
     {
-        $data = $request->validated();
+        $data = PublicationScheduler::normalize($request->validated());
 
         $post = Post::create([
             'type' => $data['type'],
@@ -81,9 +85,11 @@ class PostController extends Controller
             'author_id' => $request->user()->id,
             'status' => $data['status'],
             'published_at' => $data['published_at'] ?? null,
+            'unpublished_at' => $data['unpublished_at'] ?? null,
         ]);
         $post->upsertTranslations($this->translationsPayload($data));
-        $this->syncCover($request, $post);
+        $post->tags()->sync($data['tag_ids'] ?? []);
+        $this->syncCover($request, $post, Post::COVER_COLLECTION);
         $post->saveRevision();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Post created.')]);
@@ -93,23 +99,25 @@ class PostController extends Controller
 
     public function edit(Post $post): Response
     {
-        $post->load(['translations', 'media']);
+        $post->load(['translations', 'media', 'tags.translations']);
 
         return Inertia::render('admin/posts/form', $this->formData($post));
     }
 
     public function update(UpdatePostRequest $request, Post $post): RedirectResponse
     {
-        $data = $request->validated();
+        $data = PublicationScheduler::normalize($request->validated());
 
         $post->update([
             'type' => $data['type'],
             'category_id' => $data['category_id'] ?? null,
             'status' => $data['status'],
             'published_at' => $data['published_at'] ?? null,
+            'unpublished_at' => $data['unpublished_at'] ?? null,
         ]);
         $post->upsertTranslations($this->translationsPayload($data));
-        $this->syncCover($request, $post);
+        $post->tags()->sync($data['tag_ids'] ?? []);
+        $this->syncCover($request, $post, Post::COVER_COLLECTION);
         $post->saveRevision();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Post updated.')]);
@@ -190,8 +198,10 @@ class PostController extends Controller
                 'id' => $post->id,
                 'type' => $post->type->value,
                 'category_id' => $post->category_id,
+                'tag_ids' => $post->tags->pluck('id')->all(),
                 'status' => $post->status->value,
                 'published_at' => $post->published_at?->format('Y-m-d\TH:i'),
+                'unpublished_at' => $post->unpublished_at?->format('Y-m-d\TH:i'),
                 'cover_url' => $post->getFirstMediaUrl(Post::COVER_COLLECTION, 'thumb') ?: null,
                 'translations' => $translations,
             ] : null,
@@ -202,48 +212,22 @@ class PostController extends Controller
                 fn (PostType $type) => ['value' => $type->value, 'label' => $type->label()],
                 PostType::cases(),
             ),
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
+            'statuses' => PublicationScheduler::statusOptions(),
+            'statusTransitions' => PublicationScheduler::transitionOptions(
+                $post?->status ?? ContentStatus::Draft,
             ),
             'categories' => Category::query()
                 ->with('translations')
                 ->get()
                 ->map(fn (Category $category) => ['id' => $category->id, 'name' => $category->translation($locale)?->name ?? "#{$category->id}"])
                 ->all(),
+            'tags' => Tag::query()
+                ->with('translations')
+                ->get()
+                ->map(fn (Tag $tag) => ['id' => $tag->id, 'name' => $tag->translation($locale)?->name ?? "#{$tag->id}"])
+                ->all(),
             'defaultLocale' => Language::defaultCode(),
         ];
-    }
-
-    /**
-     * Set the cover from an upload or a picked media-library asset, or clear it when the "remove"
-     * flag is set (ТЗ §6.2, §7.7). A fresh upload wins; otherwise a chosen library asset is copied
-     * into the cover collection (the assets fieldtype, D-22).
-     */
-    private function syncCover(Request $request, Post $post): void
-    {
-        if ($request->hasFile('cover')) {
-            $post->addMediaFromRequest('cover')->toMediaCollection(Post::COVER_COLLECTION);
-        } elseif ($request->filled('cover_media_id')) {
-            $this->copyCoverFromLibrary($post, $request->integer('cover_media_id'));
-        } elseif ($request->boolean('remove_cover')) {
-            $post->clearMediaCollection(Post::COVER_COLLECTION);
-        }
-    }
-
-    /**
-     * Copy a media-library asset's file into the post's (single-file) cover collection.
-     */
-    private function copyCoverFromLibrary(Post $post, int $mediaFileId): void
-    {
-        $media = MediaFile::find($mediaFileId)?->getFirstMedia('default');
-
-        if ($media === null) {
-            return;
-        }
-
-        $post->clearMediaCollection(Post::COVER_COLLECTION);
-        $media->copy($post, Post::COVER_COLLECTION);
     }
 
     /**

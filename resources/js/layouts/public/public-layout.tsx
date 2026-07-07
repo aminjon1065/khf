@@ -15,6 +15,7 @@ import { AppEmblem } from '@/components/app-emblem';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { BottomNavigation } from '@/components/Public/bottom-navigation';
 import { GlobalSearchModal } from '@/components/Public/GlobalSearchModal';
+import { SocialLinks } from '@/components/Public/social-links';
 import { TajikistanEmblem } from '@/components/Public/symbols/state-emblem';
 import { TajikistanFlag } from '@/components/Public/symbols/state-flag';
 import {
@@ -77,6 +78,8 @@ export default function PublicLayout({
             hreflang: string;
         }>) ?? [];
     const localeSwitch = (props.localeSwitch as Record<string, string>) ?? {};
+    const socialLinks =
+        (props.socialLinks as Array<{ platform: string; url: string }>) ?? [];
 
     // Check for critical alerts to trigger Red State header
     const activeAlerts = (props.activeAlerts as Array<{ level: string }>) ?? [];
@@ -105,23 +108,34 @@ export default function PublicLayout({
     const rawPrimary = menus.primary ?? [];
     const rawFooter = menus.footer ?? [];
 
-    const mapMenuToNavEntry = (item: any): NavEntry => {
-        if (item.children && item.children.length > 0) {
+    const mapMenuToNavEntry = (item: any): NavEntry | null => {
+        if (!item.title) {
+            return null;
+        }
+
+        const visibleChildren = (item.children ?? []).filter(
+            (child: { title?: string | null }) => child.title,
+        );
+
+        if (visibleChildren.length > 0) {
             return {
                 label: item.title,
-                items: item.children.map((child: any) => ({
+                items: visibleChildren.map((child: any) => ({
                     label: child.title,
                     href: child.url || '#',
                 })),
             };
         }
+
         return {
             label: item.title,
             href: item.url || '#',
         };
     };
 
-    const navEntries: NavEntry[] = rawPrimary.map(mapMenuToNavEntry);
+    const navEntries: NavEntry[] = rawPrimary
+        .map(mapMenuToNavEntry)
+        .filter((entry): entry is NavEntry => entry !== null);
 
     // Fallback if no primary menu is seeded yet
     if (navEntries.length === 0) {
@@ -497,6 +511,7 @@ export default function PublicLayout({
                                 <Phone className="size-4" aria-hidden="true" />
                                 {t('footer.hotline')}: 112
                             </a>
+                            <SocialLinks links={socialLinks} />
                         </div>
 
                         {/* Visitor Statistics */}
@@ -548,7 +563,9 @@ export default function PublicLayout({
                             {t('footer.sections')}
                         </p>
                         <div className="flex flex-col gap-2 text-sm text-brand-strong-foreground/80">
-                            {rawFooter.map((item) => (
+                            {rawFooter
+                                .filter((item) => item.title)
+                                .map((item) => (
                                 <Link
                                     key={item.id}
                                     href={item.url || '#'}

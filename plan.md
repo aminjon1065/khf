@@ -39,30 +39,26 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 
 ## Progress Summary
 
-- **Total Tasks:** 196
-- **Completed:** 133
+- **Total Tasks:** 211 (was 196; +10 Phase 21 §20-module lines added this pass)
+- **Fully done `[x]`:** 171
+- **Partial `[~]`:** 25
+- **Not started `[ ]`:** 13
+- **Deferred `[→]`:** 3
 - **In Progress:** 0
-- **Blocked:** 0 (Redis blocker removed — D-10: no Redis on shared hosting, DB drivers in use)
-- **Remaining:** 63
-- **Completion:** ~68%
+- **Completion:** ~81% fully done (~88% counting partials as half). Base suite: **395 green**.
 
-> Phases 0–13 substantially done; **Phase 8 essentially closed**: page renderer + RSS + OG meta +
-> branded error pages, plus a full **Safety Guides** module (CMS + public catalogue/guide page,
-> hazard-type + audience incl. children, downloads, print), **Contacts** page (emergency numbers +
-> regional map + feedback), and an **operational-situation** summary on the incidents archive;
-> public portal fully trilingual (tj/ru/en); seeders (admin + trilingual demo incl. guides) in
-> place; 247 tests. **Phase 20 (Statamic CP) core in place** — shell, listing, publish forms ×7,
-> fieldtypes (text/textarea/select/toggle/bard/relation/assets), stacks, ⌘K palette, dashboard,
-> dark/a11y pass, CP render/permission tests; only the CP design-token doc remains there.
-> **Phase 16 (Security) essentially done** — headers/HSTS, rate-limit + honeypot, sanitization,
-> upload hardening, password/session policy, and a full **audit log** (8 models + security events +
-> read-only CP viewer); remaining: OWASP review pass + CI dep-scanning. **Phase 18 mostly done** —
-> internal token API (`/api/v1`), low-vision a11y mode, public-surface **WCAG AA sweep**, 249-test
-> backend coverage; remaining there: contrast measurement, client browser tests, cross-browser/UAT.
-> **Phase 19 progressing** — cron
-> scheduler (queue drain + audit prune) + CI now gates types & dependency audits; remaining: deploy
-> job/guide, env separation, backups, monitoring, TLS. Remaining elsewhere:
-> web push (12 tail), locale dates (13 tail), perf load-testing (17 tail).
+> **Reconciled 2026-07-07 (10-agent code↔plan audit against the 342-green suite).** The checkbox body
+> had been bulk-marked `[x]` ahead of the code, so this pass found the *reverse* of the old problem —
+> **20 over-claims corrected** (17 `[x]→[~]`, 3 `[x]→[ ]`) and **2 genuine upgrades** (`[~]→[x]`:
+> incident map-picker + public-archive filters). **Seven §20-mandated modules that lived only in code —
+> Leadership, Structure, Gallery, FAQ, Statistics, Vacancies, Tenders — are now retro-documented as
+> Phase 21** (all complete + tested). Confirmed **really built** (were untracked/under-tracked): web
+> push (service worker + opt-in + delivery), menu editor, revisions/rollback, appeal attachments +
+> register export, and the alert send-preview dialog.
+>
+> **Where the real remaining work now sits:** (1) **map** — no layer toggle /
+> risk-zones / КЧС-units; (2) **content tail** — tags, status-transition UI + scheduling test, full media browser;
+> (3) **SEO tail** — Matomo goals, legacy 301 map, social links; (4) **Tier-0 launch-ops** (deferred until server ready).
 
 > Completed = starter-kit functionality already satisfying ТЗ (auth, 2FA, passkeys, settings, SSR,
 > shadcn base) + Phase 0 (audit, decisions D-1…D-9) + Phase 1 design tokens (Приложение В/Г).
@@ -71,10 +67,7 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 
 ## Current Sprint
 
-**Phase 3 — CMS Foundation.** Phases 0–2 done. The CMS shell is up: guarded `/admin`, `AdminLayout`
-+ `AdminSidebar`, dashboard, and permission-aware shared props. Next: the reusable building blocks
-(server-side DataTable, form patterns, confirm-dialog) proven on a first real CRUD, then user/roles
-management — before content modules (Phase 4) build on them.
+**Local dev focus.** Search + menu + map layers + tags + status scheduling **DONE**.
 
 ---
 
@@ -147,26 +140,26 @@ management — before content modules (Phase 4) build on them.
 
 - [x] `pages` + `page_translations` (parent, slug per lang, status, SEO, soft-delete) + model/factory + reusable `HasTranslations` trait (D-2 custom translation tables, fallback chain) — tested
 - [x] `posts` + `post_translations` (PostType enum: news/release/announcement/summary; category FK; author; published_at; status; soft-delete + trash) + full CMS CRUD — tested. (cover image with media library)
-- [~] `categories` done (+ translations/slug + CMS CRUD); `tags` + pivots to posts/documents pending
-- [~] Status workflow: `App\Enums\ContentStatus` (draft → moderation → published → archived) done; status transitions UI + scheduled publish/unpublish pending
+- [x] `categories` done (+ translations/slug + CMS CRUD); `tags` + pivots to posts/documents — `Tag`/`TagTranslation`, `post_tag`/`document_tag`, `/admin/tags` CRUD, multi-select on post/document forms, public display on news show + documents index; `TagManagementTest`
+- [x] Status workflow: `App\Enums\ContentStatus` (draft → moderation → published → archived) + transition UI (`CpContentPublishPanel`) + scheduled publish/unpublish via `published_at` / `unpublished_at` on posts, vacancies, tenders; `ContentStatusWorkflowTest`, `PostSchedulingTest`, `PostStatusWorkflowTest`
 - [x] WYSIWYG editor (TipTap) with **server-side HTML sanitization** (symfony/html-sanitizer) — bold/italic/H2-H3/lists/quote/link + undo/redo; wired into post body + page content; sanitized HTML rendered on public article; tested (D-18). Tables/images/embeds can extend later (§7.2)
-- [~] Per-material SEO fields — pages have per-locale slug + seo_title + seo_description; OG image with media library (§7.2)
-- [~] Media library (spatie/laravel-medialibrary installed, D-3): post **cover** upload + thumb conversion (non-queued) + remove, wired to the post form/list — tested. Full media browser (search/reuse/galleries/alt) + page covers pending (§7.7)
-- [x] Block-based page builder (text, image/gallery, news list, map widget, CTA, accordion, table, contacts) (§7.3)
-- [x] Homepage block management (configurable composition/order without code) (§6.1, §7.3)
-- [x] Menu & navigation editor (top, footer; nesting, order, visibility per language) (§7.8)
+- [~] Per-material SEO fields — pages have per-locale slug + seo_title + seo_description; **OG image** via media library cover on pages (`seo.image` in blade) (§7.2)
+- [x] Media library (spatie/laravel-medialibrary installed, D-3): post **cover** upload + thumb conversion (non-queued) + remove, wired to the post form/list — tested. **Full media browser** (search/reuse/galleries/alt) + **page OG covers** — `MediaFilePresenter`, `/admin/media` search/type filters + alt-text edit, shared `media-browser` picker in `CpAssetsField` + block galleries, `Page::COVER_COLLECTION` + `seo.image` — `MediaManagementTest` + page cover test
+- [x] Block-based page builder (§7.3) — all **8 block types** in admin `blocks-field` + public `BlockRenderer` + JSON storage; `image_gallery`, `accordion`, `table`, `contacts` added; `map_widget` renders real `MapView`; server-side `BlockSanitizer` (HTML + URL) on save; `PageBlocksTest` (4 tests)
+- [x] Homepage block management (configurable composition/order without code) (§6.1, §7.3) — `Page.is_home` + `BlockRenderer` on `home.tsx`; homepage blocks covered by `PageBlocksTest`
+- [x] Menu & navigation editor (top, footer; nesting, order) (§7.8) — `MenuController`/`MenuItemController` + public render + `MenuManagementTest`; **per-language visibility**: `MenuFormatter` hides items without a title for the active locale; optional non-default translations in CMS; locale badges in builder; `MenuVisibilityTest`
 - [x] **Version history + rollback for key materials (§7.10)**: Create a `revisions` table and a `HasRevisions` trait. Hook into Model events (`saved`) to snapshot title, content, SEO fields into a JSON payload. Build a "History" slide-over in the publish form to view timestamped versions and an endpoint to restore them by overwriting the current state.
-- [x] Tests: content CRUD, status workflow, scheduling, translations, media
+- [x] Tests: content CRUD, translations, media covered; **status workflow + scheduling** covered for schedulable content
 
 ## Phase 5 — Emergency Incidents
 
 - [x] Incident types as `IncidentType` enum (7 types: code/label/color/icon) + `HazardLevel` enum (Приложение Г) — instead of a table; tested
 - [x] `regions` + `region_translations` (oblast hierarchy via parent_id, geocode lat/lng) + `RegionSeeder` (Душанбе/Согд/Хатлон/ГБАО, tj/ru/en) — tested. Districts can be added under parents
 - [x] `incidents` + `incident_translations` (type[enum], hazard_level[enum], status[enum], region FK, occurred_at, lat/lng geometry, soft-delete) — tested
-- [~] Incident CRUD in CMS (DataTable + trash + per-language tabs + type/level/status/region + manual lat/lng) — done; map-based location picker in Phase 7 (§7.4)
+- [x] Incident CRUD in CMS (DataTable + trash + per-language tabs + type/level/status/region + manual lat/lng) — done, incl. the map-based click-to-pick location picker in the form (§7.4)
 - [x] Status lifecycle: `IncidentStatus` (активно/под контролем/завершено) — set in CMS, reflected on public archive (§7.4)
 - [~] Link incidents ↔ regions (FK) done; incident ↔ posts linking later (§6.2)
-- [~] Public incidents archive (active-first ordering) — done; type/level/region/period filters later
+- [x] Public incidents archive (active-first ordering) + type/level/region/period filters — done & tested (`IncidentsTest`)
 - [x] Tests: incident CRUD, geometry, status, translations, public archive
 
 ## Phase 6 — Emergency Alerts
@@ -184,12 +177,12 @@ management — before content modules (Phase 4) build on them.
 
 - [x] Public map page (`/{locale}/map`, MapLibre + OSM raster) + reusable `MapView`; homepage map widget pending (§6.1, §6.3)
 - [x] Incident markers coloured by hazard level + popups; clustering at large counts pending (§6.3)
-- [x] Click popup card: title, type, hazard level, status, region, datetime (XSS-safe DOM) (§6.3)
-- [x] Toggleable layers: incident types, risk zones, КЧС units/points (§6.3)
+- [x] Click popup card: title + type / hazard level / status / region / datetime (§6.3) — **fixed 2026-07-07**: popup now parses the marker `lines[]` payload (MapLibre JSON-serialises it) and renders each localised field; XSS-safe (`textContent`). Payload contract guarded by `MapTest` (DOM render itself not unit-tested — no browser harness yet)
+- [x] Toggleable layers: incident types, risk zones, КЧС units/points (§6.3) — layer panel on `public/map` (per-type incident toggles, regional KCHS units from `Region` coords, config-driven risk-zone polygons via `MapDataService` + `config/map.php`); `MapTest`
 - [x] Filters: type, hazard level, region/district, time period; "active only" mode (§6.3)
 - [x] Admin-territorial binding (region FK) present; map filtering by region pending (§6.3)
 - [x] `MapView` supports point-pick (`onPick`) for the incident form; geolocation + fullscreen pending (§6.3)
-- [x] Tile source is configurable (own tile server per §10.8); graceful WebGL/offline fallback message pending (§6.3)
+- [~] Tile source (own tile server per §10.8) is a **hardcoded** OSM URL (`map-view.tsx` + CSP), not env/config-driven; graceful WebGL/offline fallback message still pending (§6.3)
 - [x] Tests: map data (active + with-coords only) — clustering/fallback tests later
 
 ## Phase 8 — Public Portal
@@ -199,8 +192,8 @@ management — before content modules (Phase 4) build on them.
 - [x] News/press-center: public listing (cards, cover thumb, pagination) + single article (related sidebar, gallery, attachments, filters) at `/{locale}/news[/{slug}]`
 - [x] Generic public page renderer: `Public\PageController@show` at `/{locale}/pages/{slug}` (current-locale slug, sanitised content, SEO meta, 404) + `navPages` shared prop → footer section links; CMS-managed content backbone for the static sections below
 - [x] RSS feed for news — `Public\FeedController@news` at `/{locale}/news/rss` (RSS 2.0, per-locale, discovery `<link>` in head)
-- [x] "About the Committee" section — content page live via the page renderer (seeded); structured sub-pages (leadership, structure, regional offices, history, partners, anti-corruption, vacancies)
-- [x] "Activities" section — content page live via the page renderer (seeded); detailed sub-pages
+- [~] "About the Committee" section — content page + **leadership / structure / vacancies** sub-pages live (dedicated modules — see Phase 21); **regional offices** only inside Contacts, and **history / partners / anti-corruption** have no route/page/seed yet
+- [~] "Activities" section — single seeded CMS content page only; **detailed sub-pages not implemented** (no child routes/pages/seeds)
 - [x] "Operational situation" section — incidents archive headed by a status summary (active / controlled / resolved counts) + «Открыть карту» link; active warnings via the site alert banner
 - [x] Safety guides catalog by hazard type + guide page — full `Guide`/`GuideTranslation` module: CMS CRUD (`guides.manage`, RichText content, downloadable files on private disk, trash, tj/ru/en badges) + public catalogue `/{locale}/guides` (audience filter) and guide page with downloads + print
 - [x] Educational / children materials sub-section — `GuideAudience` (general / children); catalogue audience filter surfaces children's guides (§6.5)
@@ -226,14 +219,14 @@ management — before content modules (Phase 4) build on them.
 - [x] CMS moderation queue: assignee, statuses, internal comments, deadline tracking (§6.7, §7.6)
 - [x] Public status-tracking lookup by reference number (§6.7)
 - [x] Personal-data access restricted to `appeals.manage` role (§12.5)
-- [x] Register export for a period (§7.6)
+- [~] Register export (§7.6) — CSV export (`appeals/export`, BOM for Excel) works but filters **only by search+status — no date/period range** yet
 - [x] Tests: submission, honeypot, validation, tracking, moderation update, authorization
 
 ## Phase 11 — Tourist Registration
 
 - [x] `tourist_groups` table (leader/contacts, participants, route, equipment, dates, region, start coords, status, assignee, internal_note, soft-delete) (§6.6)
 - [x] Public application form: leader/contacts, route, region, dates, participant count + honeypot + `throttle:6,1` (§6.6)
-- [x] Region binding for risk assessment done; map route/track picker pending (§6.6)
+- [~] Region binding done + single start-point map picker added; a true **route/track (polyline) picker** is still pending (route remains a free-text field) (§6.6)
 - [x] Applicant acknowledgement: reference (`TUR-YYYY-XXXXXX`) + tracking by reference (§6.6)
 - [x] CMS processing queue with statuses/assignee/note (reuses `AppealStatus`, shared UX with appeals) (§6.6, §7.6)
 - [x] Personal-data protection; `tourist-groups.manage`-only handling (§6.6, §12.5)
@@ -251,7 +244,7 @@ management — before content modules (Phase 4) build on them.
 - [x] Web push: service worker, opt-in, topic/region selection, unsubscribe (§6.4.2)
 - [x] Push delivery on alert publish (queued) (§6.4.2)
 - [x] CMS: subscriber registry (search/status filter) + counts/stats (`subscribers.manage`) (§6.4.4)
-- [x] Send preview + confirmation before bulk send; double-send protection — `notified_at` guard prevents re-send (preview UI pending) (§6.4.4)
+- [x] Send preview + confirmation before bulk send; double-send protection — recipient-estimate endpoint (`alerts/estimate`) + confirmation dialog built; `notified_at` guard prevents re-send (§6.4.4)
 - [x] Channel extensibility (SMS/messenger) — `notifications_log.channel` + topic model leave room (§6.4.4, §10.8)
 - [x] Tests: double opt-in, unsubscribe, consent/topic validation, honeypot, re-subscribe, CMS registry
 
@@ -260,27 +253,27 @@ management — before content modules (Phase 4) build on them.
 - [x] Interface translation dictionaries (tg/ru/en) — `lang/{locale}/{ui,enums,mail}.php`: `ui` shared as `translations` prop + client `useTranslations` (`t()`, dot-keys, `:placeholder`, key fallback) — ALL 11 public pages + chrome + alert banner converted (~90 keys, zero hard-coded Cyrillic left); `enums` powers all 12 enum `label()` via `__()`; `mail` localizes both e-mail templates + subjects with per-subscriber `->locale()` (§14)
 - [x] Language switcher on all pages; persist selection (session via SetLocale); first-visit browser detection (tg→tj) (§14)
 - [x] Locale URL prefix + hreflang + canonical generation — `App\Support\LocaleUrls` (shared with switcher), server-rendered in app.blade.php (canonical + alternates + x-default, valid BCP-47 `<html lang>`); admin/auth routes emit none (§14, §15.1)
-- [x] Missing-translation handling — `HasTranslations::translation()` fallback chain (locale→fallback→first) live everywhere; public lists filter by current-locale translation; «available in other language» UI note pending (§14)
+- [x] Missing-translation handling — fallback chain live everywhere; the «available in other language» banner **fixed 2026-07-07** (correct key `site.missing_translation` added to all 3 dictionaries, shows the content's native language name; rules-of-hooks fixed) (§14)
 - [x] Per-material independent language publishing (translations optional per locale) + translation-status indicator in CMS — `locales` row field + tj/ru/en badge column («Языки») in all 6 module indexes (§7.9)
-- [x] Locale-aware date/number formatting (§14)
+- [~] Locale-aware **date** formatting done (`Intl.DateTimeFormat` tg-TJ/ru-RU/en-US); **number formatting absent** (no `Intl.NumberFormat`/grouping helper) (§14)
 - [x] Full Tajik Cyrillic support in fonts, search, forms, URLs/slugs (§14)
 - [x] Tests: locale resolution (SetLocale), fallback (RegionTest), hreflang/canonical (SeoAlternatesTest), per-locale dictionaries + key parity ×3 groups, enum label locales, slug per language (content tests)
 
 ## Phase 14 — Search Engine
 
 - [x] Full-text search over posts, documents, guides, pages (locale-aware) (§6.10)
-- [x] MySQL full-text indexes (+ Scout abstraction if needed) (§10) for tg/ru handling
-- [x] Results page: match highlighting, content-type filters, pagination (§6.10)
-- [x] Tests: search relevance basics, filters, Tajik/Russian queries
+- [~] MySQL full-text indexes (+ Scout abstraction if needed) (§10) — **FULLTEXT indexes** on 11 translation tables + `TranslationSearch` (`whereFullText` on MySQL, LIKE on SQLite tests); Scout still optional/deferred
+- [x] Results page (§6.10) — **pagination** (20/page), **content-type filter chips**, **match highlighting** (`SearchHighlighter` + `<mark>`); API modal inherits highlights
+- [x] Tests: per-type coverage + **Cyrillic (ru) queries**, **type-filter**, **pagination**, and **highlight** assertions (`SearchTest` + `SearchHighlighterTest`)
 
 ## Phase 15 — Analytics
 
 - [x] Self-hosted Matomo integration (privacy-respecting tracking) (§15.2)
-- [x] Goal tracking: subscriptions, tourist registration, appeals (§15.2)
+- [x] Goal tracking: subscriptions / tourist / appeals (§15.2) — `config/matomo.php` + shared `matomo` Inertia props + `useMatomoGoal` on subscribe (pending), appeals & tourist success screens; `trackGoal` when goal IDs set, `trackEvent` fallback otherwise — `MatomoGoalsTest`
 - [x] sitemap.xml (with language versions) + robots.txt (§15.1)
 - [x] schema.org markup (Organization, NewsArticle) (§15.1)
-- [x] 301 redirect map from legacy kchs.tj / khf.tj URLs (§15.1)
-- [x] Social account links/widgets (data/perf-safe) (§6.12, §15.3)
+- [~] 301 redirect **mechanism** done & tested (`LegacyRedirects` middleware + `fallback`), but the legacy kchs.tj/khf.tj **URL map is empty** (`config/redirects.php` has only commented examples) — must be populated before launch (§15.1)
+- [x] Social account links/widgets (data/perf-safe) (§6.12, §15.3) — `config/social.php` + env URLs; outbound icon links in public footer (`SocialLinks` component, no embeds); shared via Inertia — `SocialLinksTest`
 - [x] Tests: sitemap generation, redirects, structured data presence
 
 ## Phase 16 — Security Hardening
@@ -305,7 +298,7 @@ management — before content modules (Phase 4) build on them.
 - [x] Code splitting + response compression (gzip/brotli) (§13.1)
 - [x] DB query optimization: indexes, eliminate N+1 (eager loading), paginate large lists (§13.1)
 - [x] Move heavy ops (sends, import, image processing) to queues (§10.4)
-- [x] Load testing confirming targets (TTFB ≤600ms cached, ×10 peak) (§13, §18.1)
+- [~] Load testing (§13, §18.1) — an in-process `app:benchmark` command checks TTFB≤600ms at configurable concurrency, but **no captured results proving ×10 peak** and no automated assertion
 - [x] Graceful degradation under load (secondary features limited, alerts/ops preserved) (§13)
 
 ## Phase 18 — Testing
@@ -316,19 +309,19 @@ management — before content modules (Phase 4) build on them.
 - [ ] Cross-browser + mobile responsiveness checks (§18.1)
 - [x] Internal API (token auth, versioning, rate limit) + documentation (§10.9, §18.3) — dependency-free token API: `routes/api.php` versioned under `/api/v1`, locale-aware via `?locale=` (`SetApiLocale`), `throttle:api` 60/min keyed by token; `Authorization: Bearer` auth (`AuthenticateApiToken` + `api_tokens` SHA-256-hashed store, minted with `api:token`); read endpoints alerts/incidents/news(+show) via Eloquent API Resources (active/published only, body only on show); open self-documenting `/api/v1` discovery endpoint; JSON errors. Covered by `Api/V1/ApiTest` (12 cases)
 - [x] Low-vision accessibility mode (font size, contrast, reduced graphics, keyboard nav, screen-reader) (§6.11) — `accessibility-toolbar` in the public layout: font size (normal/large/xl), 4 contrast schemes (normal/monochrome/inverted/blue-yellow), image modes (on/grayscale/off), reset; persisted to localStorage, applied via `html.a11y-*` classes in `app.css`, fully trilingual (`a11y.*` keys)
-- [ ] UAT support on staging (§18.1)
+- [~] UAT support on staging (§18.1) — checklist in `DEPLOY.md` §9; needs staging host + secrets configured
 
 ## Phase 19 — Deployment
 
-- [ ] Shared-hosting deploy guide: docroot → `public/`, SSH deploy + `migrate --force`, asset build upload (D-13; §16.1)
+- [x] Shared-hosting deploy guide: docroot → `public/`, SSH deploy + `migrate --force`, asset build upload (D-13; §16.1) — **`DEPLOY.md`** covers §3 (symlink + no-symlink docroot, pre-built assets, `.env`, cron, `migrate --force` + `optimize`). NB: fix its §5 admin-create snippet (uses a non-existent `role` column instead of spatie `assignRole`)
 - [x] Single cron entry `* * * * * php artisan schedule:run`; scheduler drains DB queue via `queue:work --stop-when-empty` (D-10; replaces Supervisor) — `routes/console.php` schedules `queue:work --stop-when-empty --tries=3 --max-time=55` every minute (`withoutOverlapping`) + weekly `activitylog:clean`; covered by `SchedulerTest`
-- [ ] Optional Docker/Compose for local dev only (app/PHP-FPM, Nginx, MySQL) — not production (D-13)
-- [~] CI/CD pipeline: lint, types, tests, Vite build, deploy (extend existing GH Actions) (§16.2) — GH Actions now run Pint + ESLint + Prettier (`lint.yml`), the Pest matrix on PHP 8.3/8.4/8.5 + Vite build (`tests.yml`, with **`types:check`** added after the build so Wayfinder types exist), and a **`security.yml`** dependency-audit job. Only the deploy job is left (needs owner hosting/secrets)
-- [ ] Env separation: dev / staging / production; secrets management (§16.1)
-- [ ] Backup automation (DB + files, 30-day retention) + restore verification (§4.3, §16.3)
-- [ ] Monitoring/alerting (availability, errors, queues) (§4.3, §16.3)
-- [ ] TLS certificate management (§16.3)
-- [ ] Deploy/runbook + admin/user (RU) + architecture + API documentation (§18.3)
+- [~] Optional Docker/Compose for local dev only — stock Laravel Sail `compose.yaml` (app + mysql:8.4 + mailpit) documented in `DEPLOY.md` §2; not the tailored Nginx/PHP-FPM split, but sufficient for local dev (D-13)
+- [~] CI/CD pipeline: lint, types, tests, Vite build, deploy (extend existing GH Actions) (§16.2) — `deploy.yml` added: manual dispatch, `deploy:env-check`, release artifact; SSH auto-deploy commented until `SSH_*` secrets are set
+- [x] Env separation: dev / staging / production; secrets management (§16.1) — `.env.staging.example` + `.env.production.example`, VAPID vars in `.env.example`, `config/deployment.php`, `deploy:env-check`, `env:encrypt` documented in `DEPLOY.md`
+- [→] Backup automation + restore verification (§4.3, §16.3) — **deferred (owner 2026-07-07, D-24):** shared host provides its own backups. Revisit at UAT: confirm 30-day retention, media (`storage/app`) coverage, and run a restore drill (RTO≤4h/RPO≤24h still applies)
+- [x] Monitoring/alerting (availability, errors, queues) (§4.3, §16.3) — `GET /health` (public summary + token-gated DB/cache/queue diagnostics via `HealthReporter`), `HEALTH_FAILED_JOBS_THRESHOLD`, `/up` unchanged; `HealthTest`
+- [~] TLS certificate management (§16.3) — host-panel AutoSSL/Let's Encrypt documented in `DEPLOY.md` §8; `URL::forceScheme('https')` for staging+production; no in-app cert automation (shared hosting)
+- [~] Deploy/runbook (RU) present (`DEPLOY.md`: high-load mode, admin account, backup note) + API self-documents (`/api/v1`); **architecture doc + comprehensive admin/user (RU) manual still missing** (§18.3)
 
 ## Phase 20 — Statamic-style Control Panel (CMS redesign, D-19)
 
@@ -337,7 +330,7 @@ management — before content modules (Phase 4) build on them.
 > design/UX, on the КЧС brand. Built incrementally; each module's existing CRUD is preserved.
 
 - [x] CP shell — Statamic-style chrome: light grouped sidebar (uppercase section labels, accent-tinted active item, brand block, account menu at foot), slim global header (breadcrumbs + view-site), soft neutral page background, mobile drawer; replaces the shadcn AdminLayout internals (`admin-layout`, `admin-sidebar`, `cp-topbar`, `cp-user-menu`)
-- [ ] CP design tokens pass — align radii/shadows/spacing/typography to Statamic's scale (still КЧС palette); document the CP token set
+- [~] CP design tokens pass — the CP token set is now documented inline in `app.css` (typography/radii/shadows/backgrounds); a deliberate scale-alignment re-tuning may still be desired (still КЧС palette)
 - [x] Listing component (Statamic "Listing") — `DataTable` restyled in place (white bordered card, uppercase header, hover rows, search on `bg-card`, polished pagination); API unchanged so all 13 module indexes upgraded at once. Column-toggle + bulk actions deferred
 - [x] Publish form (Statamic two-column) — reusable shell (`cp/publish-form`: `CpPublishForm` two-column + Save/Cancel header, `CpPanel` field group, `CpLocaleTabs` locale switcher, large borderless title). **All 7 module forms converted** (posts, pages, categories, incidents, alerts, documents, guides): localised fields in the main column, meta in the sticky sidebar (status/type/category/dates/files/map). `useForm` shapes preserved → controllers/tests unaffected. Revisions/site-switcher deferred
 - [x] Fieldtypes — `cp/fields.tsx`: `CpField` shell (label + instructions + control + error) + `CpTextField` (incl. date/datetime via `type`), `CpTextareaField`, `CpSelectField`, `CpToggleField`, `CpRichTextField` (bard — TipTap wrapped in the field shell, remounts per-locale via `editorKey`); plus `CpRelationField` (relationship picker via a stack) and **`CpAssetsField`** (`cp/assets-field.tsx` — single-image assets fieldtype: upload **or** pick from the media library in a stack). Showcased on the **alerts** form (select/relation/datetime/toggle/textarea); posts «Рубрика» uses the relation field; **bard adopted in posts/pages/guides**; **assets adopted on the posts cover** (`cover_media_id` contract, server-side copy — D-22). Remaining forms can migrate incrementally
@@ -347,12 +340,31 @@ management — before content modules (Phase 4) build on them.
 - [x] Dark mode parity + a11y pass for the whole CP — every CP surface is built on semantic tokens (`bg-card`/`text-foreground`/`border-border`/`bg-primary/10`…) so dark mode adapts automatically; added `focus-visible:ring-2 focus-visible:ring-ring` rings to every interactive CP element (sidebar nav, topbar buttons, account menu, command-palette trigger + items, locale tabs, relation-field trigger/clear, borderless titles), plus `sr-only` dialog/sheet descriptions for SR users
 - [x] Tests: CP renders per module, nav permission-gating, publish-form save flow — covered by the per-module feature suite (every `*ManagementTest` asserts the Inertia component + props render, store/update save flow, and route-level permission gating via `assertForbidden`). The Phase 20 redesign was presentation-only with `useForm`/route shapes preserved, so these tests cover it; added create+edit form-screen render assertions to the two thin modules (documents, guides) so all 7 publish-form modules assert their redesigned form renders. Client-side nav gating rides on the tested server-side gate (D-16)
 
+## Phase 21 — §20 Mandatory Section Modules (retro-documented 2026-07-07)
+
+> These §20-mandated sections were built in code **outside** the original 20-phase plan and had no
+> checkbox. The 2026-07-07 audit verified each is genuinely complete (model + translations + migrations
+> + admin CRUD with Form Requests + public read + Inertia pages + factories + passing Pest tests) and
+> wired into the CMS sidebar, ⌘K palette, global search and `sitemap.xml`. Marked `[x]` to reflect reality.
+
+- [x] **Leadership** (ТЗ §20«г» — руководство + график приёма): `Leader`/`LeaderTranslation` (status, sort, `photo` media collection, reception schedule) + admin CRUD (`leadership.manage`) + public `/{locale}/leadership` + `LeadershipManagementTest`/`LeadershipStructureTest`
+- [x] **Structure** (ТЗ §20«б» — структурные подразделения): `Subdivision`/`SubdivisionTranslation` (self-nesting `parent_id` tree, `staff_count`, functions) + admin CRUD (`structure.manage`, self-parent guard) + public `/{locale}/structure` (recursive tree) + `StructureManagementTest`
+- [x] **Gallery** (ТЗ §20«ш» — фотогалереи): `Gallery`/`GalleryTranslation` (medialibrary `photos` + thumb) + admin CRUD (`gallery.manage`) + public index/show (per-locale slug) + `GalleryManagementTest`/`GalleryFaqTest`. NB: hard-delete (no trash)
+- [x] **FAQ** (ТЗ §20«й» — вопросы/ответы): `Faq`/`FaqTranslation` (Purify-sanitized answers) + admin CRUD (`faqs.manage`) + public `/{locale}/faq` + `FaqManagementTest`/`GalleryFaqTest`. NB: hard-delete (no trash)
+- [x] **Statistics** (ТЗ §20«у» — ключевые показатели): `Statistic`/`StatisticTranslation` (value/year, KPI cards) + admin CRUD (`statistics.manage`) + public `/{locale}/statistics` + `StatisticManagementTest`/`StatisticsTest`. NB: distinct from the homepage operational counters (those come from Incident counts)
+- [x] **Vacancies** (ТЗ §20«н», §21 — вакансии + онлайн-анкета): `Vacancy`/`VacancyTranslation`/`VacancyApplication` (soft-delete, `EmploymentType`, private-disk résumé, `VAC-YYYY-XXXXXX`) + admin CRUD + applications moderation queue (private download) + public listing/show (JobPosting schema.org)/apply (honeypot + MIME allowlist)/track + `VacancyManagementTest`/`VacancyTest`
+- [x] **Tenders** (ТЗ §9, §20«э» — закупки/торговая площадка): `Tender`/`TenderTranslation`/`TenderBid` (soft-delete, `TenderType`, budget, private-disk doc, `TND-YYYY-XXXXXX`) + admin CRUD + bids moderation queue (private download) + public listing/show/bid/track + `TenderManagementTest`/`TenderTest`
+- [~] Parity nicety: **no register/period export** for the vacancy-applications and tender-bids queues (appeals has one under §7.6); applicant/bidder receive only an on-screen reference (no emailed receipt). Optional, not a blocker
+- [ ] **Polls / Опросы** (ТЗ §8 + §20«к», incl. anti-corruption expertise of draft acts) — no model/migration/route exists yet
+- [ ] **Services / Услуги** (ТЗ §20«ф» — government-services catalogue) — not built (could start Page-based)
+
 ---
 
 ## Decision Log
 
 > Architectural decisions. Status: **Proposed** until confirmed by the project owner.
 
+- **D-24 (Accepted 2026-07-07, owner):** **Backups delegated to the shared host.** The owner considers the hosting provider's own backups sufficient for now, so app-level backup automation (§16.3) is deferred (`[→]`). Revisit before launch/UAT: confirm the host's retention meets the ТЗ **30-day** window, that uploaded media under `storage/app` is covered, and run a **restore-verification** drill against §4.3 (RTO≤4h/RPO≤24h).
 - **D-0 (Accepted):** Project is a greenfield build on the Laravel React Starter Kit baseline.
   Reuse existing auth/settings/shadcn foundation; do not rewrite it.
 - **D-1 (Accepted 2026-06-09):** RBAC via **`spatie/laravel-permission`** (configurable roles +
@@ -463,6 +475,62 @@ management — before content modules (Phase 4) build on them.
 
 ## Change Log
 
+- **2026-07-07** — **Menu per-language visibility (§7.8, item 157).** `MenuFormatter` service hides
+  items (and children) without a title for the active locale — primary + footer menus; no blank labels.
+  CMS: default-locale title required, other locales optional; clearing a title removes that translation.
+  Admin builder shows locale badges per item. `MenuVisibilityTest` (4) + `MenuManagementTest` extended.
+  Item 157 → `[x]`. **395 tests green** (+6).
+- **2026-07-07** — **Search §6.10 (Phase 14).** MySQL FULLTEXT indexes on 11 translation tables;
+  `TranslationSearch` helper (FULLTEXT on MySQL, LIKE fallback in SQLite tests); `SearchHighlighter`
+  for safe `<mark>` highlighting; results page: pagination (20/page), content-type filter chips, highlighted
+  title/excerpt; API modal inherits highlights. `SearchContentType` enum. Items 269–270 → `[x]`; 268 → `[~]`
+  (Scout still optional). **389 tests green** (+6). pint clean.
+- **2026-07-07** — **Tier-0 launch-ops (env / monitoring / CI deploy).** Env separation: `.env.staging.example`,
+  `.env.production.example`, VAPID keys in `.env.example`, published `config/webpush.php`, `config/deployment.php`,
+  `php artisan deploy:env-check` (validates staging/production secrets via config, not raw env()), `env:encrypt`
+  documented. Monitoring: `GET /health` + `HealthReporter` (DB/cache/queue + failed-jobs threshold),
+  `HEALTH_CHECK_TOKEN`. CI: `.github/workflows/deploy.yml` (manual dispatch → build → env-check → artifact).
+  `DEPLOY.md` updated (§3.3 env/VAPID/health, fixed §5 admin `assignRole`, §7 CI, §8 TLS, §9 UAT checklist).
+  `AppServiceProvider`: HTTPS forced on staging too. Items 326 + 328 → `[x]`; 325/329/318 → `[~]`.
+  **383 tests green** (+8). pint clean.
+- **2026-07-07** — **§7.3 block page-builder + homepage composer (items 155–156).** Added the 4 missing
+  block types (`image_gallery`, `accordion`, `table`, `contacts`) to `blocks-field.tsx` and
+  `block-renderer.tsx`; replaced the `map_widget` text placeholder with real `MapView` (lat/lng/zoom/title
+  from block data). New `App\Support\BlockSanitizer` wired into `PageController` — HTML fields via
+  `HtmlSanitizer`, plain-text fields stripped, `javascript:` URLs neutralised. `PageBlocksTest`: save all
+  8 types, XSS sanitisation, public page render, homepage `is_home` blocks. Items 155 + 156 → `[x]`.
+  **375 tests green** (371 + 4). pint / eslint clean.
+- **2026-07-07** — **Fixed 2 reconciliation-surfaced bugs (option A).** (1) **Map popup** (§6.3, item 187):
+  the click popup rendered only the title — `map.tsx` packs type/level/status/region/datetime into a
+  `lines[]` array (which MapLibre JSON-serialises) but the popup read `props.type/level/region`
+  (undefined). Rewrote the popup to parse `lines[]` and render each already-localised field
+  (XSS-safe `textContent`); strengthened `MapTest` to assert the payload contract. (2)
+  **Missing-translation banner** (§14, item 263): `MissingTranslationAlert` called a non-existent key
+  `ui.site.missing_translation` and rendered the literal string; fixed to `site.missing_translation`,
+  added the key to all 3 dictionaries (`:language` = content's native name), and moved the
+  `useTranslations()` hook above the early return (rules-of-hooks). Also fixed a **case-sensitivity
+  bug** that would break these pages on Linux prod — 5 show pages imported
+  `@/components/public/missing-translation-alert` (lowercase) while the file is `Public/`. Items 187 +
+  263 → `[x]`. **371 tests green** (had to regenerate the Vite manifest via `npm install` + `npm run
+  build` — a concurrent branch change had added the menus module + `@radix-ui/react-tabs` without
+  installing it, which is unrelated to these fixes). pint / eslint(touched) / prettier clean.
+- **2026-07-07** — **Plan↔code reconciliation (10-agent audit; no application code changed).** The
+  checklist body had drifted *ahead* of the code (bulk-marked `[x]`), while the header still read
+  "Phase 3 / 68%". Ran the 342-green suite, then a 10-reader workflow verified every checkbox and every
+  undocumented module against actual models/migrations/controllers/pages/tests. **Corrections: 20
+  over-claims** — `[x]→[~]` on block builder (155, 4/8 types), homepage blocks (156), menu editor (157,
+  no per-lang visibility), content tests (159, no scheduling test), map popup (187, title-only bug),
+  map layers (188), tile config (192), About sub-pages (202), Activities sub-pages (203), appeals
+  register export (229, no period filter), tourist track picker (236), missing-translation note (263,
+  broken key), locale number formatting (265), search results page (273), search tests (274), legacy
+  301 map (282, empty), load testing (308); and `[x]→[ ]` on MySQL FULLTEXT (272), Matomo goals (279),
+  social links (283). **2 genuine upgrades** `[~]→[x]`: incident CMS map-picker (166) + public-archive
+  filters (169). **4 deploy upgrades** off the new `DEPLOY.md`: guide (323 `[ ]→[x]`), Docker (325),
+  docs/runbook (331), CP tokens (340) → `[~]`. **Added Phase 21** documenting 7 §20 modules that lived
+  only in code (Leadership, Structure, Gallery, FAQ, Statistics, Vacancies, Tenders — all complete +
+  tested). Rewrote Progress Summary, Current Sprint, Next Action. Confirmed really-built-but-untracked:
+  web push (VAPID keys still needed for prod), revisions/rollback, appeal attachments, send-preview
+  dialog. **342 tests green throughout; plan.md only.**
 - **2026-06-15** — **Public portal — modern-govtech redesign (D-23).** Re-skinned the citizen-facing
   portal to a FEMA/USWDS-style govtech standard. **Tokens:** `--primary` → official navy **#1F4E8C**
   (was #1e40af) across primary/ring/secondary-/accent-foreground/chart-1, plus new `--brand` and
@@ -907,13 +975,7 @@ management — before content modules (Phase 4) build on them.
 
 ## Next Action
 
-**Phase 8 closed** ✅ (page renderer, RSS, OG meta, error pages, Safety Guides module, Contacts,
-operational-situation summary, print styles — 211 tests; adversarial review run, 5 findings fixed).
-Next options: (a) **Phase 14 search** — MySQL full-text over posts/pages/documents/guides,
-locale-aware, results page + header search box (last big public-facing gap, §6.5); (b) **Phase 15
-SEO** — sitemap.xml (per-locale) + robots.txt + schema.org (builds on the OG meta + RSS just done);
-(c) **Phase 16 security** — audit log + password policy + OWASP pass. Recommend (a) then (b). Web
-push (12 tail), locale date formatting (13 tail), structured About/Activities sub-pages remain.
+**Local dev — social footer links DONE.** Next: map tile env/fallback or legacy 301 map (needs URLs).
 
 ---
 

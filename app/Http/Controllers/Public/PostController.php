@@ -74,7 +74,7 @@ class PostController extends Controller
 
             $post = Post::published()
                 ->whereKey($translation->post_id)
-                ->with(['category.translations', 'media', 'author', 'translations'])
+                ->with(['category.translations', 'media', 'author', 'translations', 'tags.translations'])
                 ->first();
 
             if ($post === null) {
@@ -101,6 +101,11 @@ class PostController extends Controller
                     'locale' => $resolved->locale,
                     'type_label' => $post->type->label(),
                     'category' => $post->category?->translation($appLocale)?->name,
+                    'tags' => $post->tags
+                        ->map(fn ($tag) => $tag->translation($appLocale)?->name)
+                        ->filter()
+                        ->values()
+                        ->all(),
                     'cover_url' => $post->getFirstMediaUrl(Post::COVER_COLLECTION) ?: null,
                     'gallery' => $post->getMedia(Post::GALLERY_COLLECTION)->map(fn ($media) => [
                         'url' => $media->getUrl(),

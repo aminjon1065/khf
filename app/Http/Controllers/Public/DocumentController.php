@@ -27,7 +27,7 @@ class DocumentController extends Controller
         $dateTo = $request->string('date_to')->toString();
 
         $documents = Document::published()
-            ->with(['translations', 'media'])
+            ->with(['translations', 'media', 'tags.translations'])
             ->whereHas('translations', fn (Builder $query) => $query->where('locale', $locale))
             ->when($search !== '', fn (Builder $query) => $query->whereHas(
                 'translations',
@@ -45,6 +45,11 @@ class DocumentController extends Controller
                     'name' => $document->translation($locale)?->name,
                     'description' => $document->translation($locale)?->description,
                     'type_label' => $document->type->label(),
+                    'tags' => $document->tags
+                        ->map(fn ($tag) => $tag->translation($locale)?->name)
+                        ->filter()
+                        ->values()
+                        ->all(),
                     'document_date' => $document->document_date?->format('d.m.Y'),
                     'files' => $document->getMedia(Document::FILES_COLLECTION)->map(fn ($media) => [
                         'id' => $media->id,

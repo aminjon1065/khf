@@ -15,6 +15,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useTranslations } from '@/hooks/use-translations';
+import { useMatomoGoal } from '@/hooks/use-matomo-goal';
 import { subscribe as pushSubscribeRoute } from '@/routes/push';
 import { store } from '@/routes/subscriptions';
 
@@ -92,6 +93,8 @@ export default function Subscribe({
     });
 
     const errors = form.errors as Record<string, string>;
+
+    useMatomoGoal('subscription', status === 'pending');
 
     const toggleTopic = (value: string, checked: boolean) => {
         form.setData(

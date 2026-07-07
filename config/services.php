@@ -23,8 +23,8 @@ return [
     ],
 
     'matomo' => [
-        'url' => env('MATOMO_URL'),
-        'site_id' => env('MATOMO_SITE_ID'),
+        'url' => config('matomo.url'),
+        'site_id' => config('matomo.site_id'),
     ],
 
     'ses' => [

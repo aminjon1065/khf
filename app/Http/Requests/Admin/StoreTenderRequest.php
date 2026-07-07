@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Enums\ContentStatus;
 use App\Enums\Permission;
 use App\Enums\TenderType;
+use App\Http\Requests\Concerns\ValidatesContentStatusTransition;
 use App\Models\Language;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -12,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class StoreTenderRequest extends FormRequest
 {
+    use ValidatesContentStatusTransition;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -34,13 +36,15 @@ class StoreTenderRequest extends FormRequest
         $rules = [
             'tender_number' => ['nullable', 'string', 'max:255'],
             'type' => ['required', Rule::in(TenderType::values())],
-            'status' => ['required', Rule::in(ContentStatus::values())],
             'budget' => ['nullable', 'numeric', 'min:0'],
             'lots_count' => ['required', 'integer', 'min:1', 'max:1000'],
             'published_at' => ['nullable', 'date'],
+            'unpublished_at' => ['nullable', 'date', 'after:published_at'],
             'deadline_at' => ['nullable', 'date'],
             'translations' => ['array'],
         ];
+
+        $rules = array_merge($rules, $this->statusTransitionRules(null));
 
         foreach ($locales as $locale) {
             $rules["translations.{$locale}.title"] = [$locale === $default ? 'required' : 'nullable', 'string', 'max:255'];

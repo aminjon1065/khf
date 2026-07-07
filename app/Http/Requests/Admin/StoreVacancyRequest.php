@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Enums\ContentStatus;
 use App\Enums\EmploymentType;
 use App\Enums\Permission;
+use App\Http\Requests\Concerns\ValidatesContentStatusTransition;
 use App\Models\Language;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -12,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class StoreVacancyRequest extends FormRequest
 {
+    use ValidatesContentStatusTransition;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -33,12 +35,14 @@ class StoreVacancyRequest extends FormRequest
 
         $rules = [
             'employment_type' => ['required', Rule::in(EmploymentType::values())],
-            'status' => ['required', Rule::in(ContentStatus::values())],
             'positions_count' => ['required', 'integer', 'min:1', 'max:1000'],
             'published_at' => ['nullable', 'date'],
+            'unpublished_at' => ['nullable', 'date', 'after:published_at'],
             'deadline_at' => ['nullable', 'date'],
             'translations' => ['array'],
         ];
+
+        $rules = array_merge($rules, $this->statusTransitionRules(null));
 
         foreach ($locales as $locale) {
             $rules["translations.{$locale}.title"] = [$locale === $default ? 'required' : 'nullable', 'string', 'max:255'];

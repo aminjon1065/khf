@@ -40,7 +40,25 @@ test('admin can view menu items builder', function () {
         ->assertInertia(fn ($page) => $page->component('admin/menus/show'));
 });
 
-test('admin can store a menu item', function () {
+test('admin can store a menu item with only the default locale', function () {
+    actingAs($this->admin)
+        ->post(route('admin.menus.items.store', $this->menu), [
+            'url' => 'https://example.com',
+            'translations' => [
+                'tj' => ['title' => 'Tojiki'],
+            ],
+        ])
+        ->assertRedirect();
+
+    expect(MenuItem::count())->toBe(1);
+
+    $item = MenuItem::first();
+    expect($item->url)->toBe('https://example.com')
+        ->and($item->translation('tj')->title)->toBe('Tojiki')
+        ->and($item->translations)->toHaveCount(1);
+});
+
+test('admin can store a menu item with multiple locales', function () {
     actingAs($this->admin)
         ->post(route('admin.menus.items.store', $this->menu), [
             'url' => 'https://example.com',
@@ -56,6 +74,27 @@ test('admin can store a menu item', function () {
     $item = MenuItem::first();
     expect($item->url)->toBe('https://example.com')
         ->and($item->translation('en')->title)->toBe('English');
+});
+
+test('admin can remove a locale translation by clearing its title', function () {
+    $item = $this->menu->items()->create(['url' => 'https://example.com', 'sort_order' => 1]);
+    $item->upsertTranslations([
+        'tj' => ['title' => 'TJ'],
+        'ru' => ['title' => 'RU'],
+    ]);
+
+    actingAs($this->admin)
+        ->put(route('admin.menus.items.update', [$this->menu, $item]), [
+            'url' => 'https://example.com',
+            'translations' => [
+                'tj' => ['title' => 'TJ'],
+                'ru' => ['title' => ''],
+            ],
+        ])
+        ->assertRedirect();
+
+    expect($item->fresh()->translations)->toHaveCount(1)
+        ->and($item->hasTranslation('ru'))->toBeFalse();
 });
 
 test('admin can reorder menu items', function () {

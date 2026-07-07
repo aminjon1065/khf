@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Enums\ContentStatus;
 use App\Enums\Permission;
+use App\Http\Requests\Concerns\ValidatesContentStatusTransition;
 use App\Models\Language;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class StorePageRequest extends FormRequest
 {
+    use ValidatesContentStatusTransition;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -32,12 +34,16 @@ class StorePageRequest extends FormRequest
         $pageId = $this->currentPageId();
 
         $rules = [
-            'status' => ['required', Rule::in(ContentStatus::values())],
             'parent_id' => ['nullable', 'integer', 'exists:pages,id'],
             'sort_order' => ['integer', 'min:0', 'max:65535'],
             'is_home' => ['boolean'],
+            'cover' => ['nullable', 'image', 'max:5120'],
+            'cover_media_id' => ['nullable', 'integer', 'exists:media_files,id'],
+            'remove_cover' => ['boolean'],
             'translations' => ['array'],
         ];
+
+        $rules = array_merge($rules, $this->statusTransitionRules(null));
 
         foreach ($locales as $locale) {
             $rules["translations.{$locale}.title"] = [$locale === $default ? 'required' : 'nullable', 'string', 'max:255'];

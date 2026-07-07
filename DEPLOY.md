@@ -1,6 +1,6 @@
 # Руководство по развёртыванию (DEPLOY)
 
-Данное руководство предназначено для системных администраторов Комитета по чрезвычайным ситуациям. Приложение разработано на **Laravel 11+** и **React (Inertia.js)**, оптимизировано для работы как на современных VPS, так и на традиционном Shared-хостинге (виртуальный хостинг).
+Данное руководство предназначено для системных администраторов Комитета по чрезвычайным ситуациям. Приложение разработано на **Laravel 13** и **React (Inertia.js)**, оптимизировано для работы как на современных VPS, так и на традиционном Shared-хостинге (виртуальный хостинг).
 
 ---
 
@@ -71,7 +71,30 @@ $app = require_once __DIR__.'/../khf-app/bootstrap/app.php';
 ```
 
 ### Шаг 3.3: Настройка окружения (`.env`)
-Скопируйте `.env.example` в `.env` и настройте параметры:
+
+Используйте шаблон для нужной среды (ТЗ §16.1):
+
+| Среда | Шаблон |
+|-------|--------|
+| Локальная разработка | `.env.example` |
+| Staging (UAT) | `.env.staging.example` |
+| Production | `.env.production.example` |
+
+Скопируйте шаблон в `.env` на сервере. **Не храните секреты в git.** Для шифрования файла окружения:
+
+```bash
+php artisan env:encrypt --env=production   # создаёт .env.production.encrypted
+php artisan env:decrypt --env=production   # на сервере при деплое
+```
+
+Перед каждым деплоем проверьте обязательные секреты:
+
+```bash
+php artisan deploy:env-check --env=production
+```
+
+Минимальные параметры production:
+
 ```env
 APP_ENV=production
 APP_DEBUG=false
@@ -84,12 +107,23 @@ DB_DATABASE=khf_db
 DB_USERNAME=user
 DB_PASSWORD=secret
 
-CACHE_STORE=file
+CACHE_STORE=database
 SESSION_DRIVER=database
 QUEUE_CONNECTION=database
 ```
 
-Выполните генерацию ключа:
+**Web Push (VAPID)** — обязательно для браузерных оповещений. Сгенерируйте **отдельные ключи для staging и production** (ключи нельзя менять после запуска):
+
+```bash
+php artisan webpush:vapid
+```
+
+Добавятся `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`; задайте `VAPID_SUBJECT` = `https://khf.tj` (или `mailto:admin@khf.tj`).
+
+**Мониторинг** — uptime-проверка: `GET /up` (Laravel) и `GET /health` (минимальный JSON). Для диагностики БД/кеша/очереди задайте `HEALTH_CHECK_TOKEN` и вызывайте `GET /health?token=…`.
+
+Выполните генерацию ключа приложения (если ещё не задан):
+
 ```bash
 php artisan key:generate
 ```
@@ -130,24 +164,65 @@ php artisan system:high-load off
 
 ---
 
-## 5. Создание учетной записи Администратора
+## 5. Создание учётной записи Администратора
 
 После развёртывания создайте первого пользователя для доступа к CMS (`/admin`):
+
 ```bash
-php artisan tinker
+php artisan tinker --execute '$user = App\Models\User::create(["name" => "Admin", "email" => "admin@khf.tj", "password" => bcrypt("StrongPassword123!"), "email_verified_at" => now()]); $user->assignRole(App\Enums\Role::SuperAdmin->value);'
 ```
-Внутри консоли выполните:
-```php
-App\Models\User::create([
-    'name' => 'Admin',
-    'email' => 'admin@khf.tj',
-    'password' => bcrypt('StrongPassword123!'),
-    'role' => 'admin'
-]);
-```
+
+Назначьте 2FA в интерфейсе `/admin/settings/security` перед первым входом в production.
 
 ---
 
 ## 6. Резервное копирование
 
-Рекомендуется настроить ежедневный бэкап базы данных и директории `storage/app/public/` (где хранятся загруженные медиафайлы). Храните бэкапы не менее 30 дней в соответствии с политикой безопасности.
+> **D-24 (2026-07-07):** бэкапы делегированы shared-хостингу. Перед UAT подтвердите у провайдера: хранение ≥30 дней, включение `storage/app` (медиа), и проведите тестовое восстановление (RTO≤4ч / RPO≤24ч).
+
+---
+
+## 7. CI/CD и деплой через GitHub Actions
+
+Workflow `.github/workflows/deploy.yml` (ручной запуск **Actions → deploy**):
+
+1. Сборка (`composer install --no-dev`, `npm run build`)
+2. `php artisan deploy:env-check` — проверка секретов
+3. Артефакт `khf-release.tar.gz` для загрузки на хостинг
+
+Настройте **GitHub Environment secrets** (`staging` / `production`):
+
+| Secret | Назначение |
+|--------|------------|
+| `APP_KEY` | Ключ приложения |
+| `APP_URL` | `https://khf.tj` или staging URL |
+| `DB_*` | Параметры MySQL |
+| `VAPID_*` | Ключи web push |
+| `MAIL_*` | SMTP для оповещений |
+| `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH` | (опционально) автоматический SCP |
+
+После настройки SSH-секретов раскомментируйте шаг «Deploy release» в workflow.
+
+---
+
+## 8. TLS (§16.3)
+
+На shared-хостинге TLS обычно управляется панелью (AutoSSL / Let's Encrypt). Убедитесь, что:
+
+- Сертификат покрывает `khf.tj` и `www.khf.tj`
+- `APP_URL` использует `https://`
+- Редирект HTTP→HTTPS включён на уровне хостинга
+
+---
+
+## 9. UAT на staging (§18.1)
+
+Чеклист перед production:
+
+- [ ] `deploy:env-check --env=staging` проходит
+- [ ] Все 3 языка (tj/ru/en) открываются
+- [ ] CMS: создание/публикация новости, оповещения, инцидента
+- [ ] Web push: подписка + тестовое оповещение (VAPID staging)
+- [ ] Карта, поиск, обращения, подписка на email
+- [ ] `/health?token=…` — все checks `ok`
+- [ ] Cron `schedule:run` активен, очередь дренируется

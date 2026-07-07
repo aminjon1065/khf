@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\UpdateVacancyRequest;
 use App\Models\Language;
 use App\Models\Vacancy;
 use App\Support\HtmlSanitizer;
+use App\Support\PublicationScheduler;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -73,13 +74,14 @@ class VacancyController extends Controller
 
     public function store(StoreVacancyRequest $request): RedirectResponse
     {
-        $data = $request->validated();
+        $data = PublicationScheduler::normalize($request->validated());
 
         $vacancy = Vacancy::create([
             'employment_type' => $data['employment_type'],
             'status' => $data['status'],
             'positions_count' => $data['positions_count'],
             'published_at' => $data['published_at'] ?? null,
+            'unpublished_at' => $data['unpublished_at'] ?? null,
             'deadline_at' => $data['deadline_at'] ?? null,
             'created_by' => $request->user()->id,
         ]);
@@ -99,13 +101,14 @@ class VacancyController extends Controller
 
     public function update(UpdateVacancyRequest $request, Vacancy $vacancy): RedirectResponse
     {
-        $data = $request->validated();
+        $data = PublicationScheduler::normalize($request->validated());
 
         $vacancy->update([
             'employment_type' => $data['employment_type'],
             'status' => $data['status'],
             'positions_count' => $data['positions_count'],
             'published_at' => $data['published_at'] ?? null,
+            'unpublished_at' => $data['unpublished_at'] ?? null,
             'deadline_at' => $data['deadline_at'] ?? null,
         ]);
         $vacancy->upsertTranslations($this->translationsPayload($data));
@@ -197,6 +200,7 @@ class VacancyController extends Controller
                 'status' => $vacancy->status->value,
                 'positions_count' => $vacancy->positions_count,
                 'published_at' => $vacancy->published_at?->format('Y-m-d\TH:i'),
+                'unpublished_at' => $vacancy->unpublished_at?->format('Y-m-d\TH:i'),
                 'deadline_at' => $vacancy->deadline_at?->format('Y-m-d'),
                 'translations' => $translations,
             ] : null,
@@ -204,9 +208,9 @@ class VacancyController extends Controller
                 ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
                 ->all(),
             'employmentTypes' => EmploymentType::options(),
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
+            'statuses' => PublicationScheduler::statusOptions(),
+            'statusTransitions' => PublicationScheduler::transitionOptions(
+                $vacancy?->status ?? ContentStatus::Draft,
             ),
             'defaultLocale' => Language::defaultCode(),
         ];

@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/hooks/use-translations';
 import { apply, index as vacanciesIndex, track } from '@/routes/vacancies';
-import { MissingTranslationAlert } from '@/components/public/missing-translation-alert';
+import { MissingTranslationAlert } from '@/components/Public/missing-translation-alert';
 
 type Vacancy = {
     id: number;

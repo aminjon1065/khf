@@ -19,6 +19,7 @@ import {
     Network,
     Newspaper,
     ScrollText,
+    Tags,
     TriangleAlert,
     Users,
 } from 'lucide-react';
@@ -39,6 +40,7 @@ import { index as pagesIndex } from '@/routes/admin/pages';
 import { index as postsIndex } from '@/routes/admin/posts';
 import { index as statisticsIndex } from '@/routes/admin/statistics';
 import { index as structureIndex } from '@/routes/admin/structure';
+import { index as tagsIndex } from '@/routes/admin/tags';
 import { index as subscribersIndex } from '@/routes/admin/subscribers';
 import { index as tenderBidsIndex } from '@/routes/admin/tender-bids';
 import { index as tendersIndex } from '@/routes/admin/tenders';
@@ -107,6 +109,12 @@ export const navGroups: AdminNavGroup[] = [
                 href: categoriesIndex(),
                 icon: FolderTree,
                 permission: 'categories.manage',
+            },
+            {
+                title: 'Теги',
+                href: tagsIndex(),
+                icon: Tags,
+                permission: 'tags.manage',
             },
             { title: 'Медиабиблиотека', href: mediaIndex(), icon: Image },
             {

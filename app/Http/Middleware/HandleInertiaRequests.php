@@ -7,7 +7,10 @@ use App\Models\Language;
 use App\Models\Menu;
 use App\Models\Page;
 use App\Models\User;
+use App\Services\Public\MenuFormatter;
 use App\Support\LocaleUrls;
+use App\Support\Matomo;
+use App\Support\SocialLinks;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -55,6 +58,8 @@ class HandleInertiaRequests extends Middleware
             'translations' => $this->translations(),
             'menus' => $this->menus(),
             'activeAlerts' => $this->activeAlerts(),
+            'matomo' => Matomo::inertiaProps(),
+            'socialLinks' => SocialLinks::all(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
@@ -201,6 +206,8 @@ class HandleInertiaRequests extends Middleware
     {
         try {
             $locale = app()->getLocale();
+            $formatter = app(MenuFormatter::class);
+
             $menus = Menu::where('is_active', true)
                 ->with(['items' => function ($query) {
                     $query->orderBy('sort_order')->with('translations');
@@ -208,30 +215,19 @@ class HandleInertiaRequests extends Middleware
                 ->get();
 
             $formatted = [];
+
             foreach ($menus as $menu) {
-                $formatted[$menu->location] = $this->formatMenuItems($menu->items->where('parent_id', null), $menu->items, $locale);
+                $formatted[$menu->location] = $formatter->formatTree(
+                    $menu->items->where('parent_id', null),
+                    $menu->items,
+                    $locale,
+                );
             }
 
             return $formatted;
         } catch (\Throwable $e) {
             return [];
         }
-    }
-
-    private function formatMenuItems($items, $allItems, $locale): array
-    {
-        return $items->map(function ($item) use ($allItems, $locale) {
-            $translation = $item->translations->firstWhere('locale', $locale);
-
-            return [
-                'id' => $item->id,
-                'title' => $translation?->title,
-                'url' => $item->url,
-                'route' => $item->route,
-                'target' => $item->target,
-                'children' => $this->formatMenuItems($allItems->where('parent_id', $item->id), $allItems, $locale),
-            ];
-        })->values()->all();
     }
 
     /**

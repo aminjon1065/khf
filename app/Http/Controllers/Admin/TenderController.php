@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\UpdateTenderRequest;
 use App\Models\Language;
 use App\Models\Tender;
 use App\Support\HtmlSanitizer;
+use App\Support\PublicationScheduler;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -73,7 +74,7 @@ class TenderController extends Controller
 
     public function store(StoreTenderRequest $request): RedirectResponse
     {
-        $data = $request->validated();
+        $data = PublicationScheduler::normalize($request->validated());
 
         $tender = Tender::create([
             'tender_number' => $data['tender_number'] ?? null,
@@ -82,6 +83,7 @@ class TenderController extends Controller
             'budget' => $data['budget'] ?? null,
             'lots_count' => $data['lots_count'],
             'published_at' => $data['published_at'] ?? null,
+            'unpublished_at' => $data['unpublished_at'] ?? null,
             'deadline_at' => $data['deadline_at'] ?? null,
             'created_by' => $request->user()->id,
         ]);
@@ -101,7 +103,7 @@ class TenderController extends Controller
 
     public function update(UpdateTenderRequest $request, Tender $tender): RedirectResponse
     {
-        $data = $request->validated();
+        $data = PublicationScheduler::normalize($request->validated());
 
         $tender->update([
             'tender_number' => $data['tender_number'] ?? null,
@@ -110,6 +112,7 @@ class TenderController extends Controller
             'budget' => $data['budget'] ?? null,
             'lots_count' => $data['lots_count'],
             'published_at' => $data['published_at'] ?? null,
+            'unpublished_at' => $data['unpublished_at'] ?? null,
             'deadline_at' => $data['deadline_at'] ?? null,
         ]);
         $tender->upsertTranslations($this->translationsPayload($data));
@@ -202,6 +205,7 @@ class TenderController extends Controller
                 'budget' => $tender->budget,
                 'lots_count' => $tender->lots_count,
                 'published_at' => $tender->published_at?->format('Y-m-d\TH:i'),
+                'unpublished_at' => $tender->unpublished_at?->format('Y-m-d\TH:i'),
                 'deadline_at' => $tender->deadline_at?->format('Y-m-d'),
                 'translations' => $translations,
             ] : null,
@@ -209,9 +213,9 @@ class TenderController extends Controller
                 ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
                 ->all(),
             'tenderTypes' => TenderType::options(),
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
+            'statuses' => PublicationScheduler::statusOptions(),
+            'statusTransitions' => PublicationScheduler::transitionOptions(
+                $tender?->status ?? ContentStatus::Draft,
             ),
             'defaultLocale' => Language::defaultCode(),
         ];

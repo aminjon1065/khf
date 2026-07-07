@@ -30,6 +30,8 @@ type SearchResultItem = {
     type: string;
     title: string;
     excerpt: string | null;
+    highlighted_title?: string | null;
+    highlighted_excerpt?: string | null;
     url: string;
     date: string | null;
 };
@@ -287,13 +289,25 @@ export function GlobalSearchModal({
                                             </span>
                                         )}
                                     </div>
-                                    <h4 className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary">
-                                        {result.title}
-                                    </h4>
-                                    {result.excerpt && (
-                                        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                                            {result.excerpt}
-                                        </p>
+                                    <h4
+                                        className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary"
+                                        dangerouslySetInnerHTML={{
+                                            __html:
+                                                result.highlighted_title ??
+                                                result.title,
+                                        }}
+                                    />
+                                    {(result.excerpt ||
+                                        result.highlighted_excerpt) && (
+                                        <p
+                                            className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground"
+                                            dangerouslySetInnerHTML={{
+                                                __html:
+                                                    result.highlighted_excerpt ??
+                                                    result.excerpt ??
+                                                    '',
+                                            }}
+                                        />
                                     )}
                                 </div>
                             </Link>

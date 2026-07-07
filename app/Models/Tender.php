@@ -7,6 +7,7 @@ use App\Enums\TenderType;
 use App\Models\Concerns\ClearsResponseCache;
 use App\Models\Concerns\HasSeoMeta;
 use App\Models\Concerns\HasTranslations;
+use App\Models\Concerns\ScopesPublicationWindow;
 use Database\Factories\TenderFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,6 +30,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property string|null $budget
  * @property int $lots_count
  * @property Carbon|null $published_at
+ * @property Carbon|null $unpublished_at
  * @property Carbon|null $deadline_at
  * @property int|null $created_by
  */
@@ -42,6 +44,7 @@ class Tender extends Model
     use HasSeoMeta;
     use HasTranslations;
     use LogsActivity;
+    use ScopesPublicationWindow;
     use SoftDeletes;
 
     /** @var list<string> */
@@ -52,6 +55,7 @@ class Tender extends Model
         'budget',
         'lots_count',
         'published_at',
+        'unpublished_at',
         'deadline_at',
         'created_by',
     ];
@@ -67,6 +71,7 @@ class Tender extends Model
             'budget' => 'decimal:2',
             'lots_count' => 'integer',
             'published_at' => 'datetime',
+            'unpublished_at' => 'datetime',
             'deadline_at' => 'date',
         ];
     }
@@ -85,19 +90,6 @@ class Tender extends Model
     public function bids(): HasMany
     {
         return $this->hasMany(TenderBid::class);
-    }
-
-    /**
-     * Published and past their publish time (ТЗ §20 «э» — scheduled publishing).
-     *
-     * @param  Builder<Tender>  $query
-     */
-    public function scopePublished(Builder $query): void
-    {
-        $query->where('status', ContentStatus::Published)
-            ->where(function (Builder $inner) {
-                $inner->whereNull('published_at')->orWhere('published_at', '<=', now());
-            });
     }
 
     /**
