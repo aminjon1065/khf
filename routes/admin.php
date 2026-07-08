@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\GalleryController;
+use App\Http\Controllers\Admin\GovServiceController;
 use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\IncidentController;
 use App\Http\Controllers\Admin\LanguageController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\PollController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\RevisionController;
 use App\Http\Controllers\Admin\StatisticController;
@@ -196,6 +198,26 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::get('faqs/{faq}/edit', [FaqController::class, 'edit'])->name('faqs.edit');
             Route::put('faqs/{faq}', [FaqController::class, 'update'])->name('faqs.update');
             Route::delete('faqs/{faq}', [FaqController::class, 'destroy'])->name('faqs.destroy');
+        });
+
+        // Content — public opinion polls (polls.manage).
+        Route::middleware('can:'.Permission::ManagePolls->value)->group(function () {
+            Route::get('polls', [PollController::class, 'index'])->name('polls.index');
+            Route::get('polls/create', [PollController::class, 'create'])->name('polls.create');
+            Route::post('polls', [PollController::class, 'store'])->name('polls.store');
+            Route::get('polls/{poll}/edit', [PollController::class, 'edit'])->name('polls.edit');
+            Route::put('polls/{poll}', [PollController::class, 'update'])->name('polls.update');
+            Route::delete('polls/{poll}', [PollController::class, 'destroy'])->name('polls.destroy');
+        });
+
+        // Content — government services catalogue (services.manage).
+        Route::middleware('can:'.Permission::ManageServices->value)->group(function () {
+            Route::get('services', [GovServiceController::class, 'index'])->name('services.index');
+            Route::get('services/create', [GovServiceController::class, 'create'])->name('services.create');
+            Route::post('services', [GovServiceController::class, 'store'])->name('services.store');
+            Route::get('services/{gov_service}/edit', [GovServiceController::class, 'edit'])->name('services.edit');
+            Route::put('services/{gov_service}', [GovServiceController::class, 'update'])->name('services.update');
+            Route::delete('services/{gov_service}', [GovServiceController::class, 'destroy'])->name('services.destroy');
         });
 
         // Content — official statistics indicators (statistics.manage).

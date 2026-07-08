@@ -69,11 +69,23 @@ return [
         'fire' => 'Fire',
         'glof' => 'Glacial lake outburst flood',
     ],
+    'poll_type' => [
+        'general' => 'General poll',
+        'anti_corruption_expertise' => 'Anti-corruption expertise',
+    ],
     'post_type' => [
         'news' => 'News',
         'press_release' => 'Press release',
         'announcement' => 'Announcement',
         'summary' => 'Operational summary',
+    ],
+    'service_category' => [
+        'registration' => 'Registration',
+        'certification' => 'Certification and licensing',
+        'information' => 'Reference information',
+        'consultation' => 'Consultations',
+        'appeals' => 'Appeals intake',
+        'other' => 'Other',
     ],
     'tender_type' => [
         'goods' => 'Goods',

@@ -77,6 +77,8 @@ enum Role: string
                 Permission::ViewStructure, Permission::ManageStructure,
                 Permission::ViewGallery, Permission::ManageGallery,
                 Permission::ViewFaqs, Permission::ManageFaqs,
+                Permission::ViewPolls, Permission::ManagePolls,
+                Permission::ViewServices, Permission::ManageServices,
                 Permission::ViewStatistics, Permission::ManageStatistics,
                 Permission::ManageMedia, Permission::ManageBlocks, Permission::ManageMenus,
                 Permission::ManageTranslations,

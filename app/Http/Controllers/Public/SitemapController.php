@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Faq;
 use App\Models\Gallery;
+use App\Models\GovService;
 use App\Models\Guide;
 use App\Models\Page;
+use App\Models\Poll;
 use App\Models\Post;
 use App\Models\Statistic;
 use App\Models\Tender;
@@ -31,6 +33,8 @@ class SitemapController extends Controller
             Gallery::max('updated_at'),
             Faq::max('updated_at'),
             Statistic::max('updated_at'),
+            Poll::max('updated_at'),
+            GovService::max('updated_at'),
         ])->filter()->max() ?? 'empty';
 
         $xml = Cache::remember('sitemap.xml.'.$version, now()->addHour(), function () use ($localeUrls) {
@@ -89,7 +93,7 @@ class SitemapController extends Controller
                 'appeals.create', 'tourist-groups.create', 'subscriptions.create',
                 'vacancies.index', 'tenders.index',
                 'leadership.index', 'structure.index',
-                'gallery.index', 'faq.index', 'statistics.index',
+                'gallery.index', 'faq.index', 'polls.index', 'services.index', 'statistics.index',
             ];
 
             foreach ($staticRoutes as $route) {

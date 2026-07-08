@@ -40,9 +40,9 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 ## Progress Summary
 
 - **Total Tasks:** 211 (was 196; +10 Phase 21 §20-module lines added this pass)
-- **Fully done `[x]`:** 171
+- **Fully done `[x]`:** 173
 - **Partial `[~]`:** 25
-- **Not started `[ ]`:** 13
+- **Not started `[ ]`:** 11
 - **Deferred `[→]`:** 3
 - **In Progress:** 0
 - **Completion:** ~81% fully done (~88% counting partials as half). Base suite: **395 green**.
@@ -355,8 +355,8 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 - [x] **Vacancies** (ТЗ §20«н», §21 — вакансии + онлайн-анкета): `Vacancy`/`VacancyTranslation`/`VacancyApplication` (soft-delete, `EmploymentType`, private-disk résumé, `VAC-YYYY-XXXXXX`) + admin CRUD + applications moderation queue (private download) + public listing/show (JobPosting schema.org)/apply (honeypot + MIME allowlist)/track + `VacancyManagementTest`/`VacancyTest`
 - [x] **Tenders** (ТЗ §9, §20«э» — закупки/торговая площадка): `Tender`/`TenderTranslation`/`TenderBid` (soft-delete, `TenderType`, budget, private-disk doc, `TND-YYYY-XXXXXX`) + admin CRUD + bids moderation queue (private download) + public listing/show/bid/track + `TenderManagementTest`/`TenderTest`
 - [~] Parity nicety: **no register/period export** for the vacancy-applications and tender-bids queues (appeals has one under §7.6); applicant/bidder receive only an on-screen reference (no emailed receipt). Optional, not a blocker
-- [ ] **Polls / Опросы** (ТЗ §8 + §20«к», incl. anti-corruption expertise of draft acts) — no model/migration/route exists yet
-- [ ] **Services / Услуги** (ТЗ §20«ф» — government-services catalogue) — not built (could start Page-based)
+- [x] **Polls / Опросы** (ТЗ §8 + §20«к», incl. anti-corruption expertise of draft acts) — `Poll`/`PollTranslation`/`PollOption`/`PollVote`, admin CRUD (`polls.manage`), public `/{locale}/polls` + vote form, anti-corruption type; `PollManagementTest`/`PollTest`
+- [x] **Services / Услуги** (ТЗ §20«ф» — government-services catalogue) — `GovService`/`GovServiceTranslation`, categories (`ServiceCategory`), admin CRUD (`services.manage`), public `/{locale}/services` catalogue + detail; `GovServiceManagementTest`/`GovServiceTest`
 
 ---
 

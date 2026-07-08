@@ -7,12 +7,14 @@ use App\Http\Controllers\Public\DocumentController;
 use App\Http\Controllers\Public\FaqController;
 use App\Http\Controllers\Public\FeedController;
 use App\Http\Controllers\Public\GalleryController;
+use App\Http\Controllers\Public\GovServiceController;
 use App\Http\Controllers\Public\GuideController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\IncidentController;
 use App\Http\Controllers\Public\LeadershipController;
 use App\Http\Controllers\Public\MapController;
 use App\Http\Controllers\Public\PageController;
+use App\Http\Controllers\Public\PollController;
 use App\Http\Controllers\Public\PostController;
 use App\Http\Controllers\Public\PushSubscriptionController;
 use App\Http\Controllers\Public\SearchController;
@@ -72,6 +74,15 @@ Route::prefix('{locale}')
 
         // FAQ — questions & answers (ТЗ §20 «й»).
         Route::get('faq', [FaqController::class, 'index'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('faq.index');
+
+        // Public opinion polls (ТЗ §8, §20 «к»).
+        Route::get('polls', [PollController::class, 'index'])->name('polls.index');
+        Route::get('polls/{slug}', [PollController::class, 'show'])->name('polls.show');
+        Route::post('polls/{slug}/vote', [PollController::class, 'vote'])->middleware('throttle:6,1')->name('polls.vote');
+
+        // Government services catalogue (ТЗ §20 «ф»).
+        Route::get('services', [GovServiceController::class, 'index'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('services.index');
+        Route::get('services/{slug}', [GovServiceController::class, 'show'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('services.show');
 
         // Official statistics — key activity indicators (ТЗ §20 «у»).
         Route::get('statistics', [StatisticController::class, 'index'])->middleware([CacheResponse::class, 'cache.headers:public;max_age=3600;etag'])->name('statistics.index');

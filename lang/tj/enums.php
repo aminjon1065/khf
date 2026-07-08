@@ -69,11 +69,23 @@ return [
         'fire' => 'Сӯхтор',
         'glof' => 'Рахнашавии кӯлҳои пиряхӣ',
     ],
+    'poll_type' => [
+        'general' => 'Опроси умумӣ',
+        'anti_corruption_expertise' => 'Экспертизаи зидди фасод',
+    ],
     'post_type' => [
         'news' => 'Хабар',
         'press_release' => 'Прессрелиз',
         'announcement' => 'Эълон',
         'summary' => 'Хулосаи фаврӣ',
+    ],
+    'service_category' => [
+        'registration' => 'Бақайдгирӣ',
+        'certification' => 'Сертификатсия ва иҷозатнома',
+        'information' => 'Маълумоти маълумотӣ',
+        'consultation' => 'Маслиҳатҳо',
+        'appeals' => 'Қабули муроҷиатҳо',
+        'other' => 'Дигар',
     ],
     'tender_type' => [
         'goods' => 'Молҳо',

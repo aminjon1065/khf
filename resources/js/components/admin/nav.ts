@@ -14,6 +14,8 @@ import {
     Inbox,
     Languages,
     LayoutDashboard,
+    ListChecks,
+    ListTree,
     Mail,
     Mountain,
     Network,
@@ -36,8 +38,11 @@ import { index as incidentsIndex } from '@/routes/admin/incidents';
 import { index as languagesIndex } from '@/routes/admin/languages';
 import { index as leadershipIndex } from '@/routes/admin/leadership';
 import { index as mediaIndex } from '@/routes/admin/media';
+import { index as menusIndex } from '@/routes/admin/menus';
 import { index as pagesIndex } from '@/routes/admin/pages';
+import { index as pollsIndex } from '@/routes/admin/polls';
 import { index as postsIndex } from '@/routes/admin/posts';
+import { index as servicesIndex } from '@/routes/admin/services';
 import { index as statisticsIndex } from '@/routes/admin/statistics';
 import { index as structureIndex } from '@/routes/admin/structure';
 import { index as tagsIndex } from '@/routes/admin/tags';
@@ -118,6 +123,12 @@ export const navGroups: AdminNavGroup[] = [
             },
             { title: 'Медиабиблиотека', href: mediaIndex(), icon: Image },
             {
+                title: 'Меню',
+                href: menusIndex(),
+                icon: ListTree,
+                permission: 'menus.manage',
+            },
+            {
                 title: 'Документы',
                 href: documentsIndex(),
                 icon: FileText,
@@ -152,6 +163,18 @@ export const navGroups: AdminNavGroup[] = [
                 href: faqsIndex(),
                 icon: HelpCircle,
                 permission: 'faqs.manage',
+            },
+            {
+                title: 'Опросы',
+                href: pollsIndex(),
+                icon: ListChecks,
+                permission: 'polls.manage',
+            },
+            {
+                title: 'Услуги',
+                href: servicesIndex(),
+                icon: ClipboardList,
+                permission: 'services.manage',
             },
             {
                 title: 'Статистика',

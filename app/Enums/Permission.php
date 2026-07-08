@@ -32,6 +32,10 @@ enum Permission: string
     case ManageGallery = 'gallery.manage';
     case ViewFaqs = 'faqs.view';
     case ManageFaqs = 'faqs.manage';
+    case ViewPolls = 'polls.view';
+    case ManagePolls = 'polls.manage';
+    case ViewServices = 'services.view';
+    case ManageServices = 'services.manage';
     case ViewStatistics = 'statistics.view';
     case ManageStatistics = 'statistics.manage';
     case ManageMedia = 'media.manage';

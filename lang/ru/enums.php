@@ -69,11 +69,23 @@ return [
         'fire' => 'Пожар',
         'glof' => 'Прорыв ледниковых озёр',
     ],
+    'poll_type' => [
+        'general' => 'Общий опрос',
+        'anti_corruption_expertise' => 'Антикоррупционная экспертиза',
+    ],
     'post_type' => [
         'news' => 'Новость',
         'press_release' => 'Пресс-релиз',
         'announcement' => 'Объявление',
         'summary' => 'Оперативная сводка',
+    ],
+    'service_category' => [
+        'registration' => 'Регистрация',
+        'certification' => 'Сертификация и лицензирование',
+        'information' => 'Справочная информация',
+        'consultation' => 'Консультации',
+        'appeals' => 'Приём обращений',
+        'other' => 'Прочее',
     ],
     'tender_type' => [
         'goods' => 'Товары',
