@@ -20,7 +20,14 @@ declare module '@inertiajs/core' {
             navPages: { title: string; slug: string }[];
             activeAlerts: ActiveAlert[];
             matomo?: { enabled: boolean; goals: Record<string, number> };
+            president?: { url: string; photo: string };
             socialLinks?: Array<{ platform: string; url: string }>;
+            footerContent?: {
+                government_url: string | null;
+                egov_url: string | null;
+                hotline: string;
+                copyright: string | null;
+            };
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

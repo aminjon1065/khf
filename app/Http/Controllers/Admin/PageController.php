@@ -3,24 +3,42 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ContentStatus;
+use App\Http\Controllers\Admin\Concerns\AutosavesEditorialContent;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\BuildsTranslationPayload;
+use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
+use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\PublishesWorkingCopy;
+use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Concerns\SyncsCoverFromLibrary;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AutosavePageRequest;
 use App\Http\Requests\Admin\StorePageRequest;
 use App\Http\Requests\Admin\UpdatePageRequest;
-use App\Models\Language;
 use App\Models\Page;
+use App\Services\Cms\TaxonomyService;
 use App\Support\BlockSanitizer;
 use App\Support\HtmlSanitizer;
-use App\Support\PublicationScheduler;
+use App\Support\PreviewUrls;
+use App\Support\PublicContentUrls;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PageController extends Controller
 {
+    use AutosavesEditorialContent;
+    use BuildsCmsFormData;
+    use BuildsTranslationPayload;
+    use ListsTranslatableContent;
+    use ManagesSoftDeletableContent;
+    use ProvidesBlueprintForm;
+    use PublishesWorkingCopy;
+    use SavesContentRevisions;
     use SyncsCoverFromLibrary;
 
     /** @var list<string> */
@@ -29,31 +47,26 @@ class PageController extends Controller
     public function __construct(
         private HtmlSanitizer $sanitizer,
         private BlockSanitizer $blockSanitizer,
+        private TaxonomyService $taxonomies,
     ) {}
 
     public function index(Request $request): Response
     {
         $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-        $sort = in_array((string) $request->string('sort'), self::SORTABLE, true)
-            ? (string) $request->string('sort')
-            : 'sort_order';
-        $direction = (string) $request->string('direction') === 'desc' ? 'desc' : 'asc';
+        $filters = $this->listFilters($request, 'sort_order', 'asc');
 
-        $pages = Page::query()
-            ->with('translations')
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('title', 'like', "%{$search}%"),
-            ))
-            ->orderBy($sort, $direction)
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Page $page) => $this->toRow($page, $locale));
+        $pages = $this->paginateTranslatable(
+            Page::query()->with('translations'),
+            $request,
+            self::SORTABLE,
+            'sort_order',
+            'asc',
+            fn (Page $page) => $this->toRow($page, $locale),
+        );
 
         return Inertia::render('admin/pages/index', [
             'pages' => $pages,
-            'filters' => ['search' => $search, 'sort' => $sort, 'direction' => $direction],
+            'filters' => $filters,
             'trashedCount' => Page::onlyTrashed()->count(),
         ]);
     }
@@ -87,23 +100,25 @@ class PageController extends Controller
             'is_home' => $data['is_home'] ?? false,
         ]);
 
-        // If this page is set as home, reset others
-        if ($page->is_home) {
-            Page::where('id', '!=', $page->id)->update(['is_home' => false]);
-        }
+        $this->ensureSingleHomepage($page);
 
         $page->upsertTranslations($this->translationsPayload($data));
+        $this->taxonomies->syncForModel($page, $data);
         $this->syncCover($request, $page, Page::COVER_COLLECTION);
-        $page->saveRevision();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Page created.')]);
+        $this->syncPublishedSnapshot(
+            $page,
+            ContentStatus::Draft,
+            ContentStatus::from($data['status']),
+        );
+        $this->saveContentRevision($page);
+        $this->flashContentSaved(__('Page created.'));
 
         return to_route('admin.pages.index');
     }
 
     public function edit(Page $page): Response
     {
-        $page->load(['translations', 'media']);
+        $page->load(['translations', 'media', 'tags.translations']);
 
         return Inertia::render('admin/pages/form', $this->formData($page));
     }
@@ -111,6 +126,7 @@ class PageController extends Controller
     public function update(UpdatePageRequest $request, Page $page): RedirectResponse
     {
         $data = $request->validated();
+        $previousStatus = $page->status;
 
         $page->update([
             'parent_id' => $data['parent_id'] ?? null,
@@ -119,44 +135,69 @@ class PageController extends Controller
             'is_home' => $data['is_home'] ?? false,
         ]);
 
-        if ($page->is_home) {
-            Page::where('id', '!=', $page->id)->update(['is_home' => false]);
-        }
+        $this->ensureSingleHomepage($page);
 
         $page->upsertTranslations($this->translationsPayload($data));
+        $this->taxonomies->syncForModel($page, $data);
         $this->syncCover($request, $page, Page::COVER_COLLECTION);
-        $page->saveRevision();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Page updated.')]);
+        $this->syncPublishedSnapshot(
+            $page,
+            $previousStatus,
+            ContentStatus::from($data['status']),
+        );
+        $this->saveContentRevision($page);
+        $this->flashContentSaved(__('Page updated.'));
 
         return to_route('admin.pages.index');
+    }
+
+    public function autosave(AutosavePageRequest $request, Page $page): JsonResponse
+    {
+        $data = $request->validated();
+
+        $page->update([
+            'parent_id' => $data['parent_id'] ?? null,
+            'sort_order' => $data['sort_order'] ?? 0,
+            'is_home' => $data['is_home'] ?? false,
+        ]);
+
+        $this->ensureSingleHomepage($page);
+        $page->upsertTranslations($this->translationsPayload($data));
+        $this->taxonomies->syncForModel($page, $data);
+
+        return $this->autosaveResponse($page);
+    }
+
+    public function publishVersion(Page $page): RedirectResponse
+    {
+        abort_if($page->status !== ContentStatus::Published, 422);
+
+        $this->publishWorkingCopy($page);
+        $this->flashContentSaved('Опубликованная версия обновлена.');
+
+        return redirect()->route('admin.pages.edit', $page);
     }
 
     public function destroy(Page $page): RedirectResponse
     {
-        $page->delete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Page moved to trash.')]);
-
-        return to_route('admin.pages.index');
+        return $this->moveToTrash($page, 'admin.pages.index', __('Page moved to trash.'));
     }
 
     public function restore(Page $page): RedirectResponse
     {
-        $page->restore();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Page restored.')]);
-
-        return to_route('admin.pages.trash');
+        return $this->restoreFromTrash($page, 'admin.pages.trash', __('Page restored.'));
     }
 
     public function forceDelete(Page $page): RedirectResponse
     {
-        $page->forceDelete();
+        return $this->permanentlyDelete($page, 'admin.pages.trash', __('Page permanently deleted.'));
+    }
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Page permanently deleted.')]);
-
-        return to_route('admin.pages.trash');
+    private function ensureSingleHomepage(Page $page): void
+    {
+        if ($page->is_home) {
+            Page::where('id', '!=', $page->id)->update(['is_home' => false]);
+        }
     }
 
     /**
@@ -202,44 +243,44 @@ class PageController extends Controller
                 'status' => $page->status->value,
                 'sort_order' => $page->sort_order,
                 'is_home' => $page->is_home,
+                'tag_ids' => $page->tags->pluck('id')->all(),
                 'cover_url' => $page->getFirstMediaUrl(Page::COVER_COLLECTION, 'thumb') ?: null,
                 'translations' => $translations,
             ] : null,
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'statuses' => PublicationScheduler::statusOptions(),
-            'statusTransitions' => PublicationScheduler::transitionOptions(
-                $page?->status ?? ContentStatus::Draft,
+            'locales' => $this->localeOptions(),
+            ...$this->publicationFormMeta($page?->status),
+            ...$this->blueprintFormProps('page'),
+            ...$this->blocksetFormProps('page'),
+            'fieldOptions' => array_merge(
+                [
+                    'parent_id' => Page::query()
+                        ->when($page, fn (Builder $query) => $query->whereKeyNot($page->id))
+                        ->with('translations')
+                        ->get()
+                        ->map(fn (Page $parent) => ['id' => $parent->id, 'name' => $parent->translation()?->title ?? "#{$parent->id}"])
+                        ->all(),
+                ],
+                $this->taxonomies->fieldOptionsForCollection('page'),
             ),
-            'parents' => Page::query()
-                ->when($page, fn (Builder $query) => $query->whereKeyNot($page->id))
-                ->with('translations')
-                ->get()
-                ->map(fn (Page $parent) => ['id' => $parent->id, 'title' => $parent->translation()?->title ?? "#{$parent->id}"])
-                ->all(),
-            'defaultLocale' => Language::defaultCode(),
+            'publicUrls' => $page ? PublicContentUrls::forPage($page) : [],
+            'previewUrls' => $page ? app(PreviewUrls::class)->forPage($page->id) : [],
+            'hasUnpublishedChanges' => $page?->hasUnpublishedChanges() ?? false,
         ];
     }
 
     /**
-     * Build the `[locale => attributes]` payload from validated data, skipping empty locales.
-     *
      * @param  array<string, mixed>  $data
      * @return array<string, array<string, mixed>>
      */
     private function translationsPayload(array $data): array
     {
-        return collect($data['translations'] ?? [])
-            ->filter(fn (array $translation) => filled($translation['title'] ?? null))
-            ->map(fn (array $translation) => [
-                'title' => $translation['title'],
-                'slug' => $translation['slug'] ?? Str::tajikSlug($translation['title']),
-                'content' => $this->sanitizer->clean($translation['content'] ?? null),
+        return $this->buildTranslationPayload(
+            $data,
+            fn (array $translation) => [
+                ...$this->baseTranslationFields($translation, $this->sanitizer),
+                'content' => $this->sanitizedHtml($translation['content'] ?? null, $this->sanitizer),
                 'blocks' => $this->blockSanitizer->sanitize($translation['blocks'] ?? null),
-                'seo_title' => $translation['seo_title'] ?? null,
-                'seo_description' => $translation['seo_description'] ?? null,
-            ])
-            ->all();
+            ],
+        );
     }
 }

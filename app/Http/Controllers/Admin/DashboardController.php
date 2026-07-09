@@ -52,7 +52,112 @@ class DashboardController extends Controller
             ],
             'recentAppeals' => $can(Permission::ViewAppeals) ? $this->recentAppeals() : [],
             'recentIncidents' => $can(Permission::ViewIncidents) ? $this->recentIncidents($locale) : [],
+            'editorial' => $this->editorialOverview($can, $locale),
         ]);
+    }
+
+    /**
+     * @param  callable(Permission): bool  $can
+     * @return array<string, mixed>|null
+     */
+    private function editorialOverview(callable $can, string $locale): ?array
+    {
+        if (! $can(Permission::ViewPosts) && ! $can(Permission::ViewPages)) {
+            return null;
+        }
+
+        return [
+            'moderation_queue' => $can(Permission::ViewModeration)
+                ? $this->moderationQueueCount()
+                : null,
+            'recent_updates' => $this->recentEditorialUpdates($can, $locale),
+            'scheduled_posts' => $can(Permission::ViewPosts)
+                ? $this->scheduledPosts($locale)
+                : [],
+        ];
+    }
+
+    private function moderationQueueCount(): int
+    {
+        return Post::query()->where('status', ContentStatus::Moderation)->count()
+            + Page::query()->where('status', ContentStatus::Moderation)->count();
+    }
+
+    /**
+     * @param  callable(Permission): bool  $can
+     * @return list<array{id: int, type: string, type_label: string, title: string, status: string, status_label: string, updated_at: string|null, edit_url: string}>
+     */
+    private function recentEditorialUpdates(callable $can, string $locale): array
+    {
+        $items = collect();
+
+        if ($can(Permission::ViewPages)) {
+            $items = $items->merge(
+                Page::query()
+                    ->with('translations')
+                    ->latest('updated_at')
+                    ->limit(5)
+                    ->get()
+                    ->map(fn (Page $page): array => [
+                        'id' => $page->id,
+                        'type' => 'page',
+                        'type_label' => 'Страница',
+                        'title' => $page->translation($locale)?->title ?? '—',
+                        'status' => $page->status->value,
+                        'status_label' => $page->status->label(),
+                        'updated_at' => $page->updated_at?->format('d.m.Y H:i'),
+                        'edit_url' => route('admin.pages.edit', $page),
+                    ]),
+            );
+        }
+
+        if ($can(Permission::ViewPosts)) {
+            $items = $items->merge(
+                Post::query()
+                    ->with('translations')
+                    ->latest('updated_at')
+                    ->limit(5)
+                    ->get()
+                    ->map(fn (Post $post): array => [
+                        'id' => $post->id,
+                        'type' => 'post',
+                        'type_label' => 'Материал',
+                        'title' => $post->translation($locale)?->title ?? '—',
+                        'status' => $post->status->value,
+                        'status_label' => $post->status->label(),
+                        'updated_at' => $post->updated_at?->format('d.m.Y H:i'),
+                        'edit_url' => route('admin.posts.edit', $post),
+                    ]),
+            );
+        }
+
+        return $items
+            ->sortByDesc('updated_at')
+            ->take(8)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array{id: int, title: string, published_at: string|null, edit_url: string}>
+     */
+    private function scheduledPosts(string $locale): array
+    {
+        return Post::query()
+            ->with('translations')
+            ->where('status', ContentStatus::Published)
+            ->whereNotNull('published_at')
+            ->where('published_at', '>', now())
+            ->orderBy('published_at')
+            ->limit(6)
+            ->get()
+            ->map(fn (Post $post): array => [
+                'id' => $post->id,
+                'title' => $post->translation($locale)?->title ?? '—',
+                'published_at' => $post->published_at?->format('d.m.Y H:i'),
+                'edit_url' => route('admin.posts.edit', $post),
+            ])
+            ->all();
     }
 
     /**

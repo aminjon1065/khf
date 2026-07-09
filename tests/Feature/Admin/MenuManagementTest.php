@@ -1,9 +1,13 @@
 <?php
 
+use App\Enums\ContentStatus;
 use App\Enums\Role as RoleEnum;
+use App\Models\Language;
 use App\Models\Menu;
 use App\Models\MenuItem;
+use App\Models\Post;
 use App\Models\User;
+use App\Support\MenuUrlResolver;
 use Database\Seeders\LanguageSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,11 +37,74 @@ test('admin can view menus index', function () {
         ->assertInertia(fn ($page) => $page->component('admin/menus/index'));
 });
 
+test('menus index provisions default header and footer menus when missing', function () {
+    Menu::query()->delete();
+
+    actingAs($this->admin)
+        ->get(route('admin.menus.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/menus/index')
+            ->has('menus', 2)
+            ->where('menus.0.location', 'primary')
+            ->where('menus.1.location', 'footer'));
+
+    expect(Menu::where('location', 'primary')->exists())->toBeTrue()
+        ->and(Menu::where('location', 'footer')->exists())->toBeTrue();
+});
+
 test('admin can view menu items builder', function () {
     actingAs($this->admin)
         ->get(route('admin.menus.show', $this->menu))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page->component('admin/menus/show'));
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/menus/show')
+            ->has('linkPageTree')
+            ->has('linkCollectionEntries'));
+});
+
+test('menu builder exposes collection entries and preview urls', function () {
+    $defaultLocale = Language::defaultCode();
+
+    $post = Post::factory()->create(['status' => ContentStatus::Published]);
+    $post->upsertTranslations([
+        $defaultLocale => ['title' => 'Новость меню', 'slug' => 'novost-menyu'],
+    ]);
+
+    $item = $this->menu->items()->create([
+        'route' => 'entry.post.'.$post->id,
+        'sort_order' => 1,
+    ]);
+    $item->upsertTranslations([$defaultLocale => ['title' => 'Ссылка на новость']]);
+
+    actingAs($this->admin)
+        ->get(route('admin.menus.show', $this->menu))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('items.0.preview_url', route('news.show', ['locale' => $defaultLocale, 'slug' => 'novost-menyu']))
+            ->where('linkCollectionEntries.0.handle', 'post'));
+});
+
+test('admin can store a menu item linked to a collection entry', function () {
+    $post = Post::factory()->create(['status' => ContentStatus::Published]);
+    $post->upsertTranslations([
+        'tj' => ['title' => 'Хабар', 'slug' => 'habar'],
+    ]);
+
+    actingAs($this->admin)
+        ->post(route('admin.menus.items.store', $this->menu), [
+            'route' => 'entry.post.'.$post->id,
+            'translations' => [
+                'tj' => ['title' => 'Хабар'],
+            ],
+        ])
+        ->assertRedirect();
+
+    $item = MenuItem::first();
+
+    expect($item->route)->toBe('entry.post.'.$post->id)
+        ->and(app(MenuUrlResolver::class)->resolve(null, $item->route, 'tj'))
+        ->toBe(route('news.show', ['locale' => 'tj', 'slug' => 'habar']));
 });
 
 test('admin can store a menu item with only the default locale', function () {

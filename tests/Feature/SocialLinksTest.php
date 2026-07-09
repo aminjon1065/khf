@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\Cms\GlobalResolver;
 use App\Support\SocialLinks;
 use Database\Seeders\LanguageSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -8,7 +9,7 @@ beforeEach(function () {
     $this->seed(LanguageSeeder::class);
 
     config([
-        'social.links' => [
+        'cms.globals.social.fallback' => [
             'telegram' => null,
             'facebook' => null,
             'instagram' => null,
@@ -16,6 +17,8 @@ beforeEach(function () {
             'x' => null,
         ],
     ]);
+
+    app(GlobalResolver::class)->forget('social');
 });
 
 it('shares an empty social link list when no profiles are configured', function () {
@@ -26,7 +29,7 @@ it('shares an empty social link list when no profiles are configured', function 
 
 it('shares only valid https social profile urls', function () {
     config([
-        'social.links' => [
+        'cms.globals.social.fallback' => [
             'telegram' => 'https://t.me/kchs_tj',
             'facebook' => 'not-a-url',
             'instagram' => '',
@@ -34,6 +37,8 @@ it('shares only valid https social profile urls', function () {
             'x' => 'https://x.com/kchs_tj',
         ],
     ]);
+
+    app(GlobalResolver::class)->forget('social');
 
     expect(SocialLinks::all())->toBe([
         ['platform' => 'telegram', 'url' => 'https://t.me/kchs_tj'],
@@ -50,8 +55,10 @@ it('shares only valid https social profile urls', function () {
 
 it('passes configured social links to the public layout', function () {
     config([
-        'social.links.telegram' => 'https://t.me/kchs_tj',
+        'cms.globals.social.fallback.telegram' => 'https://t.me/kchs_tj',
     ]);
+
+    app(GlobalResolver::class)->forget('social');
 
     $this->get(route('subscriptions.create', ['locale' => 'tj']))
         ->assertOk()

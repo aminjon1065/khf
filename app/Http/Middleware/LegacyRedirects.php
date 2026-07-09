@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\RedirectResolver;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,18 +16,10 @@ class LegacyRedirects
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $redirects = config('redirects', []);
+        $match = RedirectResolver::match($request);
 
-        $path = $request->path();
-
-        if (array_key_exists($path, $redirects)) {
-            return redirect($redirects[$path], 301);
-        }
-
-        // Also check with a leading slash just in case
-        $pathWithSlash = '/'.ltrim($path, '/');
-        if (array_key_exists($pathWithSlash, $redirects)) {
-            return redirect($redirects[$pathWithSlash], 301);
+        if ($match !== null) {
+            return redirect($match['to'], $match['status']);
         }
 
         return $next($request);

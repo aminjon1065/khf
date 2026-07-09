@@ -4,7 +4,9 @@ import { motion } from 'framer-motion';
 import {
     ArrowRight,
     Bell,
+    CalendarClock,
     CheckCircle2,
+    ClipboardCheck,
     FileText,
     Inbox,
     Languages,
@@ -30,6 +32,7 @@ import {
     create as postsCreate,
     index as postsIndex,
 } from '@/routes/admin/posts';
+import { index as moderationIndex } from '@/routes/admin/moderation';
 import { index as subscribersIndex } from '@/routes/admin/subscribers';
 import { index as touristGroupsIndex } from '@/routes/admin/tourist-groups';
 import { index as usersIndex } from '@/routes/admin/users';
@@ -69,15 +72,46 @@ type RecentIncident = {
     occurred_at: string | null;
 };
 
+type EditorialUpdate = {
+    id: number;
+    type: string;
+    type_label: string;
+    title: string;
+    status: string;
+    status_label: string;
+    updated_at: string | null;
+    edit_url: string;
+};
+
+type ScheduledPost = {
+    id: number;
+    title: string;
+    published_at: string | null;
+    edit_url: string;
+};
+
+type EditorialOverview = {
+    moderation_queue: number | null;
+    recent_updates: EditorialUpdate[];
+    scheduled_posts: ScheduledPost[];
+};
+
 type DashboardProps = {
     stats: Stats;
     recentAppeals: RecentAppeal[];
     recentIncidents: RecentIncident[];
+    editorial: EditorialOverview | null;
 };
 
 const statusToneClass: Record<string, string> = {
     new: 'border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400',
     active: 'border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400',
+    draft: 'border-muted/50 bg-muted/30 text-muted-foreground',
+    moderation:
+        'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400',
+    published:
+        'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+    archived: 'border-muted/50 bg-muted/30 text-muted-foreground',
     in_progress:
         'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400',
     controlled:
@@ -92,6 +126,10 @@ const statusToneClass: Record<string, string> = {
 const statusDotClass: Record<string, string> = {
     new: 'bg-red-500',
     active: 'bg-red-500',
+    draft: 'bg-muted-foreground',
+    moderation: 'bg-amber-500',
+    published: 'bg-emerald-500',
+    archived: 'bg-muted-foreground',
     in_progress: 'bg-amber-500',
     controlled: 'bg-amber-500',
     answered: 'bg-emerald-500',
@@ -133,6 +171,7 @@ export default function AdminDashboard({
     stats,
     recentAppeals,
     recentIncidents,
+    editorial,
 }: DashboardProps) {
     const { auth } = usePage<SharedData>().props;
     const permissions = auth?.permissions ?? [];
@@ -174,6 +213,15 @@ export default function AdminDashboard({
                   count: stats.touristGroups.pending,
                   href: touristGroupsIndex().url,
                   icon: Mountain,
+              }
+            : null,
+        editorial?.moderation_queue && editorial.moderation_queue > 0
+            ? {
+                  key: 'moderation',
+                  label: 'Материалы на модерации',
+                  count: editorial.moderation_queue,
+                  href: moderationIndex().url,
+                  icon: ClipboardCheck,
               }
             : null,
     ].filter((item): item is NonNullable<typeof item> => item !== null);
@@ -327,6 +375,92 @@ export default function AdminDashboard({
                         />
                     )}
                 </motion.div>
+
+                {editorial && (
+                    <motion.div
+                        variants={item}
+                        className="grid gap-6 lg:grid-cols-2"
+                    >
+                        <Card className="flex flex-col rounded-2xl border-border/50 shadow-sm transition-all hover:shadow-md">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/50 pb-4">
+                                <CardTitle className="text-base font-semibold">
+                                    Редакционная активность
+                                </CardTitle>
+                                <Link
+                                    href={postsIndex().url}
+                                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                                >
+                                    Контент
+                                    <ArrowRight className="size-3.5" />
+                                </Link>
+                            </CardHeader>
+                            <CardContent className="flex-1 p-0">
+                                {editorial.recent_updates.length === 0 ? (
+                                    <EmptyRow text="Недавних правок нет." />
+                                ) : (
+                                    <ul className="divide-y divide-border/50">
+                                        {editorial.recent_updates.map((item) => (
+                                            <li key={`${item.type}-${item.id}`}>
+                                                <Link
+                                                    href={item.edit_url}
+                                                    className="group flex items-center justify-between gap-4 p-4 transition-colors hover:bg-muted/30"
+                                                >
+                                                    <div className="min-w-0">
+                                                        <p className="truncate text-sm font-medium text-foreground">
+                                                            {item.title}
+                                                        </p>
+                                                        <p className="mt-1 text-xs text-muted-foreground">
+                                                            {item.type_label}
+                                                            {item.updated_at
+                                                                ? ` · ${item.updated_at}`
+                                                                : ''}
+                                                        </p>
+                                                    </div>
+                                                    <StatusBadge
+                                                        status={item.status}
+                                                        label={item.status_label}
+                                                    />
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <Card className="flex flex-col rounded-2xl border-border/50 shadow-sm transition-all hover:shadow-md">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/50 pb-4">
+                                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                                    <CalendarClock className="size-4 text-muted-foreground" />
+                                    Запланированные публикации
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex-1 p-0">
+                                {editorial.scheduled_posts.length === 0 ? (
+                                    <EmptyRow text="Нет материалов с отложенной публикацией." />
+                                ) : (
+                                    <ul className="divide-y divide-border/50">
+                                        {editorial.scheduled_posts.map((post) => (
+                                            <li key={post.id}>
+                                                <Link
+                                                    href={post.edit_url}
+                                                    className="group flex items-center justify-between gap-4 p-4 transition-colors hover:bg-muted/30"
+                                                >
+                                                    <p className="min-w-0 truncate text-sm font-medium text-foreground">
+                                                        {post.title}
+                                                    </p>
+                                                    <span className="shrink-0 text-xs text-muted-foreground">
+                                                        {post.published_at}
+                                                    </span>
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                )}
 
                 {/* Recent activity */}
                 <motion.div

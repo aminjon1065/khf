@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Plus, Search } from 'lucide-react';
+import { FileText, Plus, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ComponentType } from 'react';
 import { navGroups } from '@/components/admin/nav';
@@ -16,6 +16,13 @@ import { create as createPage } from '@/routes/admin/pages';
 import { create as createPost } from '@/routes/admin/posts';
 
 type Href = string | { url: string };
+type ContentResult = {
+    id: string;
+    title: string;
+    type: string;
+    type_label: string;
+    url: string;
+};
 type Command = {
     id: string;
     label: string;
@@ -79,6 +86,10 @@ const createCommands: Omit<Command, 'icon' | 'group'>[] = [
 const toUrl = (href: Href): string =>
     typeof href === 'string' ? href : href.url;
 
+type PaletteItem =
+    | { kind: 'content'; result: ContentResult }
+    | { kind: 'command'; command: Command };
+
 /**
  * Statamic-style command palette (⌘K / Ctrl+K): fuzzy-jump to any CMS section or "create" action.
  * Permission-gated from the shared nav data; fully keyboard-driven (↑/↓/Enter/Esc). The body lives
@@ -133,6 +144,8 @@ function CommandPaletteBody({ onClose }: { onClose: () => void }) {
     const { can } = usePermissions();
     const [query, setQuery] = useState('');
     const [active, setActive] = useState(0);
+    const [contentResults, setContentResults] = useState<ContentResult[]>([]);
+    const [contentLoading, setContentLoading] = useState(false);
 
     const commands = useMemo<Command[]>(() => {
         const nav: Command[] = navGroups.flatMap((group) =>
@@ -169,35 +182,77 @@ function CommandPaletteBody({ onClose }: { onClose: () => void }) {
         );
     }, [commands, query]);
 
-    const run = (command: Command | undefined) => {
-        if (!command) {
+    useEffect(() => {
+        const q = query.trim();
+
+        if (q.length < 2) {
+            setContentResults([]);
+
+            return;
+        }
+
+        const timer = window.setTimeout(() => {
+            setContentLoading(true);
+
+            fetch(`/admin/api/search?q=${encodeURIComponent(q)}`)
+                .then((response) => response.json())
+                .then((data: { results?: ContentResult[] }) =>
+                    setContentResults(data.results ?? []),
+                )
+                .catch(() => setContentResults([]))
+                .finally(() => setContentLoading(false));
+        }, 250);
+
+        return () => window.clearTimeout(timer);
+    }, [query]);
+
+    const items = useMemo<PaletteItem[]>(() => {
+        const content = contentResults.map(
+            (result): PaletteItem => ({ kind: 'content', result }),
+        );
+        const nav = filtered.map(
+            (command): PaletteItem => ({ kind: 'command', command }),
+        );
+
+        return [...content, ...nav];
+    }, [contentResults, filtered]);
+
+    const run = (item: PaletteItem | undefined) => {
+        if (!item) {
             return;
         }
 
         onClose();
-        router.visit(toUrl(command.href));
+
+        if (item.kind === 'content') {
+            router.visit(item.result.url);
+
+            return;
+        }
+
+        router.visit(toUrl(item.command.href));
     };
 
     const onKeyDown = (event: React.KeyboardEvent) => {
         if (event.key === 'ArrowDown') {
             event.preventDefault();
             setActive((value) =>
-                filtered.length ? (value + 1) % filtered.length : 0,
+                items.length ? (value + 1) % items.length : 0,
             );
         } else if (event.key === 'ArrowUp') {
             event.preventDefault();
             setActive((value) =>
-                filtered.length
-                    ? (value - 1 + filtered.length) % filtered.length
+                items.length
+                    ? (value - 1 + items.length) % items.length
                     : 0,
             );
         } else if (event.key === 'Enter') {
             event.preventDefault();
-            run(filtered[active]);
+            run(items[active]);
         }
     };
 
-    const current = Math.min(active, Math.max(filtered.length - 1, 0));
+    const current = Math.min(active, Math.max(items.length - 1, 0));
 
     return (
         <>
@@ -211,25 +266,64 @@ function CommandPaletteBody({ onClose }: { onClose: () => void }) {
                         setActive(0);
                     }}
                     onKeyDown={onKeyDown}
-                    placeholder="Поиск по разделам и действиям…"
+                    placeholder="Поиск по материалам и разделам…"
                     className="h-12 w-full bg-transparent pr-8 text-sm outline-none placeholder:text-muted-foreground"
                 />
+                {contentLoading ? (
+                    <span className="text-xs text-muted-foreground">…</span>
+                ) : null}
             </div>
 
             <ul className="max-h-80 overflow-y-auto p-2">
-                {filtered.length === 0 ? (
+                {items.length === 0 ? (
                     <li className="px-3 py-6 text-center text-sm text-muted-foreground">
-                        Ничего не найдено
+                        {query.trim().length >= 2
+                            ? 'Ничего не найдено'
+                            : 'Введите минимум 2 символа для поиска материалов'}
                     </li>
                 ) : (
-                    filtered.map((command, index) => {
+                    items.map((item, index) => {
+                        if (item.kind === 'content') {
+                            return (
+                                <li key={item.result.id}>
+                                    <button
+                                        type="button"
+                                        onClick={() => run(item)}
+                                        onMouseEnter={() => setActive(index)}
+                                        className={cn(
+                                            'flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition-colors',
+                                            index === current
+                                                ? 'bg-primary/10 text-primary'
+                                                : 'text-foreground hover:bg-muted',
+                                        )}
+                                    >
+                                        <FileText
+                                            className={cn(
+                                                'size-4 shrink-0',
+                                                index === current
+                                                    ? 'text-primary'
+                                                    : 'text-muted-foreground',
+                                            )}
+                                        />
+                                        <span className="flex-1">
+                                            {item.result.title}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {item.result.type_label}
+                                        </span>
+                                    </button>
+                                </li>
+                            );
+                        }
+
+                        const command = item.command;
                         const Icon = command.icon;
 
                         return (
                             <li key={command.id}>
                                 <button
                                     type="button"
-                                    onClick={() => run(command)}
+                                    onClick={() => run(item)}
                                     onMouseEnter={() => setActive(index)}
                                     className={cn(
                                         'flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition-colors',

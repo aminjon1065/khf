@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ClearsResponseCache;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,6 +19,8 @@ use Spatie\Activitylog\Support\LogOptions;
  */
 class Category extends Model
 {
+    use ClearsResponseCache;
+
     /** @use HasFactory<CategoryFactory> */
     use HasFactory;
 

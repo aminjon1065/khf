@@ -126,6 +126,7 @@ export default function ServiceForm({
                 backHref={index().url}
                 onSubmit={submit}
                 processing={form.processing}
+                modelInfo={{ type: 'service', id: service?.id ?? null }}
                 sidebar={
                     <CpPanel title="Параметры">
                         <div className="space-y-2">

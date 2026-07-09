@@ -96,6 +96,8 @@ return [
     'role' => [
         'super-admin' => 'Суперадминистратор',
         'moderator' => 'Модератор',
+        'publisher' => 'Издатель',
+        'editor' => 'Редактор',
     ],
     'subscription_status' => [
         'pending' => 'Ожидает подтверждения',

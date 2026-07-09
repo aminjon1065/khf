@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ClearsResponseCache;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\TagFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,11 +19,21 @@ use Spatie\Activitylog\Support\LogOptions;
  */
 class Tag extends Model
 {
+    use ClearsResponseCache;
+
     /** @use HasFactory<TagFactory> */
     use HasFactory;
 
     use HasTranslations;
     use LogsActivity;
+
+    /**
+     * @return BelongsToMany<Page, $this>
+     */
+    public function pages(): BelongsToMany
+    {
+        return $this->belongsToMany(Page::class);
+    }
 
     /**
      * @return BelongsToMany<Post, $this>

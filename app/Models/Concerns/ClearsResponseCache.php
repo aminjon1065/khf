@@ -2,6 +2,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Services\Cms\PublishedContentCache;
 use Spatie\ResponseCache\Facades\ResponseCache;
 
 trait ClearsResponseCache
@@ -15,10 +16,12 @@ trait ClearsResponseCache
     {
         static::saved(function ($model) {
             ResponseCache::clear();
+            app(PublishedContentCache::class)->bumpForModel($model);
         });
 
         static::deleted(function ($model) {
             ResponseCache::clear();
+            app(PublishedContentCache::class)->bumpForModel($model);
         });
     }
 }

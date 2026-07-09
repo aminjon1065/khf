@@ -41,3 +41,14 @@ it('shows the CMS dashboard to a privileged user with confirmed 2FA', function (
             ->where('auth.roles', ['super-admin'])
         );
 });
+
+it('allows privileged users without 2FA when enforcement is disabled', function () {
+    config(['fortify.require_two_factor' => false]);
+
+    $user = User::factory()->create();
+    $user->assignRole(Role::Moderator->value);
+
+    $this->actingAs($user)
+        ->get('/admin')
+        ->assertOk();
+});

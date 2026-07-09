@@ -97,6 +97,7 @@ export default function FaqForm({
                 backHref={index().url}
                 onSubmit={submit}
                 processing={form.processing}
+                modelInfo={{ type: 'faq', id: faq?.id ?? null }}
                 sidebar={
                     <CpPanel title="Публикация">
                         <div className="space-y-2">

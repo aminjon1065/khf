@@ -151,6 +151,7 @@ export default function AlertForm({
                 backHref={index().url}
                 onSubmit={submit}
                 processing={form.processing}
+                modelInfo={{ type: 'alert', id: alert?.id ?? null }}
                 sidebar={
                     <CpPanel title="Параметры">
                         <CpSelectField

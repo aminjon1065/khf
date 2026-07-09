@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\AlertStatus;
 use App\Enums\HazardLevel;
+use App\Models\Concerns\HasRevisions;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\AlertFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -31,6 +32,7 @@ class Alert extends Model
     /** @use HasFactory<AlertFactory> */
     use HasFactory;
 
+    use HasRevisions;
     use HasTranslations;
     use LogsActivity;
     use SoftDeletes;

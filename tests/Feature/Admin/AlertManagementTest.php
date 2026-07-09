@@ -7,6 +7,7 @@ use App\Enums\SubscriptionStatus;
 use App\Enums\SubscriptionTopic;
 use App\Models\Alert;
 use App\Models\Region;
+use App\Models\Revision;
 use App\Models\Subscriber;
 use App\Models\User;
 use Database\Seeders\LanguageSeeder;
@@ -54,6 +55,25 @@ it('creates an alert with translations', function () {
     expect($alert->hazard_level)->toBe(HazardLevel::Danger)
         ->and($alert->status)->toBe(AlertStatus::Published)
         ->and($alert->translations)->toHaveCount(2);
+
+    expect(Revision::query()->where('revisionable_type', Alert::class)->count())->toBe(1);
+});
+
+it('creates a revision when an alert is updated', function () {
+    $alert = Alert::factory()->create();
+    $alert->upsertTranslations(['ru' => ['title' => 'Старое', 'body' => 'Текст']]);
+
+    $this->actingAs($this->operator)
+        ->put(route('admin.alerts.update', $alert), alertPayload([
+            'translations' => [
+                'tj' => ['title' => 'Нав', 'body' => 'Матн'],
+                'ru' => ['title' => 'Новое', 'body' => 'Текст'],
+                'en' => ['title' => '', 'body' => ''],
+            ],
+        ]))
+        ->assertRedirect(route('admin.alerts.index'));
+
+    expect(Revision::query()->where('revisionable_type', Alert::class)->count())->toBe(1);
 });
 
 it('validates hazard level, status and default title', function () {

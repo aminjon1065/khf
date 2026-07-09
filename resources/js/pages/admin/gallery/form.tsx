@@ -105,6 +105,7 @@ export default function GalleryForm({
                 backHref={index().url}
                 onSubmit={submit}
                 processing={form.processing}
+                modelInfo={{ type: 'gallery', id: gallery?.id ?? null }}
                 sidebar={
                     <CpPanel title="Публикация">
                         <div className="space-y-2">

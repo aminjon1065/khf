@@ -1,36 +1,58 @@
 import { Link } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AppEmblem } from '@/components/app-emblem';
 import { useTranslations } from '@/hooks/use-translations';
-import { show as newsShow } from '@/routes/news';
+import { index as newsIndex, show as newsShow } from '@/routes/news';
 
-type NewsCard = {
+export type NewsCarouselPost = {
     title: string | null;
     slug: string | null;
     excerpt: string | null;
     category: string | null;
     cover_url: string | null;
     published_at: string | null;
+    /** When set, "Read more" links here instead of a news article. */
+    href?: string | null;
 };
 
 const AUTOPLAY_MS = 6000;
 
+const SLIDE_HEIGHT =
+    'min-h-[300px] h-[300px] sm:min-h-[400px] sm:h-[400px] lg:min-h-[460px] lg:h-[460px]';
+
 /**
- * Accessible featured-news carousel (ТЗ §6.1). Auto-advance is WCAG 2.2.2 compliant: it pauses on
- * hover/focus and when the tab is hidden, exposes an explicit pause/play control, is silenced for
- * assistive tech while rotating (`aria-live="off"`), and never auto-rotates under
- * `prefers-reduced-motion`. Slides off-screen are made `inert` so they stay out of the tab order.
+ * Featured-news carousel for the homepage hero (ТЗ §6.1). Solid brand panel with optional cover
+ * wash, emblem in the meta row, and WCAG-compliant auto-advance (pause on hover/focus/hidden tab).
  */
 export function NewsCarousel({
     posts,
     locale,
 }: {
-    posts: NewsCard[];
+    posts: NewsCarouselPost[];
     locale: string;
 }) {
     const { t } = useTranslations();
-    const total = posts.length;
+
+    const slides = useMemo((): NewsCarouselPost[] => {
+        if (posts.length > 0) {
+            return posts;
+        }
+
+        return [
+            {
+                title: t('home.slider.news_fallback_title'),
+                slug: null,
+                excerpt: t('home.slider.news_fallback_text'),
+                category: t('home.slider.news_badge'),
+                cover_url: null,
+                published_at: null,
+                href: newsIndex({ locale }).url,
+            },
+        ];
+    }, [posts, locale, t]);
+
+    const total = slides.length;
 
     const [current, setCurrent] = useState(0);
     const [isPlaying, setIsPlaying] = useState(true);
@@ -78,10 +100,6 @@ export function NewsCarousel({
         return () => clearInterval(id);
     }, [isPlaying, autopaused, reducedMotion, total, current]);
 
-    if (total === 0) {
-        return null;
-    }
-
     const goTo = (index: number) =>
         setCurrent(((index % total) + total) % total);
 
@@ -98,6 +116,18 @@ export function NewsCarousel({
     const liveValue: 'off' | 'polite' =
         isPlaying && !autopaused && !reducedMotion ? 'off' : 'polite';
 
+    const articleHref = (post: NewsCarouselPost): string | null => {
+        if (post.href) {
+            return post.href;
+        }
+
+        if (post.slug) {
+            return newsShow({ locale, slug: post.slug }).url;
+        }
+
+        return null;
+    };
+
     return (
         <section
             aria-roledescription="carousel"
@@ -107,12 +137,9 @@ export function NewsCarousel({
             onFocusCapture={() => setFocused(true)}
             onBlurCapture={() => setFocused(false)}
             onKeyDown={onKeyDown}
-            className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
+            className={`relative overflow-hidden rounded-2xl border border-border bg-brand shadow-sm ${SLIDE_HEIGHT}`}
         >
-            <div
-                aria-live={liveValue}
-                className="relative h-[300px] sm:h-[400px] lg:h-[460px]"
-            >
+            <div aria-live={liveValue} className="relative h-full">
                 <div
                     className={`flex h-full w-full ${
                         reducedMotion
@@ -121,92 +148,89 @@ export function NewsCarousel({
                     }`}
                     style={{ transform: `translateX(-${current * 100}%)` }}
                 >
-                    {posts.map((post, index) => (
-                        <article
-                            key={post.slug ?? index}
-                            role="group"
-                            aria-roledescription={t('home.slider.slide')}
-                            aria-label={`${index + 1} / ${total}`}
-                            aria-hidden={index !== current}
-                            inert={index !== current}
-                            className="relative h-full w-full shrink-0"
-                        >
-                            {post.cover_url ? (
-                                <img
-                                    src={post.cover_url}
-                                    alt=""
-                                    loading={index === 0 ? 'eager' : 'lazy'}
-                                    className="absolute inset-0 h-full w-full object-cover"
+                    {slides.map((post, index) => {
+                        const href = articleHref(post);
+
+                        return (
+                            <article
+                                key={post.slug ?? post.href ?? index}
+                                role="group"
+                                aria-roledescription={t('home.slider.slide')}
+                                aria-label={`${index + 1} / ${total}`}
+                                aria-hidden={index !== current}
+                                inert={index !== current}
+                                className="relative h-full w-full shrink-0 bg-brand"
+                            >
+                                {post.cover_url && (
+                                    <img
+                                        src={post.cover_url}
+                                        alt=""
+                                        loading={index === 0 ? 'eager' : 'lazy'}
+                                        className="absolute inset-0 h-full w-full object-cover opacity-20"
+                                    />
+                                )}
+
+                                <div
+                                    className="absolute inset-0 bg-gradient-to-br from-brand via-brand/95 to-brand-strong/90"
+                                    aria-hidden="true"
                                 />
-                            ) : (
-                                <div className="absolute inset-0 flex items-center justify-center bg-brand">
-                                    <AppEmblem className="size-24 text-white/10" />
-                                </div>
-                            )}
 
-                            <div
-                                className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent"
-                                aria-hidden="true"
-                            />
-
-                            <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 lg:p-10">
-                                <div className="flex flex-wrap items-center gap-3 text-xs font-medium tracking-wider text-white/90 uppercase">
-                                    {post.category && (
-                                        <span className="rounded-full bg-white/15 px-2.5 py-1 ring-1 ring-white/25 backdrop-blur-sm">
-                                            {post.category}
-                                        </span>
-                                    )}
-                                    {post.published_at && (
-                                        <span>{post.published_at}</span>
-                                    )}
-                                </div>
-
-                                <h3 className="mt-3 max-w-3xl text-xl leading-tight font-bold text-white sm:text-2xl lg:text-3xl">
-                                    {post.slug ? (
-                                        <Link
-                                            href={
-                                                newsShow({
-                                                    locale,
-                                                    slug: post.slug,
-                                                }).url
-                                            }
-                                            className="line-clamp-2 transition-colors hover:text-white/80 focus-visible:underline focus-visible:outline-none"
-                                        >
-                                            {post.title}
-                                        </Link>
-                                    ) : (
-                                        <span className="line-clamp-2">
-                                            {post.title}
-                                        </span>
-                                    )}
-                                </h3>
-
-                                {post.excerpt && (
-                                    <p className="mt-2 line-clamp-2 hidden max-w-2xl text-sm leading-relaxed text-white/80 sm:block">
-                                        {post.excerpt}
-                                    </p>
-                                )}
-
-                                {post.slug && (
-                                    <Link
-                                        href={
-                                            newsShow({
-                                                locale,
-                                                slug: post.slug,
-                                            }).url
-                                        }
-                                        className="mt-4 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand shadow-sm transition-colors hover:bg-white/90 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 focus-visible:outline-none"
-                                    >
-                                        {t('home.slider.news_read_more')}
-                                        <ChevronRight
-                                            className="size-4"
-                                            aria-hidden="true"
+                                <div className="relative flex h-full flex-col justify-center px-6 py-8 sm:px-10 sm:py-10 lg:px-12">
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-medium tracking-wider text-white/90 uppercase">
+                                        {post.category && (
+                                            <span className="rounded-full bg-black/30 px-2.5 py-1 ring-1 ring-white/15">
+                                                {post.category}
+                                            </span>
+                                        )}
+                                        {post.published_at && (
+                                            <span className="normal-case tracking-normal text-white/85">
+                                                {post.published_at}
+                                            </span>
+                                        )}
+                                        <AppEmblem
+                                            locale={locale}
+                                            className="ml-auto size-9 sm:size-10"
+                                            alt=""
                                         />
-                                    </Link>
-                                )}
-                            </div>
-                        </article>
-                    ))}
+                                    </div>
+
+                                    <h3 className="mt-5 max-w-2xl text-xl leading-tight font-bold text-white sm:text-2xl lg:text-3xl">
+                                        {href ? (
+                                            <Link
+                                                href={href}
+                                                className="line-clamp-3 transition-colors hover:text-white/85 focus-visible:underline focus-visible:outline-none"
+                                            >
+                                                {post.title}
+                                            </Link>
+                                        ) : (
+                                            <span className="line-clamp-3">
+                                                {post.title}
+                                            </span>
+                                        )}
+                                    </h3>
+
+                                    {post.excerpt && (
+                                        <p className="mt-3 line-clamp-3 max-w-xl text-sm leading-relaxed text-white/80 sm:text-base">
+                                            {post.excerpt}
+                                        </p>
+                                    )}
+
+                                    {href && (
+                                        <Link
+                                            href={href}
+                                            className="mt-6 inline-flex w-fit items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-brand shadow-sm transition-colors hover:bg-white/90 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand focus-visible:outline-none"
+                                        >
+                                            {t('home.slider.news_read_more')}
+                                            <ChevronRight
+                                                className="size-4"
+                                                aria-hidden="true"
+                                            />
+                                        </Link>
+                                    )}
+                                </div>
+                            </article>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -231,9 +255,9 @@ export function NewsCarousel({
 
                     <div className="absolute top-4 right-4 z-10 flex items-center gap-3 rounded-full border border-white/15 bg-black/30 px-3 py-1.5 backdrop-blur-sm">
                         <div className="flex items-center gap-2">
-                            {posts.map((_, index) => (
+                            {slides.map((slide, index) => (
                                 <button
-                                    key={index}
+                                    key={slide.slug ?? slide.href ?? index}
                                     type="button"
                                     onClick={() => goTo(index)}
                                     aria-label={t('home.slider.go_to', {

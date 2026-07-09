@@ -2,6 +2,11 @@
 
 use Laravel\Fortify\Features;
 
+$requireTwoFactor = filter_var(
+    env('REQUIRE_TWO_FACTOR', env('APP_ENV') !== 'local'),
+    FILTER_VALIDATE_BOOL,
+);
+
 return [
 
     /*
@@ -148,6 +153,19 @@ return [
         'user_handle_secret' => env('PASSKEYS_USER_HANDLE_SECRET', config('app.key')),
         'timeout' => 60000,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Two-Factor Authentication Requirement
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, privileged CMS roles must confirm two-factor authentication
+    | before accessing /admin. Disabled automatically when APP_ENV=local; set
+    | REQUIRE_TWO_FACTOR=true in .env to test 2FA locally.
+    |
+    */
+
+    'require_two_factor' => $requireTwoFactor,
 
     /*
     |--------------------------------------------------------------------------

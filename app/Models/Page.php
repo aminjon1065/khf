@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ContentStatus;
 use App\Models\Concerns\ClearsResponseCache;
+use App\Models\Concerns\HasPublishedVersion;
 use App\Models\Concerns\HasRevisions;
 use App\Models\Concerns\HasSeoMeta;
 use App\Models\Concerns\HasTranslations;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -37,6 +39,7 @@ class Page extends Model implements HasMedia
     /** @use HasFactory<PageFactory> */
     use HasFactory;
 
+    use HasPublishedVersion;
     use HasRevisions;
     use HasSeoMeta;
     use HasTranslations;
@@ -52,6 +55,8 @@ class Page extends Model implements HasMedia
         'status',
         'sort_order',
         'is_home',
+        'published_snapshot',
+        'published_snapshot_at',
     ];
 
     /**
@@ -63,7 +68,17 @@ class Page extends Model implements HasMedia
             'status' => ContentStatus::class,
             'sort_order' => 'integer',
             'is_home' => 'boolean',
+            'published_snapshot' => 'array',
+            'published_snapshot_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return BelongsToMany<Tag, $this>
+     */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class);
     }
 
     /**

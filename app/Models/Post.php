@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ContentStatus;
 use App\Enums\PostType;
 use App\Models\Concerns\ClearsResponseCache;
+use App\Models\Concerns\HasPublishedVersion;
 use App\Models\Concerns\HasRevisions;
 use App\Models\Concerns\HasSeoMeta;
 use App\Models\Concerns\HasTranslations;
@@ -42,6 +43,7 @@ class Post extends Model implements HasMedia
     /** @use HasFactory<PostFactory> */
     use HasFactory;
 
+    use HasPublishedVersion;
     use HasRevisions;
     use HasSeoMeta;
     use HasTranslations;
@@ -64,6 +66,8 @@ class Post extends Model implements HasMedia
         'status',
         'published_at',
         'unpublished_at',
+        'published_snapshot',
+        'published_snapshot_at',
     ];
 
     /**
@@ -76,6 +80,8 @@ class Post extends Model implements HasMedia
             'status' => ContentStatus::class,
             'published_at' => 'datetime',
             'unpublished_at' => 'datetime',
+            'published_snapshot' => 'array',
+            'published_snapshot_at' => 'datetime',
         ];
     }
 

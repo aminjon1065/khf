@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Concerns;
 
 use App\Models\MediaFile;
+use App\Services\Media\MediaUsageService;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\HasMedia;
 
@@ -14,11 +15,30 @@ trait SyncsCoverFromLibrary
      */
     protected function syncCover(Request $request, HasMedia $model, string $collection): void
     {
+        $usage = app(MediaUsageService::class);
+
         if ($request->hasFile('cover')) {
+            $usage->syncLibraryReference($model, null, $collection, '');
             $model->addMediaFromRequest('cover')->toMediaCollection($collection);
-        } elseif ($request->filled('cover_media_id')) {
-            $this->copyCoverFromLibrary($model, $collection, $request->integer('cover_media_id'));
-        } elseif ($request->boolean('remove_cover')) {
+
+            return;
+        }
+
+        if ($request->filled('cover_media_id')) {
+            $mediaFileId = $request->integer('cover_media_id');
+            $this->copyCoverFromLibrary($model, $collection, $mediaFileId);
+            $usage->syncLibraryReference(
+                $model,
+                $mediaFileId,
+                $collection,
+                $usage->labelForCover($model),
+            );
+
+            return;
+        }
+
+        if ($request->boolean('remove_cover')) {
+            $usage->syncLibraryReference($model, null, $collection, '');
             $model->clearMediaCollection($collection);
         }
     }

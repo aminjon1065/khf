@@ -14,6 +14,9 @@ enum Permission: string
     case ViewPosts = 'posts.view';
     case ManagePosts = 'posts.manage';
     case PublishPosts = 'posts.publish';
+    case PublishPages = 'pages.publish';
+    case PublishContent = 'content.publish';
+    case ViewModeration = 'moderation.view';
     case ManageCategories = 'categories.manage';
     case ManageTags = 'tags.manage';
     case ViewDocuments = 'documents.view';

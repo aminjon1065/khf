@@ -67,12 +67,23 @@ class SecurityHeaders
      */
     private function withDevSources(array $directives): array
     {
-        $http = ['http://localhost:*', 'http://127.0.0.1:*'];
-        $ws = ['ws://localhost:*', 'ws://127.0.0.1:*'];
+        $http = [
+            'http://localhost:*',
+            'http://127.0.0.1:*',
+            'http://*.test:*',
+            'https://*.test:*',
+        ];
+        $ws = [
+            'ws://localhost:*',
+            'ws://127.0.0.1:*',
+            'ws://*.test:*',
+            'wss://*.test:*',
+        ];
 
         $directives['script-src'] = [...$directives['script-src'], "'unsafe-eval'", ...$http];
         $directives['connect-src'] = [...$directives['connect-src'], ...$http, ...$ws];
         $directives['style-src'] = [...$directives['style-src'], ...$http];
+        $directives['font-src'] = [...$directives['font-src'], ...$http];
 
         return $directives;
     }

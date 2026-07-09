@@ -3,6 +3,7 @@
 namespace App\Services\Public;
 
 use App\Models\MenuItem;
+use App\Support\MenuUrlResolver;
 use Illuminate\Support\Collection;
 
 /**
@@ -10,6 +11,10 @@ use Illuminate\Support\Collection;
  */
 class MenuFormatter
 {
+    public function __construct(
+        private MenuUrlResolver $urlResolver,
+    ) {}
+
     /**
      * @param  Collection<int, MenuItem>  $items
      * @param  Collection<int, MenuItem>  $allItems
@@ -42,10 +47,12 @@ class MenuFormatter
             $locale,
         );
 
+        $resolvedUrl = $this->urlResolver->resolve($item->url, $item->route, $locale);
+
         return [
             'id' => $item->id,
             'title' => $title,
-            'url' => $item->url,
+            'url' => $resolvedUrl,
             'route' => $item->route,
             'target' => $item->target,
             'children' => $children,

@@ -3,11 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Alert;
 use App\Models\Document;
+use App\Models\Faq;
+use App\Models\Gallery;
+use App\Models\GovService;
 use App\Models\Guide;
+use App\Models\Incident;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Revision;
+use App\Services\Admin\RevisionDiffBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -16,22 +22,14 @@ use Inertia\Inertia;
 
 class RevisionController extends Controller
 {
+    public function __construct(private RevisionDiffBuilder $diffBuilder) {}
+
     /**
      * Get revisions for a specific model.
      */
     public function index(Request $request, string $type, int $id): JsonResponse
     {
-        // Map common type names to fully qualified model classes
-        $modelClass = match ($type) {
-            'post' => Post::class,
-            'page' => Page::class,
-            'guide' => Guide::class,
-            'document' => Document::class,
-            default => abort(404, 'Invalid revisionable type.'),
-        };
-
-        /** @var Model $model */
-        $model = $modelClass::findOrFail($id);
+        $model = $this->resolveModel($type, $id);
 
         if (! method_exists($model, 'revisions')) {
             abort(404, 'Model does not support revisions.');
@@ -53,6 +51,51 @@ class RevisionController extends Controller
     }
 
     /**
+     * Show a revision with a diff against the next newer version or the live model.
+     */
+    public function show(Revision $revision): JsonResponse
+    {
+        /** @var Model $model */
+        $model = $revision->revisionable;
+
+        if (! method_exists($model, 'revisions')) {
+            abort(404, 'Model does not support revisions.');
+        }
+
+        $newerRevision = $model->revisions()
+            ->where('id', '>', $revision->id)
+            ->orderBy('id')
+            ->first();
+
+        if ($newerRevision instanceof Revision) {
+            $compareLabel = 'Следующая версия';
+            $newerPayload = $newerRevision->payload;
+        } else {
+            $compareLabel = 'Текущая версия';
+            $model->loadMissing('translations');
+            $newerPayload = [
+                'attributes' => $model->getAttributes(),
+                'translations' => $model->translations->map(
+                    fn (Model $translation) => $translation->getAttributes(),
+                )->all(),
+            ];
+        }
+
+        return response()->json([
+            'revision' => [
+                'id' => $revision->id,
+                'created_at' => $revision->created_at?->toIso8601String(),
+                'user' => $revision->user ? [
+                    'id' => $revision->user->id,
+                    'name' => $revision->user->name,
+                ] : null,
+            ],
+            'compare_label' => $compareLabel,
+            'changes' => $this->diffBuilder->diff($revision->payload, $newerPayload),
+        ]);
+    }
+
+    /**
      * Restore a specific revision.
      */
     public function restore(Revision $revision): RedirectResponse
@@ -69,5 +112,23 @@ class RevisionController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Restored to version from :date', ['date' => $revision->created_at?->format('d.m.Y H:i')])]);
 
         return back();
+    }
+
+    private function resolveModel(string $type, int $id): Model
+    {
+        $modelClass = match ($type) {
+            'post' => Post::class,
+            'page' => Page::class,
+            'guide' => Guide::class,
+            'document' => Document::class,
+            'gallery' => Gallery::class,
+            'faq' => Faq::class,
+            'service' => GovService::class,
+            'incident' => Incident::class,
+            'alert' => Alert::class,
+            default => abort(404, 'Invalid revisionable type.'),
+        };
+
+        return $modelClass::findOrFail($id);
     }
 }

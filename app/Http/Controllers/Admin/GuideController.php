@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\ContentStatus;
 use App\Enums\GuideAudience;
 use App\Enums\IncidentType;
+use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
+use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGuideRequest;
 use App\Http\Requests\Admin\UpdateGuideRequest;
@@ -12,7 +15,6 @@ use App\Models\Guide;
 use App\Models\GuideTranslation;
 use App\Models\Language;
 use App\Support\HtmlSanitizer;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -21,6 +23,10 @@ use Inertia\Response;
 
 class GuideController extends Controller
 {
+    use ListsTranslatableContent;
+    use ManagesSoftDeletableContent;
+    use SavesContentRevisions;
+
     /** @var list<string> */
     private const SORTABLE = ['hazard_type', 'audience', 'status', 'sort_order', 'created_at'];
 
@@ -28,40 +34,30 @@ class GuideController extends Controller
 
     public function index(Request $request): Response
     {
-        $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-        $sort = in_array((string) $request->string('sort'), self::SORTABLE, true)
-            ? (string) $request->string('sort')
-            : 'sort_order';
-        $direction = (string) $request->string('direction') === 'desc' ? 'desc' : 'asc';
+        $filters = $this->listFilters($request, 'sort_order', 'asc');
 
-        $guides = Guide::query()
-            ->with(['translations', 'media'])
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('title', 'like', "%{$search}%"),
-            ))
-            ->orderBy($sort, $direction)
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Guide $guide) => $this->toRow($guide, $locale));
+        $guides = $this->paginateTranslatable(
+            Guide::query()->with(['translations', 'media']),
+            $request,
+            self::SORTABLE,
+            'sort_order',
+            'asc',
+            fn (Guide $guide, string $locale) => $this->toRow($guide, $locale),
+        );
 
         return Inertia::render('admin/guides/index', [
             'guides' => $guides,
-            'filters' => ['search' => $search, 'sort' => $sort, 'direction' => $direction],
+            'filters' => $filters,
             'trashedCount' => Guide::onlyTrashed()->count(),
         ]);
     }
 
     public function trash(): Response
     {
-        $locale = app()->getLocale();
-
-        $guides = Guide::onlyTrashed()
-            ->with('translations')
-            ->orderByDesc('deleted_at')
-            ->paginate(15)
-            ->through(fn (Guide $guide) => $this->toRow($guide, $locale));
+        $guides = $this->paginateTrashed(
+            Guide::onlyTrashed()->with('translations'),
+            fn (Guide $guide, string $locale) => $this->toRow($guide, $locale),
+        );
 
         return Inertia::render('admin/guides/trash', ['guides' => $guides]);
     }
@@ -78,9 +74,8 @@ class GuideController extends Controller
         $guide = Guide::create($this->attributes($data));
         $guide->upsertTranslations($this->translationsPayload($data, $guide->id));
         $this->syncFiles($request, $guide);
-        $guide->saveRevision();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Guide created.')]);
+        $this->saveContentRevision($guide);
+        $this->flashContentSaved(__('Guide created.'));
 
         return to_route('admin.guides.index');
     }
@@ -99,38 +94,25 @@ class GuideController extends Controller
         $guide->update($this->attributes($data));
         $guide->upsertTranslations($this->translationsPayload($data, $guide->id));
         $this->syncFiles($request, $guide);
-        $guide->saveRevision();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Guide updated.')]);
+        $this->saveContentRevision($guide);
+        $this->flashContentSaved(__('Guide updated.'));
 
         return to_route('admin.guides.index');
     }
 
     public function destroy(Guide $guide): RedirectResponse
     {
-        $guide->delete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Guide moved to trash.')]);
-
-        return to_route('admin.guides.index');
+        return $this->moveToTrash($guide, 'admin.guides.index', __('Guide moved to trash.'));
     }
 
     public function restore(Guide $guide): RedirectResponse
     {
-        $guide->restore();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Guide restored.')]);
-
-        return to_route('admin.guides.trash');
+        return $this->restoreFromTrash($guide, 'admin.guides.trash', __('Guide restored.'));
     }
 
     public function forceDelete(Guide $guide): RedirectResponse
     {
-        $guide->forceDelete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Guide permanently deleted.')]);
-
-        return to_route('admin.guides.trash');
+        return $this->permanentlyDelete($guide, 'admin.guides.trash', __('Guide permanently deleted.'));
     }
 
     private function syncFiles(Request $request, Guide $guide): void

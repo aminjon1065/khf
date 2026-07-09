@@ -96,6 +96,8 @@ return [
     'role' => [
         'super-admin' => 'Super administrator',
         'moderator' => 'Moderator',
+        'publisher' => 'Publisher',
+        'editor' => 'Editor',
     ],
     'subscription_status' => [
         'pending' => 'Pending confirmation',

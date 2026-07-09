@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Concerns;
 
 use App\Enums\ContentStatus;
-use App\Enums\Permission;
+use App\Services\Cms\EditorialWorkflow;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
@@ -18,25 +18,24 @@ trait ValidatesContentStatusTransition
             'status' => ['required', 'in:'.implode(',', ContentStatus::values())],
         ];
 
-        if ($currentStatus !== null) {
-            $rules['status'][] = function (string $attribute, mixed $value, Closure $fail) use ($currentStatus): void {
-                $target = ContentStatus::from((string) $value);
+        $rules['status'][] = function (string $attribute, mixed $value, Closure $fail) use ($currentStatus): void {
+            $target = ContentStatus::from((string) $value);
+            $from = $currentStatus ?? ContentStatus::Draft;
 
-                if ($target === $currentStatus) {
-                    return;
-                }
+            if ($target === $from) {
+                return;
+            }
 
-                if (! $currentStatus->canTransitionTo($target)) {
-                    $fail(__('Invalid status transition.'));
-                }
-            };
-        }
+            if (! app(EditorialWorkflow::class)->canTransition($this->user(), $from, $target)) {
+                $fail(__('Invalid status transition.'));
+            }
+        };
 
         return $rules;
     }
 
     protected function userCanPublish(): bool
     {
-        return $this->user()?->can(Permission::PublishPosts->value) ?? false;
+        return app(EditorialWorkflow::class)->canPublish($this->user());
     }
 }

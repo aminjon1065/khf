@@ -3,8 +3,6 @@ import { ArrowUpRight, Bell, Inbox, Map, ShieldAlert } from 'lucide-react';
 import { AppEmblem } from '@/components/app-emblem';
 import type { ActiveAlert } from '@/components/Public/EmergencyHero';
 import { EmergencyHero } from '@/components/Public/EmergencyHero';
-import { GovHero } from '@/components/Public/gov-hero';
-import type { OperationalSummary } from '@/components/Public/gov-hero';
 import { NewsCarousel } from '@/components/Public/news-carousel';
 import { OperationalStrip } from '@/components/Public/operational-strip';
 import { PresidentCard } from '@/components/Public/president-card';
@@ -29,7 +27,11 @@ type NewsCard = {
 
 type PageProps = {
     latestPosts: NewsCard[];
-    operational?: OperationalSummary;
+    operational?: {
+        active: number;
+        controlled: number;
+        resolved: number;
+    };
     mapIncidents?: any[];
     blocks?: any[];
 };
@@ -46,11 +48,9 @@ export default function Home({ latestPosts, operational, mapIncidents = [], bloc
     );
     const isRedState = criticalAlerts.length > 0;
 
-    // Featured posts lead the page as the carousel hero; the remainder fill the grid below (ТЗ §6.1).
+    // Featured posts lead the carousel; the remainder fill the grid below (ТЗ §6.1).
     const featuredPosts = latestPosts.slice(0, 3);
-    const gridPosts = latestPosts.slice(3);
-    // A critical emergency replaces the carousel with the EmergencyHero, so the grid keeps every post.
-    const newsGridPosts = isRedState ? latestPosts : gridPosts;
+    const newsGridPosts = isRedState ? latestPosts : latestPosts.slice(3);
 
     // Task-first service grid (govtech): every tile is an actionable destination, not decoration.
     const tasks = [
@@ -83,7 +83,7 @@ export default function Home({ latestPosts, operational, mapIncidents = [], bloc
 
             {isRedState ? (
                 <EmergencyHero alerts={criticalAlerts} />
-            ) : featuredPosts.length > 0 ? (
+            ) : (
                 <>
                     <div className="grid gap-4 lg:grid-cols-3 lg:items-stretch">
                         <div className="lg:col-span-2">
@@ -96,8 +96,6 @@ export default function Home({ latestPosts, operational, mapIncidents = [], bloc
                     </div>
                     <OperationalStrip operational={operational} />
                 </>
-            ) : (
-                <GovHero operational={operational} />
             )}
 
             {blocks && blocks.length > 0 ? (

@@ -1,7 +1,12 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { Scissors, Trash2, UploadCloud } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { FolderInput, Scissors, Trash2, UploadCloud } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { FocalPointPicker } from '@/components/admin/focal-point-picker';
+import {
+    MediaFolderTree,
+    type MediaFolderNode,
+} from '@/components/admin/media-folder-tree';
 import {
     MediaBrowserDetail,
     MediaBrowserFilters,
@@ -9,18 +14,30 @@ import {
     type MediaLibraryFilters,
     type MediaLibraryItem,
 } from '@/components/admin/media-browser';
+import { CpLocaleTabs } from '@/components/admin/cp/publish-form';
+import { MediaLibraryHelp } from '@/components/admin/cp/content-help-topics';
 import { ImageCropModal } from '@/components/admin/image-crop-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { dashboard } from '@/routes/admin';
 import {
+    bulkDestroy,
+    bulkMove,
     destroy as mediaDestroy,
     index as mediaIndex,
     store as mediaStore,
     update as mediaUpdate,
 } from '@/routes/admin/media';
+
+type LocaleOption = { code: string; native_name: string };
 
 type Props = {
     mediaFiles: {
@@ -32,17 +49,62 @@ type Props = {
             total: number;
         };
     };
+    folders: MediaFolderNode[];
+    locales: LocaleOption[];
+    defaultLocale: string;
     filters: MediaLibraryFilters;
 };
 
-export default function MediaLibraryIndex({ mediaFiles, filters }: Props) {
+function flatFolderOptions(
+    nodes: MediaFolderNode[],
+    depth = 0,
+): Array<{ id: number; label: string }> {
+    return nodes.flatMap((node) => [
+        { id: node.id, label: `${'— '.repeat(depth)}${node.name}` },
+        ...flatFolderOptions(node.children, depth + 1),
+    ]);
+}
+
+function buildTranslations(
+    item: MediaLibraryItem | null,
+    locales: LocaleOption[],
+): Record<string, { alt_text: string }> {
+    const translations: Record<string, { alt_text: string }> = {};
+
+    locales.forEach((locale) => {
+        translations[locale.code] = {
+            alt_text:
+                item?.translations?.[locale.code]?.alt_text ??
+                item?.alt_text ??
+                '',
+        };
+    });
+
+    return translations;
+}
+
+export default function MediaLibraryIndex({
+    mediaFiles,
+    folders: initialFolders,
+    locales,
+    defaultLocale,
+    filters,
+}: Props) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
     const [selected, setSelected] = useState<MediaLibraryItem | null>(null);
+    const [bulkSelected, setBulkSelected] = useState<number[]>([]);
+    const [activeLocale, setActiveLocale] = useState(defaultLocale);
+    const [bulkMoveFolderId, setBulkMoveFolderId] = useState<string>('none');
+    const [folders, setFolders] = useState(initialFolders);
     const [cropImage, setCropImage] = useState<{
         id: number;
         url: string;
     } | null>(null);
+
+    useEffect(() => {
+        setFolders(initialFolders);
+    }, [initialFolders]);
 
     const selectedItem = useMemo(() => {
         if (selected === null) {
@@ -54,8 +116,29 @@ export default function MediaLibraryIndex({ mediaFiles, filters }: Props) {
 
     const detailForm = useForm({
         name: selectedItem?.name ?? '',
-        alt_text: selectedItem?.alt_text ?? '',
+        translations: buildTranslations(selectedItem, locales),
+        tags: selectedItem?.tags ?? [],
+        media_folder_id: selectedItem?.media_folder_id ?? null,
+        focal_x: selectedItem?.focal_x ?? 50,
+        focal_y: selectedItem?.focal_y ?? 50,
     });
+
+    useEffect(() => {
+        if (selectedItem === null) {
+            return;
+        }
+
+        detailForm.setData({
+            name: selectedItem.name,
+            translations: buildTranslations(selectedItem, locales),
+            tags: selectedItem.tags,
+            media_folder_id: selectedItem.media_folder_id,
+            focal_x: selectedItem.focal_x,
+            focal_y: selectedItem.focal_y,
+        });
+    }, [selectedItem?.id, locales]);
+
+    const folderOptions = useMemo(() => flatFolderOptions(folders), [folders]);
 
     const applyFilters = (next: Partial<MediaLibraryFilters>) => {
         router.get(
@@ -63,9 +146,77 @@ export default function MediaLibraryIndex({ mediaFiles, filters }: Props) {
             {
                 search: next.search ?? filters.search,
                 type: next.type ?? filters.type,
+                folder_id: next.folder_id ?? filters.folder_id,
+                tag: next.tag ?? filters.tag,
             },
             { preserveState: true, preserveScroll: true, replace: true },
         );
+    };
+
+    const toggleBulkSelect = (item: MediaLibraryItem) => {
+        setBulkSelected((current) =>
+            current.includes(item.id)
+                ? current.filter((id) => id !== item.id)
+                : [...current, item.id],
+        );
+    };
+
+    const bulkDelete = () => {
+        if (bulkSelected.length === 0) {
+            return;
+        }
+
+        if (
+            !confirm(
+                `Удалить ${bulkSelected.length} файл(ов) навсегда? Это действие необратимо.`,
+            )
+        ) {
+            return;
+        }
+
+        router.post(
+            bulkDestroy().url,
+            { ids: bulkSelected },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Файлы удалены');
+                    setBulkSelected([]);
+                    setSelected(null);
+                },
+            },
+        );
+    };
+
+    const bulkMoveFiles = () => {
+        if (bulkSelected.length === 0) {
+            return;
+        }
+
+        router.post(
+            bulkMove().url,
+            {
+                ids: bulkSelected,
+                folder_id:
+                    bulkMoveFolderId === 'none'
+                        ? null
+                        : Number(bulkMoveFolderId),
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Файлы перемещены');
+                    setBulkSelected([]);
+                },
+            },
+        );
+    };
+
+    const setTranslationAlt = (locale: string, alt_text: string) => {
+        detailForm.setData('translations', {
+            ...detailForm.data.translations,
+            [locale]: { alt_text },
+        });
     };
 
     const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +227,10 @@ export default function MediaLibraryIndex({ mediaFiles, filters }: Props) {
         const file = event.target.files[0];
         const formData = new FormData();
         formData.append('file', file);
+
+        if (filters.folder_id !== 'all' && filters.folder_id !== '0') {
+            formData.append('folder_id', filters.folder_id);
+        }
 
         setUploading(true);
         router.post(mediaStore().url, formData, {
@@ -115,6 +270,10 @@ export default function MediaLibraryIndex({ mediaFiles, filters }: Props) {
             'file',
             new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' }),
         );
+
+        if (filters.folder_id !== 'all' && filters.folder_id !== '0') {
+            formData.append('folder_id', filters.folder_id);
+        }
 
         router.post(mediaStore().url, formData, {
             preserveScroll: true,
@@ -156,7 +315,8 @@ export default function MediaLibraryIndex({ mediaFiles, filters }: Props) {
                         Медиабиблиотека
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Поиск, повторное использование файлов и alt-тексты
+                        Папки, точка фокуса, alt-тексты и повторное использование
+                        файлов
                     </p>
                 </div>
                 <Button
@@ -175,25 +335,102 @@ export default function MediaLibraryIndex({ mediaFiles, filters }: Props) {
             </div>
 
             <div className="mb-4">
+                <MediaLibraryHelp />
+            </div>
+
+            <div className="mb-4 space-y-3">
                 <MediaBrowserFilters
                     search={filters.search}
                     type={filters.type}
                     onSearchChange={(search) => applyFilters({ search })}
                     onTypeChange={(type) => applyFilters({ type })}
                 />
+                <div className="relative max-w-sm">
+                    <FolderInput
+                        className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+                        aria-hidden
+                    />
+                    <Input
+                        aria-label="Фильтр по тегу"
+                        value={filters.tag}
+                        onChange={(event) =>
+                            applyFilters({ tag: event.target.value })
+                        }
+                        placeholder="Фильтр по тегу…"
+                        className="pl-8"
+                    />
+                </div>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="grid gap-6 xl:grid-cols-[240px_minmax(0,1fr)_320px]">
+                <MediaFolderTree
+                    folders={folders}
+                    activeFolderId={filters.folder_id}
+                    onSelect={(folder_id) => applyFilters({ folder_id })}
+                    onFoldersChange={setFolders}
+                />
+
                 <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+                    {bulkSelected.length > 0 && (
+                        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                            <span className="text-sm font-medium">
+                                Выбрано: {bulkSelected.length}
+                            </span>
+                            <Select
+                                value={bulkMoveFolderId}
+                                onValueChange={setBulkMoveFolderId}
+                            >
+                                <SelectTrigger className="h-8 w-44">
+                                    <SelectValue placeholder="Папка" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">
+                                        Без папки
+                                    </SelectItem>
+                                    {folderOptions.map((folder) => (
+                                        <SelectItem
+                                            key={folder.id}
+                                            value={String(folder.id)}
+                                        >
+                                            {folder.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={bulkMoveFiles}
+                            >
+                                Переместить
+                            </Button>
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="destructive"
+                                onClick={bulkDelete}
+                            >
+                                Удалить
+                            </Button>
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setBulkSelected([])}
+                            >
+                                Снять выделение
+                            </Button>
+                        </div>
+                    )}
+
                     <MediaBrowserGrid
                         items={mediaFiles.data}
                         selectedId={selectedItem?.id ?? null}
+                        selectedIds={bulkSelected}
+                        onToggleSelect={toggleBulkSelect}
                         onSelect={(item) => {
                             setSelected(item);
-                            detailForm.setData({
-                                name: item.name,
-                                alt_text: item.alt_text ?? '',
-                            });
                         }}
                         emptyMessage={
                             filters.search || filters.type
@@ -262,6 +499,21 @@ export default function MediaLibraryIndex({ mediaFiles, filters }: Props) {
 
                     {selectedItem && (
                         <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+                            {selectedItem.is_image && selectedItem.original_url && (
+                                <FocalPointPicker
+                                    imageUrl={selectedItem.original_url}
+                                    focalX={detailForm.data.focal_x}
+                                    focalY={detailForm.data.focal_y}
+                                    onChange={(focal_x, focal_y) =>
+                                        detailForm.setData({
+                                            ...detailForm.data,
+                                            focal_x,
+                                            focal_y,
+                                        })
+                                    }
+                                />
+                            )}
+
                             <div className="space-y-2">
                                 <Label htmlFor="media-name">Название</Label>
                                 <Input
@@ -276,19 +528,91 @@ export default function MediaLibraryIndex({ mediaFiles, filters }: Props) {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="media-alt">Alt-текст</Label>
-                                <Textarea
-                                    id="media-alt"
-                                    rows={3}
-                                    value={detailForm.data.alt_text}
-                                    onChange={(event) =>
+                                <Label htmlFor="media-folder">Папка</Label>
+                                <Select
+                                    value={
+                                        detailForm.data.media_folder_id === null
+                                            ? 'none'
+                                            : String(
+                                                  detailForm.data
+                                                      .media_folder_id,
+                                              )
+                                    }
+                                    onValueChange={(value) =>
                                         detailForm.setData(
-                                            'alt_text',
+                                            'media_folder_id',
+                                            value === 'none'
+                                                ? null
+                                                : Number(value),
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger id="media-folder">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">
+                                            Без папки
+                                        </SelectItem>
+                                        {folderOptions.map((folder) => (
+                                            <SelectItem
+                                                key={folder.id}
+                                                value={String(folder.id)}
+                                            >
+                                                {folder.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Alt-текст по языкам</Label>
+                                <CpLocaleTabs
+                                    locales={locales}
+                                    active={activeLocale}
+                                    onChange={setActiveLocale}
+                                    isComplete={(code) =>
+                                        Boolean(
+                                            detailForm.data.translations[code]
+                                                ?.alt_text,
+                                        )
+                                    }
+                                />
+                                <Input
+                                    id="media-alt"
+                                    value={
+                                        detailForm.data.translations[
+                                            activeLocale
+                                        ]?.alt_text ?? ''
+                                    }
+                                    onChange={(event) =>
+                                        setTranslationAlt(
+                                            activeLocale,
                                             event.target.value,
                                         )
                                     }
                                     placeholder="Описание для доступности и SEO"
                                 />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="media-tags">Теги</Label>
+                                <Input
+                                    id="media-tags"
+                                    value={detailForm.data.tags.join(', ')}
+                                    onChange={(event) =>
+                                        detailForm.setData(
+                                            'tags',
+                                            event.target.value
+                                                .split(',')
+                                                .map((tag) => tag.trim())
+                                                .filter(Boolean),
+                                        )
+                                    }
+                                    placeholder="баннер, hero, новости"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Через запятую — для поиска и группировки
+                                </p>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <Button

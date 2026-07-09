@@ -15,6 +15,7 @@ import { AppEmblem } from '@/components/app-emblem';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { BottomNavigation } from '@/components/Public/bottom-navigation';
 import { GlobalSearchModal } from '@/components/Public/GlobalSearchModal';
+import { PreviewBanner } from '@/components/Public/preview-banner';
 import { SocialLinks } from '@/components/Public/social-links';
 import { TajikistanEmblem } from '@/components/Public/symbols/state-emblem';
 import { TajikistanFlag } from '@/components/Public/symbols/state-flag';
@@ -80,6 +81,21 @@ export default function PublicLayout({
     const localeSwitch = (props.localeSwitch as Record<string, string>) ?? {};
     const socialLinks =
         (props.socialLinks as Array<{ platform: string; url: string }>) ?? [];
+    const president = props.president as { url: string; photo: string } | undefined;
+    const footerContent = (props.footerContent as {
+        government_url: string | null;
+        egov_url: string | null;
+        hotline: string;
+        copyright: string | null;
+        resource_links?: Array<{ label: string; url: string }>;
+    }) ?? {
+        government_url: 'https://government.tj',
+        egov_url: 'https://egov.tj',
+        hotline: '112',
+        copyright: null,
+        resource_links: [],
+    };
+    const hotline = footerContent.hotline || '112';
 
     // Check for critical alerts to trigger Red State header
     const activeAlerts = (props.activeAlerts as Array<{ level: string }>) ?? [];
@@ -176,6 +192,7 @@ export default function PublicLayout({
                 {t('a11y.skip_to_content')}
             </a>
             {canManage && <AdminBar pageId={pageId} postId={postId} />}
+            <PreviewBanner />
             {isA11yOpen && (
                 <AccessibilityToolbar onClose={() => setIsA11yOpen(false)} />
             )}
@@ -505,11 +522,11 @@ export default function PublicLayout({
                                 {t('site.full_name')}
                             </p>
                             <a
-                                href="tel:112"
+                                href={`tel:${hotline}`}
                                 className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-white/15"
                             >
                                 <Phone className="size-4" aria-hidden="true" />
-                                {t('footer.hotline')}: 112
+                                {t('footer.hotline')}: {hotline}
                             </a>
                             <SocialLinks links={socialLinks} />
                         </div>
@@ -586,10 +603,10 @@ export default function PublicLayout({
                             <li className="flex items-center justify-between gap-3">
                                 <span>{t('contacts.helpline')}</span>
                                 <a
-                                    href="tel:112"
+                                    href={`tel:${hotline}`}
                                     className="font-bold tabular-nums hover:text-white"
                                 >
-                                    112
+                                    {hotline}
                                 </a>
                             </li>
                             <li className="flex items-center justify-between gap-3">
@@ -628,48 +645,70 @@ export default function PublicLayout({
                             {t('footer.useful_resources')}
                         </p>
                         <ul className="flex flex-col gap-2 text-sm text-brand-strong-foreground/80">
-                            <li>
-                                <a
-                                    href="https://president.tj"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 transition-colors hover:text-white"
-                                >
-                                    {t('footer.president')}
-                                    <ExternalLink
-                                        className="size-3 opacity-50"
-                                        aria-hidden="true"
-                                    />
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    href="https://government.tj"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 transition-colors hover:text-white"
-                                >
-                                    {t('footer.government')}
-                                    <ExternalLink
-                                        className="size-3 opacity-50"
-                                        aria-hidden="true"
-                                    />
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    href="https://egov.tj"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 transition-colors hover:text-white"
-                                >
-                                    {t('footer.egov')}
-                                    <ExternalLink
-                                        className="size-3 opacity-50"
-                                        aria-hidden="true"
-                                    />
-                                </a>
-                            </li>
+                            {president?.url ? (
+                                <li>
+                                    <a
+                                        href={president.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 transition-colors hover:text-white"
+                                    >
+                                        {t('footer.president')}
+                                        <ExternalLink
+                                            className="size-3 opacity-50"
+                                            aria-hidden="true"
+                                        />
+                                    </a>
+                                </li>
+                            ) : null}
+                            {footerContent.government_url ? (
+                                <li>
+                                    <a
+                                        href={footerContent.government_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 transition-colors hover:text-white"
+                                    >
+                                        {t('footer.government')}
+                                        <ExternalLink
+                                            className="size-3 opacity-50"
+                                            aria-hidden="true"
+                                        />
+                                    </a>
+                                </li>
+                            ) : null}
+                            {footerContent.egov_url ? (
+                                <li>
+                                    <a
+                                        href={footerContent.egov_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 transition-colors hover:text-white"
+                                    >
+                                        {t('footer.egov')}
+                                        <ExternalLink
+                                            className="size-3 opacity-50"
+                                            aria-hidden="true"
+                                        />
+                                    </a>
+                                </li>
+                            ) : null}
+                            {(footerContent.resource_links ?? []).map((link) => (
+                                <li key={link.url}>
+                                    <a
+                                        href={link.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 transition-colors hover:text-white"
+                                    >
+                                        {link.label}
+                                        <ExternalLink
+                                            className="size-3 opacity-50"
+                                            aria-hidden="true"
+                                        />
+                                    </a>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                 </div>
@@ -680,6 +719,9 @@ export default function PublicLayout({
                         <span>
                             © {new Date().getFullYear()} {t('site.short_name')}{' '}
                             · {t('footer.rights')}
+                            {footerContent.copyright
+                                ? ` · ${footerContent.copyright}`
+                                : ''}
                         </span>
                         <div className="flex flex-wrap items-center gap-4">
                             <Link

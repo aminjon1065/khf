@@ -1,30 +1,40 @@
 <?php
 
 use App\Enums\Permission;
+use App\Enums\Role;
 use App\Http\Controllers\Admin\AlertController;
 use App\Http\Controllers\Admin\AppealController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\BlueprintController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\GalleryController;
+use App\Http\Controllers\Admin\GlobalController;
 use App\Http\Controllers\Admin\GovServiceController;
 use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\IncidentController;
 use App\Http\Controllers\Admin\LanguageController;
 use App\Http\Controllers\Admin\LeaderController;
 use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\MediaFolderController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\MenuItemController;
+use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PollController;
 use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\PreviewController;
+use App\Http\Controllers\Admin\RedirectController;
 use App\Http\Controllers\Admin\RevisionController;
+use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\StatisticController;
 use App\Http\Controllers\Admin\SubdivisionController;
 use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\TagController;
+use App\Http\Controllers\Admin\TaxonomyController;
 use App\Http\Controllers\Admin\TenderBidController;
 use App\Http\Controllers\Admin\TenderController;
 use App\Http\Controllers\Admin\TouristGroupController;
@@ -38,18 +48,48 @@ use Illuminate\Support\Facades\Route;
  * to authenticated staff with a CMS role, who must have verified email and confirmed 2FA (ТЗ §12.3).
  * Per-action authorization is enforced with `can:` as modules land.
  */
-Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|moderator'])
+Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:'.Role::adminMiddleware()])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+        // Unified CMS entry browser (Statamic collections analogue).
+        Route::get('content', [ContentController::class, 'hub'])->name('content.hub');
+        Route::get('content/{type}', [ContentController::class, 'index'])->name('content.index');
+        Route::get('content/{type}/export', [ContentController::class, 'export'])->name('content.export');
+        Route::post('content/{type}/import', [ContentController::class, 'import'])->name('content.import');
+        Route::post('content/{type}/bulk-destroy', [ContentController::class, 'bulkDestroy'])->name('content.bulk-destroy');
+
+        // Editorial moderation queue (content in status "moderation").
+        Route::get('moderation', [ModerationController::class, 'index'])
+            ->middleware('can:'.Permission::ViewModeration->value)
+            ->name('moderation.index');
+        Route::post('moderation/{type}/{id}/publish', [ModerationController::class, 'publish'])
+            ->middleware('can:'.Permission::PublishContent->value)
+            ->name('moderation.publish');
+
+        // Live preview (signed URL, renders public Inertia views without response cache).
+        Route::get('preview/{type}/{id}', [PreviewController::class, 'show'])
+            ->middleware('signed')
+            ->name('preview.show');
+
         // Media Library (accessible to all CMS users)
         Route::get('media', [MediaController::class, 'index'])->name('media.index');
         Route::get('api/media', [MediaController::class, 'apiIndex'])->name('api.media.index');
+        Route::get('api/media/folders', [MediaFolderController::class, 'index'])->name('api.media.folders.index');
+        Route::post('media/folders', [MediaFolderController::class, 'store'])->name('media.folders.store');
+        Route::put('media/folders/{mediaFolder}', [MediaFolderController::class, 'update'])->name('media.folders.update');
+        Route::delete('media/folders/{mediaFolder}', [MediaFolderController::class, 'destroy'])->name('media.folders.destroy');
         Route::post('media', [MediaController::class, 'store'])->name('media.store');
+        Route::post('media/bulk-destroy', [MediaController::class, 'bulkDestroy'])->name('media.bulk-destroy');
+        Route::post('media/bulk-move', [MediaController::class, 'bulkMove'])->name('media.bulk-move');
         Route::put('media/{mediaFile}', [MediaController::class, 'update'])->name('media.update');
         Route::delete('media/{mediaFile}', [MediaController::class, 'destroy'])->name('media.destroy');
+
+        Route::get('api/taxonomies', [TaxonomyController::class, 'index'])->name('api.taxonomies.index');
+        Route::get('api/taxonomies/{handle}', [TaxonomyController::class, 'show'])->name('api.taxonomies.show');
+        Route::get('api/search', SearchController::class)->name('api.search');
 
         // Content — pages (content roles via pages.manage).
         Route::middleware('can:'.Permission::ManagePages->value)->group(function () {
@@ -59,6 +99,10 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::post('pages', [PageController::class, 'store'])->name('pages.store');
             Route::get('pages/{page}/edit', [PageController::class, 'edit'])->name('pages.edit');
             Route::put('pages/{page}', [PageController::class, 'update'])->name('pages.update');
+            Route::patch('pages/{page}/autosave', [PageController::class, 'autosave'])->name('pages.autosave');
+            Route::post('pages/{page}/publish-version', [PageController::class, 'publishVersion'])
+                ->middleware('can:'.Permission::PublishPages->value)
+                ->name('pages.publish-version');
             Route::delete('pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
             Route::patch('pages/{page}/restore', [PageController::class, 'restore'])->name('pages.restore')->withTrashed();
             Route::delete('pages/{page}/force', [PageController::class, 'forceDelete'])->name('pages.force-delete')->withTrashed();
@@ -72,6 +116,10 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::post('posts', [PostController::class, 'store'])->name('posts.store');
             Route::get('posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
             Route::put('posts/{post}', [PostController::class, 'update'])->name('posts.update');
+            Route::patch('posts/{post}/autosave', [PostController::class, 'autosave'])->name('posts.autosave');
+            Route::post('posts/{post}/publish-version', [PostController::class, 'publishVersion'])
+                ->middleware('can:'.Permission::PublishPosts->value)
+                ->name('posts.publish-version');
             Route::delete('posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
             Route::patch('posts/{post}/restore', [PostController::class, 'restore'])->name('posts.restore')->withTrashed();
             Route::delete('posts/{post}/force', [PostController::class, 'forceDelete'])->name('posts.force-delete')->withTrashed();
@@ -304,6 +352,26 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
             Route::post('languages', [LanguageController::class, 'store'])->name('languages.store');
             Route::put('languages/{language}', [LanguageController::class, 'update'])->name('languages.update');
             Route::delete('languages/{language}', [LanguageController::class, 'destroy'])->name('languages.destroy');
+
+            Route::get('globals', [GlobalController::class, 'index'])->name('globals.index');
+            Route::get('globals/{handle}', [GlobalController::class, 'edit'])->name('globals.edit');
+            Route::put('globals/{handle}', [GlobalController::class, 'update'])->name('globals.update');
+
+            Route::get('blueprints', [BlueprintController::class, 'index'])->name('blueprints.index');
+            Route::get('blueprints/{collection}/{name}/edit', [BlueprintController::class, 'edit'])
+                ->where('name', '[a-z0-9_-]+')
+                ->name('blueprints.edit');
+            Route::put('blueprints/{collection}/{name?}', [BlueprintController::class, 'update'])
+                ->where('name', '[a-z0-9_-]+')
+                ->name('blueprints.update');
+            Route::get('blueprints/{collection}/{name?}', [BlueprintController::class, 'show'])
+                ->where('name', '[a-z0-9_-]+')
+                ->name('blueprints.show');
+
+            Route::get('redirects', [RedirectController::class, 'index'])->name('redirects.index');
+            Route::post('redirects', [RedirectController::class, 'store'])->name('redirects.store');
+            Route::put('redirects/{redirect}', [RedirectController::class, 'update'])->name('redirects.update');
+            Route::delete('redirects/{redirect}', [RedirectController::class, 'destroy'])->name('redirects.destroy');
         });
 
         // Staff accounts (super-admin only via users.manage).
@@ -321,6 +389,7 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:super-admin|mo
         });
 
         // Revisions (rollback for key materials)
+        Route::get('revisions/detail/{revision}', [RevisionController::class, 'show'])->name('revisions.show');
         Route::get('revisions/{type}/{id}', [RevisionController::class, 'index'])->name('revisions.index');
         Route::post('revisions/{revision}/restore', [RevisionController::class, 'restore'])->name('revisions.restore');
     });

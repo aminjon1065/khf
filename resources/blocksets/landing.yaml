@@ -1,0 +1,26 @@
+blocks:
+  text:
+    label: Текст
+    defaults:
+      content: ''
+  image_gallery:
+    label: Галерея изображений
+    defaults:
+      images:
+        - url: ''
+          alt: ''
+          caption: ''
+  cta:
+    label: Призыв к действию
+    defaults:
+      label: ''
+      url: ''
+  table:
+    label: Таблица
+    defaults:
+      caption: ''
+      headers:
+        - Колонка 1
+        - Колонка 2
+      rows:
+        - ['', '']

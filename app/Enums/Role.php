@@ -3,14 +3,15 @@
 namespace App\Enums;
 
 /**
- * CMS roles. The full ТЗ §8 set (6 roles) is reduced to two for now per the project owner:
- * Super-administrator (full access) and Moderator (day-to-day content + operations). Additional
- * roles can be created at runtime via the CMS later; permissions stay granular so that split is easy.
+ * CMS roles (ТЗ §8). Super-administrator, moderator (operations), publisher (approve & publish),
+ * and editor (draft / moderation only). Permissions stay granular via {@see Permission}.
  */
 enum Role: string
 {
     case SuperAdmin = 'super-admin';
     case Moderator = 'moderator';
+    case Publisher = 'publisher';
+    case Editor = 'editor';
 
     /**
      * Russian display label for the CMS (ТЗ §7.1 — Russian interface).
@@ -31,7 +32,15 @@ enum Role: string
     }
 
     /**
-     * Both roles are privileged, so both must use two-factor authentication (ТЗ §7.1, §12.3).
+     * Pipe-delimited role list for the admin route middleware.
+     */
+    public static function adminMiddleware(): string
+    {
+        return implode('|', self::values());
+    }
+
+    /**
+     * Privileged CMS roles that must use two-factor authentication (ТЗ §7.1, §12.3).
      */
     public function requiresTwoFactor(): bool
     {
@@ -45,17 +54,11 @@ enum Role: string
      */
     public static function twoFactorRequired(): array
     {
-        return array_values(array_map(
-            fn (self $role): string => $role->value,
-            array_filter(self::cases(), fn (self $role): bool => $role->requiresTwoFactor()),
-        ));
+        return self::values();
     }
 
     /**
-     * Permissions granted to this role. Super-admin implicitly has everything (also enforced via a
-     * Gate::before in AppServiceProvider), so it is granted all permissions explicitly too. The
-     * moderator gets all content and emergency-operations permissions, but not user, role or
-     * system-settings management — those stay with the super-admin (least privilege, §8).
+     * Permissions granted to this role.
      *
      * @return list<Permission>
      */
@@ -65,36 +68,93 @@ enum Role: string
             self::SuperAdmin => Permission::cases(),
 
             self::Moderator => [
-                // Content
-                Permission::ViewPages, Permission::ManagePages,
-                Permission::ViewPosts, Permission::ManagePosts, Permission::PublishPosts,
-                Permission::ManageCategories, Permission::ManageTags,
-                Permission::ViewDocuments, Permission::ManageDocuments,
-                Permission::ViewGuides, Permission::ManageGuides,
-                Permission::ViewVacancies, Permission::ManageVacancies,
-                Permission::ViewTenders, Permission::ManageTenders,
-                Permission::ViewLeadership, Permission::ManageLeadership,
-                Permission::ViewStructure, Permission::ManageStructure,
-                Permission::ViewGallery, Permission::ManageGallery,
-                Permission::ViewFaqs, Permission::ManageFaqs,
-                Permission::ViewPolls, Permission::ManagePolls,
-                Permission::ViewServices, Permission::ManageServices,
-                Permission::ViewStatistics, Permission::ManageStatistics,
-                Permission::ManageMedia, Permission::ManageBlocks, Permission::ManageMenus,
-                Permission::ManageTranslations,
-                // Emergencies, map & alerts
-                Permission::ViewIncidents, Permission::ManageIncidents,
-                Permission::ViewAlerts, Permission::ManageAlerts, Permission::SendAlerts,
-                Permission::ManageMap,
-                // Services & personal data
-                Permission::ViewAppeals, Permission::ManageAppeals,
-                Permission::ViewTouristGroups, Permission::ManageTouristGroups,
-                Permission::ViewVacancyApplications, Permission::ManageVacancyApplications,
-                Permission::ViewTenderBids, Permission::ManageTenderBids,
-                Permission::ViewSubscribers, Permission::ManageSubscribers,
-                // Read-only system insight
-                Permission::ViewAudit, Permission::ViewAnalytics,
+                ...self::editorialPermissions(publish: true),
+                ...self::operationsPermissions(),
+                Permission::ViewAudit,
+                Permission::ViewAnalytics,
             ],
+
+            self::Publisher => [
+                ...self::editorialPermissions(publish: true),
+                Permission::ViewAudit,
+            ],
+
+            self::Editor => self::editorialPermissions(publish: false),
         };
+    }
+
+    /**
+     * @return list<Permission>
+     */
+    private static function editorialPermissions(bool $publish): array
+    {
+        $permissions = [
+            Permission::ViewPages,
+            Permission::ManagePages,
+            Permission::ViewPosts,
+            Permission::ManagePosts,
+            Permission::ManageCategories,
+            Permission::ManageTags,
+            Permission::ViewDocuments,
+            Permission::ManageDocuments,
+            Permission::ViewGuides,
+            Permission::ManageGuides,
+            Permission::ViewVacancies,
+            Permission::ManageVacancies,
+            Permission::ViewTenders,
+            Permission::ManageTenders,
+            Permission::ViewLeadership,
+            Permission::ManageLeadership,
+            Permission::ViewStructure,
+            Permission::ManageStructure,
+            Permission::ViewGallery,
+            Permission::ManageGallery,
+            Permission::ViewFaqs,
+            Permission::ManageFaqs,
+            Permission::ViewPolls,
+            Permission::ManagePolls,
+            Permission::ViewServices,
+            Permission::ManageServices,
+            Permission::ViewStatistics,
+            Permission::ManageStatistics,
+            Permission::ManageMedia,
+            Permission::ManageBlocks,
+            Permission::ManageMenus,
+            Permission::ManageTranslations,
+        ];
+
+        if ($publish) {
+            $permissions[] = Permission::PublishPosts;
+            $permissions[] = Permission::PublishPages;
+            $permissions[] = Permission::PublishContent;
+            $permissions[] = Permission::ViewModeration;
+        }
+
+        return $permissions;
+    }
+
+    /**
+     * @return list<Permission>
+     */
+    private static function operationsPermissions(): array
+    {
+        return [
+            Permission::ViewIncidents,
+            Permission::ManageIncidents,
+            Permission::ViewAlerts,
+            Permission::ManageAlerts,
+            Permission::SendAlerts,
+            Permission::ManageMap,
+            Permission::ViewAppeals,
+            Permission::ManageAppeals,
+            Permission::ViewTouristGroups,
+            Permission::ManageTouristGroups,
+            Permission::ViewVacancyApplications,
+            Permission::ManageVacancyApplications,
+            Permission::ViewTenderBids,
+            Permission::ManageTenderBids,
+            Permission::ViewSubscribers,
+            Permission::ManageSubscribers,
+        ];
     }
 }

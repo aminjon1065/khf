@@ -96,6 +96,8 @@ return [
     'role' => [
         'super-admin' => 'Суперадминистратор',
         'moderator' => 'Модератор',
+        'publisher' => 'Нашриёт',
+        'editor' => 'Муҳаррир',
     ],
     'subscription_status' => [
         'pending' => 'Дар интизори тасдиқ',

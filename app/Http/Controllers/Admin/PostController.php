@@ -4,25 +4,42 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ContentStatus;
 use App\Enums\PostType;
+use App\Http\Controllers\Admin\Concerns\AutosavesEditorialContent;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\BuildsTranslationPayload;
+use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
+use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\PublishesWorkingCopy;
+use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Concerns\SyncsCoverFromLibrary;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AutosavePostRequest;
 use App\Http\Requests\Admin\StorePostRequest;
 use App\Http\Requests\Admin\UpdatePostRequest;
 use App\Models\Category;
-use App\Models\Language;
 use App\Models\Post;
 use App\Models\Tag;
 use App\Support\HtmlSanitizer;
+use App\Support\PreviewUrls;
 use App\Support\PublicationScheduler;
-use Illuminate\Database\Eloquent\Builder;
+use App\Support\PublicContentUrls;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PostController extends Controller
 {
+    use AutosavesEditorialContent;
+    use BuildsCmsFormData;
+    use BuildsTranslationPayload;
+    use ListsTranslatableContent;
+    use ManagesSoftDeletableContent;
+    use ProvidesBlueprintForm;
+    use PublishesWorkingCopy;
+    use SavesContentRevisions;
     use SyncsCoverFromLibrary;
 
     /** @var list<string> */
@@ -33,26 +50,20 @@ class PostController extends Controller
     public function index(Request $request): Response
     {
         $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-        $sort = in_array((string) $request->string('sort'), self::SORTABLE, true)
-            ? (string) $request->string('sort')
-            : 'published_at';
-        $direction = (string) $request->string('direction') === 'asc' ? 'asc' : 'desc';
+        $filters = $this->listFilters($request, 'published_at', 'desc');
 
-        $posts = Post::query()
-            ->with(['translations', 'category.translations', 'media'])
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('title', 'like', "%{$search}%"),
-            ))
-            ->orderBy($sort, $direction)
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Post $post) => $this->toRow($post, $locale));
+        $posts = $this->paginateTranslatable(
+            Post::query()->with(['translations', 'category.translations', 'media']),
+            $request,
+            self::SORTABLE,
+            'published_at',
+            'desc',
+            fn (Post $post) => $this->toRow($post, $locale),
+        );
 
         return Inertia::render('admin/posts/index', [
             'posts' => $posts,
-            'filters' => ['search' => $search, 'sort' => $sort, 'direction' => $direction],
+            'filters' => $filters,
             'trashedCount' => Post::onlyTrashed()->count(),
         ]);
     }
@@ -90,9 +101,13 @@ class PostController extends Controller
         $post->upsertTranslations($this->translationsPayload($data));
         $post->tags()->sync($data['tag_ids'] ?? []);
         $this->syncCover($request, $post, Post::COVER_COLLECTION);
-        $post->saveRevision();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Post created.')]);
+        $this->syncPublishedSnapshot(
+            $post,
+            ContentStatus::Draft,
+            ContentStatus::from($data['status']),
+        );
+        $this->saveContentRevision($post);
+        $this->flashContentSaved(__('Post created.'));
 
         return to_route('admin.posts.index');
     }
@@ -107,6 +122,7 @@ class PostController extends Controller
     public function update(UpdatePostRequest $request, Post $post): RedirectResponse
     {
         $data = PublicationScheduler::normalize($request->validated());
+        $previousStatus = $post->status;
 
         $post->update([
             'type' => $data['type'],
@@ -118,38 +134,75 @@ class PostController extends Controller
         $post->upsertTranslations($this->translationsPayload($data));
         $post->tags()->sync($data['tag_ids'] ?? []);
         $this->syncCover($request, $post, Post::COVER_COLLECTION);
-        $post->saveRevision();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Post updated.')]);
+        $this->syncPublishedSnapshot(
+            $post,
+            $previousStatus,
+            ContentStatus::from($data['status']),
+        );
+        $this->saveContentRevision($post);
+        $this->flashContentSaved(__('Post updated.'));
 
         return to_route('admin.posts.index');
+    }
+
+    public function autosave(AutosavePostRequest $request, Post $post): JsonResponse
+    {
+        $data = $request->validated();
+
+        $attributes = [];
+
+        if (array_key_exists('type', $data)) {
+            $attributes['type'] = $data['type'];
+        }
+
+        if (array_key_exists('category_id', $data)) {
+            $attributes['category_id'] = $data['category_id'];
+        }
+
+        if (array_key_exists('published_at', $data)) {
+            $attributes['published_at'] = PublicationScheduler::parseDateTime($data['published_at']);
+        }
+
+        if (array_key_exists('unpublished_at', $data)) {
+            $attributes['unpublished_at'] = PublicationScheduler::parseDateTime($data['unpublished_at']);
+        }
+
+        if ($attributes !== []) {
+            $post->update($attributes);
+        }
+
+        $post->upsertTranslations($this->translationsPayload($data));
+
+        if (array_key_exists('tag_ids', $data)) {
+            $post->tags()->sync($data['tag_ids'] ?? []);
+        }
+
+        return $this->autosaveResponse($post);
+    }
+
+    public function publishVersion(Post $post): RedirectResponse
+    {
+        abort_if($post->status !== ContentStatus::Published, 422);
+
+        $this->publishWorkingCopy($post);
+        $this->flashContentSaved('Опубликованная версия обновлена.');
+
+        return redirect()->route('admin.posts.edit', $post);
     }
 
     public function destroy(Post $post): RedirectResponse
     {
-        $post->delete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Post moved to trash.')]);
-
-        return to_route('admin.posts.index');
+        return $this->moveToTrash($post, 'admin.posts.index', __('Post moved to trash.'));
     }
 
     public function restore(Post $post): RedirectResponse
     {
-        $post->restore();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Post restored.')]);
-
-        return to_route('admin.posts.trash');
+        return $this->restoreFromTrash($post, 'admin.posts.trash', __('Post restored.'));
     }
 
     public function forceDelete(Post $post): RedirectResponse
     {
-        $post->forceDelete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Post permanently deleted.')]);
-
-        return to_route('admin.posts.trash');
+        return $this->permanentlyDelete($post, 'admin.posts.trash', __('Post permanently deleted.'));
     }
 
     /**
@@ -205,28 +258,28 @@ class PostController extends Controller
                 'cover_url' => $post->getFirstMediaUrl(Post::COVER_COLLECTION, 'thumb') ?: null,
                 'translations' => $translations,
             ] : null,
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'types' => array_map(
-                fn (PostType $type) => ['value' => $type->value, 'label' => $type->label()],
-                PostType::cases(),
-            ),
-            'statuses' => PublicationScheduler::statusOptions(),
-            'statusTransitions' => PublicationScheduler::transitionOptions(
-                $post?->status ?? ContentStatus::Draft,
-            ),
-            'categories' => Category::query()
-                ->with('translations')
-                ->get()
-                ->map(fn (Category $category) => ['id' => $category->id, 'name' => $category->translation($locale)?->name ?? "#{$category->id}"])
-                ->all(),
-            'tags' => Tag::query()
-                ->with('translations')
-                ->get()
-                ->map(fn (Tag $tag) => ['id' => $tag->id, 'name' => $tag->translation($locale)?->name ?? "#{$tag->id}"])
-                ->all(),
-            'defaultLocale' => Language::defaultCode(),
+            'locales' => $this->localeOptions(),
+            ...$this->publicationFormMeta($post?->status),
+            ...$this->blueprintFormProps('post'),
+            'fieldOptions' => [
+                'type' => array_map(
+                    fn (PostType $type) => ['value' => $type->value, 'label' => $type->label()],
+                    PostType::cases(),
+                ),
+                'category_id' => Category::query()
+                    ->with('translations')
+                    ->get()
+                    ->map(fn (Category $category) => ['id' => $category->id, 'name' => $category->translation($locale)?->name ?? "#{$category->id}"])
+                    ->all(),
+                'tag_ids' => Tag::query()
+                    ->with('translations')
+                    ->get()
+                    ->map(fn (Tag $tag) => ['id' => $tag->id, 'name' => $tag->translation($locale)?->name ?? "#{$tag->id}"])
+                    ->all(),
+            ],
+            'publicUrls' => $post ? PublicContentUrls::forPost($post) : [],
+            'previewUrls' => $post ? app(PreviewUrls::class)->forPost($post->id) : [],
+            'hasUnpublishedChanges' => $post?->hasUnpublishedChanges() ?? false,
         ];
     }
 
@@ -236,16 +289,13 @@ class PostController extends Controller
      */
     private function translationsPayload(array $data): array
     {
-        return collect($data['translations'] ?? [])
-            ->filter(fn (array $translation) => filled($translation['title'] ?? null))
-            ->map(fn (array $translation) => [
-                'title' => $translation['title'],
-                'slug' => $translation['slug'] ?? Str::tajikSlug($translation['title']),
+        return $this->buildTranslationPayload(
+            $data,
+            fn (array $translation) => [
+                ...$this->baseTranslationFields($translation, $this->sanitizer),
                 'excerpt' => $translation['excerpt'] ?? null,
-                'body' => $this->sanitizer->clean($translation['body'] ?? null),
-                'seo_title' => $translation['seo_title'] ?? null,
-                'seo_description' => $translation['seo_description'] ?? null,
-            ])
-            ->all();
+                'body' => $this->sanitizedHtml($translation['body'] ?? null, $this->sanitizer),
+            ],
+        );
     }
 }

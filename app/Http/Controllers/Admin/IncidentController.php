@@ -5,13 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\HazardLevel;
 use App\Enums\IncidentStatus;
 use App\Enums\IncidentType;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
+use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreIncidentRequest;
 use App\Http\Requests\Admin\UpdateIncidentRequest;
 use App\Models\Incident;
-use App\Models\Language;
 use App\Models\Region;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,45 +21,40 @@ use Inertia\Response;
 
 class IncidentController extends Controller
 {
+    use BuildsCmsFormData;
+    use ListsTranslatableContent;
+    use ManagesSoftDeletableContent;
+    use SavesContentRevisions;
+
     /** @var list<string> */
     private const SORTABLE = ['status', 'hazard_level', 'type', 'occurred_at', 'created_at'];
 
     public function index(Request $request): Response
     {
-        $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-        $sort = in_array((string) $request->string('sort'), self::SORTABLE, true)
-            ? (string) $request->string('sort')
-            : 'occurred_at';
-        $direction = (string) $request->string('direction') === 'asc' ? 'asc' : 'desc';
+        $filters = $this->listFilters($request, 'occurred_at', 'desc');
 
-        $incidents = Incident::query()
-            ->with(['translations', 'region.translations'])
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('title', 'like', "%{$search}%"),
-            ))
-            ->orderBy($sort, $direction)
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Incident $incident) => $this->toRow($incident, $locale));
+        $incidents = $this->paginateTranslatable(
+            Incident::query()->with(['translations', 'region.translations']),
+            $request,
+            self::SORTABLE,
+            'occurred_at',
+            'desc',
+            fn (Incident $incident, string $locale) => $this->toRow($incident, $locale),
+        );
 
         return Inertia::render('admin/incidents/index', [
             'incidents' => $incidents,
-            'filters' => ['search' => $search, 'sort' => $sort, 'direction' => $direction],
+            'filters' => $filters,
             'trashedCount' => Incident::onlyTrashed()->count(),
         ]);
     }
 
     public function trash(): Response
     {
-        $locale = app()->getLocale();
-
-        $incidents = Incident::onlyTrashed()
-            ->with(['translations', 'region.translations'])
-            ->orderByDesc('deleted_at')
-            ->paginate(15)
-            ->through(fn (Incident $incident) => $this->toRow($incident, $locale));
+        $incidents = $this->paginateTrashed(
+            Incident::onlyTrashed()->with(['translations', 'region.translations']),
+            fn (Incident $incident, string $locale) => $this->toRow($incident, $locale),
+        );
 
         return Inertia::render('admin/incidents/trash', ['incidents' => $incidents]);
     }
@@ -81,8 +78,8 @@ class IncidentController extends Controller
             'occurred_at' => $data['occurred_at'] ?? null,
         ]);
         $incident->upsertTranslations($this->translationsPayload($data));
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Incident created.')]);
+        $this->saveContentRevision($incident);
+        $this->flashContentSaved(__('Incident created.'));
 
         return to_route('admin.incidents.index');
     }
@@ -108,37 +105,25 @@ class IncidentController extends Controller
             'occurred_at' => $data['occurred_at'] ?? null,
         ]);
         $incident->upsertTranslations($this->translationsPayload($data));
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Incident updated.')]);
+        $this->saveContentRevision($incident);
+        $this->flashContentSaved(__('Incident updated.'));
 
         return to_route('admin.incidents.index');
     }
 
     public function destroy(Incident $incident): RedirectResponse
     {
-        $incident->delete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Incident moved to trash.')]);
-
-        return to_route('admin.incidents.index');
+        return $this->moveToTrash($incident, 'admin.incidents.index', __('Incident moved to trash.'));
     }
 
     public function restore(Incident $incident): RedirectResponse
     {
-        $incident->restore();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Incident restored.')]);
-
-        return to_route('admin.incidents.trash');
+        return $this->restoreFromTrash($incident, 'admin.incidents.trash', __('Incident restored.'));
     }
 
     public function forceDelete(Incident $incident): RedirectResponse
     {
-        $incident->forceDelete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Incident permanently deleted.')]);
-
-        return to_route('admin.incidents.trash');
+        return $this->permanentlyDelete($incident, 'admin.incidents.trash', __('Incident permanently deleted.'));
     }
 
     /**
@@ -206,10 +191,8 @@ class IncidentController extends Controller
                     'lng' => (float) $region->longitude,
                 ])
                 ->all(),
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'defaultLocale' => Language::defaultCode(),
+            'locales' => $this->localeOptions(),
+            'defaultLocale' => $this->publicationFormMeta()['defaultLocale'],
         ];
     }
 

@@ -1,0 +1,33 @@
+title: Подвал сайта
+sections:
+  main:
+    display: Ссылки и копирайт
+    fields:
+      - handle: government_url
+        type: text
+        display: Правительство РТ
+        instructions: Оставьте пустым, чтобы скрыть ссылку
+      - handle: egov_url
+        type: text
+        display: Портал госуслуг (egov.tj)
+        instructions: Оставьте пустым, чтобы скрыть ссылку
+      - handle: hotline
+        type: text
+        display: Единый телефон доверия
+        instructions: Только цифры, например 112
+      - handle: copyright
+        type: textarea
+        display: Дополнительный текст копирайта
+        instructions: Необязательно. Показывается после «Все права защищены»
+      - handle: resource_links
+        type: replicator
+        display: Дополнительные ссылки
+        instructions: Произвольные ссылки в колонке «Полезные ресурсы»
+        max: 8
+        fields:
+          - handle: label
+            type: text
+            display: Название
+          - handle: url
+            type: text
+            display: URL

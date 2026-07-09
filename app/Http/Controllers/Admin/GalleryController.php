@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ContentStatus;
+use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGalleryRequest;
 use App\Http\Requests\Admin\UpdateGalleryRequest;
@@ -17,6 +18,8 @@ use Inertia\Response;
 
 class GalleryController extends Controller
 {
+    use SavesContentRevisions;
+
     public function index(Request $request): Response
     {
         $locale = app()->getLocale();
@@ -63,8 +66,10 @@ class GalleryController extends Controller
         ]);
         $gallery->upsertTranslations($this->translationsPayload($data));
         $this->syncPhotos($request, $gallery);
+        $gallery->load(['translations', 'media']);
+        $this->saveContentRevision($gallery);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Gallery created.')]);
+        $this->flashContentSaved(__('Gallery created.'));
 
         return to_route('admin.gallery.index');
     }
@@ -86,8 +91,10 @@ class GalleryController extends Controller
         ]);
         $gallery->upsertTranslations($this->translationsPayload($data));
         $this->syncPhotos($request, $gallery);
+        $gallery->load(['translations', 'media']);
+        $this->saveContentRevision($gallery);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Gallery updated.')]);
+        $this->flashContentSaved(__('Gallery updated.'));
 
         return to_route('admin.gallery.index');
     }

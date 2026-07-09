@@ -41,3 +41,13 @@ it('sends HSTS over https outside local', function () {
         ->toContain('max-age=31536000')
         ->toContain('includeSubDomains');
 });
+
+it('allows local vite fonts in the content security policy', function () {
+    app()['env'] = 'local';
+
+    $response = $this->get(route('welcome', ['locale' => 'tj']));
+
+    expect($response->headers->get('Content-Security-Policy'))
+        ->toContain('font-src')
+        ->toContain('https://*.test:*');
+});

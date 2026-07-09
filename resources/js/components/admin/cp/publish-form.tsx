@@ -1,7 +1,10 @@
 import { Link } from '@inertiajs/react';
 import { Check, History } from 'lucide-react';
-import { type FormEvent, type ReactNode, useState } from 'react';
+import { type FormEvent, type ReactNode, useRef, useState } from 'react';
+import { CpAutosaveIndicator } from '@/components/admin/cp/autosave-indicator';
 import { Button } from '@/components/ui/button';
+import { useCmsFormShortcuts } from '@/hooks/use-cms-form-shortcuts';
+import type { AutosaveState } from '@/hooks/use-autosave';
 import { cn } from '@/lib/utils';
 import { RevisionsSlideOver } from './revisions-slide-over';
 
@@ -19,6 +22,10 @@ export function CpPublishForm({
     saveLabel = 'Сохранить',
     sidebar,
     children,
+    modelInfo,
+    headerActions,
+    onPreview,
+    autosave,
 }: {
     title: string;
     backHref: string;
@@ -28,15 +35,38 @@ export function CpPublishForm({
     sidebar?: ReactNode;
     children: ReactNode;
     modelInfo?: { type: string; id: number | null };
+    headerActions?: ReactNode;
+    onPreview?: () => void;
+    autosave?: { state: AutosaveState; savedAt: Date | null };
 }) {
     const [historyOpen, setHistoryOpen] = useState(false);
+    const formRef = useRef<HTMLFormElement>(null);
+
+    useCmsFormShortcuts({
+        onSave: () => formRef.current?.requestSubmit(),
+        onPreview,
+    });
+
     return (
-        <form onSubmit={onSubmit} className="p-4 sm:p-6">
+        <form ref={formRef} onSubmit={onSubmit} className="p-4 sm:p-6">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                <h1 className="text-2xl font-semibold tracking-tight">
-                    {title}
-                </h1>
+                <div className="space-y-1">
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                        {title}
+                    </h1>
+                    <p className="text-xs text-muted-foreground">
+                        ⌘S / Ctrl+S — сохранить
+                        {onPreview ? ' · ⌘P / Ctrl+P — предпросмотр' : ''}
+                    </p>
+                    {autosave ? (
+                        <CpAutosaveIndicator
+                            state={autosave.state}
+                            savedAt={autosave.savedAt}
+                        />
+                    ) : null}
+                </div>
                 <div className="flex items-center gap-2">
+                    {headerActions}
                     {modelInfo && (
                         <>
                             <Button

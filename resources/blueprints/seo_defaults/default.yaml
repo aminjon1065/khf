@@ -1,0 +1,17 @@
+title: SEO по умолчанию
+sections:
+  main:
+    display: Мета-теги
+    fields:
+      - handle: title
+        type: text
+        display: Заголовок по умолчанию
+        instructions: Используется, если страница не задаёт свой title
+      - handle: description
+        type: textarea
+        display: Описание по умолчанию
+        instructions: meta description и Open Graph для страниц без своего SEO
+      - handle: image
+        type: text
+        display: Изображение Open Graph
+        instructions: Путь на сайте (например /images/emblem-tj.webp) или полный URL

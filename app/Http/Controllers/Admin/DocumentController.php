@@ -4,13 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ContentStatus;
 use App\Enums\DocumentType;
+use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
+use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreDocumentRequest;
 use App\Http\Requests\Admin\UpdateDocumentRequest;
 use App\Models\Document;
 use App\Models\Language;
 use App\Models\Tag;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,45 +20,40 @@ use Inertia\Response;
 
 class DocumentController extends Controller
 {
+    use ListsTranslatableContent;
+    use ManagesSoftDeletableContent;
+    use SavesContentRevisions;
+
     /** @var list<string> */
     private const SORTABLE = ['type', 'document_date', 'status', 'created_at'];
 
     public function index(Request $request): Response
     {
-        $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-        $sort = in_array((string) $request->string('sort'), self::SORTABLE, true)
-            ? (string) $request->string('sort')
-            : 'document_date';
-        $direction = (string) $request->string('direction') === 'asc' ? 'asc' : 'desc';
+        $filters = $this->listFilters($request, 'document_date', 'desc');
 
-        $documents = Document::query()
-            ->with(['translations', 'media'])
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('name', 'like', "%{$search}%"),
-            ))
-            ->orderBy($sort, $direction)
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Document $document) => $this->toRow($document, $locale));
+        $documents = $this->paginateTranslatable(
+            Document::query()->with(['translations', 'media']),
+            $request,
+            self::SORTABLE,
+            'document_date',
+            'desc',
+            fn (Document $document, string $locale) => $this->toRow($document, $locale),
+            'name',
+        );
 
         return Inertia::render('admin/documents/index', [
             'documents' => $documents,
-            'filters' => ['search' => $search, 'sort' => $sort, 'direction' => $direction],
+            'filters' => $filters,
             'trashedCount' => Document::onlyTrashed()->count(),
         ]);
     }
 
     public function trash(): Response
     {
-        $locale = app()->getLocale();
-
-        $documents = Document::onlyTrashed()
-            ->with('translations')
-            ->orderByDesc('deleted_at')
-            ->paginate(15)
-            ->through(fn (Document $document) => $this->toRow($document, $locale));
+        $documents = $this->paginateTrashed(
+            Document::onlyTrashed()->with('translations'),
+            fn (Document $document, string $locale) => $this->toRow($document, $locale),
+        );
 
         return Inertia::render('admin/documents/trash', ['documents' => $documents]);
     }
@@ -74,9 +71,8 @@ class DocumentController extends Controller
         $document->upsertTranslations($this->translationsPayload($data));
         $document->tags()->sync($data['tag_ids'] ?? []);
         $this->syncFiles($request, $document);
-        $document->saveRevision();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Document created.')]);
+        $this->saveContentRevision($document);
+        $this->flashContentSaved(__('Document created.'));
 
         return to_route('admin.documents.index');
     }
@@ -96,38 +92,25 @@ class DocumentController extends Controller
         $document->upsertTranslations($this->translationsPayload($data));
         $document->tags()->sync($data['tag_ids'] ?? []);
         $this->syncFiles($request, $document);
-        $document->saveRevision();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Document updated.')]);
+        $this->saveContentRevision($document);
+        $this->flashContentSaved(__('Document updated.'));
 
         return to_route('admin.documents.index');
     }
 
     public function destroy(Document $document): RedirectResponse
     {
-        $document->delete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Document moved to trash.')]);
-
-        return to_route('admin.documents.index');
+        return $this->moveToTrash($document, 'admin.documents.index', __('Document moved to trash.'));
     }
 
     public function restore(Document $document): RedirectResponse
     {
-        $document->restore();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Document restored.')]);
-
-        return to_route('admin.documents.trash');
+        return $this->restoreFromTrash($document, 'admin.documents.trash', __('Document restored.'));
     }
 
     public function forceDelete(Document $document): RedirectResponse
     {
-        $document->forceDelete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Document permanently deleted.')]);
-
-        return to_route('admin.documents.trash');
+        return $this->permanentlyDelete($document, 'admin.documents.trash', __('Document permanently deleted.'));
     }
 
     private function syncFiles(Request $request, Document $document): void

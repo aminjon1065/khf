@@ -4,76 +4,51 @@ namespace App\Http\Requests\Admin;
 
 use App\Enums\Permission;
 use App\Http\Requests\Concerns\ValidatesContentStatusTransition;
-use App\Models\Language;
+use App\Http\Requests\Concerns\ValidatesFromBlueprint;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StorePageRequest extends FormRequest
 {
     use ValidatesContentStatusTransition;
+    use ValidatesFromBlueprint;
 
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return $this->user()?->can(Permission::ManagePages->value) ?? false;
     }
 
     /**
-     * Get the validation rules that apply to the request. Translations are validated per active
-     * locale; only the default locale is required, others may be filled later (ТЗ §14).
-     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        $locales = Language::codes() ?: config('app.locales');
-        $default = Language::defaultCode();
-        $pageId = $this->currentPageId();
+        return array_merge(
+            $this->blueprintRules(),
+            $this->statusTransitionRules(null),
+        );
+    }
 
-        $rules = [
-            'parent_id' => ['nullable', 'integer', 'exists:pages,id'],
-            'sort_order' => ['integer', 'min:0', 'max:65535'],
-            'is_home' => ['boolean'],
-            'cover' => ['nullable', 'image', 'max:5120'],
-            'cover_media_id' => ['nullable', 'integer', 'exists:media_files,id'],
-            'remove_cover' => ['boolean'],
-            'translations' => ['array'],
-        ];
-
-        $rules = array_merge($rules, $this->statusTransitionRules(null));
-
-        foreach ($locales as $locale) {
-            $rules["translations.{$locale}.title"] = [$locale === $default ? 'required' : 'nullable', 'string', 'max:255'];
-            $rules["translations.{$locale}.slug"] = [
-                'nullable',
-                "required_with:translations.{$locale}.title",
-                'string',
-                'max:255',
-                'regex:/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u',
-                Rule::unique('page_translations', 'slug')->where(function ($query) use ($locale, $pageId) {
-                    $query->where('locale', $locale);
-
-                    if ($pageId !== null) {
-                        $query->where('page_id', '!=', $pageId);
-                    }
-                }),
-            ];
-            $rules["translations.{$locale}.content"] = ['nullable', 'string'];
-            $rules["translations.{$locale}.blocks"] = ['nullable', 'array'];
-            $rules["translations.{$locale}.seo_title"] = ['nullable', 'string', 'max:255'];
-            $rules["translations.{$locale}.seo_description"] = ['nullable', 'string', 'max:500'];
-        }
-
-        return $rules;
+    protected function blueprintReference(): string
+    {
+        return 'page.default';
     }
 
     /**
-     * The page being updated (null when creating) — used to exclude its own slugs from the
-     * per-locale uniqueness check.
+     * @return array<string, array{table: string, column: string, foreign_key: string, exclude_id: int|null}>
      */
+    protected function blueprintSlugConstraints(): array
+    {
+        return [
+            'slug' => [
+                'table' => 'page_translations',
+                'column' => 'slug',
+                'foreign_key' => 'page_id',
+                'exclude_id' => $this->currentPageId(),
+            ],
+        ];
+    }
+
     protected function currentPageId(): ?int
     {
         return null;

@@ -1,13 +1,16 @@
 import {
+    ArrowRightLeft,
     BarChart3,
     Bell,
     BookOpen,
     Briefcase,
+    ClipboardCheck,
     ClipboardList,
     Contact,
     FileSignature,
     FileText,
     FolderTree,
+    Globe,
     Gavel,
     HelpCircle,
     Image,
@@ -16,6 +19,8 @@ import {
     LayoutDashboard,
     ListChecks,
     ListTree,
+    LayoutGrid,
+    Layers,
     Mail,
     Mountain,
     Network,
@@ -26,6 +31,7 @@ import {
     Users,
 } from 'lucide-react';
 import { dashboard as adminDashboard } from '@/routes/admin';
+import { hub as contentHub } from '@/routes/admin/content';
 import { index as alertsIndex } from '@/routes/admin/alerts';
 import { index as appealsIndex } from '@/routes/admin/appeals';
 import { index as auditLogsIndex } from '@/routes/admin/audit-logs';
@@ -33,15 +39,19 @@ import { index as categoriesIndex } from '@/routes/admin/categories';
 import { index as documentsIndex } from '@/routes/admin/documents';
 import { index as faqsIndex } from '@/routes/admin/faqs';
 import { index as galleryIndex } from '@/routes/admin/gallery';
+import { index as blueprintsIndex } from '@/routes/admin/blueprints';
+import { index as globalsIndex } from '@/routes/admin/globals';
 import { index as guidesIndex } from '@/routes/admin/guides';
 import { index as incidentsIndex } from '@/routes/admin/incidents';
 import { index as languagesIndex } from '@/routes/admin/languages';
 import { index as leadershipIndex } from '@/routes/admin/leadership';
 import { index as mediaIndex } from '@/routes/admin/media';
 import { index as menusIndex } from '@/routes/admin/menus';
+import { index as moderationIndex } from '@/routes/admin/moderation';
 import { index as pagesIndex } from '@/routes/admin/pages';
 import { index as pollsIndex } from '@/routes/admin/polls';
 import { index as postsIndex } from '@/routes/admin/posts';
+import { index as redirectsIndex } from '@/routes/admin/redirects';
 import { index as servicesIndex } from '@/routes/admin/services';
 import { index as statisticsIndex } from '@/routes/admin/statistics';
 import { index as structureIndex } from '@/routes/admin/structure';
@@ -97,6 +107,17 @@ export const navGroups: AdminNavGroup[] = [
     {
         label: 'Контент',
         items: [
+            {
+                title: 'Все коллекции',
+                href: contentHub(),
+                icon: LayoutGrid,
+            },
+            {
+                title: 'Модерация',
+                href: moderationIndex(),
+                icon: ClipboardCheck,
+                permission: 'moderation.view',
+            },
             {
                 title: 'Новости',
                 href: postsIndex(),
@@ -249,6 +270,24 @@ export const navGroups: AdminNavGroup[] = [
                 title: 'Языки',
                 href: languagesIndex(),
                 icon: Languages,
+                permission: 'settings.manage',
+            },
+            {
+                title: 'Глобальные настройки',
+                href: globalsIndex(),
+                icon: Globe,
+                permission: 'settings.manage',
+            },
+            {
+                title: 'Blueprint-схемы',
+                href: blueprintsIndex(),
+                icon: Layers,
+                permission: 'settings.manage',
+            },
+            {
+                title: 'Редиректы',
+                href: redirectsIndex(),
+                icon: ArrowRightLeft,
                 permission: 'settings.manage',
             },
             {

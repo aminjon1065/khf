@@ -5,6 +5,7 @@ use App\Enums\PostType;
 use App\Enums\Role;
 use App\Models\Category;
 use App\Models\MediaFile;
+use App\Models\MediaUsage;
 use App\Models\Post;
 use App\Models\User;
 use Database\Seeders\LanguageSeeder;
@@ -96,7 +97,7 @@ it('renders the list, create, edit and trash screens', function () {
 
     $this->actingAs($this->editor)->get(route('admin.posts.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/posts/form')->has('types', 4)->has('statuses', 4));
+        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/posts/form')->has('blueprint')->has('fieldOptions')->has('statuses', 4));
 
     $this->actingAs($this->editor)->get(route('admin.posts.edit', $post))
         ->assertOk()
@@ -154,7 +155,8 @@ it('attaches a cover image picked from the media library', function () {
 
     $post = Post::first();
 
-    expect($post->getFirstMedia(Post::COVER_COLLECTION))->not->toBeNull();
+    expect($post->getFirstMedia(Post::COVER_COLLECTION))->not->toBeNull()
+        ->and(MediaUsage::query()->where('media_file_id', $mediaFile->id)->count())->toBe(1);
 });
 
 it('rejects a cover_media_id that does not exist', function () {

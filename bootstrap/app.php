@@ -3,6 +3,8 @@
 use App\Http\Middleware\EnsureTwoFactorEnabled;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\LegacyRedirects;
+use App\Http\Middleware\ResolveLocalApplicationUrl;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -35,6 +37,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
+        ]);
+
+        $middleware->web(prepend: [
+            ResolveLocalApplicationUrl::class,
+            LegacyRedirects::class,
         ]);
 
         $middleware->web(append: [

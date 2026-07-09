@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ContentStatus;
 use App\Models\Concerns\ClearsResponseCache;
+use App\Models\Concerns\HasRevisions;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\GalleryFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -31,6 +32,7 @@ class Gallery extends Model implements HasMedia
     /** @use HasFactory<GalleryFactory> */
     use HasFactory;
 
+    use HasRevisions;
     use HasTranslations;
     use InteractsWithMedia;
     use LogsActivity;

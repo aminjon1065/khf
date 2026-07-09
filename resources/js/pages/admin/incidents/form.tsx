@@ -136,6 +136,7 @@ export default function IncidentForm({
                 backHref={index().url}
                 onSubmit={submit}
                 processing={form.processing}
+                modelInfo={{ type: 'incident', id: incident?.id ?? null }}
                 sidebar={
                     <>
                         <CpPanel title="Параметры">

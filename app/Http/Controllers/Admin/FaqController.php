@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ContentStatus;
+use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreFaqRequest;
 use App\Http\Requests\Admin\UpdateFaqRequest;
@@ -17,6 +18,8 @@ use Inertia\Response;
 
 class FaqController extends Controller
 {
+    use SavesContentRevisions;
+
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
     public function index(Request $request): Response
@@ -62,8 +65,10 @@ class FaqController extends Controller
             'sort_order' => $data['sort_order'] ?? 0,
         ]);
         $faq->upsertTranslations($this->translationsPayload($data));
+        $faq->load('translations');
+        $this->saveContentRevision($faq);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('FAQ created.')]);
+        $this->flashContentSaved(__('FAQ created.'));
 
         return to_route('admin.faqs.index');
     }
@@ -84,8 +89,10 @@ class FaqController extends Controller
             'sort_order' => $data['sort_order'] ?? 0,
         ]);
         $faq->upsertTranslations($this->translationsPayload($data));
+        $faq->load('translations');
+        $this->saveContentRevision($faq);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('FAQ updated.')]);
+        $this->flashContentSaved(__('FAQ updated.'));
 
         return to_route('admin.faqs.index');
     }

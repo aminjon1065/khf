@@ -7,12 +7,20 @@ use App\Http\Controllers\Controller;
 use App\Models\Incident;
 use App\Models\Page;
 use App\Models\Post;
-use Illuminate\Support\Facades\Cache;
+use App\Services\Cms\PublishedContentCache;
+use App\Services\Cms\PublishedVersionService;
+use App\Services\Public\PostShowPresenter;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class HomeController extends Controller
 {
+    public function __construct(
+        private PublishedContentCache $contentCache,
+        private PublishedVersionService $publishedVersions,
+        private PostShowPresenter $postPresenter,
+    ) {}
+
     /**
      * Public homepage (ТЗ §6.1): latest news + quick access. Alert banner, operational situation
      * and map widget are wired as those modules land.
@@ -21,36 +29,24 @@ class HomeController extends Controller
     {
         $locale = app()->getLocale();
 
-        $cacheKey = 'home.latest_posts.'.$locale.'.'.(Post::max('updated_at') ?? 'empty');
-
-        $latestPosts = Cache::remember($cacheKey, 3600, function () use ($locale) {
+        $latestPosts = $this->contentCache->remember('post', $locale, 'home.latest', function () use ($locale) {
             return Post::published()
                 ->with(['translations', 'category.translations', 'media'])
                 ->whereHas('translations', fn ($query) => $query->where('locale', $locale))
                 ->orderByDesc('published_at')
                 ->limit(6)
                 ->get()
-                ->map(function (Post $post) use ($locale): array {
-                    $translation = $post->translation($locale);
-
-                    return [
-                        'title' => $translation?->title,
-                        'slug' => $translation?->slug,
-                        'excerpt' => $translation?->excerpt,
-                        'category' => $post->category?->translation($locale)?->name,
-                        'cover_url' => $post->getFirstMediaUrl(Post::COVER_COLLECTION, 'thumb') ?: null,
-                        'published_at' => $post->published_at?->format('d.m.Y'),
-                    ];
-                })
+                ->map(fn (Post $post): array => $this->postPresenter->card(
+                    $this->publishedVersions->forPublicDisplay($post),
+                    $locale,
+                ))
                 ->all();
         });
 
-        // Operational-situation summary (ТЗ §5, §6.1) — incident counts by status, surfaced in the
-        // homepage hero. Cached on the latest incident change like the incidents archive.
-        $incidentVersion = Incident::max('updated_at') ?? 'empty';
-        $operational = Cache::remember(
-            'home.operational.'.$incidentVersion,
-            3600,
+        $operational = $this->contentCache->remember(
+            'incident',
+            PublishedContentCache::LOCALE_AGNOSTIC,
+            'home.operational',
             function (): array {
                 $counts = Incident::query()
                     ->selectRaw('status, COUNT(*) as total')
@@ -62,40 +58,36 @@ class HomeController extends Controller
                     'controlled' => (int) ($counts[IncidentStatus::Controlled->value] ?? 0),
                     'resolved' => (int) ($counts[IncidentStatus::Resolved->value] ?? 0),
                 ];
-            }
+            },
         );
 
-        $mapIncidents = Cache::remember(
-            'home.map_incidents.'.$locale.'.'.$incidentVersion,
-            3600,
-            function () use ($locale): array {
-                return Incident::query()
-                    ->with(['translations', 'region.translations'])
-                    ->whereNotNull('latitude')
-                    ->whereNotNull('longitude')
-                    ->whereIn('status', [IncidentStatus::Active, IncidentStatus::Controlled])
-                    ->orderByDesc('occurred_at')
-                    ->limit(100)
-                    ->get()
-                    ->map(function (Incident $incident) use ($locale): array {
-                        $translation = $incident->translation($locale);
+        $mapIncidents = $this->contentCache->remember('incident', $locale, 'home.map', function () use ($locale): array {
+            return Incident::query()
+                ->with(['translations', 'region.translations'])
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->whereIn('status', [IncidentStatus::Active, IncidentStatus::Controlled])
+                ->orderByDesc('occurred_at')
+                ->limit(100)
+                ->get()
+                ->map(function (Incident $incident) use ($locale): array {
+                    $translation = $incident->translation($locale);
 
-                        return [
-                            'id' => $incident->id,
-                            'lat' => (float) $incident->latitude,
-                            'lng' => (float) $incident->longitude,
-                            'color' => $incident->hazard_level->color(),
-                            'title' => $translation?->title ?: '—',
-                            'type' => $incident->type->label(),
-                            'level' => $incident->hazard_level->label(),
-                            'status' => $incident->status->label(),
-                            'region' => $incident->region?->translation($locale)?->name,
-                            'occurred_at' => $incident->occurred_at?->format('d.m.Y H:i'),
-                        ];
-                    })
-                    ->all();
-            }
-        );
+                    return [
+                        'id' => $incident->id,
+                        'lat' => (float) $incident->latitude,
+                        'lng' => (float) $incident->longitude,
+                        'color' => $incident->hazard_level->color(),
+                        'title' => $translation?->title ?: '—',
+                        'type' => $incident->type->label(),
+                        'level' => $incident->hazard_level->label(),
+                        'status' => $incident->status->label(),
+                        'region' => $incident->region?->translation($locale)?->name,
+                        'occurred_at' => $incident->occurred_at?->format('d.m.Y H:i'),
+                    ];
+                })
+                ->all();
+        });
 
         $homePage = Page::where('is_home', true)->with('translations')->first();
         $blocks = $homePage?->translation($locale)?->blocks ?? [];

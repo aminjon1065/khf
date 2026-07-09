@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ContentStatus;
 use App\Models\Concerns\ClearsResponseCache;
+use App\Models\Concerns\HasRevisions;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\FaqFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,6 +28,7 @@ class Faq extends Model
     /** @use HasFactory<FaqFactory> */
     use HasFactory;
 
+    use HasRevisions;
     use HasTranslations;
     use LogsActivity;
 

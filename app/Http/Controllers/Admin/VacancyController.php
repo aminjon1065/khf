@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ContentStatus;
 use App\Enums\EmploymentType;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
+use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreVacancyRequest;
 use App\Http\Requests\Admin\UpdateVacancyRequest;
-use App\Models\Language;
 use App\Models\Vacancy;
 use App\Support\HtmlSanitizer;
 use App\Support\PublicationScheduler;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -20,6 +21,11 @@ use Inertia\Response;
 
 class VacancyController extends Controller
 {
+    use BuildsCmsFormData;
+    use ListsTranslatableContent;
+    use ManagesSoftDeletableContent;
+    use SavesContentRevisions;
+
     /** @var list<string> */
     private const SORTABLE = ['status', 'employment_type', 'published_at', 'deadline_at', 'created_at'];
 
@@ -27,42 +33,30 @@ class VacancyController extends Controller
 
     public function index(Request $request): Response
     {
-        $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-        $sort = in_array((string) $request->string('sort'), self::SORTABLE, true)
-            ? (string) $request->string('sort')
-            : 'published_at';
-        $direction = (string) $request->string('direction') === 'asc' ? 'asc' : 'desc';
+        $filters = $this->listFilters($request, 'published_at', 'desc');
 
-        $vacancies = Vacancy::query()
-            ->with('translations')
-            ->withCount('applications')
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('title', 'like', "%{$search}%"),
-            ))
-            ->orderBy($sort, $direction)
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Vacancy $vacancy) => $this->toRow($vacancy, $locale));
+        $vacancies = $this->paginateTranslatable(
+            Vacancy::query()->with('translations')->withCount('applications'),
+            $request,
+            self::SORTABLE,
+            'published_at',
+            'desc',
+            fn (Vacancy $vacancy, string $locale) => $this->toRow($vacancy, $locale),
+        );
 
         return Inertia::render('admin/vacancies/index', [
             'vacancies' => $vacancies,
-            'filters' => ['search' => $search, 'sort' => $sort, 'direction' => $direction],
+            'filters' => $filters,
             'trashedCount' => Vacancy::onlyTrashed()->count(),
         ]);
     }
 
     public function trash(): Response
     {
-        $locale = app()->getLocale();
-
-        $vacancies = Vacancy::onlyTrashed()
-            ->with('translations')
-            ->withCount('applications')
-            ->orderByDesc('deleted_at')
-            ->paginate(15)
-            ->through(fn (Vacancy $vacancy) => $this->toRow($vacancy, $locale));
+        $vacancies = $this->paginateTrashed(
+            Vacancy::onlyTrashed()->with('translations')->withCount('applications'),
+            fn (Vacancy $vacancy, string $locale) => $this->toRow($vacancy, $locale),
+        );
 
         return Inertia::render('admin/vacancies/trash', ['vacancies' => $vacancies]);
     }
@@ -86,8 +80,7 @@ class VacancyController extends Controller
             'created_by' => $request->user()->id,
         ]);
         $vacancy->upsertTranslations($this->translationsPayload($data));
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Vacancy created.')]);
+        $this->flashContentSaved(__('Vacancy created.'));
 
         return to_route('admin.vacancies.index');
     }
@@ -112,37 +105,24 @@ class VacancyController extends Controller
             'deadline_at' => $data['deadline_at'] ?? null,
         ]);
         $vacancy->upsertTranslations($this->translationsPayload($data));
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Vacancy updated.')]);
+        $this->flashContentSaved(__('Vacancy updated.'));
 
         return to_route('admin.vacancies.index');
     }
 
     public function destroy(Vacancy $vacancy): RedirectResponse
     {
-        $vacancy->delete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Vacancy moved to trash.')]);
-
-        return to_route('admin.vacancies.index');
+        return $this->moveToTrash($vacancy, 'admin.vacancies.index', __('Vacancy moved to trash.'));
     }
 
     public function restore(Vacancy $vacancy): RedirectResponse
     {
-        $vacancy->restore();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Vacancy restored.')]);
-
-        return to_route('admin.vacancies.trash');
+        return $this->restoreFromTrash($vacancy, 'admin.vacancies.trash', __('Vacancy restored.'));
     }
 
     public function forceDelete(Vacancy $vacancy): RedirectResponse
     {
-        $vacancy->forceDelete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Vacancy permanently deleted.')]);
-
-        return to_route('admin.vacancies.trash');
+        return $this->permanentlyDelete($vacancy, 'admin.vacancies.trash', __('Vacancy permanently deleted.'));
     }
 
     /**
@@ -204,15 +184,9 @@ class VacancyController extends Controller
                 'deadline_at' => $vacancy->deadline_at?->format('Y-m-d'),
                 'translations' => $translations,
             ] : null,
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
+            'locales' => $this->localeOptions(),
             'employmentTypes' => EmploymentType::options(),
-            'statuses' => PublicationScheduler::statusOptions(),
-            'statusTransitions' => PublicationScheduler::transitionOptions(
-                $vacancy?->status ?? ContentStatus::Draft,
-            ),
-            'defaultLocale' => Language::defaultCode(),
+            ...$this->publicationFormMeta($vacancy?->status),
         ];
     }
 

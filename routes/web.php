@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthenticatedHomeController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Public\AppealController;
 use App\Http\Controllers\Public\ContactController;
@@ -25,8 +26,9 @@ use App\Http\Controllers\Public\SubscriptionController;
 use App\Http\Controllers\Public\TenderController;
 use App\Http\Controllers\Public\TouristGroupController;
 use App\Http\Controllers\Public\VacancyController;
+use App\Http\Middleware\CacheResponse;
+use App\Support\RedirectResolver;
 use Illuminate\Support\Facades\Route;
-use Spatie\ResponseCache\Middlewares\CacheResponse;
 
 /*
  * Root → resolved localized homepage. The locale is set by the SetLocale middleware
@@ -135,23 +137,17 @@ Route::prefix('{locale}')
  * Russian (ТЗ §7.1) and these routes resolve locale from the session.
  */
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', AuthenticatedHomeController::class)->name('dashboard');
 });
 
 require __DIR__.'/admin.php';
 require __DIR__.'/settings.php';
 
 Route::fallback(function () {
-    $path = request()->path();
-    $redirects = config('redirects', []);
+    $match = RedirectResolver::match(request());
 
-    if (array_key_exists($path, $redirects)) {
-        return redirect($redirects[$path], 301);
-    }
-
-    $pathWithSlash = '/'.ltrim($path, '/');
-    if (array_key_exists($pathWithSlash, $redirects)) {
-        return redirect($redirects[$pathWithSlash], 301);
+    if ($match !== null) {
+        return redirect($match['to'], $match['status']);
     }
 
     abort(404);

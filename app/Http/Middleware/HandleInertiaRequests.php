@@ -7,10 +7,10 @@ use App\Models\Language;
 use App\Models\Menu;
 use App\Models\Page;
 use App\Models\User;
+use App\Services\Cms\GlobalResolver;
 use App\Services\Public\MenuFormatter;
 use App\Support\LocaleUrls;
 use App\Support\Matomo;
-use App\Support\SocialLinks;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -59,7 +59,9 @@ class HandleInertiaRequests extends Middleware
             'menus' => $this->menus(),
             'activeAlerts' => $this->activeAlerts(),
             'matomo' => Matomo::inertiaProps(),
-            'socialLinks' => SocialLinks::all(),
+            'socialLinks' => app(GlobalResolver::class)->socialLinks(),
+            'president' => app(GlobalResolver::class)->president(),
+            'footerContent' => app(GlobalResolver::class)->footer(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

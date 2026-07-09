@@ -6,6 +6,7 @@ use App\Enums\HazardLevel;
 use App\Enums\IncidentStatus;
 use App\Enums\IncidentType;
 use App\Models\Concerns\ClearsResponseCache;
+use App\Models\Concerns\HasRevisions;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\IncidentFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -37,6 +38,7 @@ class Incident extends Model
     /** @use HasFactory<IncidentFactory> */
     use HasFactory;
 
+    use HasRevisions;
     use HasTranslations;
     use LogsActivity;
     use SoftDeletes;

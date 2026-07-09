@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ContentStatus;
 use App\Enums\ServiceCategory;
+use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGovServiceRequest;
 use App\Http\Requests\Admin\UpdateGovServiceRequest;
@@ -19,6 +20,8 @@ use Inertia\Response;
 
 class GovServiceController extends Controller
 {
+    use SavesContentRevisions;
+
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
     public function index(Request $request): Response
@@ -72,8 +75,10 @@ class GovServiceController extends Controller
             'sort_order' => $data['sort_order'] ?? 0,
         ]);
         $service->upsertTranslations($this->translationsPayload($data));
+        $service->load('translations');
+        $this->saveContentRevision($service);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Service created.')]);
+        $this->flashContentSaved(__('Service created.'));
 
         return to_route('admin.services.index');
     }
@@ -99,8 +104,10 @@ class GovServiceController extends Controller
             'sort_order' => $data['sort_order'] ?? 0,
         ]);
         $govService->upsertTranslations($this->translationsPayload($data));
+        $govService->load('translations');
+        $this->saveContentRevision($govService);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Service updated.')]);
+        $this->flashContentSaved(__('Service updated.'));
 
         return to_route('admin.services.index');
     }

@@ -1,0 +1,14 @@
+title: Президент
+sections:
+  main:
+    display: Настройки
+    fields:
+      - handle: url
+        type: text
+        display: URL портала president.tj
+        required: true
+      - handle: photo
+        type: text
+        display: Изображение
+        instructions: Путь на сайте (например /images/president.webp) или полный URL
+        required: true

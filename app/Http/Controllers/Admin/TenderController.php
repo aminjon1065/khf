@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ContentStatus;
 use App\Enums\TenderType;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
+use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreTenderRequest;
 use App\Http\Requests\Admin\UpdateTenderRequest;
-use App\Models\Language;
 use App\Models\Tender;
 use App\Support\HtmlSanitizer;
 use App\Support\PublicationScheduler;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -20,6 +21,11 @@ use Inertia\Response;
 
 class TenderController extends Controller
 {
+    use BuildsCmsFormData;
+    use ListsTranslatableContent;
+    use ManagesSoftDeletableContent;
+    use SavesContentRevisions;
+
     /** @var list<string> */
     private const SORTABLE = ['status', 'type', 'published_at', 'deadline_at', 'created_at'];
 
@@ -27,42 +33,30 @@ class TenderController extends Controller
 
     public function index(Request $request): Response
     {
-        $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-        $sort = in_array((string) $request->string('sort'), self::SORTABLE, true)
-            ? (string) $request->string('sort')
-            : 'published_at';
-        $direction = (string) $request->string('direction') === 'asc' ? 'asc' : 'desc';
+        $filters = $this->listFilters($request, 'published_at', 'desc');
 
-        $tenders = Tender::query()
-            ->with('translations')
-            ->withCount('bids')
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('title', 'like', "%{$search}%"),
-            ))
-            ->orderBy($sort, $direction)
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Tender $tender) => $this->toRow($tender, $locale));
+        $tenders = $this->paginateTranslatable(
+            Tender::query()->with('translations')->withCount('bids'),
+            $request,
+            self::SORTABLE,
+            'published_at',
+            'desc',
+            fn (Tender $tender, string $locale) => $this->toRow($tender, $locale),
+        );
 
         return Inertia::render('admin/tenders/index', [
             'tenders' => $tenders,
-            'filters' => ['search' => $search, 'sort' => $sort, 'direction' => $direction],
+            'filters' => $filters,
             'trashedCount' => Tender::onlyTrashed()->count(),
         ]);
     }
 
     public function trash(): Response
     {
-        $locale = app()->getLocale();
-
-        $tenders = Tender::onlyTrashed()
-            ->with('translations')
-            ->withCount('bids')
-            ->orderByDesc('deleted_at')
-            ->paginate(15)
-            ->through(fn (Tender $tender) => $this->toRow($tender, $locale));
+        $tenders = $this->paginateTrashed(
+            Tender::onlyTrashed()->with('translations')->withCount('bids'),
+            fn (Tender $tender, string $locale) => $this->toRow($tender, $locale),
+        );
 
         return Inertia::render('admin/tenders/trash', ['tenders' => $tenders]);
     }
@@ -88,8 +82,7 @@ class TenderController extends Controller
             'created_by' => $request->user()->id,
         ]);
         $tender->upsertTranslations($this->translationsPayload($data));
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Tender created.')]);
+        $this->flashContentSaved(__('Tender created.'));
 
         return to_route('admin.tenders.index');
     }
@@ -116,37 +109,24 @@ class TenderController extends Controller
             'deadline_at' => $data['deadline_at'] ?? null,
         ]);
         $tender->upsertTranslations($this->translationsPayload($data));
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Tender updated.')]);
+        $this->flashContentSaved(__('Tender updated.'));
 
         return to_route('admin.tenders.index');
     }
 
     public function destroy(Tender $tender): RedirectResponse
     {
-        $tender->delete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Tender moved to trash.')]);
-
-        return to_route('admin.tenders.index');
+        return $this->moveToTrash($tender, 'admin.tenders.index', __('Tender moved to trash.'));
     }
 
     public function restore(Tender $tender): RedirectResponse
     {
-        $tender->restore();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Tender restored.')]);
-
-        return to_route('admin.tenders.trash');
+        return $this->restoreFromTrash($tender, 'admin.tenders.trash', __('Tender restored.'));
     }
 
     public function forceDelete(Tender $tender): RedirectResponse
     {
-        $tender->forceDelete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Tender permanently deleted.')]);
-
-        return to_route('admin.tenders.trash');
+        return $this->permanentlyDelete($tender, 'admin.tenders.trash', __('Tender permanently deleted.'));
     }
 
     /**
@@ -209,15 +189,9 @@ class TenderController extends Controller
                 'deadline_at' => $tender->deadline_at?->format('Y-m-d'),
                 'translations' => $translations,
             ] : null,
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
+            'locales' => $this->localeOptions(),
             'tenderTypes' => TenderType::options(),
-            'statuses' => PublicationScheduler::statusOptions(),
-            'statusTransitions' => PublicationScheduler::transitionOptions(
-                $tender?->status ?? ContentStatus::Draft,
-            ),
-            'defaultLocale' => Language::defaultCode(),
+            ...$this->publicationFormMeta($tender?->status),
         ];
     }
 

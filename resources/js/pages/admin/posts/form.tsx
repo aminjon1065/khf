@@ -1,29 +1,23 @@
 import { Head, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { CpAssetsField } from '@/components/admin/cp/assets-field';
-import { CpRichTextField } from '@/components/admin/cp/fields';
+import { CpBlueprintForm } from '@/components/admin/cp/blueprint-form';
+import { PostEditorHelp } from '@/components/admin/cp/content-help-topics';
+import { CpLivePreview } from '@/components/admin/cp/live-preview';
+import { CpViewOnSite } from '@/components/admin/cp/view-on-site';
 import {
     CpLocaleTabs,
-    CpPanel,
     CpPublishForm,
 } from '@/components/admin/cp/publish-form';
-import { CpContentPublishPanel } from '@/components/admin/cp/content-publish-panel';
-import { CpMultiRelationField } from '@/components/admin/cp/multi-relation-field';
-import { CpRelationField } from '@/components/admin/cp/relation-field';
-import InputError from '@/components/input-error';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes/admin';
-import { index, store, update } from '@/routes/admin/posts';
+import { CpWorkingCopyBanner } from '@/components/admin/cp/working-copy-banner';
+import { autosave, index, publishVersion, store, update } from '@/routes/admin/posts';
+import { useAutosave } from '@/hooks/use-autosave';
+import type {
+    BlueprintDefinition,
+    BlueprintFieldOptions,
+    SelectOption,
+} from '@/types/cms';
 
 type Translation = {
     title: string;
@@ -34,10 +28,7 @@ type Translation = {
     seo_description: string;
 };
 
-type Option = { value: string; label: string };
 type LocaleOption = { code: string; native_name: string };
-type CategoryOption = { id: number; name: string };
-type TagOption = { id: number; name: string };
 
 type PostData = {
     id: number;
@@ -53,24 +44,30 @@ type PostData = {
 
 type PageProps = {
     post: PostData | null;
+    blueprint: BlueprintDefinition;
+    fieldOptions: BlueprintFieldOptions;
     locales: LocaleOption[];
-    types: Option[];
-    statuses: Option[];
-    statusTransitions: Option[];
-    categories: CategoryOption[];
-    tags: TagOption[];
+    statuses: SelectOption[];
+    statusTransitions: SelectOption[];
     defaultLocale: string;
+    publicUrls?: Record<string, string>;
+    previewUrls?: Record<string, string>;
+    hasUnpublishedChanges?: boolean;
+    canPublish?: boolean;
 };
 
 export default function PostForm({
     post,
+    blueprint,
+    fieldOptions,
     locales,
-    types,
     statuses,
     statusTransitions,
-    categories,
-    tags,
     defaultLocale,
+    publicUrls = {},
+    previewUrls = {},
+    hasUnpublishedChanges = false,
+    canPublish = false,
 }: PageProps) {
     const isEdit = Boolean(post);
 
@@ -88,7 +85,7 @@ export default function PostForm({
     });
 
     const form = useForm({
-        type: post?.type ?? types[0]?.value ?? 'news',
+        type: post?.type ?? 'news',
         category_id: post?.category_id ?? null,
         tag_ids: post?.tag_ids ?? [],
         status: post?.status ?? statuses[0]?.value ?? 'draft',
@@ -101,16 +98,47 @@ export default function PostForm({
     });
 
     const [activeLocale, setActiveLocale] = useState(defaultLocale);
+    const [previewOpen, setPreviewOpen] = useState(false);
     const errors = form.errors as Record<string, string>;
+
+    const autosavePayload = useMemo(
+        () => ({
+            type: form.data.type,
+            category_id: form.data.category_id,
+            tag_ids: form.data.tag_ids,
+            published_at: form.data.published_at,
+            unpublished_at: form.data.unpublished_at,
+            translations: form.data.translations,
+        }),
+        [
+            form.data.type,
+            form.data.category_id,
+            form.data.tag_ids,
+            form.data.published_at,
+            form.data.unpublished_at,
+            form.data.translations,
+        ],
+    );
+
+    const autosaveState = useAutosave({
+        enabled: isEdit && Boolean(post?.id),
+        url: post?.id ? autosave(post.id).url : '',
+        data: autosavePayload,
+    });
+
+    const hasPreview = Boolean(post?.id && Object.keys(previewUrls).length > 0);
 
     const setTranslation = (
         locale: string,
-        field: keyof Translation,
-        value: string,
+        field: string,
+        value: unknown,
     ) => {
         form.setData('translations', {
             ...form.data.translations,
-            [locale]: { ...form.data.translations[locale], [field]: value },
+            [locale]: {
+                ...form.data.translations[locale],
+                [field]: value,
+            },
         });
     };
 
@@ -124,8 +152,13 @@ export default function PostForm({
         }
     };
 
-    const active = form.data.translations[activeLocale];
     const title = isEdit ? 'Редактирование материала' : 'Новый материал';
+    const formMeta = {
+        statuses,
+        statusTransitions,
+        showSchedule: true,
+        coverUrl: post?.cover_url ?? null,
+    };
 
     return (
         <>
@@ -138,113 +171,60 @@ export default function PostForm({
                 processing={form.processing}
                 saveLabel={post?.id ? 'Обновить' : 'Создать'}
                 modelInfo={{ type: 'post', id: post?.id ?? null }}
+                onPreview={hasPreview ? () => setPreviewOpen(true) : undefined}
+                autosave={isEdit ? autosaveState : undefined}
+                headerActions={
+                    <>
+                        {hasPreview ? (
+                            <CpLivePreview
+                                previewUrls={previewUrls}
+                                locales={locales}
+                                activeLocale={activeLocale}
+                                open={previewOpen}
+                                onOpenChange={setPreviewOpen}
+                            />
+                        ) : null}
+                        {form.data.status === 'published' ? (
+                            <CpViewOnSite
+                                urls={publicUrls}
+                                locales={locales}
+                                defaultLocale={defaultLocale}
+                            />
+                        ) : null}
+                    </>
+                }
                 sidebar={
                     <>
-                        <CpPanel title="Публикация">
-                            <CpContentPublishPanel
-                                status={form.data.status}
-                                statuses={statuses}
-                                transitions={statusTransitions}
-                                publishedAt={form.data.published_at}
-                                unpublishedAt={form.data.unpublished_at}
-                                showSchedule
-                                onStatusChange={(value) =>
-                                    form.setData('status', value)
-                                }
-                                onPublishedAtChange={(value) =>
-                                    form.setData('published_at', value)
-                                }
-                                onUnpublishedAtChange={(value) =>
-                                    form.setData('unpublished_at', value)
-                                }
-                                errors={errors}
-                            />
-                            <div className="space-y-2">
-                                <Label htmlFor="type">Тип</Label>
-                                <Select
-                                    value={form.data.type}
-                                    onValueChange={(value) =>
-                                        form.setData('type', value)
-                                    }
-                                >
-                                    <SelectTrigger id="type">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {types.map((type) => (
-                                            <SelectItem
-                                                key={type.value}
-                                                value={type.value}
-                                            >
-                                                {type.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.type} />
-                            </div>
-                            <CpRelationField
-                                id="category"
-                                label="Рубрика"
-                                value={form.data.category_id}
-                                options={categories}
-                                onChange={(value) =>
-                                    form.setData('category_id', value)
-                                }
-                                placeholder="— Нет —"
-                                error={errors.category_id}
-                            />
-                            <CpMultiRelationField
-                                id="tags"
-                                label="Теги"
-                                value={form.data.tag_ids}
-                                options={tags}
-                                onChange={(value) =>
-                                    form.setData('tag_ids', value)
-                                }
-                                placeholder="— Нет —"
-                                error={errors.tag_ids}
-                            />
-                        </CpPanel>
-
-                        <CpPanel title="Обложка">
-                            <CpAssetsField
-                                label="Изображение обложки"
-                                instructions="Загрузите файл или выберите из медиабиблиотеки"
-                                currentUrl={post?.cover_url ?? null}
-                                file={form.data.cover}
-                                mediaId={form.data.cover_media_id}
-                                removed={form.data.remove_cover}
-                                onUpload={(file) =>
-                                    form.setData({
-                                        ...form.data,
-                                        cover: file,
-                                        cover_media_id: null,
-                                        remove_cover: false,
-                                    })
-                                }
-                                onPickAsset={(asset) =>
-                                    form.setData({
-                                        ...form.data,
-                                        cover: null,
-                                        cover_media_id: asset?.id ?? null,
-                                        remove_cover: false,
-                                    })
-                                }
-                                onClear={() =>
-                                    form.setData({
-                                        ...form.data,
-                                        cover: null,
-                                        cover_media_id: null,
-                                        remove_cover: true,
-                                    })
-                                }
-                                error={errors.cover ?? errors.cover_media_id}
-                            />
-                        </CpPanel>
+                        <CpWorkingCopyBanner
+                            hasUnpublishedChanges={hasUnpublishedChanges}
+                            canPublish={canPublish}
+                            publishUrl={
+                                post?.id
+                                    ? publishVersion(post.id).url
+                                    : null
+                            }
+                        />
+                        <CpBlueprintForm
+                            blueprint={blueprint}
+                            section="sidebar"
+                            data={form.data}
+                            errors={errors}
+                            activeLocale={activeLocale}
+                            fieldOptions={fieldOptions}
+                            meta={formMeta}
+                            onRootChange={(handle, value) =>
+                                form.setData(handle as keyof typeof form.data, value as never)
+                            }
+                            onTranslationChange={setTranslation}
+                            onAssetChange={(patch) =>
+                                form.setData({ ...form.data, ...patch })
+                            }
+                        />
                     </>
                 }
             >
+                <PostEditorHelp />
+
                 <CpLocaleTabs
                     locales={locales}
                     active={activeLocale}
@@ -254,107 +234,23 @@ export default function PostForm({
                     }
                 />
 
-                <div>
-                    <input
-                        aria-label="Заголовок"
-                        value={active.title}
-                        onChange={(event) =>
-                            setTranslation(
-                                activeLocale,
-                                'title',
-                                event.target.value,
-                            )
-                        }
-                        placeholder="Заголовок"
-                        className="w-full rounded-sm border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    />
-                    <InputError
-                        message={errors[`translations.${activeLocale}.title`]}
-                    />
-                </div>
-
-                <CpPanel title="Содержание">
-                    <div className="space-y-2">
-                        <Label htmlFor="slug">ЧПУ (slug)</Label>
-                        <Input
-                            id="slug"
-                            value={active.slug}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'slug',
-                                    event.target.value,
-                                )
-                            }
-                            placeholder="оставьте пустым для авто"
-                        />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.slug`]
-                            }
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="excerpt">Анонс</Label>
-                        <Textarea
-                            id="excerpt"
-                            rows={2}
-                            value={active.excerpt}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'excerpt',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.excerpt`]
-                            }
-                        />
-                    </div>
-                    <CpRichTextField
-                        label="Полный текст"
-                        editorKey={activeLocale}
-                        value={active.body}
-                        onChange={(html) =>
-                            setTranslation(activeLocale, 'body', html)
-                        }
-                        error={errors[`translations.${activeLocale}.body`]}
-                    />
-                </CpPanel>
-
-                <CpPanel title="SEO">
-                    <div className="space-y-2">
-                        <Label htmlFor="seo_title">SEO заголовок</Label>
-                        <Input
-                            id="seo_title"
-                            value={active.seo_title}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'seo_title',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="seo_description">SEO описание</Label>
-                        <Input
-                            id="seo_description"
-                            value={active.seo_description}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'seo_description',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                    </div>
-                </CpPanel>
+                <CpBlueprintForm
+                    blueprint={blueprint}
+                    section="main"
+                    data={form.data}
+                    errors={errors}
+                    activeLocale={activeLocale}
+                    fieldOptions={fieldOptions}
+                    meta={formMeta}
+                    titleAsHeader
+                    onRootChange={(handle, value) =>
+                        form.setData(handle as keyof typeof form.data, value as never)
+                    }
+                    onTranslationChange={setTranslation}
+                    onAssetChange={(patch) =>
+                        form.setData({ ...form.data, ...patch })
+                    }
+                />
             </CpPublishForm>
         </>
     );

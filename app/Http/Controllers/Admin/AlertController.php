@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\AlertStatus;
 use App\Enums\HazardLevel;
 use App\Enums\SubscriptionTopic;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
+use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreAlertRequest;
 use App\Http\Requests\Admin\UpdateAlertRequest;
 use App\Jobs\SendAlertNotifications;
 use App\Models\Alert;
-use App\Models\Language;
 use App\Models\Region;
 use App\Models\Subscriber;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,45 +25,40 @@ use Inertia\Response;
 
 class AlertController extends Controller
 {
+    use BuildsCmsFormData;
+    use ListsTranslatableContent;
+    use ManagesSoftDeletableContent;
+    use SavesContentRevisions;
+
     /** @var list<string> */
     private const SORTABLE = ['status', 'hazard_level', 'starts_at', 'created_at'];
 
     public function index(Request $request): Response
     {
-        $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-        $sort = in_array((string) $request->string('sort'), self::SORTABLE, true)
-            ? (string) $request->string('sort')
-            : 'created_at';
-        $direction = (string) $request->string('direction') === 'asc' ? 'asc' : 'desc';
+        $filters = $this->listFilters($request, 'created_at', 'desc');
 
-        $alerts = Alert::query()
-            ->with(['translations', 'region.translations'])
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('title', 'like', "%{$search}%"),
-            ))
-            ->orderBy($sort, $direction)
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Alert $alert) => $this->toRow($alert, $locale));
+        $alerts = $this->paginateTranslatable(
+            Alert::query()->with(['translations', 'region.translations']),
+            $request,
+            self::SORTABLE,
+            'created_at',
+            'desc',
+            fn (Alert $alert, string $locale) => $this->toRow($alert, $locale),
+        );
 
         return Inertia::render('admin/alerts/index', [
             'alerts' => $alerts,
-            'filters' => ['search' => $search, 'sort' => $sort, 'direction' => $direction],
+            'filters' => $filters,
             'trashedCount' => Alert::onlyTrashed()->count(),
         ]);
     }
 
     public function trash(): Response
     {
-        $locale = app()->getLocale();
-
-        $alerts = Alert::onlyTrashed()
-            ->with(['translations', 'region.translations'])
-            ->orderByDesc('deleted_at')
-            ->paginate(15)
-            ->through(fn (Alert $alert) => $this->toRow($alert, $locale));
+        $alerts = $this->paginateTrashed(
+            Alert::onlyTrashed()->with(['translations', 'region.translations']),
+            fn (Alert $alert, string $locale) => $this->toRow($alert, $locale),
+        );
 
         return Inertia::render('admin/alerts/trash', ['alerts' => $alerts]);
     }
@@ -77,8 +75,8 @@ class AlertController extends Controller
         $alert = Alert::create($this->attributes($data));
         $alert->upsertTranslations($this->translationsPayload($data));
         $this->dispatchNotifications($alert);
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Alert created.')]);
+        $this->saveContentRevision($alert);
+        $this->flashContentSaved(__('Alert created.'));
 
         return to_route('admin.alerts.index');
     }
@@ -97,37 +95,25 @@ class AlertController extends Controller
         $alert->update($this->attributes($data));
         $alert->upsertTranslations($this->translationsPayload($data));
         $this->dispatchNotifications($alert);
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Alert updated.')]);
+        $this->saveContentRevision($alert);
+        $this->flashContentSaved(__('Alert updated.'));
 
         return to_route('admin.alerts.index');
     }
 
     public function destroy(Alert $alert): RedirectResponse
     {
-        $alert->delete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Alert moved to trash.')]);
-
-        return to_route('admin.alerts.index');
+        return $this->moveToTrash($alert, 'admin.alerts.index', __('Alert moved to trash.'));
     }
 
     public function restore(Alert $alert): RedirectResponse
     {
-        $alert->restore();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Alert restored.')]);
-
-        return to_route('admin.alerts.trash');
+        return $this->restoreFromTrash($alert, 'admin.alerts.trash', __('Alert restored.'));
     }
 
     public function forceDelete(Alert $alert): RedirectResponse
     {
-        $alert->forceDelete();
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Alert permanently deleted.')]);
-
-        return to_route('admin.alerts.trash');
+        return $this->permanentlyDelete($alert, 'admin.alerts.trash', __('Alert permanently deleted.'));
     }
 
     public function estimateRecipients(Request $request): JsonResponse
@@ -227,10 +213,8 @@ class AlertController extends Controller
                 ->get()
                 ->map(fn (Region $region) => ['id' => $region->id, 'name' => $region->translation($locale)?->name ?? $region->code])
                 ->all(),
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'defaultLocale' => Language::defaultCode(),
+            'locales' => $this->localeOptions(),
+            'defaultLocale' => $this->publicationFormMeta()['defaultLocale'],
         ];
     }
 

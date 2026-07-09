@@ -5,6 +5,7 @@ use App\Enums\IncidentStatus;
 use App\Enums\IncidentType;
 use App\Enums\Role;
 use App\Models\Incident;
+use App\Models\Revision;
 use App\Models\User;
 use Database\Seeders\LanguageSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -59,6 +60,25 @@ it('creates an incident with translations', function () {
         ->and($incident->translations)->toHaveCount(2)
         ->and($incident->translation('ru')->title)->toBe('Землетрясение')
         ->and((float) $incident->latitude)->toBe(38.5598);
+
+    expect(Revision::query()->where('revisionable_type', Incident::class)->count())->toBe(1);
+});
+
+it('creates a revision when an incident is updated', function () {
+    $incident = Incident::factory()->create();
+    $incident->upsertTranslations(['ru' => ['title' => 'Старое', 'description' => 'd']]);
+
+    $this->actingAs($this->operator)
+        ->put(route('admin.incidents.update', $incident), incidentPayload([
+            'translations' => [
+                'tj' => ['title' => 'Нав', 'description' => 'Тавсиф'],
+                'ru' => ['title' => 'Новое', 'description' => 'Описание'],
+                'en' => ['title' => '', 'description' => ''],
+            ],
+        ]))
+        ->assertRedirect(route('admin.incidents.index'));
+
+    expect(Revision::query()->where('revisionable_type', Incident::class)->count())->toBe(1);
 });
 
 it('validates type, hazard level and default title', function () {

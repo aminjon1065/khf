@@ -1,0 +1,60 @@
+title: Страница
+sections:
+  main:
+    display: Содержание
+    fields:
+      - handle: title
+        type: text
+        display: Заголовок
+        localizable: true
+        required: true
+      - handle: slug
+        type: slug
+        display: ЧПУ (slug)
+        localizable: true
+      - handle: content
+        type: rich_text
+        display: Классическое содержимое (Legacy HTML)
+        localizable: true
+      - handle: blocks
+        type: blocks
+        display: Конструктор блоков
+        localizable: true
+        blockset: page
+  sidebar:
+    display: Публикация
+    fields:
+      - handle: status
+        type: status
+        display: Статус
+      - handle: parent_id
+        type: entries
+        display: Родительская страница
+        collection: pages
+        max: 1
+      - handle: sort_order
+        type: number
+        display: Порядок
+      - handle: is_home
+        type: toggle
+        display: Сделать главной страницей
+        instructions: Только одна страница может быть главной
+      - handle: cover
+        type: assets
+        display: OG-изображение
+        instructions: Используется в соцсетях и превью ссылки
+        max: 1
+      - handle: tag_ids
+        type: entries
+        display: Теги
+        collection: tags
+      - handle: seo_title
+        type: text
+        display: SEO заголовок
+        localizable: true
+      - handle: seo_description
+        type: textarea
+        display: SEO описание
+        localizable: true
+        rows: 2
+        max: 500

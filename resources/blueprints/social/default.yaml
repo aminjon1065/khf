@@ -1,0 +1,21 @@
+title: Социальные сети
+sections:
+  main:
+    display: Ссылки
+    fields:
+      - handle: telegram
+        type: text
+        display: Telegram
+        instructions: Оставьте пустым, чтобы скрыть
+      - handle: facebook
+        type: text
+        display: Facebook
+      - handle: instagram
+        type: text
+        display: Instagram
+      - handle: youtube
+        type: text
+        display: YouTube
+      - handle: x
+        type: text
+        display: X (Twitter)

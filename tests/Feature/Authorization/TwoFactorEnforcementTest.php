@@ -40,3 +40,14 @@ it('does not block a user without a privileged role', function () {
         ->get('/__test/protected')
         ->assertOk();
 });
+
+it('skips enforcement when two factor is disabled for the environment', function () {
+    config(['fortify.require_two_factor' => false]);
+
+    $user = User::factory()->create();
+    $user->assignRole(Role::Moderator->value);
+
+    $this->actingAs($user)
+        ->get('/__test/protected')
+        ->assertOk();
+});

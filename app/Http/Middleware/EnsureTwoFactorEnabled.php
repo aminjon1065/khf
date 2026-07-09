@@ -22,6 +22,10 @@ class EnsureTwoFactorEnabled
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if (! config('fortify.require_two_factor')) {
+            return $next($request);
+        }
+
         $user = $request->user();
 
         if ($user instanceof User

@@ -39,7 +39,9 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        Vite::prefetch(concurrency: 3);
+        if (! $this->app->isLocal()) {
+            Vite::prefetch(concurrency: 3);
+        }
 
         $this->configureDefaults();
         $this->configureAuthorization();

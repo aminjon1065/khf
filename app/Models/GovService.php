@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ContentStatus;
 use App\Enums\ServiceCategory;
 use App\Models\Concerns\ClearsResponseCache;
+use App\Models\Concerns\HasRevisions;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\GovServiceFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,6 +33,7 @@ class GovService extends Model
     /** @use HasFactory<GovServiceFactory> */
     use HasFactory;
 
+    use HasRevisions;
     use HasTranslations;
     use LogsActivity;
 

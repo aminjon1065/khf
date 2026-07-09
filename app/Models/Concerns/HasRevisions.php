@@ -28,8 +28,8 @@ trait HasRevisions
     {
         $userId ??= auth()->id();
 
-        // Ensure translations are loaded
-        $this->loadMissing('translations');
+        $this->unsetRelation('translations');
+        $this->load('translations');
 
         $payload = [
             'attributes' => $this->getAttributes(),

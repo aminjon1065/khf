@@ -5,11 +5,13 @@
     $seoAlternates = $page['props']['seoAlternates'] ?? $localeUrls->alternates(request());
 
     $locale = app()->getLocale();
+    $seoDefaults = app(\App\Services\Cms\GlobalResolver::class)->seoDefaults();
     $seo = $page['props']['seo'] ?? [];
-    $seoTitle = $seo['title'] ?? config('app.name', 'КЧС');
-    $seoDescription = $seo['description'] ?? trans('ui.site.full_name');
+    $seoTitle = $seo['title'] ?? $seoDefaults['title'];
+    $seoDescription = $seo['description'] ?? $seoDefaults['description'];
     $canonicalUrl = collect($seoAlternates)->firstWhere('code', $locale)['url'] ?? request()->url();
-    $ogImage = $seo['image'] ?? url('/images/emblem-'.(in_array($locale, ['tj', 'ru', 'en'], true) ? $locale : 'tj').'.webp');
+    $ogImage = $seo['image'] ?? $seoDefaults['image'];
+    $isPreview = ($page['props']['isPreview'] ?? false) || ($seo['noindex'] ?? false);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $localeUrls->hreflang($locale) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
@@ -18,6 +20,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <meta name="description" content="{{ $seoDescription }}">
+        @if ($isPreview)
+            <meta name="robots" content="noindex, nofollow">
+        @endif
 
         {{-- Open Graph / Twitter card — server-rendered for crawlers since SSR is off (ТЗ §15) --}}
         <meta property="og:type" content="website">
@@ -42,7 +47,7 @@
         @endif
 
         {{-- Matomo Analytics --}}
-        @if (config('matomo.url') && config('matomo.site_id'))
+        @if (! $isPreview && config('matomo.url') && config('matomo.site_id'))
             <script>
                 var _paq = window._paq = window._paq || [];
                 /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
