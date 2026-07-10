@@ -1,40 +1,20 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { CpContentPublishPanel } from '@/components/admin/cp/content-publish-panel';
-import { CpRichTextField } from '@/components/admin/cp/fields';
+import { CpBlueprintForm } from '@/components/admin/cp/blueprint-form';
 import {
     CpLocaleTabs,
-    CpPanel,
     CpPublishForm,
 } from '@/components/admin/cp/publish-form';
-import InputError from '@/components/input-error';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes/admin';
 import { index, store, update } from '@/routes/admin/tenders';
+import type {
+    BlueprintDefinition,
+    BlueprintFieldOptions,
+    SelectOption,
+} from '@/types/cms';
 
-type Translation = {
-    title: string;
-    slug: string;
-    organizer: string;
-    summary: string;
-    description: string;
-    requirements: string;
-    terms: string;
-    seo_title: string;
-    seo_description: string;
-};
-
-type Option = { value: string; label: string };
+type Translation = { title: string };
 type LocaleOption = { code: string; native_name: string };
 
 type TenderData = {
@@ -52,29 +32,19 @@ type TenderData = {
 
 type PageProps = {
     tender: TenderData | null;
+    blueprint: BlueprintDefinition;
+    fieldOptions: BlueprintFieldOptions;
     locales: LocaleOption[];
-    tenderTypes: Option[];
-    statuses: Option[];
-    statusTransitions: Option[];
+    statuses: SelectOption[];
+    statusTransitions: SelectOption[];
     defaultLocale: string;
-};
-
-const emptyTranslation: Translation = {
-    title: '',
-    slug: '',
-    organizer: '',
-    summary: '',
-    description: '',
-    requirements: '',
-    terms: '',
-    seo_title: '',
-    seo_description: '',
 };
 
 export default function TenderForm({
     tender,
+    blueprint,
+    fieldOptions,
     locales,
-    tenderTypes,
     statuses,
     statusTransitions,
     defaultLocale,
@@ -84,13 +54,15 @@ export default function TenderForm({
     const initialTranslations: Record<string, Translation> = {};
     locales.forEach((locale) => {
         const existing = tender?.translations?.[locale.code];
-        initialTranslations[locale.code] = { ...emptyTranslation, ...existing };
+        initialTranslations[locale.code] = {
+            title: existing?.title ?? '',
+        };
     });
 
     const form = useForm({
-        tender_number: tender?.tender_number ?? '',
-        type: tender?.type ?? tenderTypes[0]?.value ?? 'goods',
         status: tender?.status ?? statuses[0]?.value ?? 'draft',
+        type: tender?.type ?? '',
+        tender_number: tender?.tender_number ?? '',
         budget: tender?.budget ?? '',
         lots_count: tender?.lots_count ?? 1,
         published_at: tender?.published_at ?? '',
@@ -102,17 +74,6 @@ export default function TenderForm({
     const [activeLocale, setActiveLocale] = useState(defaultLocale);
     const errors = form.errors as Record<string, string>;
 
-    const setTranslation = (
-        locale: string,
-        field: keyof Translation,
-        value: string,
-    ) => {
-        form.setData('translations', {
-            ...form.data.translations,
-            [locale]: { ...form.data.translations[locale], [field]: value },
-        });
-    };
-
     const submit = (event: FormEvent) => {
         event.preventDefault();
 
@@ -123,8 +84,12 @@ export default function TenderForm({
         }
     };
 
-    const active = form.data.translations[activeLocale];
     const title = isEdit ? 'Редактирование тендера' : 'Новый тендер';
+    const formMeta = {
+        statuses,
+        statusTransitions,
+        showSchedule: true,
+    };
 
     return (
         <>
@@ -135,112 +100,33 @@ export default function TenderForm({
                 backHref={index().url}
                 onSubmit={submit}
                 processing={form.processing}
+                saveLabel={tender?.id ? 'Обновить' : 'Создать'}
+                modelInfo={{ type: 'tender', id: tender?.id ?? null }}
                 sidebar={
-                    <CpPanel title="Публикация">
-                        <CpContentPublishPanel
-                            status={form.data.status}
-                            statuses={statuses}
-                            transitions={statusTransitions}
-                            publishedAt={form.data.published_at}
-                            unpublishedAt={form.data.unpublished_at}
-                            showSchedule
-                            onStatusChange={(value) =>
-                                form.setData('status', value)
-                            }
-                            onPublishedAtChange={(value) =>
-                                form.setData('published_at', value)
-                            }
-                            onUnpublishedAtChange={(value) =>
-                                form.setData('unpublished_at', value)
-                            }
-                            errors={errors}
-                        />
-                        <div className="mt-4 space-y-2">
-                            <Label htmlFor="type">Тип закупки</Label>
-                            <Select
-                                value={form.data.type}
-                                onValueChange={(value) =>
-                                    form.setData('type', value)
-                                }
-                            >
-                                <SelectTrigger id="type">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {tenderTypes.map((type) => (
-                                        <SelectItem
-                                            key={type.value}
-                                            value={type.value}
-                                        >
-                                            {type.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError message={errors.type} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="tender_number">Номер тендера</Label>
-                            <Input
-                                id="tender_number"
-                                value={form.data.tender_number}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'tender_number',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                            <InputError message={errors.tender_number} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="budget">
-                                Ориентировочная стоимость
-                            </Label>
-                            <Input
-                                id="budget"
-                                type="number"
-                                min={0}
-                                step="0.01"
-                                value={form.data.budget}
-                                onChange={(event) =>
-                                    form.setData('budget', event.target.value)
-                                }
-                            />
-                            <InputError message={errors.budget} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="lots_count">Количество лотов</Label>
-                            <Input
-                                id="lots_count"
-                                type="number"
-                                min={1}
-                                value={form.data.lots_count}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'lots_count',
-                                        Number(event.target.value),
-                                    )
-                                }
-                            />
-                            <InputError message={errors.lots_count} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="deadline_at">Срок подачи</Label>
-                            <Input
-                                id="deadline_at"
-                                type="date"
-                                value={form.data.deadline_at}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'deadline_at',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                            <InputError message={errors.deadline_at} />
-                        </div>
-                    </CpPanel>
+                    <CpBlueprintForm
+                        blueprint={blueprint}
+                        section="sidebar"
+                        data={form.data}
+                        errors={errors}
+                        activeLocale={activeLocale}
+                        fieldOptions={fieldOptions}
+                        meta={formMeta}
+                        onRootChange={(handle, value) =>
+                            form.setData(handle as keyof typeof form.data, value as never)
+                        }
+                        onTranslationChange={(locale, handle, value) =>
+                            form.setData('translations', {
+                                ...form.data.translations,
+                                [locale]: {
+                                    ...form.data.translations[locale],
+                                    [handle]: value,
+                                },
+                            })
+                        }
+                        onAssetChange={(patch) =>
+                            form.setData({ ...form.data, ...patch })
+                        }
+                    />
                 }
             >
                 <CpLocaleTabs
@@ -252,148 +138,32 @@ export default function TenderForm({
                     }
                 />
 
-                <div>
-                    <input
-                        aria-label="Название тендера"
-                        value={active.title}
-                        onChange={(event) =>
-                            setTranslation(
-                                activeLocale,
-                                'title',
-                                event.target.value,
-                            )
-                        }
-                        placeholder="Название тендера"
-                        className="w-full rounded-sm border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    />
-                    <InputError
-                        message={errors[`translations.${activeLocale}.title`]}
-                    />
-                </div>
-
-                <CpPanel title="Основное">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="slug">ЧПУ (slug)</Label>
-                            <Input
-                                id="slug"
-                                value={active.slug}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'slug',
-                                        event.target.value,
-                                    )
-                                }
-                                placeholder="оставьте пустым для авто"
-                            />
-                            <InputError
-                                message={
-                                    errors[`translations.${activeLocale}.slug`]
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="organizer">Организатор</Label>
-                            <Input
-                                id="organizer"
-                                value={active.organizer}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'organizer',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="summary">Краткое описание</Label>
-                        <Textarea
-                            id="summary"
-                            rows={2}
-                            value={active.summary}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'summary',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.summary`]
-                            }
-                        />
-                    </div>
-                </CpPanel>
-
-                <CpPanel title="Описание">
-                    <CpRichTextField
-                        label="Описание тендера"
-                        editorKey={`${activeLocale}-description`}
-                        value={active.description}
-                        onChange={(html) =>
-                            setTranslation(activeLocale, 'description', html)
-                        }
-                        error={
-                            errors[`translations.${activeLocale}.description`]
-                        }
-                    />
-                    <CpRichTextField
-                        label="Условия участия"
-                        editorKey={`${activeLocale}-requirements`}
-                        value={active.requirements}
-                        onChange={(html) =>
-                            setTranslation(activeLocale, 'requirements', html)
-                        }
-                        error={
-                            errors[`translations.${activeLocale}.requirements`]
-                        }
-                    />
-                    <CpRichTextField
-                        label="Условия контракта"
-                        editorKey={`${activeLocale}-terms`}
-                        value={active.terms}
-                        onChange={(html) =>
-                            setTranslation(activeLocale, 'terms', html)
-                        }
-                        error={errors[`translations.${activeLocale}.terms`]}
-                    />
-                </CpPanel>
-
-                <CpPanel title="SEO">
-                    <div className="space-y-2">
-                        <Label htmlFor="seo_title">SEO заголовок</Label>
-                        <Input
-                            id="seo_title"
-                            value={active.seo_title}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'seo_title',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="seo_description">SEO описание</Label>
-                        <Input
-                            id="seo_description"
-                            value={active.seo_description}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'seo_description',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                    </div>
-                </CpPanel>
+                <CpBlueprintForm
+                    blueprint={blueprint}
+                    section="main"
+                    data={form.data}
+                    errors={errors}
+                    activeLocale={activeLocale}
+                    fieldOptions={fieldOptions}
+                    meta={formMeta}
+                    titleAsHeader
+                    titleFieldHandle="title"
+                    onRootChange={(handle, value) =>
+                        form.setData(handle as keyof typeof form.data, value as never)
+                    }
+                    onTranslationChange={(locale, handle, value) =>
+                        form.setData('translations', {
+                            ...form.data.translations,
+                            [locale]: {
+                                ...form.data.translations[locale],
+                                [handle]: value,
+                            },
+                        })
+                    }
+                    onAssetChange={(patch) =>
+                        form.setData({ ...form.data, ...patch })
+                    }
+                />
             </CpPublishForm>
         </>
     );

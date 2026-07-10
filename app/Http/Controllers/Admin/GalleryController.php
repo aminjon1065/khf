@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ContentStatus;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGalleryRequest;
 use App\Http\Requests\Admin\UpdateGalleryRequest;
 use App\Models\Gallery;
-use App\Models\Language;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +18,8 @@ use Inertia\Response;
 
 class GalleryController extends Controller
 {
+    use BuildsCmsFormData;
+    use ProvidesBlueprintForm;
     use SavesContentRevisions;
 
     public function index(Request $request): Response
@@ -132,7 +134,7 @@ class GalleryController extends Controller
     private function formData(?Gallery $gallery): array
     {
         $translations = [];
-        $photos = [];
+        $existingPhotos = [];
 
         if ($gallery) {
             foreach ($gallery->translations as $translation) {
@@ -143,7 +145,7 @@ class GalleryController extends Controller
                 ];
             }
 
-            $photos = $gallery->getMedia(Gallery::PHOTOS_COLLECTION)
+            $existingPhotos = $gallery->getMedia(Gallery::PHOTOS_COLLECTION)
                 ->map(fn ($media) => [
                     'id' => $media->id,
                     'url' => $media->getUrl('thumb'),
@@ -158,16 +160,12 @@ class GalleryController extends Controller
                 'status' => $gallery->status->value,
                 'sort_order' => $gallery->sort_order,
                 'translations' => $translations,
-                'photos' => $photos,
             ] : null,
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
-            ),
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'defaultLocale' => Language::defaultCode(),
+            ...$this->publicationFormMeta($gallery?->status),
+            ...$this->blueprintFormProps('gallery'),
+            'fieldOptions' => [],
+            'locales' => $this->localeOptions(),
+            'existingPhotos' => $existingPhotos,
         ];
     }
 

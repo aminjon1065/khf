@@ -8,6 +8,7 @@ use App\Enums\SubscriptionTopic;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreAlertRequest;
@@ -28,6 +29,7 @@ class AlertController extends Controller
     use BuildsCmsFormData;
     use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
+    use ProvidesBlueprintForm;
     use SavesContentRevisions;
 
     /** @var list<string> */
@@ -205,14 +207,20 @@ class AlertController extends Controller
                 'ends_at' => $alert->ends_at?->format('Y-m-d\TH:i'),
                 'translations' => $translations,
             ] : null,
-            'levels' => HazardLevel::options(),
-            'statuses' => AlertStatus::options(),
-            'regions' => Region::query()
-                ->with('translations')
-                ->orderBy('sort_order')
-                ->get()
-                ->map(fn (Region $region) => ['id' => $region->id, 'name' => $region->translation($locale)?->name ?? $region->code])
-                ->all(),
+            ...$this->blueprintFormProps('alert'),
+            'fieldOptions' => [
+                'hazard_level' => HazardLevel::options(),
+                'status' => AlertStatus::options(),
+                'region_id' => Region::query()
+                    ->with('translations')
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->map(fn (Region $region) => [
+                        'id' => $region->id,
+                        'name' => $region->translation($locale)?->name ?? $region->code,
+                    ])
+                    ->all(),
+            ],
             'locales' => $this->localeOptions(),
             'defaultLocale' => $this->publicationFormMeta()['defaultLocale'],
         ];

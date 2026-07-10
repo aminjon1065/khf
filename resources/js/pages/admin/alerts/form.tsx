@@ -10,26 +10,17 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import {
-    CpSelectField,
-    CpTextField,
-    CpTextareaField,
-    CpToggleField,
-} from '@/components/admin/cp/fields';
+import { CpBlueprintForm } from '@/components/admin/cp/blueprint-form';
 import {
     CpLocaleTabs,
-    CpPanel,
     CpPublishForm,
 } from '@/components/admin/cp/publish-form';
-import { CpRelationField } from '@/components/admin/cp/relation-field';
-import InputError from '@/components/input-error';
 import { dashboard } from '@/routes/admin';
 import { index, store, update } from '@/routes/admin/alerts';
+import type { BlueprintDefinition, BlueprintFieldOptions } from '@/types/cms';
 
 type Translation = { title: string; body: string };
-type Option = { value: string; label: string };
 type LocaleOption = { code: string; native_name: string };
-type RegionOption = { id: number; name: string };
 
 type AlertData = {
     id: number;
@@ -44,18 +35,16 @@ type AlertData = {
 
 type PageProps = {
     alert: AlertData | null;
-    levels: Option[];
-    statuses: Option[];
-    regions: RegionOption[];
+    blueprint: BlueprintDefinition;
+    fieldOptions: BlueprintFieldOptions;
     locales: LocaleOption[];
     defaultLocale: string;
 };
 
 export default function AlertForm({
     alert,
-    levels,
-    statuses,
-    regions,
+    blueprint,
+    fieldOptions,
     locales,
     defaultLocale,
 }: PageProps) {
@@ -71,8 +60,8 @@ export default function AlertForm({
     });
 
     const form = useForm({
-        hazard_level: alert?.hazard_level ?? levels[0]?.value ?? '',
-        status: alert?.status ?? statuses[0]?.value ?? 'draft',
+        hazard_level: alert?.hazard_level ?? '',
+        status: alert?.status ?? 'draft',
         region_id: alert?.region_id ?? null,
         is_dismissible: alert?.is_dismissible ?? true,
         starts_at: alert?.starts_at ?? '',
@@ -86,17 +75,6 @@ export default function AlertForm({
     const [showModal, setShowModal] = useState(false);
     const [estimatedCount, setEstimatedCount] = useState<number | null>(null);
     const [isEstimating, setIsEstimating] = useState(false);
-
-    const setTranslation = (
-        locale: string,
-        field: keyof Translation,
-        value: string,
-    ) => {
-        form.setData('translations', {
-            ...form.data.translations,
-            [locale]: { ...form.data.translations[locale], [field]: value },
-        });
-    };
 
     const doSubmit = () => {
         if (isEdit && alert) {
@@ -139,8 +117,11 @@ export default function AlertForm({
         doSubmit();
     };
 
-    const active = form.data.translations[activeLocale];
     const title = isEdit ? 'Редактирование оповещения' : 'Новое оповещение';
+    const formMeta = {
+        statuses: [],
+        statusTransitions: [],
+    };
 
     return (
         <>
@@ -153,64 +134,30 @@ export default function AlertForm({
                 processing={form.processing}
                 modelInfo={{ type: 'alert', id: alert?.id ?? null }}
                 sidebar={
-                    <CpPanel title="Параметры">
-                        <CpSelectField
-                            id="hazard_level"
-                            label="Уровень опасности"
-                            value={form.data.hazard_level}
-                            onChange={(value) =>
-                                form.setData('hazard_level', value)
-                            }
-                            options={levels}
-                            error={errors.hazard_level}
-                        />
-                        <CpSelectField
-                            id="status"
-                            label="Статус"
-                            value={form.data.status}
-                            onChange={(value) => form.setData('status', value)}
-                            options={statuses}
-                            error={errors.status}
-                        />
-                        <CpRelationField
-                            id="region"
-                            label="Регион"
-                            value={form.data.region_id}
-                            options={regions}
-                            onChange={(value) =>
-                                form.setData('region_id', value)
-                            }
-                            placeholder="Вся страна"
-                            error={errors.region_id}
-                        />
-                        <CpTextField
-                            id="starts_at"
-                            label="Начало"
-                            type="datetime-local"
-                            value={form.data.starts_at}
-                            onChange={(value) =>
-                                form.setData('starts_at', value)
-                            }
-                            error={errors.starts_at}
-                        />
-                        <CpTextField
-                            id="ends_at"
-                            label="Окончание"
-                            type="datetime-local"
-                            value={form.data.ends_at}
-                            onChange={(value) => form.setData('ends_at', value)}
-                            error={errors.ends_at}
-                        />
-                        <CpToggleField
-                            id="is_dismissible"
-                            label="Пользователь может закрыть баннер"
-                            instructions="Снимите для критических оповещений, которые нельзя скрыть."
-                            checked={form.data.is_dismissible}
-                            onChange={(value) =>
-                                form.setData('is_dismissible', value)
-                            }
-                        />
-                    </CpPanel>
+                    <CpBlueprintForm
+                        blueprint={blueprint}
+                        section="sidebar"
+                        data={form.data}
+                        errors={errors}
+                        activeLocale={activeLocale}
+                        fieldOptions={fieldOptions}
+                        meta={formMeta}
+                        onRootChange={(handle, value) =>
+                            form.setData(handle as keyof typeof form.data, value as never)
+                        }
+                        onTranslationChange={(locale, handle, value) =>
+                            form.setData('translations', {
+                                ...form.data.translations,
+                                [locale]: {
+                                    ...form.data.translations[locale],
+                                    [handle]: value,
+                                },
+                            })
+                        }
+                        onAssetChange={(patch) =>
+                            form.setData({ ...form.data, ...patch })
+                        }
+                    />
                 }
             >
                 <CpLocaleTabs
@@ -222,37 +169,32 @@ export default function AlertForm({
                     }
                 />
 
-                <div>
-                    <input
-                        aria-label="Заголовок"
-                        value={active.title}
-                        onChange={(event) =>
-                            setTranslation(
-                                activeLocale,
-                                'title',
-                                event.target.value,
-                            )
-                        }
-                        placeholder="Заголовок оповещения"
-                        className="w-full rounded-sm border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    />
-                    <InputError
-                        message={errors[`translations.${activeLocale}.title`]}
-                    />
-                </div>
-
-                <CpPanel title="Текст">
-                    <CpTextareaField
-                        id="body"
-                        label="Текст оповещения"
-                        rows={5}
-                        value={active.body}
-                        onChange={(value) =>
-                            setTranslation(activeLocale, 'body', value)
-                        }
-                        error={errors[`translations.${activeLocale}.body`]}
-                    />
-                </CpPanel>
+                <CpBlueprintForm
+                    blueprint={blueprint}
+                    section="main"
+                    data={form.data}
+                    errors={errors}
+                    activeLocale={activeLocale}
+                    fieldOptions={fieldOptions}
+                    meta={formMeta}
+                    titleAsHeader
+                    titleFieldHandle="title"
+                    onRootChange={(handle, value) =>
+                        form.setData(handle as keyof typeof form.data, value as never)
+                    }
+                    onTranslationChange={(locale, handle, value) =>
+                        form.setData('translations', {
+                            ...form.data.translations,
+                            [locale]: {
+                                ...form.data.translations[locale],
+                                [handle]: value,
+                            },
+                        })
+                    }
+                    onAssetChange={(patch) =>
+                        form.setData({ ...form.data, ...patch })
+                    }
+                />
             </CpPublishForm>
 
             <Dialog open={showModal} onOpenChange={setShowModal}>

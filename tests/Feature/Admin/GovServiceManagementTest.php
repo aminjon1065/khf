@@ -71,7 +71,11 @@ it('renders the services list and form', function () {
 
     $this->actingAs($this->editor)->get(route('admin.services.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('admin/services/form')->has('categories', 6));
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/services/form')
+            ->has('blueprint')
+            ->has('fieldOptions.category', 6)
+            ->has('statuses', 4));
 });
 
 it('creates a service with translations', function () {

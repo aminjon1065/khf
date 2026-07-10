@@ -1,9 +1,10 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Paperclip, FileIcon } from 'lucide-react';
-import { useTranslations } from '@/hooks/use-translations';
-import { index as newsIndex, show } from '@/routes/news';
 import { MissingTranslationAlert } from '@/components/Public/missing-translation-alert';
+import { NewsCover } from '@/components/Public/news-cover';
+import { useTranslations } from '@/hooks/use-translations';
 import { formatDate } from '@/lib/utils';
+import { index as newsIndex, show } from '@/routes/news';
 
 type MediaItem = {
     url: string;
@@ -83,13 +84,16 @@ export default function NewsShow({ post, related }: PageProps) {
                         {post.title}
                     </h1>
 
-                    {post.cover_url && (
-                        <img
+                    {post.cover_url ? (
+                        <NewsCover
                             src={post.cover_url}
                             alt={post.title ?? ''}
-                            className="mt-6 w-full rounded-lg object-cover"
+                            locale={locale}
+                            aspect="aspect-[16/9]"
+                            className="mt-6 overflow-hidden rounded-lg"
+                            loading="eager"
                         />
-                    )}
+                    ) : null}
 
                     {post.excerpt && (
                         <p className="mt-6 text-lg text-muted-foreground">
@@ -107,7 +111,7 @@ export default function NewsShow({ post, related }: PageProps) {
 
                     {post.gallery && post.gallery.length > 0 && (
                         <div className="mt-8">
-                            <h3 className="mb-4 text-lg font-semibold">{t('common.photo_gallery') || 'Фотогалерея'}</h3>
+                            <h3 className="mb-4 text-lg font-semibold">{t('common.photo_gallery')}</h3>
                             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                                 {post.gallery.map((img, i) => (
                                     <a key={i} href={img.url} target="_blank" rel="noreferrer" className="block aspect-video overflow-hidden rounded-lg bg-muted border hover:border-primary transition-colors">
@@ -122,7 +126,7 @@ export default function NewsShow({ post, related }: PageProps) {
                         <div className="mt-8">
                             <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
                                 <Paperclip className="size-5" />
-                                {t('common.attachments') || 'Прикрепленные файлы'}
+                                {t('common.attachments')}
                             </h3>
                             <ul className="flex flex-col gap-3">
                                 {post.attachments.map((file, i) => (
@@ -151,7 +155,7 @@ export default function NewsShow({ post, related }: PageProps) {
 
                 <aside className="space-y-4">
                     <h2 className="text-lg font-semibold">
-                        {t('common.related_news') || 'Похожие материалы'}
+                        {t('common.related_news')}
                     </h2>
                     <ul className="space-y-3">
                         {related.map((item) => (

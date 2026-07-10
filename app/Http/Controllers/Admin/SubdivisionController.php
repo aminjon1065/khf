@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ContentStatus;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSubdivisionRequest;
 use App\Http\Requests\Admin\UpdateSubdivisionRequest;
-use App\Models\Language;
 use App\Models\Subdivision;
 use App\Support\HtmlSanitizer;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +17,9 @@ use Inertia\Response;
 
 class SubdivisionController extends Controller
 {
+    use BuildsCmsFormData;
+    use ProvidesBlueprintForm;
+
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
     public function index(Request $request): Response
@@ -129,7 +132,6 @@ class SubdivisionController extends Controller
             }
         }
 
-        // Candidate parents — every other subdivision (a unit cannot be its own parent).
         $parents = Subdivision::query()
             ->with('translations')
             ->when($subdivision, fn (Builder $query) => $query->whereKeyNot($subdivision->id))
@@ -152,15 +154,12 @@ class SubdivisionController extends Controller
                 'staff_count' => $subdivision->staff_count,
                 'translations' => $translations,
             ] : null,
-            'parents' => $parents,
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
-            ),
-            'defaultLocale' => Language::defaultCode(),
+            ...$this->publicationFormMeta($subdivision?->status),
+            ...$this->blueprintFormProps('subdivision'),
+            'fieldOptions' => [
+                'parent_id' => $parents,
+            ],
+            'locales' => $this->localeOptions(),
         ];
     }
 

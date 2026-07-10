@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ContentStatus;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreLeaderRequest;
 use App\Http\Requests\Admin\UpdateLeaderRequest;
-use App\Models\Language;
 use App\Models\Leader;
 use App\Support\HtmlSanitizer;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +17,9 @@ use Inertia\Response;
 
 class LeaderController extends Controller
 {
+    use BuildsCmsFormData;
+    use ProvidesBlueprintForm;
+
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
     public function index(Request $request): Response
@@ -146,17 +149,13 @@ class LeaderController extends Controller
                 'sort_order' => $leader->sort_order,
                 'email' => $leader->email,
                 'phone' => $leader->phone,
-                'photo_url' => $leader->getFirstMediaUrl(Leader::PHOTO_COLLECTION, 'thumb') ?: null,
                 'translations' => $translations,
             ] : null,
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
-            ),
-            'defaultLocale' => Language::defaultCode(),
+            ...$this->publicationFormMeta($leader?->status),
+            ...$this->blueprintFormProps('leader'),
+            'fieldOptions' => [],
+            'locales' => $this->localeOptions(),
+            'photoUrl' => $leader?->getFirstMediaUrl(Leader::PHOTO_COLLECTION, 'thumb') ?: null,
         ];
     }
 

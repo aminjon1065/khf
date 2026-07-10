@@ -116,7 +116,7 @@ export default function DocumentsRegistry({
                         type="date"
                         value={dateFrom}
                         onChange={(event) => setDateFrom(event.target.value)}
-                        aria-label={t('documents.form.date_from') || 'С даты'}
+                        aria-label={t('documents.form.date_from')}
                         className="w-full sm:w-[150px]"
                     />
                     <span className="text-muted-foreground">-</span>
@@ -124,7 +124,7 @@ export default function DocumentsRegistry({
                         type="date"
                         value={dateTo}
                         onChange={(event) => setDateTo(event.target.value)}
-                        aria-label={t('documents.form.date_to') || 'По дату'}
+                        aria-label={t('documents.form.date_to')}
                         className="w-full sm:w-[150px]"
                     />
                 </div>

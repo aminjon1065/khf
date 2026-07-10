@@ -6,6 +6,7 @@ use App\Enums\EmploymentType;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreVacancyRequest;
@@ -24,6 +25,7 @@ class VacancyController extends Controller
     use BuildsCmsFormData;
     use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
+    use ProvidesBlueprintForm;
     use SavesContentRevisions;
 
     /** @var list<string> */
@@ -184,9 +186,12 @@ class VacancyController extends Controller
                 'deadline_at' => $vacancy->deadline_at?->format('Y-m-d'),
                 'translations' => $translations,
             ] : null,
-            'locales' => $this->localeOptions(),
-            'employmentTypes' => EmploymentType::options(),
             ...$this->publicationFormMeta($vacancy?->status),
+            ...$this->blueprintFormProps('vacancy'),
+            'fieldOptions' => [
+                'employment_type' => EmploymentType::options(),
+            ],
+            'locales' => $this->localeOptions(),
         ];
     }
 

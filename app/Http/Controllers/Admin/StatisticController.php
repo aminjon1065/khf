@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ContentStatus;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreStatisticRequest;
 use App\Http\Requests\Admin\UpdateStatisticRequest;
-use App\Models\Language;
 use App\Models\Statistic;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -16,6 +16,9 @@ use Inertia\Response;
 
 class StatisticController extends Controller
 {
+    use BuildsCmsFormData;
+    use ProvidesBlueprintForm;
+
     public function index(Request $request): Response
     {
         $locale = app()->getLocale();
@@ -127,14 +130,10 @@ class StatisticController extends Controller
                 'sort_order' => $statistic->sort_order,
                 'translations' => $translations,
             ] : null,
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
-            ),
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'defaultLocale' => Language::defaultCode(),
+            ...$this->publicationFormMeta($statistic?->status),
+            ...$this->blueprintFormProps('statistic'),
+            'fieldOptions' => [],
+            'locales' => $this->localeOptions(),
         ];
     }
 

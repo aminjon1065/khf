@@ -85,7 +85,8 @@ it('renders the admin create and edit screens', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/documents/form')
-            ->has('types')
+            ->has('blueprint')
+            ->has('fieldOptions')
             ->has('statuses')
             ->has('locales'));
 
@@ -93,7 +94,8 @@ it('renders the admin create and edit screens', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/documents/form')
-            ->where('document.id', $document->id));
+            ->where('document.id', $document->id)
+            ->has('blueprint.sections.main.fields'));
 });
 
 it('renders the public registry and downloads a file via the controlled route', function () {

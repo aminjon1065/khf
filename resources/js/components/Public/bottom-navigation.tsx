@@ -33,7 +33,7 @@ export function BottomNavigation() {
     return (
         <nav
             aria-label={t('a11y.primary_nav')}
-            className="pb-safe fixed right-0 bottom-0 left-0 z-50 flex h-16 items-center justify-around border-t bg-background px-2 pt-1 sm:hidden"
+            className="fixed right-0 bottom-0 left-0 z-50 flex h-16 items-center justify-around border-t bg-background px-2 pt-1 pb-[env(safe-area-inset-bottom,0px)] sm:hidden"
         >
             {navItems.map((item) => {
                 const isActive = isCurrentUrl(item.href);

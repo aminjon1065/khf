@@ -40,25 +40,30 @@ export function MapWidget({ locale, incidents }: MapWidgetProps) {
     }));
 
     return (
-        <div className="flex flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-300 hover:shadow-md">
-            <div className="flex items-center justify-between border-b px-5 py-4">
-                <div className="flex items-center gap-2">
-                    <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <Map className="size-4.5" />
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
+            <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+                <div className="flex min-w-0 items-center gap-2">
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                        <Map className="size-4" />
                     </span>
-                    <h3 className="font-semibold text-foreground">
-                        {t('common.emergency_map')}
-                    </h3>
+                    <div className="min-w-0">
+                        <h3 className="truncate text-sm font-semibold text-foreground">
+                            {t('common.emergency_map')}
+                        </h3>
+                        <p className="truncate text-xs text-muted-foreground">
+                            {t('common.operational_situation')}
+                        </p>
+                    </div>
                 </div>
                 <Link
                     href={mapIndex({ locale }).url}
-                    className="group inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+                    className="group inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/80 sm:text-sm"
                 >
                     {t('common.open_full_map')}
-                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                 </Link>
             </div>
-            <div className="h-64 w-full relative">
+            <div className="relative h-44 w-full sm:h-52 lg:h-56">
                 <MapView markers={markers} />
             </div>
         </div>

@@ -22,4 +22,15 @@ enum PollType: string
     {
         return __('enums.poll_type.'.$this->value);
     }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    public static function options(): array
+    {
+        return array_map(
+            fn (self $type): array => ['value' => $type->value, 'label' => $type->label()],
+            self::cases(),
+        );
+    }
 }

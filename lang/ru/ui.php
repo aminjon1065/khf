@@ -18,6 +18,7 @@ return [
     ],
     'nav' => [
         'home' => 'Главная',
+        'about' => 'О Комитете',
         'leadership' => 'Руководство',
         'structure' => 'Структура',
         'news' => 'Новости',
@@ -122,6 +123,12 @@ return [
         'reference_number' => 'Регистрационный номер',
         'track_status' => 'Отследить статус',
         'updated' => 'Обновлено: :date',
+        'all_categories' => 'Все',
+        'photo_gallery' => 'Фотогалерея',
+        'attachments' => 'Прикреплённые файлы',
+        'related_news' => 'Похожие материалы',
+        'open_full_map' => 'Открыть карту',
+        'cover_placeholder_alt' => 'Обложка отсутствует',
     ],
     'home' => [
         'meta_title' => 'Главная',
@@ -237,6 +244,8 @@ return [
             'search_placeholder' => 'Поиск по наименованию…',
             'type_placeholder' => 'Тип',
             'all_types' => 'Все типы',
+            'date_from' => 'С даты',
+            'date_to' => 'По дату',
         ],
     ],
     'appeals' => [

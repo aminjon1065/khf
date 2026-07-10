@@ -153,9 +153,16 @@ export default function PublicLayout({
         .map(mapMenuToNavEntry)
         .filter((entry): entry is NavEntry => entry !== null);
 
-    // Fallback if no primary menu is seeded yet
+    // Fallback when CMS primary menu is empty or incomplete
     if (navEntries.length === 0) {
-        navEntries.push({ label: t('nav.home'), href: welcome({ locale }).url });
+        navEntries.push(
+            { label: t('nav.home'), href: welcome({ locale }).url },
+            { label: t('nav.about'), href: leadershipIndex({ locale }).url },
+            { label: t('nav.news'), href: newsIndex({ locale }).url },
+            { label: t('nav.guides'), href: guidesIndex({ locale }).url },
+            { label: t('nav.documents'), href: documentsIndex({ locale }).url },
+            { label: t('nav.contacts'), href: contactsIndex({ locale }).url },
+        );
     }
 
     const pathOf = (href: string) => {
@@ -184,7 +191,7 @@ export default function PublicLayout({
     const navActive = 'bg-primary/10 text-primary';
 
     return (
-        <div className="flex min-h-screen flex-col bg-background font-sans text-foreground antialiased selection:bg-primary/20">
+        <div className="flex min-h-screen flex-col overflow-x-clip bg-background font-sans text-foreground antialiased selection:bg-primary/20">
             <a
                 href="#main-content"
                 className="sr-only rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100]"
@@ -499,7 +506,7 @@ export default function PublicLayout({
             <main
                 id="main-content"
                 tabIndex={-1}
-                className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 focus:outline-none sm:py-16"
+                className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 focus:outline-none sm:py-12 sm:pb-12 lg:py-16 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] lg:pb-16"
             >
                 {children}
             </main>

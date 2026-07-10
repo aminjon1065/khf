@@ -1,10 +1,12 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Paginator } from '@/components/admin/data-table';
+import { EmptyState } from '@/components/Public/empty-state';
+import { NewsCover } from '@/components/Public/news-cover';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/hooks/use-translations';
-import { index as newsIndex, show } from '@/routes/news';
 import { formatDate } from '@/lib/utils';
+import { index as newsIndex, show } from '@/routes/news';
 
 type NewsCard = {
     title: string | null;
@@ -52,7 +54,7 @@ export default function NewsIndex({ posts, categories, filters }: PageProps) {
                         onClick={() => handleCategoryFilter(null)}
                         className="rounded-full"
                     >
-                        {t('common.all_categories') || 'Все'}
+                        {t('common.all_categories')}
                     </Button>
                     {categories.map((category) => (
                         <Button
@@ -73,26 +75,21 @@ export default function NewsIndex({ posts, categories, filters }: PageProps) {
             )}
 
             {posts.data.length === 0 ? (
-                <p className="text-muted-foreground">
-                    {t('common.no_publications')}
-                </p>
+                <EmptyState message={t('common.no_publications')} />
             ) : (
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {posts.data.map((post) => (
                         <Link
                             key={post.slug}
                             href={show({ locale, slug: post.slug ?? '' }).url}
-                            className="group flex flex-col overflow-hidden rounded-lg border transition-shadow hover:shadow-md"
+                            className="group flex min-w-0 flex-col overflow-hidden rounded-lg border transition-shadow hover:shadow-md"
                         >
-                            <div className="aspect-video w-full bg-muted">
-                                {post.cover_url && (
-                                    <img
-                                        src={post.cover_url}
-                                        alt=""
-                                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                                    />
-                                )}
-                            </div>
+                            <NewsCover
+                                src={post.cover_url}
+                                locale={locale}
+                                aspect="aspect-video"
+                                imgClassName="transition-transform group-hover:scale-105"
+                            />
                             <div className="flex flex-1 flex-col gap-2 p-4">
                                 {post.category && (
                                     <span className="text-sm font-medium text-primary mb-2 block">

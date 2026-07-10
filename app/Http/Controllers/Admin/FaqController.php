@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ContentStatus;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreFaqRequest;
 use App\Http\Requests\Admin\UpdateFaqRequest;
 use App\Models\Faq;
-use App\Models\Language;
 use App\Support\HtmlSanitizer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -18,6 +18,8 @@ use Inertia\Response;
 
 class FaqController extends Controller
 {
+    use BuildsCmsFormData;
+    use ProvidesBlueprintForm;
     use SavesContentRevisions;
 
     public function __construct(private HtmlSanitizer $sanitizer) {}
@@ -129,14 +131,10 @@ class FaqController extends Controller
                 'sort_order' => $faq->sort_order,
                 'translations' => $translations,
             ] : null,
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
-            ),
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'defaultLocale' => Language::defaultCode(),
+            ...$this->publicationFormMeta($faq?->status),
+            ...$this->blueprintFormProps('faq'),
+            'fieldOptions' => [],
+            'locales' => $this->localeOptions(),
         ];
     }
 

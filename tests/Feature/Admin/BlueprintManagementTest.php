@@ -32,10 +32,10 @@ it('lists blueprints for a super admin', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/blueprints/index')
-            ->has('blueprints', 6)
-            ->where('blueprints.0.handle', 'footer.default')
-            ->where('blueprints.1.handle', 'page.default')
-            ->where('blueprints.2.handle', 'post.default')
+            ->has('blueprints', 19)
+            ->where('blueprints.0.handle', 'alert.default')
+            ->where('blueprints.1.handle', 'document.default')
+            ->where('blueprints.2.handle', 'faq.default')
         );
 });
 

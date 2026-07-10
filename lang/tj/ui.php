@@ -18,6 +18,7 @@ return [
     ],
     'nav' => [
         'home' => 'Асосӣ',
+        'about' => 'Дар бораи Кумита',
         'leadership' => 'Роҳбарият',
         'structure' => 'Сохтор',
         'news' => 'Хабарҳо',
@@ -122,6 +123,12 @@ return [
         'reference_number' => 'Рақами бақайдгирӣ',
         'track_status' => 'Пайгирии вазъият',
         'updated' => 'Навсозӣ шуд: :date',
+        'all_categories' => 'Ҳама',
+        'photo_gallery' => 'Галереяи суратҳо',
+        'attachments' => 'Файлҳои замимашуда',
+        'related_news' => 'Маводҳои марбут',
+        'open_full_map' => 'Харитаи пурра',
+        'cover_placeholder_alt' => 'Тасвири муқова мавҷуд нест',
     ],
     'home' => [
         'meta_title' => 'Саҳифаи асосӣ',
@@ -237,6 +244,8 @@ return [
             'search_placeholder' => 'Ҷустуҷӯ аз рӯи ном…',
             'type_placeholder' => 'Намуд',
             'all_types' => 'Ҳамаи намудҳо',
+            'date_from' => 'Аз сана',
+            'date_to' => 'То сана',
         ],
     ],
     'appeals' => [

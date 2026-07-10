@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ContentStatus;
 use App\Enums\GuideAudience;
 use App\Enums\IncidentType;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGuideRequest;
 use App\Http\Requests\Admin\UpdateGuideRequest;
 use App\Models\Guide;
 use App\Models\GuideTranslation;
-use App\Models\Language;
 use App\Support\HtmlSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,8 +23,10 @@ use Inertia\Response;
 
 class GuideController extends Controller
 {
+    use BuildsCmsFormData;
     use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
+    use ProvidesBlueprintForm;
     use SavesContentRevisions;
 
     /** @var list<string> */
@@ -137,7 +139,7 @@ class GuideController extends Controller
     private function attributes(array $data): array
     {
         return [
-            'hazard_type' => $data['hazard_type'] ?? null,
+            'hazard_type' => filled($data['hazard_type'] ?? null) ? $data['hazard_type'] : null,
             'audience' => $data['audience'],
             'status' => $data['status'],
             'sort_order' => $data['sort_order'] ?? 0,
@@ -201,26 +203,26 @@ class GuideController extends Controller
         return [
             'guide' => $guide ? [
                 'id' => $guide->id,
-                'hazard_type' => $guide->hazard_type?->value,
+                'hazard_type' => $guide->hazard_type?->value ?? '',
                 'audience' => $guide->audience->value,
                 'status' => $guide->status->value,
                 'sort_order' => $guide->sort_order,
                 'translations' => $translations,
-                'files' => $files,
             ] : null,
-            'hazardTypes' => array_map(
-                fn (IncidentType $type) => ['value' => $type->value, 'label' => $type->label()],
-                IncidentType::cases(),
-            ),
-            'audiences' => GuideAudience::options(),
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
-            ),
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'defaultLocale' => Language::defaultCode(),
+            ...$this->publicationFormMeta($guide?->status),
+            ...$this->blueprintFormProps('guide'),
+            'fieldOptions' => [
+                'hazard_type' => array_merge(
+                    [['value' => '', 'label' => 'Без привязки']],
+                    array_map(
+                        fn (IncidentType $type) => ['value' => $type->value, 'label' => $type->label()],
+                        IncidentType::cases(),
+                    ),
+                ),
+                'audience' => GuideAudience::options(),
+            ],
+            'locales' => $this->localeOptions(),
+            'existingFiles' => $files,
         ];
     }
 

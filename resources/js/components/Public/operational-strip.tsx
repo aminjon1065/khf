@@ -38,18 +38,14 @@ export function OperationalStrip({
     return (
         <section
             aria-label={t('home.operational.title')}
-            className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-xl border border-border bg-card px-5 py-3.5 shadow-sm"
+            className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-border/80 bg-muted/40 px-4 py-2.5 text-sm"
         >
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-                <span className="inline-flex items-center gap-2 font-semibold text-foreground">
-                    <span className="relative flex size-2.5">
-                        <span
-                            className={`absolute inline-flex h-full w-full rounded-full ${STATUS_DOT[status]} opacity-60 motion-safe:animate-ping`}
-                        />
-                        <span
-                            className={`relative inline-flex size-2.5 rounded-full ${STATUS_DOT[status]}`}
-                        />
-                    </span>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                <span className="inline-flex items-center gap-2 font-medium text-foreground">
+                    <span
+                        className={`inline-flex size-2 rounded-full ${STATUS_DOT[status]}`}
+                        aria-hidden="true"
+                    />
                     {t('home.status.label')}
                     <span className="font-normal text-muted-foreground">
                         — {t(`home.status.${status}`)}
@@ -57,15 +53,15 @@ export function OperationalStrip({
                 </span>
 
                 {activeCount > 0 ? (
-                    <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
+                    <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
                         <span>
-                            <span className="font-bold text-foreground">
+                            <span className="font-semibold text-foreground">
                                 {operational?.active}
                             </span>{' '}
                             {t('home.operational.active')}
                         </span>
                         <span>
-                            <span className="font-bold text-foreground">
+                            <span className="font-semibold text-foreground">
                                 {operational?.controlled}
                             </span>{' '}
                             {t('home.operational.controlled')}
@@ -81,10 +77,10 @@ export function OperationalStrip({
 
             <a
                 href="tel:112"
-                className="inline-flex items-center gap-2 rounded-lg bg-signal px-4 py-2 text-sm font-bold text-signal-foreground transition-colors hover:bg-signal/90 focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2 focus-visible:outline-none"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-signal/25 bg-background px-3 py-1.5 text-xs font-semibold text-signal transition-colors hover:bg-signal/5 focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2 focus-visible:outline-none sm:text-sm"
             >
-                <Phone className="size-4" aria-hidden="true" />
-                {t('home.hero.emergency_call')}
+                <Phone className="size-3.5" aria-hidden="true" />
+                <span className="tabular-nums">112</span>
             </a>
         </section>
     );

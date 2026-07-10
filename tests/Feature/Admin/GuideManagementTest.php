@@ -95,8 +95,8 @@ it('renders the admin create and edit screens', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/guides/form')
-            ->has('hazardTypes')
-            ->has('audiences')
+            ->has('blueprint')
+            ->has('fieldOptions')
             ->has('statuses')
             ->has('locales'));
 
@@ -104,7 +104,8 @@ it('renders the admin create and edit screens', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/guides/form')
-            ->where('guide.id', $guide->id));
+            ->where('guide.id', $guide->id)
+            ->has('blueprint.sections.sidebar.fields'));
 });
 
 it('generates unique slugs when auto-generated slugs would collide', function () {

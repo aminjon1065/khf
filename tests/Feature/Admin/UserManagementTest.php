@@ -32,7 +32,7 @@ it('lists users for a super admin with role options', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/users/index')
             ->has('users.data')
-            ->has('roles', 2)
+            ->has('roles', count(Role::cases()))
         );
 });
 

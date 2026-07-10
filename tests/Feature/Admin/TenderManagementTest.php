@@ -92,7 +92,11 @@ it('renders the list, create, edit and trash screens', function () {
 
     $this->actingAs($this->editor)->get(route('admin.tenders.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/tenders/form')->has('tenderTypes', 4)->has('statuses', 4));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/tenders/form')
+            ->has('blueprint')
+            ->has('fieldOptions.type', 4)
+            ->has('statuses', 4));
 
     $this->actingAs($this->editor)->get(route('admin.tenders.edit', $tender))
         ->assertOk()

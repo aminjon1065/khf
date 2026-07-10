@@ -3,16 +3,39 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Subdivision;
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Validation\Rule;
 
 class UpdateSubdivisionRequest extends StoreSubdivisionRequest
 {
     /**
-     * Exclude the subdivision being edited from being selected as its own parent.
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
+    public function rules(): array
+    {
+        $subdivision = $this->route('subdivision');
+        $current = $subdivision instanceof Subdivision ? $subdivision->status : null;
+
+        $rules = array_merge(
+            $this->blueprintRules(),
+            $this->statusTransitionRules($current),
+        );
+
+        if (($id = $this->currentSubdivisionId()) !== null) {
+            $rules['parent_id'][] = Rule::notIn([$id]);
+        }
+
+        return $rules;
+    }
+
     protected function currentSubdivisionId(): ?int
     {
         $subdivision = $this->route('subdivision');
 
-        return $subdivision instanceof Subdivision ? $subdivision->id : null;
+        if ($subdivision instanceof Subdivision) {
+            return $subdivision->id;
+        }
+
+        return is_numeric($subdivision) ? (int) $subdivision : null;
     }
 }

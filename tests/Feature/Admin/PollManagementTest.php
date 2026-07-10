@@ -81,7 +81,11 @@ it('renders the poll list and form', function () {
 
     $this->actingAs($this->editor)->get(route('admin.polls.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/polls/form')->has('locales', 3)->has('types', 2));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/polls/form')
+            ->has('locales', 3)
+            ->has('blueprint')
+            ->has('fieldOptions.type', 2));
 });
 
 it('creates a poll with translations and options', function () {

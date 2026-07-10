@@ -1,11 +1,11 @@
-import { ExternalLink } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
+import { ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { AppEmblem } from '@/components/app-emblem';
 import { useTranslations } from '@/hooks/use-translations';
 
-const SLIDE_HEIGHT =
-    'min-h-[300px] h-[300px] sm:min-h-[400px] sm:h-[400px] lg:min-h-[460px] lg:h-[460px]';
+const DESKTOP_HEIGHT =
+    'lg:min-h-[460px] lg:h-[460px]';
 
 /**
  * "Leader of the Nation" portrait card beside the homepage news slider. The whole card opens
@@ -13,8 +13,9 @@ const SLIDE_HEIGHT =
  */
 export function PresidentCard() {
     const { t } = useTranslations();
-    const { president } = usePage().props as {
+    const { president, locale } = usePage().props as {
         president?: { url: string; photo: string };
+        locale?: string;
     };
 
     const presidentUrl = president?.url ?? 'https://president.tj';
@@ -28,18 +29,23 @@ export function PresidentCard() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`${t('home.president.kicker')} — ${t('home.president.name')}, president.tj`}
-            className={`group relative block overflow-hidden rounded-2xl border border-border bg-brand shadow-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${SLIDE_HEIGHT}`}
+            className={`group relative block aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border bg-brand shadow-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none lg:aspect-auto ${DESKTOP_HEIGHT}`}
         >
             {hasPhoto ? (
                 <img
                     src={photoSrc}
                     alt=""
+                    loading="lazy"
                     onError={() => setHasPhoto(false)}
                     className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
                 />
             ) : (
                 <div className="absolute inset-0 flex items-center justify-center bg-brand">
-                    <AppEmblem className="size-24 text-white/10" />
+                    <AppEmblem
+                        locale={locale}
+                        className="size-20 text-white/10 sm:size-24"
+                        alt=""
+                    />
                 </div>
             )}
 

@@ -3,16 +3,32 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Gallery;
+use Illuminate\Contracts\Validation\ValidationRule;
 
 class UpdateGalleryRequest extends StoreGalleryRequest
 {
     /**
-     * Exclude the gallery being edited from the per-locale slug uniqueness check.
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
+    public function rules(): array
+    {
+        $gallery = $this->route('gallery');
+        $current = $gallery instanceof Gallery ? $gallery->status : null;
+
+        return array_merge(
+            $this->blueprintRules(),
+            $this->statusTransitionRules($current),
+        );
+    }
+
     protected function currentGalleryId(): ?int
     {
         $gallery = $this->route('gallery');
 
-        return $gallery instanceof Gallery ? $gallery->id : null;
+        if ($gallery instanceof Gallery) {
+            return $gallery->id;
+        }
+
+        return is_numeric($gallery) ? (int) $gallery : null;
     }
 }

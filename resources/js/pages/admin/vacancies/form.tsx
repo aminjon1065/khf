@@ -1,42 +1,20 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { CpContentPublishPanel } from '@/components/admin/cp/content-publish-panel';
-import { CpRichTextField } from '@/components/admin/cp/fields';
+import { CpBlueprintForm } from '@/components/admin/cp/blueprint-form';
 import {
     CpLocaleTabs,
-    CpPanel,
     CpPublishForm,
 } from '@/components/admin/cp/publish-form';
-import InputError from '@/components/input-error';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes/admin';
 import { index, store, update } from '@/routes/admin/vacancies';
+import type {
+    BlueprintDefinition,
+    BlueprintFieldOptions,
+    SelectOption,
+} from '@/types/cms';
 
-type Translation = {
-    title: string;
-    slug: string;
-    department: string;
-    location: string;
-    salary: string;
-    summary: string;
-    description: string;
-    requirements: string;
-    responsibilities: string;
-    seo_title: string;
-    seo_description: string;
-};
-
-type Option = { value: string; label: string };
+type Translation = { title: string };
 type LocaleOption = { code: string; native_name: string };
 
 type VacancyData = {
@@ -52,31 +30,19 @@ type VacancyData = {
 
 type PageProps = {
     vacancy: VacancyData | null;
+    blueprint: BlueprintDefinition;
+    fieldOptions: BlueprintFieldOptions;
     locales: LocaleOption[];
-    employmentTypes: Option[];
-    statuses: Option[];
-    statusTransitions: Option[];
+    statuses: SelectOption[];
+    statusTransitions: SelectOption[];
     defaultLocale: string;
-};
-
-const emptyTranslation: Translation = {
-    title: '',
-    slug: '',
-    department: '',
-    location: '',
-    salary: '',
-    summary: '',
-    description: '',
-    requirements: '',
-    responsibilities: '',
-    seo_title: '',
-    seo_description: '',
 };
 
 export default function VacancyForm({
     vacancy,
+    blueprint,
+    fieldOptions,
     locales,
-    employmentTypes,
     statuses,
     statusTransitions,
     defaultLocale,
@@ -87,17 +53,13 @@ export default function VacancyForm({
     locales.forEach((locale) => {
         const existing = vacancy?.translations?.[locale.code];
         initialTranslations[locale.code] = {
-            ...emptyTranslation,
-            ...existing,
+            title: existing?.title ?? '',
         };
     });
 
     const form = useForm({
-        employment_type:
-            vacancy?.employment_type ??
-            employmentTypes[0]?.value ??
-            'full_time',
         status: vacancy?.status ?? statuses[0]?.value ?? 'draft',
+        employment_type: vacancy?.employment_type ?? '',
         positions_count: vacancy?.positions_count ?? 1,
         published_at: vacancy?.published_at ?? '',
         unpublished_at: vacancy?.unpublished_at ?? '',
@@ -107,17 +69,6 @@ export default function VacancyForm({
 
     const [activeLocale, setActiveLocale] = useState(defaultLocale);
     const errors = form.errors as Record<string, string>;
-
-    const setTranslation = (
-        locale: string,
-        field: keyof Translation,
-        value: string,
-    ) => {
-        form.setData('translations', {
-            ...form.data.translations,
-            [locale]: { ...form.data.translations[locale], [field]: value },
-        });
-    };
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -129,8 +80,12 @@ export default function VacancyForm({
         }
     };
 
-    const active = form.data.translations[activeLocale];
     const title = isEdit ? 'Редактирование вакансии' : 'Новая вакансия';
+    const formMeta = {
+        statuses,
+        statusTransitions,
+        showSchedule: true,
+    };
 
     return (
         <>
@@ -141,86 +96,33 @@ export default function VacancyForm({
                 backHref={index().url}
                 onSubmit={submit}
                 processing={form.processing}
+                saveLabel={vacancy?.id ? 'Обновить' : 'Создать'}
+                modelInfo={{ type: 'vacancy', id: vacancy?.id ?? null }}
                 sidebar={
-                    <CpPanel title="Публикация">
-                        <CpContentPublishPanel
-                            status={form.data.status}
-                            statuses={statuses}
-                            transitions={statusTransitions}
-                            publishedAt={form.data.published_at}
-                            unpublishedAt={form.data.unpublished_at}
-                            showSchedule
-                            onStatusChange={(value) =>
-                                form.setData('status', value)
-                            }
-                            onPublishedAtChange={(value) =>
-                                form.setData('published_at', value)
-                            }
-                            onUnpublishedAtChange={(value) =>
-                                form.setData('unpublished_at', value)
-                            }
-                            errors={errors}
-                        />
-                        <div className="mt-4 space-y-2">
-                            <Label htmlFor="employment_type">
-                                Тип занятости
-                            </Label>
-                            <Select
-                                value={form.data.employment_type}
-                                onValueChange={(value) =>
-                                    form.setData('employment_type', value)
-                                }
-                            >
-                                <SelectTrigger id="employment_type">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {employmentTypes.map((type) => (
-                                        <SelectItem
-                                            key={type.value}
-                                            value={type.value}
-                                        >
-                                            {type.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError message={errors.employment_type} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="positions_count">
-                                Количество мест
-                            </Label>
-                            <Input
-                                id="positions_count"
-                                type="number"
-                                min={1}
-                                value={form.data.positions_count}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'positions_count',
-                                        Number(event.target.value),
-                                    )
-                                }
-                            />
-                            <InputError message={errors.positions_count} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="deadline_at">Срок подачи</Label>
-                            <Input
-                                id="deadline_at"
-                                type="date"
-                                value={form.data.deadline_at}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'deadline_at',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                            <InputError message={errors.deadline_at} />
-                        </div>
-                    </CpPanel>
+                    <CpBlueprintForm
+                        blueprint={blueprint}
+                        section="sidebar"
+                        data={form.data}
+                        errors={errors}
+                        activeLocale={activeLocale}
+                        fieldOptions={fieldOptions}
+                        meta={formMeta}
+                        onRootChange={(handle, value) =>
+                            form.setData(handle as keyof typeof form.data, value as never)
+                        }
+                        onTranslationChange={(locale, handle, value) =>
+                            form.setData('translations', {
+                                ...form.data.translations,
+                                [locale]: {
+                                    ...form.data.translations[locale],
+                                    [handle]: value,
+                                },
+                            })
+                        }
+                        onAssetChange={(patch) =>
+                            form.setData({ ...form.data, ...patch })
+                        }
+                    />
                 }
             >
                 <CpLocaleTabs
@@ -232,184 +134,32 @@ export default function VacancyForm({
                     }
                 />
 
-                <div>
-                    <input
-                        aria-label="Название должности"
-                        value={active.title}
-                        onChange={(event) =>
-                            setTranslation(
-                                activeLocale,
-                                'title',
-                                event.target.value,
-                            )
-                        }
-                        placeholder="Название должности"
-                        className="w-full rounded-sm border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    />
-                    <InputError
-                        message={errors[`translations.${activeLocale}.title`]}
-                    />
-                </div>
-
-                <CpPanel title="Основное">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="slug">ЧПУ (slug)</Label>
-                            <Input
-                                id="slug"
-                                value={active.slug}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'slug',
-                                        event.target.value,
-                                    )
-                                }
-                                placeholder="оставьте пустым для авто"
-                            />
-                            <InputError
-                                message={
-                                    errors[`translations.${activeLocale}.slug`]
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="department">Подразделение</Label>
-                            <Input
-                                id="department"
-                                value={active.department}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'department',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="location">Место работы</Label>
-                            <Input
-                                id="location"
-                                value={active.location}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'location',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="salary">Оплата труда</Label>
-                            <Input
-                                id="salary"
-                                value={active.salary}
-                                onChange={(event) =>
-                                    setTranslation(
-                                        activeLocale,
-                                        'salary',
-                                        event.target.value,
-                                    )
-                                }
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="summary">Краткое описание</Label>
-                        <Textarea
-                            id="summary"
-                            rows={2}
-                            value={active.summary}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'summary',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                        <InputError
-                            message={
-                                errors[`translations.${activeLocale}.summary`]
-                            }
-                        />
-                    </div>
-                </CpPanel>
-
-                <CpPanel title="Описание">
-                    <CpRichTextField
-                        label="Описание вакансии"
-                        editorKey={`${activeLocale}-description`}
-                        value={active.description}
-                        onChange={(html) =>
-                            setTranslation(activeLocale, 'description', html)
-                        }
-                        error={
-                            errors[`translations.${activeLocale}.description`]
-                        }
-                    />
-                    <CpRichTextField
-                        label="Квалификационные требования"
-                        editorKey={`${activeLocale}-requirements`}
-                        value={active.requirements}
-                        onChange={(html) =>
-                            setTranslation(activeLocale, 'requirements', html)
-                        }
-                        error={
-                            errors[`translations.${activeLocale}.requirements`]
-                        }
-                    />
-                    <CpRichTextField
-                        label="Должностные обязанности"
-                        editorKey={`${activeLocale}-responsibilities`}
-                        value={active.responsibilities}
-                        onChange={(html) =>
-                            setTranslation(
-                                activeLocale,
-                                'responsibilities',
-                                html,
-                            )
-                        }
-                        error={
-                            errors[
-                                `translations.${activeLocale}.responsibilities`
-                            ]
-                        }
-                    />
-                </CpPanel>
-
-                <CpPanel title="SEO">
-                    <div className="space-y-2">
-                        <Label htmlFor="seo_title">SEO заголовок</Label>
-                        <Input
-                            id="seo_title"
-                            value={active.seo_title}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'seo_title',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="seo_description">SEO описание</Label>
-                        <Input
-                            id="seo_description"
-                            value={active.seo_description}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'seo_description',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                    </div>
-                </CpPanel>
+                <CpBlueprintForm
+                    blueprint={blueprint}
+                    section="main"
+                    data={form.data}
+                    errors={errors}
+                    activeLocale={activeLocale}
+                    fieldOptions={fieldOptions}
+                    meta={formMeta}
+                    titleAsHeader
+                    titleFieldHandle="title"
+                    onRootChange={(handle, value) =>
+                        form.setData(handle as keyof typeof form.data, value as never)
+                    }
+                    onTranslationChange={(locale, handle, value) =>
+                        form.setData('translations', {
+                            ...form.data.translations,
+                            [locale]: {
+                                ...form.data.translations[locale],
+                                [handle]: value,
+                            },
+                        })
+                    }
+                    onAssetChange={(patch) =>
+                        form.setData({ ...form.data, ...patch })
+                    }
+                />
             </CpPublishForm>
         </>
     );

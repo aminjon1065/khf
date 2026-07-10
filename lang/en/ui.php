@@ -18,6 +18,7 @@ return [
     ],
     'nav' => [
         'home' => 'Home',
+        'about' => 'About the Committee',
         'leadership' => 'Leadership',
         'structure' => 'Structure',
         'news' => 'News',
@@ -122,6 +123,12 @@ return [
         'reference_number' => 'Registration number',
         'track_status' => 'Track status',
         'updated' => 'Updated: :date',
+        'all_categories' => 'All',
+        'photo_gallery' => 'Photo gallery',
+        'attachments' => 'Attachments',
+        'related_news' => 'Related articles',
+        'open_full_map' => 'Open full map',
+        'cover_placeholder_alt' => 'Cover image unavailable',
     ],
     'home' => [
         'meta_title' => 'Home',
@@ -237,6 +244,8 @@ return [
             'search_placeholder' => 'Search by title…',
             'type_placeholder' => 'Type',
             'all_types' => 'All types',
+            'date_from' => 'From date',
+            'date_to' => 'To date',
         ],
     ],
     'appeals' => [

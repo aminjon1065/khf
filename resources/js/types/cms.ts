@@ -46,6 +46,19 @@ export type BlockSetDefinition = {
 export type SelectOption = { value: string; label: string };
 export type RelationOption = { id: number; name: string };
 
+export type ExistingAssetFile = {
+    id: number;
+    name: string;
+    size: string;
+    url: string;
+};
+
+export type ExistingPhoto = {
+    id: number;
+    url: string;
+    name: string;
+};
+
 export type BlueprintFieldOptions = Record<
     string,
     SelectOption[] | RelationOption[]
@@ -56,4 +69,7 @@ export type BlueprintFormMeta = {
     statusTransitions: SelectOption[];
     showSchedule?: boolean;
     coverUrl?: string | null;
+    photoUrl?: string | null;
+    existingFiles?: ExistingAssetFile[];
+    existingPhotos?: ExistingPhoto[];
 };

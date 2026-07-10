@@ -1,6 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { CpBlueprintForm } from '@/components/admin/cp/blueprint-form';
 import {
     CpLocaleTabs,
     CpPanel,
@@ -10,21 +11,20 @@ import InputError from '@/components/input-error';
 import { MapView } from '@/components/map-view';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes/admin';
 import { index, store, update } from '@/routes/admin/incidents';
+import type {
+    BlueprintDefinition,
+    BlueprintFieldOptions,
+    RelationOption,
+} from '@/types/cms';
 
 type Translation = { title: string; description: string };
-type Option = { value: string; label: string };
 type LocaleOption = { code: string; native_name: string };
-type RegionOption = { id: number; name: string; lat: number; lng: number };
+type RegionCoordinateOption = RelationOption & {
+    lat?: number | null;
+    lng?: number | null;
+};
 
 type IncidentData = {
     id: number;
@@ -40,20 +40,95 @@ type IncidentData = {
 
 type PageProps = {
     incident: IncidentData | null;
-    types: Option[];
-    levels: Option[];
-    statuses: Option[];
-    regions: RegionOption[];
+    blueprint: BlueprintDefinition;
+    fieldOptions: BlueprintFieldOptions;
     locales: LocaleOption[];
     defaultLocale: string;
 };
 
+function IncidentLocationPanel({
+    latitude,
+    longitude,
+    errors,
+    regionCoordinates,
+    onLatitudeChange,
+    onLongitudeChange,
+    onPick,
+}: {
+    latitude: number | '';
+    longitude: number | '';
+    errors: Record<string, string>;
+    regionCoordinates: Record<number, { lat: number; lng: number }>;
+    onLatitudeChange: (value: number | '') => void;
+    onLongitudeChange: (value: number | '') => void;
+    onPick: (coords: { lat: number; lng: number }) => void;
+}) {
+    return (
+        <CpPanel
+            title="Координаты на карте"
+            description="Кликните по карте или выберите регион для приближения."
+        >
+            <div className="relative h-64 overflow-hidden rounded-lg border border-border">
+                <MapView
+                    initialPickedCoords={
+                        latitude && longitude
+                            ? {
+                                  lat: Number(latitude),
+                                  lng: Number(longitude),
+                              }
+                            : null
+                    }
+                    onPick={onPick}
+                />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                    <Label htmlFor="latitude">Широта</Label>
+                    <Input
+                        id="latitude"
+                        type="number"
+                        step="0.0000001"
+                        value={latitude}
+                        onChange={(event) =>
+                            onLatitudeChange(
+                                event.target.value === ''
+                                    ? ''
+                                    : Number(event.target.value),
+                            )
+                        }
+                    />
+                    <InputError message={errors.latitude} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="longitude">Долгота</Label>
+                    <Input
+                        id="longitude"
+                        type="number"
+                        step="0.0000001"
+                        value={longitude}
+                        onChange={(event) =>
+                            onLongitudeChange(
+                                event.target.value === ''
+                                    ? ''
+                                    : Number(event.target.value),
+                            )
+                        }
+                    />
+                    <InputError message={errors.longitude} />
+                </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+                Регионов с координатами для авто-подстановки: {' '}
+                {Object.keys(regionCoordinates).length}
+            </p>
+        </CpPanel>
+    );
+}
+
 export default function IncidentForm({
     incident,
-    types,
-    levels,
-    statuses,
-    regions,
+    blueprint,
+    fieldOptions,
     locales,
     defaultLocale,
 }: PageProps) {
@@ -69,9 +144,9 @@ export default function IncidentForm({
     });
 
     const form = useForm({
-        type: incident?.type ?? types[0]?.value ?? '',
-        hazard_level: incident?.hazard_level ?? levels[0]?.value ?? '',
-        status: incident?.status ?? statuses[0]?.value ?? 'active',
+        type: incident?.type ?? '',
+        hazard_level: incident?.hazard_level ?? '',
+        status: incident?.status ?? 'active',
         region_id: incident?.region_id ?? null,
         latitude: incident?.latitude ?? '',
         longitude: incident?.longitude ?? '',
@@ -81,37 +156,42 @@ export default function IncidentForm({
 
     const [activeLocale, setActiveLocale] = useState(defaultLocale);
     const errors = form.errors as Record<string, string>;
-
-    const setTranslation = (
-        locale: string,
-        field: keyof Translation,
-        value: string,
-    ) => {
-        form.setData('translations', {
-            ...form.data.translations,
-            [locale]: { ...form.data.translations[locale], [field]: value },
-        });
-    };
-
-    const onRegionChange = (value: string) => {
-        const regionId = value === 'none' ? null : Number(value);
-
-        if (regionId) {
-            const region = regions.find((r) => r.id === regionId);
-
-            if (region && region.lat && region.lng) {
-                form.setData((prev) => ({
-                    ...prev,
-                    region_id: regionId,
-                    latitude: Number(region.lat.toFixed(7)),
-                    longitude: Number(region.lng.toFixed(7)),
-                }));
-            } else {
-                form.setData('region_id', regionId);
+    const regionCoordinates = (
+        (fieldOptions.region_id as RegionCoordinateOption[] | undefined) ?? []
+    ).reduce(
+        (acc, region) => {
+            if (region.lat != null && region.lng != null) {
+                acc[region.id] = { lat: region.lat, lng: region.lng };
             }
-        } else {
-            form.setData('region_id', null);
+
+            return acc;
+        },
+        {} as Record<number, { lat: number; lng: number }>,
+    );
+
+    const onRootChange = (handle: string, value: unknown) => {
+        if (handle !== 'region_id') {
+            form.setData(handle as keyof typeof form.data, value as never);
+            return;
         }
+
+        const regionId =
+            value === null || value === '' ? null : Number(value);
+        const selectedRegionCoordinates = regionId
+            ? regionCoordinates[regionId]
+            : undefined;
+
+        if (selectedRegionCoordinates) {
+            form.setData((current) => ({
+                ...current,
+                region_id: regionId,
+                latitude: Number(selectedRegionCoordinates.lat.toFixed(7)),
+                longitude: Number(selectedRegionCoordinates.lng.toFixed(7)),
+            }));
+            return;
+        }
+
+        form.setData('region_id', regionId);
     };
 
     const submit = (event: FormEvent) => {
@@ -124,8 +204,11 @@ export default function IncidentForm({
         }
     };
 
-    const active = form.data.translations[activeLocale];
     const title = isEdit ? 'Редактирование события' : 'Новое событие ЧС';
+    const formMeta = {
+        statuses: [],
+        statusTransitions: [],
+    };
 
     return (
         <>
@@ -139,200 +222,49 @@ export default function IncidentForm({
                 modelInfo={{ type: 'incident', id: incident?.id ?? null }}
                 sidebar={
                     <>
-                        <CpPanel title="Параметры">
-                            <div className="space-y-2">
-                                <Label htmlFor="type">Тип</Label>
-                                <Select
-                                    value={form.data.type}
-                                    onValueChange={(value) =>
-                                        form.setData('type', value)
-                                    }
-                                >
-                                    <SelectTrigger id="type">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {types.map((type) => (
-                                            <SelectItem
-                                                key={type.value}
-                                                value={type.value}
-                                            >
-                                                {type.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.type} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="hazard_level">
-                                    Уровень опасности
-                                </Label>
-                                <Select
-                                    value={form.data.hazard_level}
-                                    onValueChange={(value) =>
-                                        form.setData('hazard_level', value)
-                                    }
-                                >
-                                    <SelectTrigger id="hazard_level">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {levels.map((level) => (
-                                            <SelectItem
-                                                key={level.value}
-                                                value={level.value}
-                                            >
-                                                {level.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.hazard_level} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="status">Статус</Label>
-                                <Select
-                                    value={form.data.status}
-                                    onValueChange={(value) =>
-                                        form.setData('status', value)
-                                    }
-                                >
-                                    <SelectTrigger id="status">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {statuses.map((status) => (
-                                            <SelectItem
-                                                key={status.value}
-                                                value={status.value}
-                                            >
-                                                {status.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.status} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="region">Регион</Label>
-                                <Select
-                                    value={
-                                        form.data.region_id
-                                            ? String(form.data.region_id)
-                                            : 'none'
-                                    }
-                                    onValueChange={onRegionChange}
-                                >
-                                    <SelectTrigger id="region">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">
-                                            — Не указан —
-                                        </SelectItem>
-                                        {regions.map((region) => (
-                                            <SelectItem
-                                                key={region.id}
-                                                value={String(region.id)}
-                                            >
-                                                {region.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.region_id} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="occurred_at">
-                                    Дата и время
-                                </Label>
-                                <Input
-                                    id="occurred_at"
-                                    type="datetime-local"
-                                    value={form.data.occurred_at}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'occurred_at',
-                                            event.target.value,
-                                        )
-                                    }
-                                />
-                                <InputError message={errors.occurred_at} />
-                            </div>
-                        </CpPanel>
+                        <CpBlueprintForm
+                            blueprint={blueprint}
+                            section="sidebar"
+                            data={form.data}
+                            errors={errors}
+                            activeLocale={activeLocale}
+                            fieldOptions={fieldOptions}
+                            meta={formMeta}
+                            excludeHandles={['latitude', 'longitude']}
+                            onRootChange={onRootChange}
+                            onTranslationChange={(locale, handle, value) =>
+                                form.setData('translations', {
+                                    ...form.data.translations,
+                                    [locale]: {
+                                        ...form.data.translations[locale],
+                                        [handle]: value,
+                                    },
+                                })
+                            }
+                            onAssetChange={(patch) =>
+                                form.setData({ ...form.data, ...patch })
+                            }
+                        />
 
-                        <CpPanel
-                            title="Координаты на карте"
-                            description="Кликните по карте или выберите регион для приближения."
-                        >
-                            <div className="relative h-64 overflow-hidden rounded-lg border border-border">
-                                <MapView
-                                    initialPickedCoords={
-                                        form.data.latitude &&
-                                        form.data.longitude
-                                            ? {
-                                                  lat: Number(
-                                                      form.data.latitude,
-                                                  ),
-                                                  lng: Number(
-                                                      form.data.longitude,
-                                                  ),
-                                              }
-                                            : null
-                                    }
-                                    onPick={({ lat, lng }) => {
-                                        form.setData((data) => ({
-                                            ...data,
-                                            latitude: Number(lat.toFixed(7)),
-                                            longitude: Number(lng.toFixed(7)),
-                                        }));
-                                    }}
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-2">
-                                    <Label htmlFor="latitude">Широта</Label>
-                                    <Input
-                                        id="latitude"
-                                        type="number"
-                                        step="0.0000001"
-                                        value={form.data.latitude}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'latitude',
-                                                event.target.value === ''
-                                                    ? ''
-                                                    : Number(
-                                                          event.target.value,
-                                                      ),
-                                            )
-                                        }
-                                    />
-                                    <InputError message={errors.latitude} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="longitude">Долгота</Label>
-                                    <Input
-                                        id="longitude"
-                                        type="number"
-                                        step="0.0000001"
-                                        value={form.data.longitude}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'longitude',
-                                                event.target.value === ''
-                                                    ? ''
-                                                    : Number(
-                                                          event.target.value,
-                                                      ),
-                                            )
-                                        }
-                                    />
-                                    <InputError message={errors.longitude} />
-                                </div>
-                            </div>
-                        </CpPanel>
+                        <IncidentLocationPanel
+                            latitude={form.data.latitude}
+                            longitude={form.data.longitude}
+                            errors={errors}
+                            regionCoordinates={regionCoordinates}
+                            onLatitudeChange={(value) =>
+                                form.setData('latitude', value)
+                            }
+                            onLongitudeChange={(value) =>
+                                form.setData('longitude', value)
+                            }
+                            onPick={({ lat, lng }) => {
+                                form.setData((data) => ({
+                                    ...data,
+                                    latitude: Number(lat.toFixed(7)),
+                                    longitude: Number(lng.toFixed(7)),
+                                }));
+                            }}
+                        />
                     </>
                 }
             >
@@ -345,49 +277,30 @@ export default function IncidentForm({
                     }
                 />
 
-                <div>
-                    <input
-                        aria-label="Заголовок"
-                        value={active.title}
-                        onChange={(event) =>
-                            setTranslation(
-                                activeLocale,
-                                'title',
-                                event.target.value,
-                            )
-                        }
-                        placeholder="Заголовок события"
-                        className="w-full rounded-sm border-0 bg-transparent px-0 text-2xl font-semibold placeholder:text-muted-foreground/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    />
-                    <InputError
-                        message={errors[`translations.${activeLocale}.title`]}
-                    />
-                </div>
-
-                <CpPanel title="Описание">
-                    <div className="space-y-2">
-                        <Label htmlFor="description">Описание</Label>
-                        <Textarea
-                            id="description"
-                            rows={8}
-                            value={active.description}
-                            onChange={(event) =>
-                                setTranslation(
-                                    activeLocale,
-                                    'description',
-                                    event.target.value,
-                                )
-                            }
-                        />
-                        <InputError
-                            message={
-                                errors[
-                                    `translations.${activeLocale}.description`
-                                ]
-                            }
-                        />
-                    </div>
-                </CpPanel>
+                <CpBlueprintForm
+                    blueprint={blueprint}
+                    section="main"
+                    data={form.data}
+                    errors={errors}
+                    activeLocale={activeLocale}
+                    fieldOptions={fieldOptions}
+                    meta={formMeta}
+                    titleAsHeader
+                    titleFieldHandle="title"
+                    onRootChange={onRootChange}
+                    onTranslationChange={(locale, handle, value) =>
+                        form.setData('translations', {
+                            ...form.data.translations,
+                            [locale]: {
+                                ...form.data.translations[locale],
+                                [handle]: value,
+                            },
+                        })
+                    }
+                    onAssetChange={(patch) =>
+                        form.setData({ ...form.data, ...patch })
+                    }
+                />
             </CpPublishForm>
         </>
     );

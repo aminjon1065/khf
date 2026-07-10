@@ -50,7 +50,11 @@ it('renders the statistics list and form', function () {
 
     $this->actingAs($this->editor)->get(route('admin.statistics.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/statistics/form')->has('locales', 3)->has('statuses', 4));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/statistics/form')
+            ->has('blueprint')
+            ->has('locales', 3)
+            ->has('statuses', 4));
 });
 
 it('creates an indicator with translations', function () {

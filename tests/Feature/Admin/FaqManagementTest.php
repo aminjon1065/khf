@@ -48,7 +48,11 @@ it('renders the faq list and form', function () {
 
     $this->actingAs($this->editor)->get(route('admin.faqs.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/faq/form')->has('locales', 3)->has('statuses', 4));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/faq/form')
+            ->has('blueprint')
+            ->has('locales', 3)
+            ->has('statuses', 4));
 });
 
 it('creates a faq with translations and sanitizes the answer', function () {

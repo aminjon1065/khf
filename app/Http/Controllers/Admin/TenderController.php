@@ -6,6 +6,7 @@ use App\Enums\TenderType;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreTenderRequest;
@@ -24,6 +25,7 @@ class TenderController extends Controller
     use BuildsCmsFormData;
     use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
+    use ProvidesBlueprintForm;
     use SavesContentRevisions;
 
     /** @var list<string> */
@@ -189,9 +191,12 @@ class TenderController extends Controller
                 'deadline_at' => $tender->deadline_at?->format('Y-m-d'),
                 'translations' => $translations,
             ] : null,
-            'locales' => $this->localeOptions(),
-            'tenderTypes' => TenderType::options(),
             ...$this->publicationFormMeta($tender?->status),
+            ...$this->blueprintFormProps('tender'),
+            'fieldOptions' => [
+                'type' => TenderType::options(),
+            ],
+            'locales' => $this->localeOptions(),
         ];
     }
 

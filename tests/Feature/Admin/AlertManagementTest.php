@@ -99,7 +99,10 @@ it('renders the list, create and trash screens', function () {
 
     $this->actingAs($this->operator)->get(route('admin.alerts.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/alerts/form')->has('levels', 4));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/alerts/form')
+            ->has('blueprint')
+            ->has('fieldOptions.hazard_level', 4));
 
     $alert->delete();
 

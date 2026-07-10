@@ -54,7 +54,11 @@ it('renders the leadership list and form', function () {
 
     $this->actingAs($this->editor)->get(route('admin.leadership.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/leadership/form')->has('locales', 3)->has('statuses', 4));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/leadership/form')
+            ->has('locales', 3)
+            ->has('statuses', 4)
+            ->has('blueprint'));
 });
 
 it('creates a leader with translations and a photo', function () {

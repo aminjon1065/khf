@@ -51,7 +51,11 @@ it('renders the gallery list and form', function () {
 
     $this->actingAs($this->editor)->get(route('admin.gallery.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/gallery/form')->has('locales', 3)->has('statuses', 4));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/gallery/form')
+            ->has('locales', 3)
+            ->has('statuses', 4)
+            ->has('blueprint'));
 });
 
 it('creates a gallery with translations and uploaded photos', function () {

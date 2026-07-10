@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ContentStatus;
 use App\Enums\PollType;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePollRequest;
 use App\Http\Requests\Admin\UpdatePollRequest;
-use App\Models\Language;
 use App\Models\Poll;
 use App\Models\PollOption;
 use App\Support\HtmlSanitizer;
@@ -20,6 +20,9 @@ use Inertia\Response;
 
 class PollController extends Controller
 {
+    use BuildsCmsFormData;
+    use ProvidesBlueprintForm;
+
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
     public function index(Request $request): Response
@@ -169,18 +172,12 @@ class PollController extends Controller
                 'translations' => $translations,
                 'options' => $options,
             ] : null,
-            'types' => array_map(
-                fn (PollType $type) => ['value' => $type->value, 'label' => $type->label()],
-                PollType::cases(),
-            ),
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
-            ),
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'defaultLocale' => Language::defaultCode(),
+            ...$this->publicationFormMeta($poll?->status),
+            ...$this->blueprintFormProps('poll'),
+            'fieldOptions' => [
+                'type' => PollType::options(),
+            ],
+            'locales' => $this->localeOptions(),
         ];
     }
 

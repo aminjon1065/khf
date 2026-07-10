@@ -1,0 +1,47 @@
+title: Подразделение
+sections:
+  main:
+    display: Содержание
+    fields:
+      - handle: name
+        type: text
+        display: Название
+        localizable: true
+        required: true
+      - handle: head
+        type: text
+        display: Руководитель
+        localizable: true
+      - handle: functions
+        type: rich_text
+        display: Функции и задачи
+        localizable: true
+      - handle: address
+        type: textarea
+        display: Адрес
+        localizable: true
+        rows: 2
+        max: 500
+  sidebar:
+    display: Публикация
+    fields:
+      - handle: status
+        type: status
+        display: Статус
+      - handle: parent_id
+        type: entries
+        display: Родительское подразделение
+        collection: subdivisions
+        max: 1
+      - handle: staff_count
+        type: number
+        display: Численность
+      - handle: email
+        type: text
+        display: E-mail
+      - handle: phone
+        type: text
+        display: Телефон
+      - handle: sort_order
+        type: number
+        display: Порядок

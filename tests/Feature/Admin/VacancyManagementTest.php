@@ -90,7 +90,11 @@ it('renders the list, create, edit and trash screens', function () {
 
     $this->actingAs($this->editor)->get(route('admin.vacancies.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/vacancies/form')->has('employmentTypes', 4)->has('statuses', 4));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/vacancies/form')
+            ->has('blueprint')
+            ->has('fieldOptions.employment_type', 4)
+            ->has('statuses', 4));
 
     $this->actingAs($this->editor)->get(route('admin.vacancies.edit', $vacancy))
         ->assertOk()

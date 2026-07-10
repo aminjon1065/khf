@@ -1,3 +1,5 @@
+import { CpMultiAssetsField } from '@/components/admin/cp/multi-assets-field';
+import { CpPhotoGalleryField } from '@/components/admin/cp/photo-gallery-field';
 import { CpAssetsField } from '@/components/admin/cp/assets-field';
 import { CpBlocksField } from '@/components/admin/cp/blocks-field';
 import type { BlockData } from '@/components/admin/cp/blocks-field';
@@ -108,6 +110,79 @@ export function CpBlueprintField({
     }
 
     if (field.type === 'assets') {
+        if (field.handle === 'files') {
+            const existingFiles = meta.existingFiles ?? [];
+            const pendingFiles = (data.files as File[] | undefined) ?? [];
+            const removeIds = (data.remove_files as number[] | undefined) ?? [];
+
+            return (
+                <CpMultiAssetsField
+                    id={id}
+                    label={field.display}
+                    instructions={field.instructions ?? undefined}
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.jpg,.jpeg,.png"
+                    existingFiles={existingFiles}
+                    pendingFiles={pendingFiles}
+                    removeIds={removeIds}
+                    onAddFiles={(files) => onRootChange('files', files)}
+                    onRemoveExisting={(mediaId) =>
+                        onRootChange('remove_files', [...removeIds, mediaId])
+                    }
+                    error={errors['files.0'] ?? errors.files}
+                />
+            );
+        }
+
+        if (field.handle === 'photos') {
+            const existingPhotos = meta.existingPhotos ?? [];
+            const pendingPhotos = (data.photos as File[] | undefined) ?? [];
+            const removeIds = (data.remove_photos as number[] | undefined) ?? [];
+
+            return (
+                <CpPhotoGalleryField
+                    id={id}
+                    label={field.display}
+                    instructions={field.instructions ?? undefined}
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    existingPhotos={existingPhotos}
+                    pendingPhotos={pendingPhotos}
+                    removeIds={removeIds}
+                    onAddPhotos={(files) => onRootChange('photos', files)}
+                    onRemoveExisting={(mediaId) =>
+                        onRootChange('remove_photos', [...removeIds, mediaId])
+                    }
+                    error={errors['photos.0'] ?? errors.photos}
+                />
+            );
+        }
+
+        if (field.handle === 'photo') {
+            return (
+                <CpAssetsField
+                    label={field.display}
+                    instructions={field.instructions ?? undefined}
+                    currentUrl={meta.photoUrl ?? null}
+                    file={(data.photo as File | null) ?? null}
+                    mediaId={null}
+                    removed={Boolean(data.remove_photo)}
+                    onUpload={(file) =>
+                        onAssetChange({
+                            photo: file,
+                            remove_photo: false,
+                        })
+                    }
+                    onPickAsset={() => {}}
+                    onClear={() =>
+                        onAssetChange({
+                            photo: null,
+                            remove_photo: true,
+                        })
+                    }
+                    error={errors.photo}
+                />
+            );
+        }
+
         return (
             <CpAssetsField
                 label={field.display}
@@ -203,12 +278,23 @@ export function CpBlueprintField({
     }
 
     if (field.type === 'date') {
+        const inputType = [
+            'published_at',
+            'unpublished_at',
+            'starts_at',
+            'ends_at',
+            'deadline_at',
+            'occurred_at',
+        ].includes(field.handle)
+            ? 'datetime-local'
+            : 'date';
+
         return (
             <div className="space-y-2">
                 <Label htmlFor={id}>{field.display}</Label>
                 <Input
                     id={id}
-                    type="datetime-local"
+                    type={inputType}
                     value={String(value ?? '')}
                     onChange={(event) => onChange(event.target.value)}
                 />

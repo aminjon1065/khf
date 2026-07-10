@@ -52,7 +52,11 @@ it('renders the structure list and form', function () {
 
     $this->actingAs($this->editor)->get(route('admin.structure.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/structure/form')->has('locales', 3)->has('statuses', 4));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/structure/form')
+            ->has('locales', 3)
+            ->has('statuses', 4)
+            ->has('blueprint'));
 });
 
 it('creates a subdivision under a parent', function () {

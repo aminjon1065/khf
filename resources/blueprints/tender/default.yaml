@@ -1,0 +1,77 @@
+title: Тендер
+sections:
+  main:
+    display: Содержание
+    fields:
+      - handle: title
+        type: text
+        display: Название
+        localizable: true
+        required: true
+      - handle: slug
+        type: slug
+        display: ЧПУ (slug)
+        localizable: true
+      - handle: organizer
+        type: text
+        display: Организатор
+        localizable: true
+      - handle: summary
+        type: textarea
+        display: Краткое описание
+        localizable: true
+        rows: 2
+        max: 500
+      - handle: description
+        type: rich_text
+        display: Описание
+        localizable: true
+      - handle: requirements
+        type: rich_text
+        display: Требования
+        localizable: true
+      - handle: terms
+        type: rich_text
+        display: Условия
+        localizable: true
+      - handle: seo_title
+        type: text
+        display: SEO заголовок
+        localizable: true
+      - handle: seo_description
+        type: textarea
+        display: SEO описание
+        localizable: true
+        rows: 2
+        max: 500
+  sidebar:
+    display: Публикация
+    fields:
+      - handle: status
+        type: status
+        display: Статус
+      - handle: tender_number
+        type: text
+        display: Номер тендера
+      - handle: type
+        type: select
+        display: Тип закупки
+        required: true
+      - handle: budget
+        type: number
+        display: Бюджет
+      - handle: lots_count
+        type: number
+        display: Количество лотов
+        required: true
+        min: 1
+        max: 1000
+      - handle: published_at
+        type: date
+        display: Дата публикации
+      - handle: unpublished_at
+        type: date
+        display: Дата снятия
+      - handle: deadline_at
+        type: date
+        display: Срок подачи заявок

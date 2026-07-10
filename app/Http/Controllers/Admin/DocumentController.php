@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ContentStatus;
 use App\Enums\DocumentType;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreDocumentRequest;
 use App\Http\Requests\Admin\UpdateDocumentRequest;
 use App\Models\Document;
-use App\Models\Language;
 use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,8 +20,10 @@ use Inertia\Response;
 
 class DocumentController extends Controller
 {
+    use BuildsCmsFormData;
     use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
+    use ProvidesBlueprintForm;
     use SavesContentRevisions;
 
     /** @var list<string> */
@@ -203,22 +205,19 @@ class DocumentController extends Controller
                 'sort_order' => $document->sort_order,
                 'tag_ids' => $document->tags->pluck('id')->all(),
                 'translations' => $translations,
-                'files' => $files,
             ] : null,
-            'types' => DocumentType::options(),
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
-            ),
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'tags' => Tag::query()
-                ->with('translations')
-                ->get()
-                ->map(fn (Tag $tag) => ['id' => $tag->id, 'name' => $tag->translation($locale)?->name ?? "#{$tag->id}"])
-                ->all(),
-            'defaultLocale' => Language::defaultCode(),
+            ...$this->publicationFormMeta($document?->status),
+            ...$this->blueprintFormProps('document'),
+            'fieldOptions' => [
+                'type' => DocumentType::options(),
+                'tag_ids' => Tag::query()
+                    ->with('translations')
+                    ->get()
+                    ->map(fn (Tag $tag) => ['id' => $tag->id, 'name' => $tag->translation($locale)?->name ?? "#{$tag->id}"])
+                    ->all(),
+            ],
+            'locales' => $this->localeOptions(),
+            'existingFiles' => $files,
         ];
     }
 

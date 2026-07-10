@@ -133,20 +133,100 @@ class BlueprintValidator
                     ? ['nullable', 'date', 'after:published_at']
                     : ['nullable', 'date'],
             ],
-            'assets' => [
-                'cover' => ['nullable', 'image', 'max:5120'],
-                'cover_media_id' => ['nullable', 'integer', 'exists:media_files,id'],
-                'remove_cover' => ['boolean'],
-            ],
+            'assets' => $this->assetsRules($field),
             'toggle' => [
                 $field->handle => ['boolean'],
             ],
-            'number' => [
-                $field->handle => ['integer', 'min:0', 'max:65535'],
+            'text', 'textarea' => [
+                $field->handle => array_values(array_filter([
+                    $field->isRequired() ? 'required' : 'nullable',
+                    $field->handle === 'email' ? 'email' : null,
+                    $field->handle === 'external_url' ? 'url' : null,
+                    'string',
+                    'max:'.($field->config['max'] ?? ($field->type === 'textarea' ? 2000 : 255)),
+                ])),
             ],
+            'number' => $this->numberRules($field),
             'grid', 'replicator' => $this->nestedArrayRules($field, $field->handle),
             default => [],
         };
+    }
+
+    /**
+     * @return array<string, list<ValidationRule|string>>
+     */
+    private function numberRules(BlueprintField $field): array
+    {
+        if ($field->handle === 'budget') {
+            return [
+                'budget' => ['nullable', 'numeric', 'min:0'],
+            ];
+        }
+
+        if ($field->handle === 'latitude') {
+            return [
+                'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            ];
+        }
+
+        if ($field->handle === 'longitude') {
+            return [
+                'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            ];
+        }
+
+        $min = (int) ($field->config['min'] ?? 0);
+        $max = (int) ($field->config['max'] ?? 65535);
+
+        return [
+            $field->handle => array_values(array_filter([
+                $field->isRequired() ? 'required' : 'nullable',
+                'integer',
+                "min:{$min}",
+                "max:{$max}",
+            ])),
+        ];
+    }
+
+    /**
+     * @return array<string, list<ValidationRule|string>>
+     */
+    private function assetsRules(BlueprintField $field): array
+    {
+        if ($field->handle === 'files') {
+            $mimes = (string) ($field->config['mimes'] ?? 'pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,jpg,jpeg,png');
+
+            return [
+                'files' => ['nullable', 'array'],
+                'files.*' => ['file', 'max:20480', 'mimes:'.$mimes],
+                'remove_files' => ['nullable', 'array'],
+                'remove_files.*' => ['integer'],
+            ];
+        }
+
+        if ($field->handle === 'photos') {
+            $mimes = (string) ($field->config['mimes'] ?? 'jpg,jpeg,png,gif,webp');
+
+            return [
+                'photos' => ['nullable', 'array'],
+                'photos.*' => ['image', 'mimes:'.$mimes, 'max:5120'],
+                'remove_photos' => ['nullable', 'array'],
+                'remove_photos.*' => ['integer'],
+            ];
+        }
+
+        if ($field->handle === 'photo') {
+            return [
+                'photo' => ['nullable', 'image', 'max:5120'],
+                'remove_photo' => ['boolean'],
+            ];
+        }
+
+        return [
+            'cover' => ['nullable', 'image', 'max:5120'],
+            'cover_media_id' => ['nullable', 'integer', 'exists:media_files,id'],
+            'remove_cover' => ['boolean'],
+        ];
     }
 
     /**
@@ -191,8 +271,16 @@ class BlueprintValidator
         ];
 
         if ($isSlug) {
-            $rules = ['nullable', "required_with:translations.{$locale}.title", ...array_slice($rules, 1)];
-            $rules[] = 'regex:/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u';
+            $rules = [
+                'nullable',
+                'string',
+                'max:'.($field->config['max'] ?? 255),
+                'regex:/^$|^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u',
+            ];
+
+            if ($field->isRequired()) {
+                array_unshift($rules, "required_with:translations.{$locale}.title");
+            }
 
             $constraint = $slugConstraints[$field->handle] ?? $slugConstraints['slug'] ?? null;
 
@@ -219,6 +307,8 @@ class BlueprintValidator
             'categories' => 'categories',
             'tags' => 'tags',
             'pages' => 'pages',
+            'subdivisions' => 'subdivisions',
+            'regions' => 'regions',
             default => null,
         };
 

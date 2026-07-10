@@ -12,22 +12,23 @@ class UpdateTenderRequest extends StoreTenderRequest
      */
     public function rules(): array
     {
-        $rules = parent::rules();
-        unset($rules['status']);
-
         $tender = $this->route('tender');
         $current = $tender instanceof Tender ? $tender->status : null;
 
-        return array_merge($rules, $this->statusTransitionRules($current));
+        return array_merge(
+            $this->blueprintRules(),
+            $this->statusTransitionRules($current),
+        );
     }
 
-    /**
-     * Exclude the tender being edited from the per-locale slug uniqueness check.
-     */
     protected function currentTenderId(): ?int
     {
         $tender = $this->route('tender');
 
-        return $tender instanceof Tender ? $tender->id : null;
+        if ($tender instanceof Tender) {
+            return $tender->id;
+        }
+
+        return is_numeric($tender) ? (int) $tender : null;
     }
 }

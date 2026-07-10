@@ -19,7 +19,7 @@ export type NewsCarouselPost = {
 const AUTOPLAY_MS = 6000;
 
 const SLIDE_HEIGHT =
-    'min-h-[300px] h-[300px] sm:min-h-[400px] sm:h-[400px] lg:min-h-[460px] lg:h-[460px]';
+    'min-h-[340px] h-[340px] sm:min-h-[400px] sm:h-[400px] lg:min-h-[460px] lg:h-[460px]';
 
 /**
  * Featured-news carousel for the homepage hero (ТЗ §6.1). Solid brand panel with optional cover
@@ -137,11 +137,11 @@ export function NewsCarousel({
             onFocusCapture={() => setFocused(true)}
             onBlurCapture={() => setFocused(false)}
             onKeyDown={onKeyDown}
-            className={`relative overflow-hidden rounded-2xl border border-border bg-brand shadow-sm ${SLIDE_HEIGHT}`}
+            className={`relative isolate overflow-hidden rounded-2xl border border-border bg-brand shadow-sm ${SLIDE_HEIGHT}`}
         >
-            <div aria-live={liveValue} className="relative h-full">
+            <div aria-live={liveValue} className="relative h-full overflow-hidden">
                 <div
-                    className={`flex h-full w-full ${
+                    className={`flex h-full w-full will-change-transform ${
                         reducedMotion
                             ? ''
                             : 'transition-transform duration-700 ease-in-out'
@@ -175,8 +175,8 @@ export function NewsCarousel({
                                     aria-hidden="true"
                                 />
 
-                                <div className="relative flex h-full flex-col justify-center px-6 py-8 sm:px-10 sm:py-10 lg:px-12">
-                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-medium tracking-wider text-white/90 uppercase">
+                                <div className="relative flex h-full flex-col justify-center px-5 py-6 pr-12 pl-12 sm:px-10 sm:py-10 sm:pr-14 sm:pl-14 lg:px-12 lg:pr-16 lg:pl-16">
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pe-16 text-xs font-medium tracking-wider text-white/90 uppercase sm:pe-0">
                                         {post.category && (
                                             <span className="rounded-full bg-black/30 px-2.5 py-1 ring-1 ring-white/15">
                                                 {post.category}
@@ -189,12 +189,12 @@ export function NewsCarousel({
                                         )}
                                         <AppEmblem
                                             locale={locale}
-                                            className="ml-auto size-9 sm:size-10"
+                                            className="ms-auto hidden size-9 sm:block sm:size-10"
                                             alt=""
                                         />
                                     </div>
 
-                                    <h3 className="mt-5 max-w-2xl text-xl leading-tight font-bold text-white sm:text-2xl lg:text-3xl">
+                                    <h3 className="mt-4 max-w-2xl text-xl leading-tight font-bold text-white sm:mt-5 sm:text-2xl lg:text-3xl">
                                         {href ? (
                                             <Link
                                                 href={href}
@@ -210,7 +210,7 @@ export function NewsCarousel({
                                     </h3>
 
                                     {post.excerpt && (
-                                        <p className="mt-3 line-clamp-3 max-w-xl text-sm leading-relaxed text-white/80 sm:text-base">
+                                        <p className="mt-2 line-clamp-2 max-w-xl text-sm leading-relaxed text-white/80 sm:mt-3 sm:line-clamp-3 sm:text-base">
                                             {post.excerpt}
                                         </p>
                                     )}
@@ -218,7 +218,7 @@ export function NewsCarousel({
                                     {href && (
                                         <Link
                                             href={href}
-                                            className="mt-6 inline-flex w-fit items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-brand shadow-sm transition-colors hover:bg-white/90 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand focus-visible:outline-none"
+                                            className="mt-4 inline-flex w-fit items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-brand shadow-sm transition-colors hover:bg-white/90 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand focus-visible:outline-none sm:mt-6"
                                         >
                                             {t('home.slider.news_read_more')}
                                             <ChevronRight
@@ -240,7 +240,7 @@ export function NewsCarousel({
                         type="button"
                         onClick={() => goTo(current - 1)}
                         aria-label={t('home.slider.prev')}
-                        className="absolute top-1/2 left-3 z-10 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-black/50 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+                        className="absolute top-1/2 left-2 z-10 flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-black/50 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none sm:left-3 sm:size-10"
                     >
                         <ChevronLeft className="size-5" aria-hidden="true" />
                     </button>
@@ -248,13 +248,13 @@ export function NewsCarousel({
                         type="button"
                         onClick={() => goTo(current + 1)}
                         aria-label={t('home.slider.next')}
-                        className="absolute top-1/2 right-3 z-10 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-black/50 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+                        className="absolute top-1/2 right-2 z-10 flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-black/50 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none sm:right-3 sm:size-10"
                     >
                         <ChevronRight className="size-5" aria-hidden="true" />
                     </button>
 
-                    <div className="absolute top-4 right-4 z-10 flex items-center gap-3 rounded-full border border-white/15 bg-black/30 px-3 py-1.5 backdrop-blur-sm">
-                        <div className="flex items-center gap-2">
+                    <div className="absolute right-3 bottom-3 left-3 z-10 flex items-center justify-center gap-3 sm:top-4 sm:right-4 sm:bottom-auto sm:left-auto sm:justify-start">
+                        <div className="flex items-center gap-2 rounded-full border border-white/15 bg-black/30 px-3 py-1.5 backdrop-blur-sm">
                             {slides.map((slide, index) => (
                                 <button
                                     key={slide.slug ?? slide.href ?? index}
@@ -271,33 +271,33 @@ export function NewsCarousel({
                                     }`}
                                 />
                             ))}
-                        </div>
 
-                        {!reducedMotion && (
-                            <button
-                                type="button"
-                                onClick={() => setIsPlaying((p) => !p)}
-                                aria-label={
-                                    isPlaying
-                                        ? t('home.slider.pause')
-                                        : t('home.slider.play')
-                                }
-                                aria-pressed={!isPlaying}
-                                className="flex size-6 cursor-pointer items-center justify-center rounded-full text-white/90 transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
-                            >
-                                {isPlaying ? (
-                                    <Pause
-                                        className="size-3.5"
-                                        aria-hidden="true"
-                                    />
-                                ) : (
-                                    <Play
-                                        className="size-3.5"
-                                        aria-hidden="true"
-                                    />
-                                )}
-                            </button>
-                        )}
+                            {!reducedMotion && (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsPlaying((p) => !p)}
+                                    aria-label={
+                                        isPlaying
+                                            ? t('home.slider.pause')
+                                            : t('home.slider.play')
+                                    }
+                                    aria-pressed={!isPlaying}
+                                    className="flex size-6 cursor-pointer items-center justify-center rounded-full text-white/90 transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+                                >
+                                    {isPlaying ? (
+                                        <Pause
+                                            className="size-3.5"
+                                            aria-hidden="true"
+                                        />
+                                    ) : (
+                                        <Play
+                                            className="size-3.5"
+                                            aria-hidden="true"
+                                        />
+                                    )}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </>
             )}

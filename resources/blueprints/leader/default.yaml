@@ -1,0 +1,47 @@
+title: Руководитель
+sections:
+  main:
+    display: Содержание
+    fields:
+      - handle: full_name
+        type: text
+        display: ФИО
+        localizable: true
+        required: true
+      - handle: position
+        type: text
+        display: Должность
+        localizable: true
+        required: true
+      - handle: bio
+        type: rich_text
+        display: Биография
+        localizable: true
+      - handle: reception
+        type: textarea
+        display: График приёма
+        localizable: true
+        rows: 3
+        max: 1000
+  sidebar:
+    display: Публикация
+    fields:
+      - handle: status
+        type: status
+        display: Статус
+      - handle: photo
+        type: assets
+        display: Фотография
+        max: 1
+        instructions: JPG, PNG — до 5 МБ
+      - handle: email
+        type: text
+        display: E-mail
+        max: 255
+      - handle: phone
+        type: text
+        display: Телефон
+        max: 50
+      - handle: sort_order
+        type: number
+        display: Порядок

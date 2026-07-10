@@ -101,7 +101,11 @@ it('renders the list, create, edit and trash screens', function () {
 
     $this->actingAs($this->operator)->get(route('admin.incidents.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/incidents/form')->has('types', 7)->has('levels', 4));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/incidents/form')
+            ->has('blueprint')
+            ->has('fieldOptions.type', 7)
+            ->has('fieldOptions.hazard_level', 4));
 
     $this->actingAs($this->operator)->get(route('admin.incidents.edit', $incident))
         ->assertOk()

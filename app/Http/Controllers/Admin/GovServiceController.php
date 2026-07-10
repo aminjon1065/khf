@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ContentStatus;
 use App\Enums\ServiceCategory;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGovServiceRequest;
 use App\Http\Requests\Admin\UpdateGovServiceRequest;
 use App\Models\GovService;
-use App\Models\Language;
 use App\Support\HtmlSanitizer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +20,8 @@ use Inertia\Response;
 
 class GovServiceController extends Controller
 {
+    use BuildsCmsFormData;
+    use ProvidesBlueprintForm;
     use SavesContentRevisions;
 
     public function __construct(private HtmlSanitizer $sanitizer) {}
@@ -155,15 +157,12 @@ class GovServiceController extends Controller
                 'sort_order' => $service->sort_order,
                 'translations' => $translations,
             ] : null,
-            'categories' => ServiceCategory::options(),
-            'statuses' => array_map(
-                fn (ContentStatus $status) => ['value' => $status->value, 'label' => $status->label()],
-                ContentStatus::cases(),
-            ),
-            'locales' => Language::active()
-                ->map(fn (Language $language) => ['code' => $language->code, 'native_name' => $language->native_name])
-                ->all(),
-            'defaultLocale' => Language::defaultCode(),
+            ...$this->publicationFormMeta($service?->status),
+            ...$this->blueprintFormProps('gov_service'),
+            'fieldOptions' => [
+                'category' => ServiceCategory::options(),
+            ],
+            'locales' => $this->localeOptions(),
         ];
     }
 

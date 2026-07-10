@@ -45,6 +45,7 @@ export function CpBlueprintForm({
     onTranslationChange,
     onAssetChange,
     titleAsHeader = false,
+    titleFieldHandle = 'title',
     wrapInPanel = true,
     excludeHandles = [],
     blockset,
@@ -64,6 +65,7 @@ export function CpBlueprintForm({
     ) => void;
     onAssetChange: (patch: Record<string, unknown>) => void;
     titleAsHeader?: boolean;
+    titleFieldHandle?: string;
     wrapInPanel?: boolean;
     excludeHandles?: string[];
     blockset?: BlockSetDefinition;
@@ -73,10 +75,10 @@ export function CpBlueprintForm({
     );
 
     const titleField = titleAsHeader
-        ? fields.find((field) => field.handle === 'title')
+        ? fields.find((field) => field.handle === titleFieldHandle)
         : null;
     const bodyFields = titleField
-        ? fields.filter((field) => field.handle !== 'title')
+        ? fields.filter((field) => field.handle !== titleFieldHandle)
         : fields;
 
     const renderField = (field: BlueprintFieldDefinition) => (
@@ -116,7 +118,7 @@ export function CpBlueprintForm({
                         onChange={(event) =>
                             onTranslationChange(
                                 activeLocale,
-                                'title',
+                                titleFieldHandle,
                                 event.target.value,
                             )
                         }
@@ -125,7 +127,9 @@ export function CpBlueprintForm({
                     />
                     <InputError
                         message={
-                            errors[`translations.${activeLocale}.title`]
+                            errors[
+                                `translations.${activeLocale}.${titleFieldHandle}`
+                            ]
                         }
                     />
                 </div>

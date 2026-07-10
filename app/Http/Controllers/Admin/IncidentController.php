@@ -8,6 +8,7 @@ use App\Enums\IncidentType;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
+use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreIncidentRequest;
@@ -24,6 +25,7 @@ class IncidentController extends Controller
     use BuildsCmsFormData;
     use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
+    use ProvidesBlueprintForm;
     use SavesContentRevisions;
 
     /** @var list<string> */
@@ -177,18 +179,29 @@ class IncidentController extends Controller
                 'occurred_at' => $incident->occurred_at?->format('Y-m-d\TH:i'),
                 'translations' => $translations,
             ] : null,
-            'types' => IncidentType::options(),
-            'levels' => HazardLevel::options(),
-            'statuses' => IncidentStatus::options(),
-            'regions' => Region::query()
-                ->with('translations')
+            ...$this->blueprintFormProps('incident'),
+            'fieldOptions' => [
+                'type' => IncidentType::options(),
+                'hazard_level' => HazardLevel::options(),
+                'status' => IncidentStatus::options(),
+                'region_id' => Region::query()
+                    ->with('translations')
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->map(fn (Region $region) => [
+                        'id' => $region->id,
+                        'name' => $region->translation($locale)?->name ?? $region->code,
+                    ])
+                    ->all(),
+            ],
+            'regionCoordinates' => Region::query()
                 ->orderBy('sort_order')
                 ->get()
-                ->map(fn (Region $region) => [
-                    'id' => $region->id,
-                    'name' => $region->translation($locale)?->name ?? $region->code,
-                    'lat' => (float) $region->latitude,
-                    'lng' => (float) $region->longitude,
+                ->mapWithKeys(fn (Region $region) => [
+                    $region->id => [
+                        'lat' => (float) $region->latitude,
+                        'lng' => (float) $region->longitude,
+                    ],
                 ])
                 ->all(),
             'locales' => $this->localeOptions(),
