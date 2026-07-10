@@ -18,11 +18,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             LanguageSeeder::class,
             GlobalSeeder::class,
-            MenuSeeder::class,
             RolePermissionSeeder::class,
             RegionSeeder::class,
             AdminUserSeeder::class,
             DemoContentSeeder::class,
+            FullTestContentSeeder::class,
+            MenuSeeder::class,
         ]);
     }
 }
