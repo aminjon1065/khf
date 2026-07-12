@@ -10,8 +10,7 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database: reference data (languages, roles/permissions, regions),
-     * staff accounts, then demo content for local/staging.
+     * Seed reference data, staff accounts, then full test content for local/staging CMS QA.
      */
     public function run(): void
     {
@@ -21,8 +20,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             RegionSeeder::class,
             AdminUserSeeder::class,
-            DemoContentSeeder::class,
-            FullTestContentSeeder::class,
+            TestContentSeeder::class,
             MenuSeeder::class,
         ]);
     }
