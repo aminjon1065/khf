@@ -39,6 +39,17 @@ class ResolveLocalApplicationUrl
         $scheme = $request->headers->get('X-Forwarded-Proto', $request->getScheme());
         $host = $request->headers->get('X-Forwarded-Host', $request->getHttpHost());
 
+        // Herd/nginx often terminate TLS and forward plain HTTP to PHP-FPM without
+        // X-Forwarded-Proto. Prefer the configured APP_URL scheme when the host matches.
+        $configured = parse_url((string) config('app.url'));
+        if (
+            ($configured['scheme'] ?? null) === 'https'
+            && $scheme === 'http'
+            && ($configured['host'] ?? null) === $request->getHost()
+        ) {
+            $scheme = 'https';
+        }
+
         return $scheme.'://'.$host;
     }
 }

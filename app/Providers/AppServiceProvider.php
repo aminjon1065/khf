@@ -40,6 +40,10 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        // Relative build URLs so response-cached HTML stays scheme-agnostic (no Mixed Content
+        // when the same page is later served over HTTPS after an HTTP-primed cache entry).
+        Vite::createAssetPathsUsing(fn (string $path, ?bool $secure = null): string => '/'.ltrim($path, '/'));
+
         if (! $this->app->isLocal()) {
             Vite::prefetch(concurrency: 3);
         }

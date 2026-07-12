@@ -54,3 +54,24 @@ it('does not cache inertia visits', function () {
 
     expect(ResponseCache::hasBeenCached(Request::create($url)))->toBeFalse();
 });
+
+it('keeps separate cache entries for http and https', function () {
+    $http = Request::create('http://khf.test/tj', 'GET');
+    $https = Request::create('https://khf.test/tj', 'GET');
+
+    $this->get('http://khf.test/tj')->assertOk();
+
+    expect(ResponseCache::hasBeenCached($http))->toBeTrue();
+    expect(ResponseCache::hasBeenCached($https))->toBeFalse();
+
+    $this->get('https://khf.test/tj')->assertOk();
+
+    expect(ResponseCache::hasBeenCached($https))->toBeTrue();
+});
+
+it('emits relative vite asset urls that work on https pages', function () {
+    $this->get('https://khf.test/tj')
+        ->assertOk()
+        ->assertSee('src="/build/assets/', false)
+        ->assertDontSee('src="http://khf.test/build/', false);
+});

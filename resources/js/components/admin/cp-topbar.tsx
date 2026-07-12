@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { ExternalLink, Menu } from 'lucide-react';
 import { CommandPalette } from '@/components/admin/command-palette';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { home } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 
@@ -32,6 +33,8 @@ export function CpTopbar({
             </div>
 
             <CommandPalette />
+
+            <ThemeToggle className="size-9" iconClassName="size-4" />
 
             <Link
                 href={home()}

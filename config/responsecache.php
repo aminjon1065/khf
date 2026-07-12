@@ -1,7 +1,7 @@
 <?php
 
 use App\ResponseCache\PublicCacheProfile;
-use Spatie\ResponseCache\Hasher\DefaultHasher;
+use App\ResponseCache\SchemeAwareHasher;
 use Spatie\ResponseCache\Replacers\CsrfTokenReplacer;
 use Spatie\ResponseCache\Serializers\JsonSerializer;
 
@@ -107,7 +107,7 @@ return [
      * This class is responsible for generating a hash for
      * a request. Used for looking up cached responses.
      */
-    'hasher' => DefaultHasher::class,
+    'hasher' => SchemeAwareHasher::class,
 
     /*
      * This class is responsible for serializing responses.

@@ -19,6 +19,7 @@ import { PreviewBanner } from '@/components/Public/preview-banner';
 import { SocialLinks } from '@/components/Public/social-links';
 import { TajikistanEmblem } from '@/components/Public/symbols/state-emblem';
 import { TajikistanFlag } from '@/components/Public/symbols/state-flag';
+import { ThemeToggle } from '@/components/theme-toggle';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -218,6 +219,10 @@ export default function PublicLayout({
                         </span>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
+                        <ThemeToggle
+                            className="px-2 py-1"
+                            iconClassName="size-3.5"
+                        />
                         <LanguageSwitcher className="text-muted-foreground hover:text-foreground" />
                         <span className="mx-1 hidden h-3 w-px bg-border sm:inline" />
                         <button
@@ -385,6 +390,12 @@ export default function PublicLayout({
                                             <Eye className="size-4.5" />
                                             <span>{t('a11y.open')}</span>
                                         </button>
+
+                                        <ThemeToggle
+                                            className="w-full justify-start gap-3 rounded-md px-3 py-2 text-slate-300 hover:bg-slate-800 hover:text-white"
+                                            iconClassName="size-4.5"
+                                            label={t('theme.toggle')}
+                                        />
 
                                         {locales.length > 1 && (
                                             <>

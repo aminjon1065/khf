@@ -44,3 +44,19 @@ it('does not override the root url outside local', function () {
 
     expect(url('/build/assets/app.js'))->toBe('https://khf.test:8443/build/assets/app.js');
 });
+
+it('prefers https from app.url when php-fpm sees plain http on the same host', function () {
+    app()['env'] = 'local';
+    config(['app.url' => 'https://khf.test']);
+
+    $request = Request::create('http://khf.test/tj', 'GET', [], [], [], [
+        'HTTP_HOST' => 'khf.test',
+        'HTTPS' => 'off',
+        'SERVER_PORT' => '80',
+        'REQUEST_SCHEME' => 'http',
+    ]);
+
+    (new ResolveLocalApplicationUrl)->handle($request, fn () => response('ok'));
+
+    expect(url('/build/assets/app.js'))->toBe('https://khf.test/build/assets/app.js');
+});

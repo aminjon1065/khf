@@ -101,6 +101,12 @@ return [
         'reset' => 'Reset settings',
         'close_panel' => 'Close panel',
     ],
+    'theme' => [
+        'toggle' => 'Toggle theme',
+        'light' => 'light',
+        'dark' => 'dark',
+        'system' => 'system',
+    ],
     'errors' => [
         '403' => ['title' => 'Access denied', 'message' => 'You do not have permission to view this page.'],
         '404' => ['title' => 'Page not found', 'message' => 'The requested page does not exist or has been moved.'],
