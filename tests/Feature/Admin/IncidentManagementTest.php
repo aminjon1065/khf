@@ -50,7 +50,7 @@ it('forbids users without a CMS role', function () {
 it('creates an incident with translations', function () {
     $this->actingAs($this->operator)
         ->post(route('admin.incidents.store'), incidentPayload())
-        ->assertRedirect(route('admin.incidents.index'));
+        ->assertRedirect(route('admin.content.index', 'incident'));
 
     $incident = Incident::with('translations')->first();
 
@@ -76,7 +76,7 @@ it('creates a revision when an incident is updated', function () {
                 'en' => ['title' => '', 'description' => ''],
             ],
         ]))
-        ->assertRedirect(route('admin.incidents.index'));
+        ->assertRedirect(route('admin.content.index', 'incident'));
 
     expect(Revision::query()->where('revisionable_type', Incident::class)->count())->toBe(1);
 });
@@ -96,26 +96,44 @@ it('renders the list, create, edit and trash screens', function () {
     $incident->upsertTranslations(['tj' => ['title' => 'Тест', 'description' => 'd']]);
 
     $this->actingAs($this->operator)->get(route('admin.incidents.index'))
+        ->assertRedirect(route('admin.content.index', 'incident'));
+
+    $this->actingAs($this->operator)->get(route('admin.content.index', 'incident'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/incidents/index')->has('incidents.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'incident')
+            ->has('entries.data', 1));
 
     $this->actingAs($this->operator)->get(route('admin.incidents.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->component('admin/incidents/form')
+            ->component('admin/content/form')
+            ->where('contentType.handle', 'incident')
             ->has('blueprint')
             ->has('fieldOptions.type', 7)
-            ->has('fieldOptions.hazard_level', 4));
+            ->has('fieldOptions.hazard_level', 4)
+            ->has('regionCoordinates'));
 
     $this->actingAs($this->operator)->get(route('admin.incidents.edit', $incident))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/incidents/form')->where('incident.id', $incident->id));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/form')
+            ->where('entry.id', $incident->id)
+            ->has('regionCoordinates'));
 
     $incident->delete();
 
     $this->actingAs($this->operator)->get(route('admin.incidents.trash'))
+        ->assertRedirect(route('admin.content.index', ['type' => 'incident', 'trashed' => 1]));
+
+    $this->actingAs($this->operator)->get(route('admin.content.index', ['type' => 'incident', 'trashed' => 1]))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/incidents/trash')->has('incidents.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'incident')
+            ->where('filters.trashed', true)
+            ->has('entries.data', 1));
 });
 
 it('soft deletes, restores and force deletes an incident', function () {

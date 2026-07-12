@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\EmploymentType;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
-use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreVacancyRequest;
@@ -15,57 +16,34 @@ use App\Models\Vacancy;
 use App\Support\HtmlSanitizer;
 use App\Support\PublicationScheduler;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class VacancyController extends Controller
 {
+    use BuildsCmsEntryFormProps;
     use BuildsCmsFormData;
-    use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
     use ProvidesBlueprintForm;
+    use RedirectsToContentBrowser;
     use SavesContentRevisions;
-
-    /** @var list<string> */
-    private const SORTABLE = ['status', 'employment_type', 'published_at', 'deadline_at', 'created_at'];
 
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $filters = $this->listFilters($request, 'published_at', 'desc');
-
-        $vacancies = $this->paginateTranslatable(
-            Vacancy::query()->with('translations')->withCount('applications'),
-            $request,
-            self::SORTABLE,
-            'published_at',
-            'desc',
-            fn (Vacancy $vacancy, string $locale) => $this->toRow($vacancy, $locale),
-        );
-
-        return Inertia::render('admin/vacancies/index', [
-            'vacancies' => $vacancies,
-            'filters' => $filters,
-            'trashedCount' => Vacancy::onlyTrashed()->count(),
-        ]);
+        return $this->redirectToContentBrowser('vacancy');
     }
 
-    public function trash(): Response
+    public function trash(): RedirectResponse
     {
-        $vacancies = $this->paginateTrashed(
-            Vacancy::onlyTrashed()->with('translations')->withCount('applications'),
-            fn (Vacancy $vacancy, string $locale) => $this->toRow($vacancy, $locale),
-        );
-
-        return Inertia::render('admin/vacancies/trash', ['vacancies' => $vacancies]);
+        return $this->redirectToContentBrowserTrash('vacancy');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/vacancies/form', $this->formData(null));
+        return Inertia::render('admin/content/form', $this->formData(null));
     }
 
     public function store(StoreVacancyRequest $request): RedirectResponse
@@ -84,14 +62,14 @@ class VacancyController extends Controller
         $vacancy->upsertTranslations($this->translationsPayload($data));
         $this->flashContentSaved(__('Vacancy created.'));
 
-        return to_route('admin.vacancies.index');
+        return $this->toContentBrowser('vacancy');
     }
 
     public function edit(Vacancy $vacancy): Response
     {
         $vacancy->load('translations');
 
-        return Inertia::render('admin/vacancies/form', $this->formData($vacancy));
+        return Inertia::render('admin/content/form', $this->formData($vacancy));
     }
 
     public function update(UpdateVacancyRequest $request, Vacancy $vacancy): RedirectResponse
@@ -109,45 +87,22 @@ class VacancyController extends Controller
         $vacancy->upsertTranslations($this->translationsPayload($data));
         $this->flashContentSaved(__('Vacancy updated.'));
 
-        return to_route('admin.vacancies.index');
+        return $this->toContentBrowser('vacancy');
     }
 
     public function destroy(Vacancy $vacancy): RedirectResponse
     {
-        return $this->moveToTrash($vacancy, 'admin.vacancies.index', __('Vacancy moved to trash.'));
+        return $this->moveToTrash($vacancy, 'admin.content.index', __('Vacancy moved to trash.'), 'vacancy');
     }
 
     public function restore(Vacancy $vacancy): RedirectResponse
     {
-        return $this->restoreFromTrash($vacancy, 'admin.vacancies.trash', __('Vacancy restored.'));
+        return $this->restoreFromTrash($vacancy, 'admin.content.index', __('Vacancy restored.'), ['type' => 'vacancy', 'trashed' => 1]);
     }
 
     public function forceDelete(Vacancy $vacancy): RedirectResponse
     {
-        return $this->permanentlyDelete($vacancy, 'admin.vacancies.trash', __('Vacancy permanently deleted.'));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function toRow(Vacancy $vacancy, string $locale): array
-    {
-        return [
-            'id' => $vacancy->id,
-            'title' => $vacancy->translation($locale)?->title ?? '—',
-            'department' => $vacancy->translation($locale)?->department,
-            'employment_type' => $vacancy->employment_type->value,
-            'employment_type_label' => $vacancy->employment_type->label(),
-            'status' => $vacancy->status->value,
-            'status_label' => $vacancy->status->label(),
-            'positions_count' => $vacancy->positions_count,
-            'applications_count' => $vacancy->applications_count,
-            'locales' => $vacancy->translatedLocales(),
-            'published_at' => $vacancy->published_at?->toDateString(),
-            'deadline_at' => $vacancy->deadline_at?->toDateString(),
-            'is_open' => $vacancy->isOpen(),
-            'deleted_at' => $vacancy->deleted_at?->toDateString(),
-        ];
+        return $this->permanentlyDelete($vacancy, 'admin.content.index', __('Vacancy permanently deleted.'), ['type' => 'vacancy', 'trashed' => 1]);
     }
 
     /**
@@ -175,8 +130,9 @@ class VacancyController extends Controller
             }
         }
 
-        return [
-            'vacancy' => $vacancy ? [
+        return $this->contentEntryFormProps(
+            'vacancy',
+            $vacancy ? [
                 'id' => $vacancy->id,
                 'employment_type' => $vacancy->employment_type->value,
                 'status' => $vacancy->status->value,
@@ -186,13 +142,10 @@ class VacancyController extends Controller
                 'deadline_at' => $vacancy->deadline_at?->format('Y-m-d'),
                 'translations' => $translations,
             ] : null,
-            ...$this->publicationFormMeta($vacancy?->status),
-            ...$this->blueprintFormProps('vacancy'),
-            'fieldOptions' => [
+            [
                 'employment_type' => EmploymentType::options(),
             ],
-            'locales' => $this->localeOptions(),
-        ];
+        );
     }
 
     /**

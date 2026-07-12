@@ -6,11 +6,12 @@ use App\Enums\ContentStatus;
 use App\Enums\PostType;
 use App\Http\Controllers\Admin\Concerns\AutosavesEditorialContent;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\BuildsEditorialEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsTranslationPayload;
-use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Admin\Concerns\PublishesWorkingCopy;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Concerns\SyncsCoverFromLibrary;
 use App\Http\Controllers\Controller;
@@ -26,7 +27,6 @@ use App\Support\PublicationScheduler;
 use App\Support\PublicContentUrls;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,56 +34,30 @@ class PostController extends Controller
 {
     use AutosavesEditorialContent;
     use BuildsCmsFormData;
+    use BuildsEditorialEntryFormProps;
     use BuildsTranslationPayload;
-    use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
     use ProvidesBlueprintForm;
     use PublishesWorkingCopy;
+    use RedirectsToContentBrowser;
     use SavesContentRevisions;
     use SyncsCoverFromLibrary;
 
-    /** @var list<string> */
-    private const SORTABLE = ['status', 'type', 'published_at', 'created_at'];
-
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $locale = app()->getLocale();
-        $filters = $this->listFilters($request, 'published_at', 'desc');
-
-        $posts = $this->paginateTranslatable(
-            Post::query()->with(['translations', 'category.translations', 'media']),
-            $request,
-            self::SORTABLE,
-            'published_at',
-            'desc',
-            fn (Post $post) => $this->toRow($post, $locale),
-        );
-
-        return Inertia::render('admin/posts/index', [
-            'posts' => $posts,
-            'filters' => $filters,
-            'trashedCount' => Post::onlyTrashed()->count(),
-        ]);
+        return $this->redirectToContentBrowser('post');
     }
 
-    public function trash(): Response
+    public function trash(): RedirectResponse
     {
-        $locale = app()->getLocale();
-
-        $posts = Post::onlyTrashed()
-            ->with(['translations', 'media'])
-            ->orderByDesc('deleted_at')
-            ->paginate(15)
-            ->through(fn (Post $post) => $this->toRow($post, $locale));
-
-        return Inertia::render('admin/posts/trash', ['posts' => $posts]);
+        return $this->redirectToContentBrowserTrash('post');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/posts/form', $this->formData(null));
+        return Inertia::render('admin/content/editorial-form', $this->formData(null));
     }
 
     public function store(StorePostRequest $request): RedirectResponse
@@ -109,14 +83,14 @@ class PostController extends Controller
         $this->saveContentRevision($post);
         $this->flashContentSaved(__('Post created.'));
 
-        return to_route('admin.posts.index');
+        return $this->toContentBrowser('post');
     }
 
     public function edit(Post $post): Response
     {
         $post->load(['translations', 'media', 'tags.translations']);
 
-        return Inertia::render('admin/posts/form', $this->formData($post));
+        return Inertia::render('admin/content/editorial-form', $this->formData($post));
     }
 
     public function update(UpdatePostRequest $request, Post $post): RedirectResponse
@@ -142,7 +116,7 @@ class PostController extends Controller
         $this->saveContentRevision($post);
         $this->flashContentSaved(__('Post updated.'));
 
-        return to_route('admin.posts.index');
+        return $this->toContentBrowser('post');
     }
 
     public function autosave(AutosavePostRequest $request, Post $post): JsonResponse
@@ -192,37 +166,17 @@ class PostController extends Controller
 
     public function destroy(Post $post): RedirectResponse
     {
-        return $this->moveToTrash($post, 'admin.posts.index', __('Post moved to trash.'));
+        return $this->moveToTrash($post, 'admin.content.index', __('Post moved to trash.'), 'post');
     }
 
     public function restore(Post $post): RedirectResponse
     {
-        return $this->restoreFromTrash($post, 'admin.posts.trash', __('Post restored.'));
+        return $this->restoreFromTrash($post, 'admin.content.index', __('Post restored.'), ['type' => 'post', 'trashed' => 1]);
     }
 
     public function forceDelete(Post $post): RedirectResponse
     {
-        return $this->permanentlyDelete($post, 'admin.posts.trash', __('Post permanently deleted.'));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function toRow(Post $post, string $locale): array
-    {
-        return [
-            'id' => $post->id,
-            'title' => $post->translation($locale)?->title ?? '—',
-            'type' => $post->type->value,
-            'type_label' => $post->type->label(),
-            'category' => $post->category?->translation($locale)?->name,
-            'status' => $post->status->value,
-            'status_label' => $post->status->label(),
-            'cover_url' => $post->getFirstMediaUrl(Post::COVER_COLLECTION, 'thumb') ?: null,
-            'locales' => $post->translatedLocales(),
-            'published_at' => $post->published_at?->toDateString(),
-            'deleted_at' => $post->deleted_at?->toDateString(),
-        ];
+        return $this->permanentlyDelete($post, 'admin.content.index', __('Post permanently deleted.'), ['type' => 'post', 'trashed' => 1]);
     }
 
     /**
@@ -246,8 +200,9 @@ class PostController extends Controller
             }
         }
 
-        return [
-            'post' => $post ? [
+        return $this->editorialEntryFormProps(
+            'post',
+            $post ? [
                 'id' => $post->id,
                 'type' => $post->type->value,
                 'category_id' => $post->category_id,
@@ -258,10 +213,7 @@ class PostController extends Controller
                 'cover_url' => $post->getFirstMediaUrl(Post::COVER_COLLECTION, 'thumb') ?: null,
                 'translations' => $translations,
             ] : null,
-            'locales' => $this->localeOptions(),
-            ...$this->publicationFormMeta($post?->status),
-            ...$this->blueprintFormProps('post'),
-            'fieldOptions' => [
+            [
                 'type' => array_map(
                     fn (PostType $type) => ['value' => $type->value, 'label' => $type->label()],
                     PostType::cases(),
@@ -277,10 +229,12 @@ class PostController extends Controller
                     ->map(fn (Tag $tag) => ['id' => $tag->id, 'name' => $tag->translation($locale)?->name ?? "#{$tag->id}"])
                     ->all(),
             ],
-            'publicUrls' => $post ? PublicContentUrls::forPost($post) : [],
-            'previewUrls' => $post ? app(PreviewUrls::class)->forPost($post->id) : [],
-            'hasUnpublishedChanges' => $post?->hasUnpublishedChanges() ?? false,
-        ];
+            [
+                'publicUrls' => $post ? PublicContentUrls::forPost($post) : [],
+                'previewUrls' => $post ? app(PreviewUrls::class)->forPost($post->id) : [],
+                'hasUnpublishedChanges' => $post?->hasUnpublishedChanges() ?? false,
+            ],
+        );
     }
 
     /**

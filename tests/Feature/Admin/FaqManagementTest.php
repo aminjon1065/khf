@@ -43,13 +43,22 @@ it('renders the faq list and form', function () {
     $faq->upsertTranslations(['tj' => ['question' => 'Тест?', 'answer' => 'Ҷавоб']]);
 
     $this->actingAs($this->editor)->get(route('admin.faqs.index'))
+        ->assertRedirect(route('admin.content.index', 'faq'));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', 'faq'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/faq/index')->has('faqs.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'faq')
+            ->has('entries.data', 1));
 
     $this->actingAs($this->editor)->get(route('admin.faqs.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->component('admin/faq/form')
+            ->component('admin/content/form')
+            ->where('contentType.handle', 'faq')
+            ->has('entry')
+            ->has('urls.store')
             ->has('blueprint')
             ->has('locales', 3)
             ->has('statuses', 4));
@@ -61,7 +70,7 @@ it('creates a faq with translations and sanitizes the answer', function () {
 
     $this->actingAs($this->editor)
         ->post(route('admin.faqs.store'), $payload)
-        ->assertRedirect(route('admin.faqs.index'));
+        ->assertRedirect(route('admin.content.index', 'faq'));
 
     $faq = Faq::with('translations')->first();
 
@@ -87,13 +96,13 @@ it('updates and deletes a faq', function () {
 
     $this->actingAs($this->editor)
         ->put(route('admin.faqs.update', $faq), faqPayload(['sort_order' => 4]))
-        ->assertRedirect(route('admin.faqs.index'));
+        ->assertRedirect(route('admin.content.index', 'faq'));
 
     expect($faq->fresh()->sort_order)->toBe(4);
 
     $this->actingAs($this->editor)
         ->delete(route('admin.faqs.destroy', $faq))
-        ->assertRedirect(route('admin.faqs.index'));
+        ->assertRedirect(route('admin.content.index', 'faq'));
 
     expect(Faq::find($faq->id))->toBeNull();
 });

@@ -2,57 +2,33 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\BuildsCmsEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreStatisticRequest;
 use App\Http\Requests\Admin\UpdateStatisticRequest;
 use App\Models\Statistic;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class StatisticController extends Controller
 {
+    use BuildsCmsEntryFormProps;
     use BuildsCmsFormData;
     use ProvidesBlueprintForm;
+    use RedirectsToContentBrowser;
 
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-
-        $statistics = Statistic::query()
-            ->with('translations')
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('label', 'like', "%{$search}%"),
-            ))
-            ->orderBy('sort_order')
-            ->paginate(20)
-            ->withQueryString()
-            ->through(fn (Statistic $statistic) => [
-                'id' => $statistic->id,
-                'label' => $statistic->translation($locale)?->label ?? '—',
-                'value' => $statistic->value,
-                'year' => $statistic->year,
-                'status' => $statistic->status->value,
-                'status_label' => $statistic->status->label(),
-                'locales' => $statistic->translatedLocales(),
-                'sort_order' => $statistic->sort_order,
-            ]);
-
-        return Inertia::render('admin/statistics/index', [
-            'statistics' => $statistics,
-            'filters' => ['search' => $search],
-        ]);
+        return $this->redirectToContentBrowser('statistic');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/statistics/form', $this->formData(null));
+        return Inertia::render('admin/content/form', $this->formData(null));
     }
 
     public function store(StoreStatisticRequest $request): RedirectResponse
@@ -69,14 +45,14 @@ class StatisticController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Indicator created.')]);
 
-        return to_route('admin.statistics.index');
+        return $this->toContentBrowser('statistic');
     }
 
     public function edit(Statistic $statistic): Response
     {
         $statistic->load('translations');
 
-        return Inertia::render('admin/statistics/form', $this->formData($statistic));
+        return Inertia::render('admin/content/form', $this->formData($statistic));
     }
 
     public function update(UpdateStatisticRequest $request, Statistic $statistic): RedirectResponse
@@ -93,7 +69,7 @@ class StatisticController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Indicator updated.')]);
 
-        return to_route('admin.statistics.index');
+        return $this->toContentBrowser('statistic');
     }
 
     public function destroy(Statistic $statistic): RedirectResponse
@@ -102,7 +78,7 @@ class StatisticController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Indicator deleted.')]);
 
-        return to_route('admin.statistics.index');
+        return $this->toContentBrowser('statistic');
     }
 
     /**
@@ -121,8 +97,9 @@ class StatisticController extends Controller
             }
         }
 
-        return [
-            'statistic' => $statistic ? [
+        return $this->contentEntryFormProps(
+            'statistic',
+            $statistic ? [
                 'id' => $statistic->id,
                 'status' => $statistic->status->value,
                 'value' => $statistic->value,
@@ -130,11 +107,7 @@ class StatisticController extends Controller
                 'sort_order' => $statistic->sort_order,
                 'translations' => $translations,
             ] : null,
-            ...$this->publicationFormMeta($statistic?->status),
-            ...$this->blueprintFormProps('statistic'),
-            'fieldOptions' => [],
-            'locales' => $this->localeOptions(),
-        ];
+        );
     }
 
     /**

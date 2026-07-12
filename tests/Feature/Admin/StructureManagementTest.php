@@ -47,16 +47,25 @@ it('renders the structure list and form', function () {
     $subdivision->upsertTranslations(['tj' => ['name' => 'Тест']]);
 
     $this->actingAs($this->editor)->get(route('admin.structure.index'))
+        ->assertRedirect(route('admin.content.index', 'subdivision'));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', 'subdivision'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/structure/index')->has('subdivisions.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'subdivision')
+            ->has('entries.data', 1));
 
     $this->actingAs($this->editor)->get(route('admin.structure.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->component('admin/structure/form')
+            ->component('admin/content/form')
+            ->where('contentType.handle', 'subdivision')
+            ->has('entry')
+            ->has('urls.store')
+            ->has('blueprint')
             ->has('locales', 3)
-            ->has('statuses', 4)
-            ->has('blueprint'));
+            ->has('statuses', 4));
 });
 
 it('creates a subdivision under a parent', function () {
@@ -65,7 +74,7 @@ it('creates a subdivision under a parent', function () {
 
     $this->actingAs($this->editor)
         ->post(route('admin.structure.store'), subdivisionPayload(['parent_id' => $parent->id]))
-        ->assertRedirect(route('admin.structure.index'));
+        ->assertRedirect(route('admin.content.index', 'subdivision'));
 
     $child = Subdivision::with('translations')->where('parent_id', $parent->id)->first();
 
@@ -101,13 +110,13 @@ it('updates and deletes a subdivision', function () {
 
     $this->actingAs($this->editor)
         ->put(route('admin.structure.update', $subdivision), subdivisionPayload(['sort_order' => 3]))
-        ->assertRedirect(route('admin.structure.index'));
+        ->assertRedirect(route('admin.content.index', 'subdivision'));
 
     expect($subdivision->fresh()->sort_order)->toBe(3);
 
     $this->actingAs($this->editor)
         ->delete(route('admin.structure.destroy', $subdivision))
-        ->assertRedirect(route('admin.structure.index'));
+        ->assertRedirect(route('admin.content.index', 'subdivision'));
 
     expect(Subdivision::find($subdivision->id))->toBeNull();
 });

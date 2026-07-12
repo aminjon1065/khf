@@ -76,13 +76,20 @@ it('renders the poll list and form', function () {
     ]);
 
     $this->actingAs($this->editor)->get(route('admin.polls.index'))
+        ->assertRedirect(route('admin.content.index', 'poll'));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', 'poll'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/polls/index')->has('polls.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'poll')
+            ->has('entries.data', 1));
 
     $this->actingAs($this->editor)->get(route('admin.polls.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->component('admin/polls/form')
+            ->component('admin/content/form')
+            ->where('contentType.handle', 'poll')
             ->has('locales', 3)
             ->has('blueprint')
             ->has('fieldOptions.type', 2));
@@ -94,7 +101,7 @@ it('creates a poll with translations and options', function () {
 
     $this->actingAs($this->editor)
         ->post(route('admin.polls.store'), $payload)
-        ->assertRedirect(route('admin.polls.index'));
+        ->assertRedirect(route('admin.content.index', 'poll'));
 
     $poll = Poll::with(['translations', 'options.translations'])->first();
 
@@ -134,13 +141,13 @@ it('updates and deletes a poll', function () {
 
     $this->actingAs($this->editor)
         ->put(route('admin.polls.update', $poll), $payload)
-        ->assertRedirect(route('admin.polls.index'));
+        ->assertRedirect(route('admin.content.index', 'poll'));
 
     expect($poll->fresh()->translation('ru')->title)->toBe('Тестовый опрос');
 
     $this->actingAs($this->editor)
         ->delete(route('admin.polls.destroy', $poll))
-        ->assertRedirect(route('admin.polls.index'));
+        ->assertRedirect(route('admin.content.index', 'poll'));
 
     expect(Poll::find($poll->id))->toBeNull();
 });

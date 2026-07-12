@@ -3,65 +3,38 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\PollType;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePollRequest;
 use App\Http\Requests\Admin\UpdatePollRequest;
 use App\Models\Poll;
 use App\Models\PollOption;
 use App\Support\HtmlSanitizer;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PollController extends Controller
 {
+    use BuildsCmsEntryFormProps;
     use BuildsCmsFormData;
     use ProvidesBlueprintForm;
+    use RedirectsToContentBrowser;
 
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-
-        $polls = Poll::query()
-            ->with('translations')
-            ->withCount('votes')
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('title', 'like', "%{$search}%"),
-            ))
-            ->orderByDesc('created_at')
-            ->paginate(20)
-            ->withQueryString()
-            ->through(fn (Poll $poll) => [
-                'id' => $poll->id,
-                'title' => $poll->translation($locale)?->title ?? '—',
-                'type' => $poll->type->value,
-                'type_label' => $poll->type->label(),
-                'status' => $poll->status->value,
-                'status_label' => $poll->status->label(),
-                'votes_count' => $poll->votes_count,
-                'starts_at' => $poll->starts_at?->toIso8601String(),
-                'ends_at' => $poll->ends_at?->toIso8601String(),
-                'locales' => $poll->translatedLocales(),
-            ]);
-
-        return Inertia::render('admin/polls/index', [
-            'polls' => $polls,
-            'filters' => ['search' => $search],
-        ]);
+        return $this->redirectToContentBrowser('poll');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/polls/form', $this->formData(null));
+        return Inertia::render('admin/content/form', $this->formData(null));
     }
 
     public function store(StorePollRequest $request): RedirectResponse
@@ -82,14 +55,14 @@ class PollController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Poll created.')]);
 
-        return to_route('admin.polls.index');
+        return $this->toContentBrowser('poll');
     }
 
     public function edit(Poll $poll): Response
     {
         $poll->load(['translations', 'options.translations']);
 
-        return Inertia::render('admin/polls/form', $this->formData($poll));
+        return Inertia::render('admin/content/form', $this->formData($poll));
     }
 
     public function update(UpdatePollRequest $request, Poll $poll): RedirectResponse
@@ -110,7 +83,7 @@ class PollController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Poll updated.')]);
 
-        return to_route('admin.polls.index');
+        return $this->toContentBrowser('poll');
     }
 
     public function destroy(Poll $poll): RedirectResponse
@@ -119,7 +92,7 @@ class PollController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Poll deleted.')]);
 
-        return to_route('admin.polls.index');
+        return $this->toContentBrowser('poll');
     }
 
     /**
@@ -159,8 +132,9 @@ class PollController extends Controller
             }
         }
 
-        return [
-            'poll' => $poll ? [
+        return $this->contentEntryFormProps(
+            'poll',
+            $poll ? [
                 'id' => $poll->id,
                 'type' => $poll->type->value,
                 'status' => $poll->status->value,
@@ -172,13 +146,10 @@ class PollController extends Controller
                 'translations' => $translations,
                 'options' => $options,
             ] : null,
-            ...$this->publicationFormMeta($poll?->status),
-            ...$this->blueprintFormProps('poll'),
-            'fieldOptions' => [
+            [
                 'type' => PollType::options(),
             ],
-            'locales' => $this->localeOptions(),
-        ];
+        );
     }
 
     /**

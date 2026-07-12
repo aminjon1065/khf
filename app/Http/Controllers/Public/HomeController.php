@@ -31,7 +31,7 @@ class HomeController extends Controller
 
         $latestPosts = $this->contentCache->remember('post', $locale, 'home.latest', function () use ($locale) {
             return Post::published()
-                ->with(['translations', 'category.translations', 'media'])
+                ->with(PostShowPresenter::CARD_WITH)
                 ->whereHas('translations', fn ($query) => $query->where('locale', $locale))
                 ->orderByDesc('published_at')
                 ->limit(6)

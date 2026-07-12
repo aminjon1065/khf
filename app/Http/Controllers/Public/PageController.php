@@ -33,7 +33,7 @@ class PageController extends Controller
                 return null;
             }
 
-            $page = Page::published()->with(['translations', 'media'])->whereKey($pageId)->first();
+            $page = Page::published()->with(PageShowPresenter::SHOW_WITH)->whereKey($pageId)->first();
 
             if ($page === null) {
                 return null;

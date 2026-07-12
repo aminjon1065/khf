@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\TenderType;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
-use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreTenderRequest;
@@ -15,57 +16,34 @@ use App\Models\Tender;
 use App\Support\HtmlSanitizer;
 use App\Support\PublicationScheduler;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class TenderController extends Controller
 {
+    use BuildsCmsEntryFormProps;
     use BuildsCmsFormData;
-    use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
     use ProvidesBlueprintForm;
+    use RedirectsToContentBrowser;
     use SavesContentRevisions;
-
-    /** @var list<string> */
-    private const SORTABLE = ['status', 'type', 'published_at', 'deadline_at', 'created_at'];
 
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $filters = $this->listFilters($request, 'published_at', 'desc');
-
-        $tenders = $this->paginateTranslatable(
-            Tender::query()->with('translations')->withCount('bids'),
-            $request,
-            self::SORTABLE,
-            'published_at',
-            'desc',
-            fn (Tender $tender, string $locale) => $this->toRow($tender, $locale),
-        );
-
-        return Inertia::render('admin/tenders/index', [
-            'tenders' => $tenders,
-            'filters' => $filters,
-            'trashedCount' => Tender::onlyTrashed()->count(),
-        ]);
+        return $this->redirectToContentBrowser('tender');
     }
 
-    public function trash(): Response
+    public function trash(): RedirectResponse
     {
-        $tenders = $this->paginateTrashed(
-            Tender::onlyTrashed()->with('translations')->withCount('bids'),
-            fn (Tender $tender, string $locale) => $this->toRow($tender, $locale),
-        );
-
-        return Inertia::render('admin/tenders/trash', ['tenders' => $tenders]);
+        return $this->redirectToContentBrowserTrash('tender');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/tenders/form', $this->formData(null));
+        return Inertia::render('admin/content/form', $this->formData(null));
     }
 
     public function store(StoreTenderRequest $request): RedirectResponse
@@ -86,14 +64,14 @@ class TenderController extends Controller
         $tender->upsertTranslations($this->translationsPayload($data));
         $this->flashContentSaved(__('Tender created.'));
 
-        return to_route('admin.tenders.index');
+        return $this->toContentBrowser('tender');
     }
 
     public function edit(Tender $tender): Response
     {
         $tender->load('translations');
 
-        return Inertia::render('admin/tenders/form', $this->formData($tender));
+        return Inertia::render('admin/content/form', $this->formData($tender));
     }
 
     public function update(UpdateTenderRequest $request, Tender $tender): RedirectResponse
@@ -113,46 +91,22 @@ class TenderController extends Controller
         $tender->upsertTranslations($this->translationsPayload($data));
         $this->flashContentSaved(__('Tender updated.'));
 
-        return to_route('admin.tenders.index');
+        return $this->toContentBrowser('tender');
     }
 
     public function destroy(Tender $tender): RedirectResponse
     {
-        return $this->moveToTrash($tender, 'admin.tenders.index', __('Tender moved to trash.'));
+        return $this->moveToTrash($tender, 'admin.content.index', __('Tender moved to trash.'), 'tender');
     }
 
     public function restore(Tender $tender): RedirectResponse
     {
-        return $this->restoreFromTrash($tender, 'admin.tenders.trash', __('Tender restored.'));
+        return $this->restoreFromTrash($tender, 'admin.content.index', __('Tender restored.'), ['type' => 'tender', 'trashed' => 1]);
     }
 
     public function forceDelete(Tender $tender): RedirectResponse
     {
-        return $this->permanentlyDelete($tender, 'admin.tenders.trash', __('Tender permanently deleted.'));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function toRow(Tender $tender, string $locale): array
-    {
-        return [
-            'id' => $tender->id,
-            'title' => $tender->translation($locale)?->title ?? '—',
-            'organizer' => $tender->translation($locale)?->organizer,
-            'tender_number' => $tender->tender_number,
-            'type' => $tender->type->value,
-            'type_label' => $tender->type->label(),
-            'status' => $tender->status->value,
-            'status_label' => $tender->status->label(),
-            'lots_count' => $tender->lots_count,
-            'bids_count' => $tender->bids_count,
-            'locales' => $tender->translatedLocales(),
-            'published_at' => $tender->published_at?->toDateString(),
-            'deadline_at' => $tender->deadline_at?->toDateString(),
-            'is_open' => $tender->isOpen(),
-            'deleted_at' => $tender->deleted_at?->toDateString(),
-        ];
+        return $this->permanentlyDelete($tender, 'admin.content.index', __('Tender permanently deleted.'), ['type' => 'tender', 'trashed' => 1]);
     }
 
     /**
@@ -178,8 +132,9 @@ class TenderController extends Controller
             }
         }
 
-        return [
-            'tender' => $tender ? [
+        return $this->contentEntryFormProps(
+            'tender',
+            $tender ? [
                 'id' => $tender->id,
                 'tender_number' => $tender->tender_number,
                 'type' => $tender->type->value,
@@ -191,13 +146,10 @@ class TenderController extends Controller
                 'deadline_at' => $tender->deadline_at?->format('Y-m-d'),
                 'translations' => $translations,
             ] : null,
-            ...$this->publicationFormMeta($tender?->status),
-            ...$this->blueprintFormProps('tender'),
-            'fieldOptions' => [
+            [
                 'type' => TenderType::options(),
             ],
-            'locales' => $this->localeOptions(),
-        ];
+        );
     }
 
     /**

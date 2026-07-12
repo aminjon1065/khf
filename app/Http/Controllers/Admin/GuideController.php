@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\GuideAudience;
 use App\Enums\IncidentType;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
-use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGuideRequest;
@@ -23,50 +24,28 @@ use Inertia\Response;
 
 class GuideController extends Controller
 {
+    use BuildsCmsEntryFormProps;
     use BuildsCmsFormData;
-    use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
     use ProvidesBlueprintForm;
+    use RedirectsToContentBrowser;
     use SavesContentRevisions;
-
-    /** @var list<string> */
-    private const SORTABLE = ['hazard_type', 'audience', 'status', 'sort_order', 'created_at'];
 
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $filters = $this->listFilters($request, 'sort_order', 'asc');
-
-        $guides = $this->paginateTranslatable(
-            Guide::query()->with(['translations', 'media']),
-            $request,
-            self::SORTABLE,
-            'sort_order',
-            'asc',
-            fn (Guide $guide, string $locale) => $this->toRow($guide, $locale),
-        );
-
-        return Inertia::render('admin/guides/index', [
-            'guides' => $guides,
-            'filters' => $filters,
-            'trashedCount' => Guide::onlyTrashed()->count(),
-        ]);
+        return $this->redirectToContentBrowser('guide');
     }
 
-    public function trash(): Response
+    public function trash(): RedirectResponse
     {
-        $guides = $this->paginateTrashed(
-            Guide::onlyTrashed()->with('translations'),
-            fn (Guide $guide, string $locale) => $this->toRow($guide, $locale),
-        );
-
-        return Inertia::render('admin/guides/trash', ['guides' => $guides]);
+        return $this->redirectToContentBrowserTrash('guide');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/guides/form', $this->formData(null));
+        return Inertia::render('admin/content/form', $this->formData(null));
     }
 
     public function store(StoreGuideRequest $request): RedirectResponse
@@ -79,14 +58,14 @@ class GuideController extends Controller
         $this->saveContentRevision($guide);
         $this->flashContentSaved(__('Guide created.'));
 
-        return to_route('admin.guides.index');
+        return $this->toContentBrowser('guide');
     }
 
     public function edit(Guide $guide): Response
     {
         $guide->load(['translations', 'media']);
 
-        return Inertia::render('admin/guides/form', $this->formData($guide));
+        return Inertia::render('admin/content/form', $this->formData($guide));
     }
 
     public function update(UpdateGuideRequest $request, Guide $guide): RedirectResponse
@@ -99,22 +78,22 @@ class GuideController extends Controller
         $this->saveContentRevision($guide);
         $this->flashContentSaved(__('Guide updated.'));
 
-        return to_route('admin.guides.index');
+        return $this->toContentBrowser('guide');
     }
 
     public function destroy(Guide $guide): RedirectResponse
     {
-        return $this->moveToTrash($guide, 'admin.guides.index', __('Guide moved to trash.'));
+        return $this->moveToTrash($guide, 'admin.content.index', __('Guide moved to trash.'), 'guide');
     }
 
     public function restore(Guide $guide): RedirectResponse
     {
-        return $this->restoreFromTrash($guide, 'admin.guides.trash', __('Guide restored.'));
+        return $this->restoreFromTrash($guide, 'admin.content.index', __('Guide restored.'), ['type' => 'guide', 'trashed' => 1]);
     }
 
     public function forceDelete(Guide $guide): RedirectResponse
     {
-        return $this->permanentlyDelete($guide, 'admin.guides.trash', __('Guide permanently deleted.'));
+        return $this->permanentlyDelete($guide, 'admin.content.index', __('Guide permanently deleted.'), ['type' => 'guide', 'trashed' => 1]);
     }
 
     private function syncFiles(Request $request, Guide $guide): void
@@ -143,26 +122,6 @@ class GuideController extends Controller
             'audience' => $data['audience'],
             'status' => $data['status'],
             'sort_order' => $data['sort_order'] ?? 0,
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function toRow(Guide $guide, string $locale): array
-    {
-        return [
-            'id' => $guide->id,
-            'title' => $guide->translation($locale)?->title ?? '—',
-            'hazard_type' => $guide->hazard_type?->value,
-            'hazard_label' => $guide->hazard_type?->label(),
-            'audience' => $guide->audience->value,
-            'audience_label' => $guide->audience->label(),
-            'status' => $guide->status->value,
-            'status_label' => $guide->status->label(),
-            'locales' => $guide->translatedLocales(),
-            'files_count' => $guide->relationLoaded('media') ? $guide->getMedia(Guide::FILES_COLLECTION)->count() : 0,
-            'deleted_at' => $guide->deleted_at?->toDateString(),
         ];
     }
 
@@ -200,8 +159,9 @@ class GuideController extends Controller
                 ->all();
         }
 
-        return [
-            'guide' => $guide ? [
+        return $this->contentEntryFormProps(
+            'guide',
+            $guide ? [
                 'id' => $guide->id,
                 'hazard_type' => $guide->hazard_type?->value ?? '',
                 'audience' => $guide->audience->value,
@@ -209,9 +169,7 @@ class GuideController extends Controller
                 'sort_order' => $guide->sort_order,
                 'translations' => $translations,
             ] : null,
-            ...$this->publicationFormMeta($guide?->status),
-            ...$this->blueprintFormProps('guide'),
-            'fieldOptions' => [
+            [
                 'hazard_type' => array_merge(
                     [['value' => '', 'label' => 'Без привязки']],
                     array_map(
@@ -221,9 +179,10 @@ class GuideController extends Controller
                 ),
                 'audience' => GuideAudience::options(),
             ],
-            'locales' => $this->localeOptions(),
-            'existingFiles' => $files,
-        ];
+            [
+                'existingFiles' => $files,
+            ],
+        );
     }
 
     /**

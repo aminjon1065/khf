@@ -47,7 +47,7 @@ it('creates a guide with hazard type, audience and sanitised content', function 
                 'ru' => ['title' => 'Землетрясение', 'summary' => 'с', 'content' => '<p>ok</p>'],
             ],
         ]))
-        ->assertRedirect(route('admin.guides.index'));
+        ->assertRedirect(route('admin.content.index', 'guide'));
 
     $guide = Guide::with('translations')->first();
 
@@ -60,7 +60,7 @@ it('creates a guide with hazard type, audience and sanitised content', function 
 it('allows a general guide with no hazard binding', function () {
     $this->actingAs($this->editor)
         ->post(route('admin.guides.store'), guidePayload(['hazard_type' => null]))
-        ->assertRedirect(route('admin.guides.index'));
+        ->assertRedirect(route('admin.content.index', 'guide'));
 
     expect(Guide::first()->hazard_type)->toBeNull();
 });
@@ -80,11 +80,15 @@ it('renders the index with translation-status locales', function () {
     $guide->upsertTranslations(['tj' => ['title' => 'Т', 'slug' => 't-tj']]);
 
     $this->actingAs($this->editor)->get(route('admin.guides.index'))
+        ->assertRedirect(route('admin.content.index', 'guide'));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', 'guide'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('admin/guides/index')
-            ->has('guides.data', 1)
-            ->where('guides.data.0.locales', ['tj']));
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'guide')
+            ->has('entries.data', 1)
+            ->where('entries.data.0.locales', ['tj']));
 });
 
 it('renders the admin create and edit screens', function () {
@@ -94,18 +98,20 @@ it('renders the admin create and edit screens', function () {
     $this->actingAs($this->editor)->get(route('admin.guides.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('admin/guides/form')
+            ->component('admin/content/form')
             ->has('blueprint')
             ->has('fieldOptions')
             ->has('statuses')
-            ->has('locales'));
+            ->has('locales')
+            ->has('existingFiles'));
 
     $this->actingAs($this->editor)->get(route('admin.guides.edit', $guide))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('admin/guides/form')
-            ->where('guide.id', $guide->id)
-            ->has('blueprint.sections.sidebar.fields'));
+            ->component('admin/content/form')
+            ->where('entry.id', $guide->id)
+            ->has('blueprint.sections.sidebar.fields')
+            ->has('existingFiles'));
 });
 
 it('generates unique slugs when auto-generated slugs would collide', function () {

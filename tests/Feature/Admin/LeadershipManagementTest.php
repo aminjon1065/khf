@@ -49,16 +49,24 @@ it('renders the leadership list and form', function () {
     $leader->upsertTranslations(['tj' => ['full_name' => 'Тест', 'position' => 'Должность']]);
 
     $this->actingAs($this->editor)->get(route('admin.leadership.index'))
+        ->assertRedirect(route('admin.content.index', 'leader'));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', 'leader'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/leadership/index')->has('leaders.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'leader')
+            ->has('entries.data', 1));
 
     $this->actingAs($this->editor)->get(route('admin.leadership.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->component('admin/leadership/form')
+            ->component('admin/content/form')
+            ->where('contentType.handle', 'leader')
             ->has('locales', 3)
             ->has('statuses', 4)
-            ->has('blueprint'));
+            ->has('blueprint')
+            ->has('photoUrl'));
 });
 
 it('creates a leader with translations and a photo', function () {
@@ -66,7 +74,7 @@ it('creates a leader with translations and a photo', function () {
         ->post(route('admin.leadership.store'), leaderPayload([
             'photo' => UploadedFile::fake()->image('chief.jpg', 400, 400),
         ]))
-        ->assertRedirect(route('admin.leadership.index'));
+        ->assertRedirect(route('admin.content.index', 'leader'));
 
     $leader = Leader::with('translations')->first();
 
@@ -93,13 +101,13 @@ it('updates and deletes a leader', function () {
 
     $this->actingAs($this->editor)
         ->put(route('admin.leadership.update', $leader), leaderPayload(['sort_order' => 7]))
-        ->assertRedirect(route('admin.leadership.index'));
+        ->assertRedirect(route('admin.content.index', 'leader'));
 
     expect($leader->fresh()->sort_order)->toBe(7);
 
     $this->actingAs($this->editor)
         ->delete(route('admin.leadership.destroy', $leader))
-        ->assertRedirect(route('admin.leadership.index'));
+        ->assertRedirect(route('admin.content.index', 'leader'));
 
     expect(Leader::find($leader->id))->toBeNull();
 });

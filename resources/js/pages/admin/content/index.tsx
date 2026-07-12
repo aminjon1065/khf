@@ -1,5 +1,13 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Download, Pencil, Plus, Trash2, Upload } from 'lucide-react';
+import {
+    ArchiveRestore,
+    ArrowLeft,
+    Download,
+    Pencil,
+    Plus,
+    Trash2,
+    Upload,
+} from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { DataTable } from '@/components/admin/data-table';
@@ -29,7 +37,13 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { dashboard } from '@/routes/admin';
-import { bulkDestroy, exportMethod as exportContent, hub as contentHub, importMethod as importContent, index as contentIndex } from '@/routes/admin/content';
+import {
+    bulkDestroy,
+    exportMethod as exportContent,
+    hub as contentHub,
+    importMethod as importContent,
+    index as contentIndex,
+} from '@/routes/admin/content';
 
 type EntryRow = {
     id: number;
@@ -40,8 +54,11 @@ type EntryRow = {
     subtype_label?: string;
     locales: string[];
     updated_at: string | null;
+    deleted_at?: string | null;
     edit_url: string;
     destroy_url: string;
+    restore_url?: string;
+    force_delete_url?: string;
 };
 
 type ContentTypeMeta = {
@@ -78,6 +95,10 @@ const statusVariant: Record<
     draft: 'secondary',
     moderation: 'outline',
     archived: 'destructive',
+    active: 'destructive',
+    controlled: 'outline',
+    resolved: 'secondary',
+    cancelled: 'destructive',
 };
 
 export default function ContentIndex({
@@ -93,6 +114,7 @@ export default function ContentIndex({
     showSubtype,
 }: PageProps) {
     const [deleting, setDeleting] = useState<EntryRow | null>(null);
+    const [purging, setPurging] = useState<EntryRow | null>(null);
     const [selected, setSelected] = useState<number[]>([]);
     const [importOpen, setImportOpen] = useState(false);
     const [importFile, setImportFile] = useState<File | null>(null);
@@ -100,6 +122,7 @@ export default function ContentIndex({
     const [importing, setImporting] = useState(false);
     const baseUrl = contentIndex(contentType.handle).url;
     const hasSoftDeletes = contentType.features.includes('soft_deletes');
+    const viewingTrash = Boolean(filters.trashed);
 
     const toggleAll = (checked: boolean) => {
         setSelected(checked ? entries.data.map((row) => row.id) : []);
@@ -119,6 +142,7 @@ export default function ContentIndex({
             {
                 ...filters,
                 status: status === 'all' ? undefined : status,
+                trashed: viewingTrash ? 1 : undefined,
             },
             { preserveState: true, replace: true },
         );
@@ -127,7 +151,9 @@ export default function ContentIndex({
     const switchType = (handle: string) => {
         const target = types.find((type) => type.handle === handle);
         if (target) {
-            router.visit(target.url);
+            router.visit(
+                viewingTrash ? `${target.url}?trashed=1` : target.url,
+            );
         }
     };
 
@@ -149,6 +175,10 @@ export default function ContentIndex({
 
         if (filters.direction) {
             params.set('direction', filters.direction);
+        }
+
+        if (viewingTrash) {
+            params.set('trashed', '1');
         }
 
         selected.forEach((id) => params.append('ids[]', String(id)));
@@ -197,14 +227,18 @@ export default function ContentIndex({
             return;
         }
 
-        router.post(bulkDestroy(contentType.handle).url, { ids: selected }, {
-            preserveScroll: true,
-            onSuccess: () => setSelected([]),
-        });
+        router.post(
+            bulkDestroy(contentType.handle).url,
+            { ids: selected },
+            {
+                preserveScroll: true,
+                onSuccess: () => setSelected([]),
+            },
+        );
     };
 
     const columns: DataTableColumn<EntryRow>[] = [
-        ...(hasSoftDeletes
+        ...(hasSoftDeletes && !viewingTrash
             ? [
                   {
                       key: 'select',
@@ -286,27 +320,44 @@ export default function ContentIndex({
                   } satisfies DataTableColumn<EntryRow>,
               ]
             : []),
-        {
-            key: 'updated_at',
-            label: 'Изменена',
-            sortable: contentType.sortable.includes('updated_at'),
-            className: 'hidden sm:table-cell',
-        },
+        viewingTrash
+            ? {
+                  key: 'deleted_at',
+                  label: 'Удалён',
+                  className: 'hidden sm:table-cell',
+                  render: (row: EntryRow) => row.deleted_at ?? '—',
+              }
+            : {
+                  key: 'updated_at',
+                  label: 'Изменена',
+                  sortable: contentType.sortable.includes('updated_at'),
+                  className: 'hidden sm:table-cell',
+              },
     ];
 
     return (
         <>
-            <Head title={contentType.label} />
+            <Head
+                title={
+                    viewingTrash
+                        ? `Корзина — ${contentType.label}`
+                        : contentType.label
+                }
+            />
 
             <div className="flex h-full flex-1 flex-col gap-6 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="space-y-3">
                         <div>
                             <h1 className="text-2xl font-semibold">
-                                {contentType.label}
+                                {viewingTrash
+                                    ? `Корзина — ${contentType.label}`
+                                    : contentType.label}
                             </h1>
                             <p className="text-sm text-muted-foreground">
-                                Браузер записей коллекции
+                                {viewingTrash
+                                    ? 'Удалённые записи можно восстановить или удалить навсегда'
+                                    : 'Браузер записей коллекции'}
                             </p>
                         </div>
                         {types.length > 1 && (
@@ -331,24 +382,35 @@ export default function ContentIndex({
                         )}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                        {hasSoftDeletes && selected.length > 0 && (
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={bulkDelete}
-                            >
-                                <Trash2 className="size-4" />В корзину (
-                                {selected.length})
-                            </Button>
-                        )}
-                        {trashUrl && (
+                        {hasSoftDeletes &&
+                            !viewingTrash &&
+                            selected.length > 0 && (
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={bulkDelete}
+                                >
+                                    <Trash2 className="size-4" />В корзину (
+                                    {selected.length})
+                                </Button>
+                            )}
+                        {viewingTrash ? (
                             <Button variant="outline" size="sm" asChild>
-                                <Link href={trashUrl}>
-                                    <Trash2 className="size-4" />
-                                    Корзина{' '}
-                                    {trashedCount > 0 && `(${trashedCount})`}
+                                <Link href={contentIndex(contentType.handle)}>
+                                    <ArrowLeft className="size-4" />К списку
                                 </Link>
                             </Button>
+                        ) : (
+                            trashUrl && (
+                                <Button variant="outline" size="sm" asChild>
+                                    <Link href={trashUrl}>
+                                        <Trash2 className="size-4" />
+                                        Корзина{' '}
+                                        {trashedCount > 0 &&
+                                            `(${trashedCount})`}
+                                    </Link>
+                                </Button>
+                            )
                         )}
                     </div>
                 </div>
@@ -360,6 +422,9 @@ export default function ContentIndex({
                     baseUrl={baseUrl}
                     getRowId={(row) => row.id}
                     searchPlaceholder={searchPlaceholder}
+                    emptyMessage={
+                        viewingTrash ? 'Корзина пуста' : 'Ничего не найдено'
+                    }
                     toolbar={
                         <div className="flex flex-wrap items-center gap-2">
                             {statuses.length > 0 && (
@@ -385,73 +450,110 @@ export default function ContentIndex({
                                     </SelectContent>
                                 </Select>
                             )}
-                            {hasSoftDeletes && entries.data.length > 0 && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Checkbox
-                                        checked={
-                                            selected.length ===
-                                                entries.data.length &&
-                                            entries.data.length > 0
-                                        }
-                                        onCheckedChange={(checked) =>
-                                            toggleAll(checked === true)
-                                        }
-                                    />
-                                    Выбрать все
-                                </div>
+                            {hasSoftDeletes &&
+                                !viewingTrash &&
+                                entries.data.length > 0 && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Checkbox
+                                            checked={
+                                                selected.length ===
+                                                    entries.data.length &&
+                                                entries.data.length > 0
+                                            }
+                                            onCheckedChange={(checked) =>
+                                                toggleAll(checked === true)
+                                            }
+                                        />
+                                        Выбрать все
+                                    </div>
+                                )}
+                            {!viewingTrash && (
+                                <>
+                                    <Button variant="outline" asChild>
+                                        <a href={exportUrl('json')}>
+                                            <Download className="size-4" />
+                                            JSON
+                                        </a>
+                                    </Button>
+                                    <Button variant="outline" asChild>
+                                        <a href={exportUrl('csv')}>
+                                            <Download className="size-4" />
+                                            CSV
+                                        </a>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setImportOpen(true)}
+                                    >
+                                        <Upload className="size-4" />
+                                        Импорт
+                                    </Button>
+                                    <Button asChild>
+                                        <Link href={createUrl}>
+                                            <Plus className="size-4" />
+                                            Создать
+                                        </Link>
+                                    </Button>
+                                </>
                             )}
-                            <Button variant="outline" asChild>
-                                <a href={exportUrl('json')}>
-                                    <Download className="size-4" />
-                                    JSON
-                                </a>
-                            </Button>
-                            <Button variant="outline" asChild>
-                                <a href={exportUrl('csv')}>
-                                    <Download className="size-4" />
-                                    CSV
-                                </a>
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setImportOpen(true)}
-                            >
-                                <Upload className="size-4" />
-                                Импорт
-                            </Button>
-                            <Button asChild>
-                                <Link href={createUrl}>
-                                    <Plus className="size-4" />
-                                    Создать
-                                </Link>
-                            </Button>
                         </div>
                     }
-                    actions={(row) => (
-                        <div className="flex justify-end gap-1">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                aria-label="Изменить"
-                                asChild
-                            >
-                                <Link href={row.edit_url}>
-                                    <Pencil className="size-4" />
-                                </Link>
-                            </Button>
-                            {hasSoftDeletes && (
+                    actions={(row) =>
+                        viewingTrash ? (
+                            <div className="flex justify-end gap-1">
+                                {row.restore_url && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        aria-label="Восстановить"
+                                        onClick={() =>
+                                            router.patch(
+                                                row.restore_url!,
+                                                {},
+                                                { preserveScroll: true },
+                                            )
+                                        }
+                                    >
+                                        <ArchiveRestore className="size-4" />
+                                    </Button>
+                                )}
+                                {row.force_delete_url && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        aria-label="Удалить навсегда"
+                                        onClick={() => setPurging(row)}
+                                    >
+                                        <Trash2 className="size-4 text-destructive" />
+                                    </Button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex justify-end gap-1">
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    aria-label="Удалить"
-                                    onClick={() => setDeleting(row)}
+                                    aria-label="Изменить"
+                                    asChild
                                 >
-                                    <Trash2 className="size-4" />
+                                    <Link href={row.edit_url}>
+                                        <Pencil className="size-4" />
+                                    </Link>
                                 </Button>
-                            )}
-                        </div>
-                    )}
+                                {hasSoftDeletes && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        aria-label="Удалить"
+                                        onClick={() => setDeleting(row)}
+                                    >
+                                        <Trash2 className="size-4" />
+                                    </Button>
+                                )}
+                            </div>
+                        )
+                    }
                 />
             </div>
 
@@ -485,6 +587,41 @@ export default function ContentIndex({
                             }}
                         >
                             В корзину
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog
+                open={Boolean(purging)}
+                onOpenChange={(open) => !open && setPurging(null)}
+            >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Удалить навсегда?</DialogTitle>
+                        <DialogDescription>
+                            «{purging?.title}» будет удалён безвозвратно.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setPurging(null)}
+                        >
+                            Отмена
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => {
+                                if (purging?.force_delete_url) {
+                                    router.delete(purging.force_delete_url, {
+                                        preserveScroll: true,
+                                        onSuccess: () => setPurging(null),
+                                    });
+                                }
+                            }}
+                        >
+                            Удалить навсегда
                         </Button>
                     </DialogFooter>
                 </DialogContent>

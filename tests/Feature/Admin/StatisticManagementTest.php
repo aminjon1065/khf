@@ -45,13 +45,22 @@ it('renders the statistics list and form', function () {
     $statistic->upsertTranslations(['tj' => ['label' => 'Тест']]);
 
     $this->actingAs($this->editor)->get(route('admin.statistics.index'))
+        ->assertRedirect(route('admin.content.index', 'statistic'));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', 'statistic'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/statistics/index')->has('statistics.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'statistic')
+            ->has('entries.data', 1));
 
     $this->actingAs($this->editor)->get(route('admin.statistics.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->component('admin/statistics/form')
+            ->component('admin/content/form')
+            ->where('contentType.handle', 'statistic')
+            ->has('entry')
+            ->has('urls.store')
             ->has('blueprint')
             ->has('locales', 3)
             ->has('statuses', 4));
@@ -60,7 +69,7 @@ it('renders the statistics list and form', function () {
 it('creates an indicator with translations', function () {
     $this->actingAs($this->editor)
         ->post(route('admin.statistics.store'), statisticPayload())
-        ->assertRedirect(route('admin.statistics.index'));
+        ->assertRedirect(route('admin.content.index', 'statistic'));
 
     $statistic = Statistic::with('translations')->first();
 
@@ -86,13 +95,13 @@ it('updates and deletes an indicator', function () {
 
     $this->actingAs($this->editor)
         ->put(route('admin.statistics.update', $statistic), statisticPayload(['sort_order' => 9]))
-        ->assertRedirect(route('admin.statistics.index'));
+        ->assertRedirect(route('admin.content.index', 'statistic'));
 
     expect($statistic->fresh()->sort_order)->toBe(9);
 
     $this->actingAs($this->editor)
         ->delete(route('admin.statistics.destroy', $statistic))
-        ->assertRedirect(route('admin.statistics.index'));
+        ->assertRedirect(route('admin.content.index', 'statistic'));
 
     expect(Statistic::find($statistic->id))->toBeNull();
 });

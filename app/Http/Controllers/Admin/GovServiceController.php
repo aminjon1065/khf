@@ -3,64 +3,39 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ServiceCategory;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGovServiceRequest;
 use App\Http\Requests\Admin\UpdateGovServiceRequest;
 use App\Models\GovService;
 use App\Support\HtmlSanitizer;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class GovServiceController extends Controller
 {
+    use BuildsCmsEntryFormProps;
     use BuildsCmsFormData;
     use ProvidesBlueprintForm;
+    use RedirectsToContentBrowser;
     use SavesContentRevisions;
 
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-
-        $services = GovService::query()
-            ->with('translations')
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('title', 'like', "%{$search}%"),
-            ))
-            ->orderBy('sort_order')
-            ->paginate(20)
-            ->withQueryString()
-            ->through(fn (GovService $service) => [
-                'id' => $service->id,
-                'title' => $service->translation($locale)?->title ?? '—',
-                'category' => $service->category->value,
-                'category_label' => $service->category->label(),
-                'status' => $service->status->value,
-                'status_label' => $service->status->label(),
-                'is_online' => $service->is_online,
-                'locales' => $service->translatedLocales(),
-                'sort_order' => $service->sort_order,
-            ]);
-
-        return Inertia::render('admin/services/index', [
-            'services' => $services,
-            'filters' => ['search' => $search],
-        ]);
+        return $this->redirectToContentBrowser('gov_service');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/services/form', $this->formData(null));
+        return Inertia::render('admin/content/form', $this->formData(null));
     }
 
     public function store(StoreGovServiceRequest $request): RedirectResponse
@@ -82,14 +57,14 @@ class GovServiceController extends Controller
 
         $this->flashContentSaved(__('Service created.'));
 
-        return to_route('admin.services.index');
+        return $this->toContentBrowser('gov_service');
     }
 
     public function edit(GovService $govService): Response
     {
         $govService->load('translations');
 
-        return Inertia::render('admin/services/form', $this->formData($govService));
+        return Inertia::render('admin/content/form', $this->formData($govService));
     }
 
     public function update(UpdateGovServiceRequest $request, GovService $govService): RedirectResponse
@@ -111,7 +86,7 @@ class GovServiceController extends Controller
 
         $this->flashContentSaved(__('Service updated.'));
 
-        return to_route('admin.services.index');
+        return $this->toContentBrowser('gov_service');
     }
 
     public function destroy(GovService $govService): RedirectResponse
@@ -120,7 +95,7 @@ class GovServiceController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Service deleted.')]);
 
-        return to_route('admin.services.index');
+        return $this->toContentBrowser('gov_service');
     }
 
     /**
@@ -145,8 +120,9 @@ class GovServiceController extends Controller
             }
         }
 
-        return [
-            'service' => $service ? [
+        return $this->contentEntryFormProps(
+            'gov_service',
+            $service ? [
                 'id' => $service->id,
                 'category' => $service->category->value,
                 'status' => $service->status->value,
@@ -157,13 +133,10 @@ class GovServiceController extends Controller
                 'sort_order' => $service->sort_order,
                 'translations' => $translations,
             ] : null,
-            ...$this->publicationFormMeta($service?->status),
-            ...$this->blueprintFormProps('gov_service'),
-            'fieldOptions' => [
+            [
                 'category' => ServiceCategory::options(),
             ],
-            'locales' => $this->localeOptions(),
-        ];
+        );
     }
 
     /**

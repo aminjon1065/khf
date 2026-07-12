@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Category;
 use App\Models\Post;
 use Database\Seeders\LanguageSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -55,6 +56,29 @@ it('shows a published article by its localized slug', function () {
             ->has('post.title')
             ->has('post.body')
             ->has('related')
+        );
+});
+
+it('eager loads categories for related posts on the article page', function () {
+    $category = Category::factory()->create();
+    $category->upsertTranslations([
+        'tj' => ['name' => 'Пресс-релизы', 'slug' => 'press-releases'],
+    ]);
+
+    $main = publishedPost(['tj'], 'main');
+    $main->update(['category_id' => $category->id]);
+
+    $related = publishedPost(['tj'], 'related');
+    $related->update(['category_id' => $category->id]);
+
+    $this->get(route('news.show', ['locale' => 'tj', 'slug' => 'main-tj']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/news/show')
+            ->where('post.category', 'Пресс-релизы')
+            ->has('related', 1)
+            ->where('related.0.category', 'Пресс-релизы')
+            ->where('related.0.slug', 'related-tj')
         );
 });
 

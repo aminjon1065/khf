@@ -9,9 +9,27 @@ use App\Support\PreviewUrls;
 
 /**
  * Builds Inertia props for the public news/material detail view (and admin live preview).
+ *
+ * Eager-load contracts ({@see CARD_WITH}, {@see SHOW_WITH}) are the single source of truth for
+ * callers; {@see card()} / {@see present()} also {@see Model::loadMissing()} as a safety net so
+ * Inertia navigations cannot trip {@see Model::preventLazyLoading()}.
  */
 class PostShowPresenter
 {
+    /**
+     * Relations required by {@see card()}.
+     *
+     * @var list<string>
+     */
+    public const CARD_WITH = ['translations', 'category.translations', 'media'];
+
+    /**
+     * Relations required by {@see present()} (excluding related cards, which use {@see CARD_WITH}).
+     *
+     * @var list<string>
+     */
+    public const SHOW_WITH = ['category.translations', 'media', 'author', 'translations', 'tags.translations'];
+
     public function __construct(
         private LocaleUrls $localeUrls,
         private PreviewUrls $previewUrls,
@@ -23,6 +41,8 @@ class PostShowPresenter
      */
     public function present(Post $post, string $locale, bool $preview = false): array
     {
+        $post->loadMissing(self::SHOW_WITH);
+
         $resolved = $post->translation($locale);
 
         abort_if($resolved === null, 404);
@@ -67,7 +87,7 @@ class PostShowPresenter
                     ->whereKeyNot($post->id)
                     ->where('category_id', $post->category_id)
                     ->whereHas('translations', fn ($query) => $query->where('locale', $locale))
-                    ->with(['translations', 'media'])
+                    ->with(self::CARD_WITH)
                     ->orderByDesc('published_at')
                     ->limit(3)
                     ->get()
@@ -105,6 +125,8 @@ class PostShowPresenter
      */
     public function card(Post $post, string $locale): array
     {
+        $post->loadMissing(self::CARD_WITH);
+
         $translation = $post->translation($locale);
 
         return [

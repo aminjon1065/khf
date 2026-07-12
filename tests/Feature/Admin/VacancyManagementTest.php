@@ -46,7 +46,7 @@ it('forbids users without a CMS role', function () {
 it('creates a vacancy and sets the creator', function () {
     $this->actingAs($this->editor)
         ->post(route('admin.vacancies.store'), vacancyPayload())
-        ->assertRedirect(route('admin.vacancies.index'));
+        ->assertRedirect(route('admin.content.index', 'vacancy'));
 
     $vacancy = Vacancy::with('translations')->first();
 
@@ -85,26 +85,42 @@ it('renders the list, create, edit and trash screens', function () {
     $vacancy->upsertTranslations(['tj' => ['title' => 'Тест', 'slug' => 'test-vacancy']]);
 
     $this->actingAs($this->editor)->get(route('admin.vacancies.index'))
+        ->assertRedirect(route('admin.content.index', 'vacancy'));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', 'vacancy'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/vacancies/index')->has('vacancies.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'vacancy')
+            ->has('entries.data', 1));
 
     $this->actingAs($this->editor)->get(route('admin.vacancies.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->component('admin/vacancies/form')
+            ->component('admin/content/form')
+            ->where('contentType.handle', 'vacancy')
             ->has('blueprint')
             ->has('fieldOptions.employment_type', 4)
             ->has('statuses', 4));
 
     $this->actingAs($this->editor)->get(route('admin.vacancies.edit', $vacancy))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/vacancies/form')->where('vacancy.id', $vacancy->id));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/form')
+            ->where('entry.id', $vacancy->id));
 
     $vacancy->delete();
 
     $this->actingAs($this->editor)->get(route('admin.vacancies.trash'))
+        ->assertRedirect(route('admin.content.index', ['type' => 'vacancy', 'trashed' => 1]));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', ['type' => 'vacancy', 'trashed' => 1]))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/vacancies/trash')->has('vacancies.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'vacancy')
+            ->where('filters.trashed', true)
+            ->has('entries.data', 1));
 });
 
 it('sanitizes the vacancy description html on save', function () {

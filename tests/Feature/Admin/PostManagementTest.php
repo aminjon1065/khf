@@ -53,7 +53,7 @@ it('creates a post with a category and sets the author', function () {
 
     $this->actingAs($this->editor)
         ->post(route('admin.posts.store'), postPayload(['category_id' => $category->id]))
-        ->assertRedirect(route('admin.posts.index'));
+        ->assertRedirect(route('admin.content.index', 'post'));
 
     $post = Post::with('translations')->first();
 
@@ -92,22 +92,44 @@ it('renders the list, create, edit and trash screens', function () {
     $post->upsertTranslations(['tj' => ['title' => 'Тест', 'slug' => 'test-post']]);
 
     $this->actingAs($this->editor)->get(route('admin.posts.index'))
+        ->assertRedirect(route('admin.content.index', 'post'));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', 'post'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/posts/index')->has('posts.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'post')
+            ->has('entries.data', 1));
 
     $this->actingAs($this->editor)->get(route('admin.posts.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/posts/form')->has('blueprint')->has('fieldOptions')->has('statuses', 4));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/editorial-form')
+            ->where('contentType.handle', 'post')
+            ->has('blueprint')
+            ->has('fieldOptions')
+            ->has('statuses', 4));
 
     $this->actingAs($this->editor)->get(route('admin.posts.edit', $post))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/posts/form')->where('post.id', $post->id));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/editorial-form')
+            ->where('entry.id', $post->id)
+            ->has('urls.autosave')
+            ->has('previewUrls'));
 
     $post->delete();
 
     $this->actingAs($this->editor)->get(route('admin.posts.trash'))
+        ->assertRedirect(route('admin.content.index', ['type' => 'post', 'trashed' => 1]));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', ['type' => 'post', 'trashed' => 1]))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/posts/trash')->has('posts.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'post')
+            ->where('filters.trashed', true)
+            ->has('entries.data', 1));
 });
 
 it('sanitizes the post body html on save', function () {

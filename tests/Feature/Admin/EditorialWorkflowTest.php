@@ -68,7 +68,7 @@ it('lets an editor submit a post for moderation', function () {
 
     $this->actingAs($editor)
         ->post(route('admin.posts.store'), editorialPostPayload())
-        ->assertRedirect(route('admin.posts.index'));
+        ->assertRedirect(route('admin.content.index', 'post'));
 
     expect(Post::first()?->status)->toBe(ContentStatus::Moderation);
 });

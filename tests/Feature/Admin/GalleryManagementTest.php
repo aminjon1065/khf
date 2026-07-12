@@ -46,16 +46,24 @@ it('renders the gallery list and form', function () {
     $gallery->upsertTranslations(['tj' => ['title' => 'Тест', 'slug' => 'test-gal']]);
 
     $this->actingAs($this->editor)->get(route('admin.gallery.index'))
+        ->assertRedirect(route('admin.content.index', 'gallery'));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', 'gallery'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/gallery/index')->has('galleries.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'gallery')
+            ->has('entries.data', 1));
 
     $this->actingAs($this->editor)->get(route('admin.gallery.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->component('admin/gallery/form')
+            ->component('admin/content/form')
+            ->where('contentType.handle', 'gallery')
             ->has('locales', 3)
             ->has('statuses', 4)
-            ->has('blueprint'));
+            ->has('blueprint')
+            ->has('existingPhotos'));
 });
 
 it('creates a gallery with translations and uploaded photos', function () {
@@ -66,7 +74,7 @@ it('creates a gallery with translations and uploaded photos', function () {
                 UploadedFile::fake()->image('two.jpg'),
             ],
         ]))
-        ->assertRedirect(route('admin.gallery.index'));
+        ->assertRedirect(route('admin.content.index', 'gallery'));
 
     $gallery = Gallery::with('translations')->first();
 
@@ -104,13 +112,13 @@ it('removes a photo on update and deletes the gallery', function () {
 
     $this->actingAs($this->editor)
         ->put(route('admin.gallery.update', $gallery), galleryPayload(['remove_photos' => [$media->id]]))
-        ->assertRedirect(route('admin.gallery.index'));
+        ->assertRedirect(route('admin.content.index', 'gallery'));
 
     expect($gallery->fresh()->getMedia(Gallery::PHOTOS_COLLECTION))->toHaveCount(0);
 
     $this->actingAs($this->editor)
         ->delete(route('admin.gallery.destroy', $gallery))
-        ->assertRedirect(route('admin.gallery.index'));
+        ->assertRedirect(route('admin.content.index', 'gallery'));
 
     expect(Gallery::find($gallery->id))->toBeNull();
 });

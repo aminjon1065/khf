@@ -48,7 +48,7 @@ it('creates a page with tags', function () {
         ->post(route('admin.pages.store'), pageTagPayload([
             'tag_ids' => [$tag->id],
         ]))
-        ->assertRedirect(route('admin.pages.index'));
+        ->assertRedirect(route('admin.content.index', 'page'));
 
     $page = Page::with('tags')->first();
 
@@ -79,7 +79,7 @@ it('syncs tags when updating a page', function () {
                 'en' => ['title' => '', 'slug' => ''],
             ],
         ]))
-        ->assertRedirect(route('admin.pages.index'));
+        ->assertRedirect(route('admin.content.index', 'page'));
 
     $page->refresh()->load('tags');
 

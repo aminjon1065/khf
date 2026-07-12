@@ -44,6 +44,8 @@ export type DataTableFilters = {
     search?: string;
     sort?: string;
     direction?: 'asc' | 'desc';
+    status?: string | null;
+    trashed?: boolean;
 };
 
 type DataTableProps<T> = {
@@ -85,6 +87,8 @@ export function DataTable<T>({
                 search: filters.search,
                 sort: filters.sort,
                 direction: filters.direction,
+                status: filters.status || undefined,
+                trashed: filters.trashed ? 1 : undefined,
                 ...params,
             },
             { preserveState: true, preserveScroll: true, replace: true },

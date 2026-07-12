@@ -2,60 +2,38 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\BuildsCmsEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreFaqRequest;
 use App\Http\Requests\Admin\UpdateFaqRequest;
 use App\Models\Faq;
 use App\Support\HtmlSanitizer;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class FaqController extends Controller
 {
+    use BuildsCmsEntryFormProps;
     use BuildsCmsFormData;
     use ProvidesBlueprintForm;
+    use RedirectsToContentBrowser;
     use SavesContentRevisions;
 
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-
-        $faqs = Faq::query()
-            ->with('translations')
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('question', 'like', "%{$search}%"),
-            ))
-            ->orderBy('sort_order')
-            ->paginate(20)
-            ->withQueryString()
-            ->through(fn (Faq $faq) => [
-                'id' => $faq->id,
-                'question' => $faq->translation($locale)?->question ?? '—',
-                'status' => $faq->status->value,
-                'status_label' => $faq->status->label(),
-                'locales' => $faq->translatedLocales(),
-                'sort_order' => $faq->sort_order,
-            ]);
-
-        return Inertia::render('admin/faq/index', [
-            'faqs' => $faqs,
-            'filters' => ['search' => $search],
-        ]);
+        return $this->redirectToContentBrowser('faq');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/faq/form', $this->formData(null));
+        return Inertia::render('admin/content/form', $this->formData(null));
     }
 
     public function store(StoreFaqRequest $request): RedirectResponse
@@ -72,14 +50,14 @@ class FaqController extends Controller
 
         $this->flashContentSaved(__('FAQ created.'));
 
-        return to_route('admin.faqs.index');
+        return $this->toContentBrowser('faq');
     }
 
     public function edit(Faq $faq): Response
     {
         $faq->load('translations');
 
-        return Inertia::render('admin/faq/form', $this->formData($faq));
+        return Inertia::render('admin/content/form', $this->formData($faq));
     }
 
     public function update(UpdateFaqRequest $request, Faq $faq): RedirectResponse
@@ -96,7 +74,7 @@ class FaqController extends Controller
 
         $this->flashContentSaved(__('FAQ updated.'));
 
-        return to_route('admin.faqs.index');
+        return $this->toContentBrowser('faq');
     }
 
     public function destroy(Faq $faq): RedirectResponse
@@ -105,7 +83,7 @@ class FaqController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('FAQ deleted.')]);
 
-        return to_route('admin.faqs.index');
+        return $this->toContentBrowser('faq');
     }
 
     /**
@@ -124,18 +102,15 @@ class FaqController extends Controller
             }
         }
 
-        return [
-            'faq' => $faq ? [
+        return $this->contentEntryFormProps(
+            'faq',
+            $faq ? [
                 'id' => $faq->id,
                 'status' => $faq->status->value,
                 'sort_order' => $faq->sort_order,
                 'translations' => $translations,
             ] : null,
-            ...$this->publicationFormMeta($faq?->status),
-            ...$this->blueprintFormProps('faq'),
-            'fieldOptions' => [],
-            'locales' => $this->localeOptions(),
-        ];
+        );
     }
 
     /**

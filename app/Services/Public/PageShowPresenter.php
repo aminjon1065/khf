@@ -9,9 +9,18 @@ use App\Support\PreviewUrls;
 
 /**
  * Builds Inertia props for the public static page view (and admin live preview).
+ *
+ * {@see SHOW_WITH} is the eager-load contract for callers; {@see present()} also loadMissing()s it.
  */
 class PageShowPresenter
 {
+    /**
+     * Relations required by {@see present()}.
+     *
+     * @var list<string>
+     */
+    public const SHOW_WITH = ['translations', 'media'];
+
     public function __construct(
         private LocaleUrls $localeUrls,
         private PreviewUrls $previewUrls,
@@ -23,6 +32,8 @@ class PageShowPresenter
      */
     public function present(Page $page, string $locale, bool $preview = false): array
     {
+        $page->loadMissing(self::SHOW_WITH);
+
         $resolved = $page->translation($locale);
 
         abort_if($resolved === null, 404);

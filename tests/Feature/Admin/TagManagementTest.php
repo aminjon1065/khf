@@ -147,13 +147,13 @@ it('syncs tags on posts and documents', function () {
         ->put(route('admin.posts.update', $post), array_merge(tagPostPayload(), [
             'tag_ids' => [$tag->id],
         ]))
-        ->assertRedirect(route('admin.posts.index'));
+        ->assertRedirect(route('admin.content.index', 'post'));
 
     $this->actingAs($this->editor)
         ->put(route('admin.documents.update', $document), array_merge(tagDocumentPayload(), [
             'tag_ids' => [$tag->id],
         ]))
-        ->assertRedirect(route('admin.documents.index'));
+        ->assertRedirect(route('admin.content.index', 'document'));
 
     expect($post->fresh()->tags)->toHaveCount(1)
         ->and($document->fresh()->tags)->toHaveCount(1);

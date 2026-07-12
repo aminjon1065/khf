@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Enums\Role;
 use App\Listeners\LogAuthenticationActivity;
 use App\Models\User;
+use App\Services\Public\SharedPublicProps;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -49,6 +50,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Security audit trail: log sign-in / sign-out / failed-login / 2FA events (ТЗ §12.7).
         Event::subscribe(LogAuthenticationActivity::class);
+
+        $this->app->make(SharedPublicProps::class)->registerInvalidation();
     }
 
     /**

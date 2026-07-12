@@ -59,7 +59,7 @@ it('allows archiving a published post', function () {
 
     $this->actingAs($this->editor)
         ->put(route('admin.posts.update', $post), $payload)
-        ->assertRedirect(route('admin.posts.index'));
+        ->assertRedirect(route('admin.content.index', 'post'));
 
     expect($post->fresh()->status)->toBe(ContentStatus::Archived)
         ->and($post->fresh()->unpublished_at)->toBeNull();

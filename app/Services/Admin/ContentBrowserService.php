@@ -4,7 +4,6 @@ namespace App\Services\Admin;
 
 use App\Cms\ContentTypeDefinition;
 use App\Cms\ContentTypeRegistry;
-use App\Enums\ContentStatus;
 use App\Models\User;
 use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
@@ -79,7 +78,7 @@ class ContentBrowserService
                 : 0,
             'createUrl' => route("admin.{$type->routePrefix}.create"),
             'trashUrl' => $type->hasFeature('soft_deletes')
-                ? route($type->trashRoute())
+                ? route($type->browserRoute(), ['type' => $type->handle, 'trashed' => 1])
                 : null,
             'searchPlaceholder' => $this->searchPlaceholder($type),
             'showSubtype' => $type->handle === 'post',
@@ -144,7 +143,7 @@ class ContentBrowserService
         return $this->entryQuery($type, $filters)
             ->paginate(15, ['*'], 'page', $currentPage)
             ->appends($request->query())
-            ->through(fn (Model $record) => $this->toRow($type, $record, $locale));
+            ->through(fn (Model $record) => $this->toRow($type, $record, $locale, $filters['trashed']));
     }
 
     /**
@@ -170,24 +169,44 @@ class ContentBrowserService
      */
     private function statusOptions(ContentTypeDefinition $type): array
     {
-        if (! $this->supportsContentStatus($type)) {
+        $statusEnum = $this->statusEnumClass($type);
+
+        if ($statusEnum === null) {
             return [];
         }
 
         return array_map(
-            fn (ContentStatus $status): array => [
-                'value' => $status->value,
-                'label' => $status->label(),
-            ],
-            ContentStatus::cases(),
+            function (BackedEnum $status): array {
+                $label = method_exists($status, 'label')
+                    ? $status->label()
+                    : $status->value;
+
+                return [
+                    'value' => $status->value,
+                    'label' => is_string($label) ? $label : $status->value,
+                ];
+            },
+            $statusEnum::cases(),
         );
     }
 
     private function supportsContentStatus(ContentTypeDefinition $type): bool
     {
-        $model = new $type->modelClass;
+        return $this->statusEnumClass($type) !== null;
+    }
 
-        return ($model->getCasts()['status'] ?? null) === ContentStatus::class;
+    /**
+     * @return class-string<BackedEnum>|null
+     */
+    private function statusEnumClass(ContentTypeDefinition $type): ?string
+    {
+        $cast = (new $type->modelClass)->getCasts()['status'] ?? null;
+
+        if (! is_string($cast) || ! enum_exists($cast) || ! is_subclass_of($cast, BackedEnum::class)) {
+            return null;
+        }
+
+        return $cast;
     }
 
     private function entryCount(ContentTypeDefinition $type): int
@@ -220,7 +239,7 @@ class ContentBrowserService
     /**
      * @return array<string, mixed>
      */
-    private function toRow(ContentTypeDefinition $type, Model $record, string $locale): array
+    private function toRow(ContentTypeDefinition $type, Model $record, string $locale, bool $trashed = false): array
     {
         $row = [
             'id' => $record->getKey(),
@@ -234,10 +253,12 @@ class ContentBrowserService
         ];
 
         if ($this->supportsContentStatus($type)) {
-            /** @var ContentStatus $status */
+            /** @var BackedEnum $status */
             $status = $record->status;
             $row['status'] = $status->value;
-            $row['status_label'] = $status->label();
+            $row['status_label'] = method_exists($status, 'label')
+                ? (string) $status->label()
+                : $status->value;
         }
 
         if ($type->handle === 'post' && isset($record->type)) {
@@ -246,6 +267,12 @@ class ContentBrowserService
             $row['subtype_label'] = $postType instanceof BackedEnum && method_exists($postType, 'label')
                 ? $postType->label()
                 : (string) $postType;
+        }
+
+        if ($trashed) {
+            $row['deleted_at'] = $record->deleted_at?->toDateString();
+            $row['restore_url'] = route("admin.{$type->routePrefix}.restore", $record);
+            $row['force_delete_url'] = route("admin.{$type->routePrefix}.force-delete", $record);
         }
 
         return $row;

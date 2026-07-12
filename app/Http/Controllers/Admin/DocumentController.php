@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\DocumentType;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
-use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreDocumentRequest;
@@ -20,49 +21,26 @@ use Inertia\Response;
 
 class DocumentController extends Controller
 {
+    use BuildsCmsEntryFormProps;
     use BuildsCmsFormData;
-    use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
     use ProvidesBlueprintForm;
+    use RedirectsToContentBrowser;
     use SavesContentRevisions;
 
-    /** @var list<string> */
-    private const SORTABLE = ['type', 'document_date', 'status', 'created_at'];
-
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $filters = $this->listFilters($request, 'document_date', 'desc');
-
-        $documents = $this->paginateTranslatable(
-            Document::query()->with(['translations', 'media']),
-            $request,
-            self::SORTABLE,
-            'document_date',
-            'desc',
-            fn (Document $document, string $locale) => $this->toRow($document, $locale),
-            'name',
-        );
-
-        return Inertia::render('admin/documents/index', [
-            'documents' => $documents,
-            'filters' => $filters,
-            'trashedCount' => Document::onlyTrashed()->count(),
-        ]);
+        return $this->redirectToContentBrowser('document');
     }
 
-    public function trash(): Response
+    public function trash(): RedirectResponse
     {
-        $documents = $this->paginateTrashed(
-            Document::onlyTrashed()->with('translations'),
-            fn (Document $document, string $locale) => $this->toRow($document, $locale),
-        );
-
-        return Inertia::render('admin/documents/trash', ['documents' => $documents]);
+        return $this->redirectToContentBrowserTrash('document');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/documents/form', $this->formData(null));
+        return Inertia::render('admin/content/form', $this->formData(null));
     }
 
     public function store(StoreDocumentRequest $request): RedirectResponse
@@ -76,14 +54,14 @@ class DocumentController extends Controller
         $this->saveContentRevision($document);
         $this->flashContentSaved(__('Document created.'));
 
-        return to_route('admin.documents.index');
+        return $this->toContentBrowser('document');
     }
 
     public function edit(Document $document): Response
     {
         $document->load(['translations', 'media', 'tags.translations']);
 
-        return Inertia::render('admin/documents/form', $this->formData($document));
+        return Inertia::render('admin/content/form', $this->formData($document));
     }
 
     public function update(UpdateDocumentRequest $request, Document $document): RedirectResponse
@@ -97,22 +75,22 @@ class DocumentController extends Controller
         $this->saveContentRevision($document);
         $this->flashContentSaved(__('Document updated.'));
 
-        return to_route('admin.documents.index');
+        return $this->toContentBrowser('document');
     }
 
     public function destroy(Document $document): RedirectResponse
     {
-        return $this->moveToTrash($document, 'admin.documents.index', __('Document moved to trash.'));
+        return $this->moveToTrash($document, 'admin.content.index', __('Document moved to trash.'), 'document');
     }
 
     public function restore(Document $document): RedirectResponse
     {
-        return $this->restoreFromTrash($document, 'admin.documents.trash', __('Document restored.'));
+        return $this->restoreFromTrash($document, 'admin.content.index', __('Document restored.'), ['type' => 'document', 'trashed' => 1]);
     }
 
     public function forceDelete(Document $document): RedirectResponse
     {
-        return $this->permanentlyDelete($document, 'admin.documents.trash', __('Document permanently deleted.'));
+        return $this->permanentlyDelete($document, 'admin.content.index', __('Document permanently deleted.'), ['type' => 'document', 'trashed' => 1]);
     }
 
     private function syncFiles(Request $request, Document $document): void
@@ -148,25 +126,6 @@ class DocumentController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function toRow(Document $document, string $locale): array
-    {
-        return [
-            'id' => $document->id,
-            'name' => $document->translation($locale)?->name ?? '—',
-            'type' => $document->type->value,
-            'type_label' => $document->type->label(),
-            'status' => $document->status->value,
-            'status_label' => $document->status->label(),
-            'locales' => $document->translatedLocales(),
-            'document_date' => $document->document_date?->format('d.m.Y'),
-            'files_count' => $document->relationLoaded('media') ? $document->getMedia(Document::FILES_COLLECTION)->count() : 0,
-            'deleted_at' => $document->deleted_at?->toDateString(),
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
     private function formData(?Document $document): array
     {
         $locale = app()->getLocale();
@@ -195,8 +154,9 @@ class DocumentController extends Controller
                 ->all();
         }
 
-        return [
-            'document' => $document ? [
+        return $this->contentEntryFormProps(
+            'document',
+            $document ? [
                 'id' => $document->id,
                 'type' => $document->type->value,
                 'source' => $document->source,
@@ -206,9 +166,7 @@ class DocumentController extends Controller
                 'tag_ids' => $document->tags->pluck('id')->all(),
                 'translations' => $translations,
             ] : null,
-            ...$this->publicationFormMeta($document?->status),
-            ...$this->blueprintFormProps('document'),
-            'fieldOptions' => [
+            [
                 'type' => DocumentType::options(),
                 'tag_ids' => Tag::query()
                     ->with('translations')
@@ -216,9 +174,10 @@ class DocumentController extends Controller
                     ->map(fn (Tag $tag) => ['id' => $tag->id, 'name' => $tag->translation($locale)?->name ?? "#{$tag->id}"])
                     ->all(),
             ],
-            'locales' => $this->localeOptions(),
-            'existingFiles' => $files,
-        ];
+            [
+                'existingFiles' => $files,
+            ],
+        );
     }
 
     /**

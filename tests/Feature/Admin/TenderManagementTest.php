@@ -48,7 +48,7 @@ it('forbids users without a CMS role', function () {
 it('creates a tender and sets the creator', function () {
     $this->actingAs($this->editor)
         ->post(route('admin.tenders.store'), tenderPayload())
-        ->assertRedirect(route('admin.tenders.index'));
+        ->assertRedirect(route('admin.content.index', 'tender'));
 
     $tender = Tender::with('translations')->first();
 
@@ -87,26 +87,42 @@ it('renders the list, create, edit and trash screens', function () {
     $tender->upsertTranslations(['tj' => ['title' => 'Тест', 'slug' => 'test-tender']]);
 
     $this->actingAs($this->editor)->get(route('admin.tenders.index'))
+        ->assertRedirect(route('admin.content.index', 'tender'));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', 'tender'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/tenders/index')->has('tenders.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'tender')
+            ->has('entries.data', 1));
 
     $this->actingAs($this->editor)->get(route('admin.tenders.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->component('admin/tenders/form')
+            ->component('admin/content/form')
+            ->where('contentType.handle', 'tender')
             ->has('blueprint')
             ->has('fieldOptions.type', 4)
             ->has('statuses', 4));
 
     $this->actingAs($this->editor)->get(route('admin.tenders.edit', $tender))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/tenders/form')->where('tender.id', $tender->id));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/form')
+            ->where('entry.id', $tender->id));
 
     $tender->delete();
 
     $this->actingAs($this->editor)->get(route('admin.tenders.trash'))
+        ->assertRedirect(route('admin.content.index', ['type' => 'tender', 'trashed' => 1]));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', ['type' => 'tender', 'trashed' => 1]))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/tenders/trash')->has('tenders.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'tender')
+            ->where('filters.trashed', true)
+            ->has('entries.data', 1));
 });
 
 it('sanitizes the tender description html on save', function () {

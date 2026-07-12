@@ -66,7 +66,7 @@ it('passes blockset to the page edit form', function () {
         ->get(route('admin.pages.edit', $page))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->component('admin/pages/form')
+            ->component('admin/content/editorial-form')
             ->has('blockset')
             ->where('blockset.handle', 'page')
             ->has('blockset.blocks', 8));

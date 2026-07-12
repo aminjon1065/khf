@@ -2,13 +2,10 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Alert;
 use App\Models\Language;
-use App\Models\Menu;
-use App\Models\Page;
 use App\Models\User;
 use App\Services\Cms\GlobalResolver;
-use App\Services\Public\MenuFormatter;
+use App\Services\Public\SharedPublicProps;
 use App\Support\LocaleUrls;
 use App\Support\Matomo;
 use Illuminate\Http\Request;
@@ -44,6 +41,9 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $locale = app()->getLocale();
+        $shared = app(SharedPublicProps::class);
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -52,12 +52,12 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $this->authRoles($request),
                 'permissions' => $this->authPermissions($request),
             ],
-            'locale' => app()->getLocale(),
+            'locale' => $locale,
             'locales' => $this->locales(),
             'localeSwitch' => $this->localeSwitch($request),
             'translations' => $this->translations(),
-            'menus' => $this->menus(),
-            'activeAlerts' => $this->activeAlerts(),
+            'menus' => $this->safeShared(fn (): array => $shared->menus($locale)),
+            'activeAlerts' => $this->safeShared(fn (): array => $shared->activeAlerts($locale)),
             'matomo' => Matomo::inertiaProps(),
             'socialLinks' => app(GlobalResolver::class)->socialLinks(),
             'president' => app(GlobalResolver::class)->president(),
@@ -107,36 +107,15 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Active emergency alerts for the current locale, ordered by severity — drives the site banner
-     * on every public page (ТЗ §6.4.1). Refreshed via Inertia polling (D-11).
+     * @template T of array
      *
-     * @return list<array<string, mixed>>
+     * @param  callable(): T  $callback
+     * @return T|array{}
      */
-    private function activeAlerts(): array
+    private function safeShared(callable $callback): array
     {
-        $severity = ['critical' => 0, 'danger' => 1, 'elevated' => 2, 'normal' => 3];
-        $locale = app()->getLocale();
-
         try {
-            return Alert::active()
-                ->with('translations')
-                ->get()
-                ->sortBy(fn (Alert $alert): int => $severity[$alert->hazard_level->value] ?? 9)
-                ->values()
-                ->map(function (Alert $alert) use ($locale): array {
-                    $translation = $alert->translation($locale);
-
-                    return [
-                        'id' => $alert->id,
-                        'level' => $alert->hazard_level->value,
-                        'level_label' => $alert->hazard_level->label(),
-                        'color' => $alert->hazard_level->color(),
-                        'title' => $translation?->title,
-                        'body' => $translation?->body,
-                        'dismissible' => $alert->is_dismissible,
-                    ];
-                })
-                ->all();
+            return $callback();
         } catch (\Throwable) {
             return [];
         }
@@ -199,37 +178,6 @@ class HandleInertiaRequests extends Middleware
         $messages = trans('ui');
 
         return is_array($messages) ? $messages : [];
-    }
-
-    /**
-     * Fetch active menus (primary and footer) and format them for the frontend.
-     */
-    private function menus(): array
-    {
-        try {
-            $locale = app()->getLocale();
-            $formatter = app(MenuFormatter::class);
-
-            $menus = Menu::where('is_active', true)
-                ->with(['items' => function ($query) {
-                    $query->orderBy('sort_order')->with('translations');
-                }])
-                ->get();
-
-            $formatted = [];
-
-            foreach ($menus as $menu) {
-                $formatted[$menu->location] = $formatter->formatTree(
-                    $menu->items->where('parent_id', null),
-                    $menu->items,
-                    $locale,
-                );
-            }
-
-            return $formatted;
-        } catch (\Throwable $e) {
-            return [];
-        }
     }
 
     /**

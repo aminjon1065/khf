@@ -31,37 +31,22 @@ import {
     Users,
 } from 'lucide-react';
 import { dashboard as adminDashboard } from '@/routes/admin';
-import { hub as contentHub } from '@/routes/admin/content';
-import { index as alertsIndex } from '@/routes/admin/alerts';
+import { hub as contentHub, index as contentIndex } from '@/routes/admin/content';
 import { index as appealsIndex } from '@/routes/admin/appeals';
 import { index as auditLogsIndex } from '@/routes/admin/audit-logs';
 import { index as categoriesIndex } from '@/routes/admin/categories';
-import { index as documentsIndex } from '@/routes/admin/documents';
-import { index as faqsIndex } from '@/routes/admin/faqs';
-import { index as galleryIndex } from '@/routes/admin/gallery';
 import { index as blueprintsIndex } from '@/routes/admin/blueprints';
 import { index as globalsIndex } from '@/routes/admin/globals';
-import { index as guidesIndex } from '@/routes/admin/guides';
-import { index as incidentsIndex } from '@/routes/admin/incidents';
 import { index as languagesIndex } from '@/routes/admin/languages';
-import { index as leadershipIndex } from '@/routes/admin/leadership';
 import { index as mediaIndex } from '@/routes/admin/media';
 import { index as menusIndex } from '@/routes/admin/menus';
 import { index as moderationIndex } from '@/routes/admin/moderation';
-import { index as pagesIndex } from '@/routes/admin/pages';
-import { index as pollsIndex } from '@/routes/admin/polls';
-import { index as postsIndex } from '@/routes/admin/posts';
 import { index as redirectsIndex } from '@/routes/admin/redirects';
-import { index as servicesIndex } from '@/routes/admin/services';
-import { index as statisticsIndex } from '@/routes/admin/statistics';
-import { index as structureIndex } from '@/routes/admin/structure';
 import { index as tagsIndex } from '@/routes/admin/tags';
 import { index as subscribersIndex } from '@/routes/admin/subscribers';
 import { index as tenderBidsIndex } from '@/routes/admin/tender-bids';
-import { index as tendersIndex } from '@/routes/admin/tenders';
 import { index as touristGroupsIndex } from '@/routes/admin/tourist-groups';
 import { index as usersIndex } from '@/routes/admin/users';
-import { index as vacanciesIndex } from '@/routes/admin/vacancies';
 import { index as vacancyApplicationsIndex } from '@/routes/admin/vacancy-applications';
 import type { NavItem } from '@/types';
 
@@ -74,6 +59,7 @@ export type AdminNavGroup = {
 
 /**
  * CMS navigation (Statamic-style grouped sections), shared by the sidebar and the command palette.
+ * Collection indexes point at the unified Entry Browser (`/admin/content/{type}`).
  * Items can be gated by a permission string (super-admin passes everything).
  */
 export const navGroups: AdminNavGroup[] = [
@@ -92,13 +78,13 @@ export const navGroups: AdminNavGroup[] = [
         items: [
             {
                 title: 'Руководство',
-                href: leadershipIndex(),
+                href: contentIndex('leader'),
                 icon: Contact,
                 permission: 'leadership.manage',
             },
             {
                 title: 'Структура',
-                href: structureIndex(),
+                href: contentIndex('subdivision'),
                 icon: Network,
                 permission: 'structure.manage',
             },
@@ -120,13 +106,13 @@ export const navGroups: AdminNavGroup[] = [
             },
             {
                 title: 'Новости',
-                href: postsIndex(),
+                href: contentIndex('post'),
                 icon: Newspaper,
                 permission: 'posts.manage',
             },
             {
                 title: 'Страницы',
-                href: pagesIndex(),
+                href: contentIndex('page'),
                 icon: FileText,
                 permission: 'pages.manage',
             },
@@ -151,55 +137,55 @@ export const navGroups: AdminNavGroup[] = [
             },
             {
                 title: 'Документы',
-                href: documentsIndex(),
+                href: contentIndex('document'),
                 icon: FileText,
                 permission: 'documents.manage',
             },
             {
                 title: 'Памятки',
-                href: guidesIndex(),
+                href: contentIndex('guide'),
                 icon: BookOpen,
                 permission: 'guides.manage',
             },
             {
                 title: 'Вакансии',
-                href: vacanciesIndex(),
+                href: contentIndex('vacancy'),
                 icon: Briefcase,
                 permission: 'vacancies.manage',
             },
             {
                 title: 'Тендеры',
-                href: tendersIndex(),
+                href: contentIndex('tender'),
                 icon: Gavel,
                 permission: 'tenders.manage',
             },
             {
                 title: 'Фотогалерея',
-                href: galleryIndex(),
+                href: contentIndex('gallery'),
                 icon: Image,
                 permission: 'gallery.manage',
             },
             {
                 title: 'Вопросы и ответы',
-                href: faqsIndex(),
+                href: contentIndex('faq'),
                 icon: HelpCircle,
                 permission: 'faqs.manage',
             },
             {
                 title: 'Опросы',
-                href: pollsIndex(),
+                href: contentIndex('poll'),
                 icon: ListChecks,
                 permission: 'polls.manage',
             },
             {
                 title: 'Услуги',
-                href: servicesIndex(),
+                href: contentIndex('gov_service'),
                 icon: ClipboardList,
                 permission: 'services.manage',
             },
             {
                 title: 'Статистика',
-                href: statisticsIndex(),
+                href: contentIndex('statistic'),
                 icon: BarChart3,
                 permission: 'statistics.manage',
             },
@@ -210,13 +196,13 @@ export const navGroups: AdminNavGroup[] = [
         items: [
             {
                 title: 'События ЧС',
-                href: incidentsIndex(),
+                href: contentIndex('incident'),
                 icon: TriangleAlert,
                 permission: 'incidents.manage',
             },
             {
                 title: 'Оповещения',
-                href: alertsIndex(),
+                href: contentIndex('alert'),
                 icon: Bell,
                 permission: 'alerts.manage',
             },

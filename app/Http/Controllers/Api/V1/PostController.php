@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\PostResource;
 use App\Models\Post;
+use App\Services\Public\PostShowPresenter;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
@@ -30,7 +31,7 @@ class PostController extends Controller
             404,
         );
 
-        $post->load(['translations', 'category.translations']);
+        $post->loadMissing(PostShowPresenter::CARD_WITH);
 
         return new PostResource($post);
     }

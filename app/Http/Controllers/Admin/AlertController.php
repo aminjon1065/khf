@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\AlertStatus;
 use App\Enums\HazardLevel;
 use App\Enums\SubscriptionTopic;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
-use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreAlertRequest;
@@ -26,48 +27,26 @@ use Inertia\Response;
 
 class AlertController extends Controller
 {
+    use BuildsCmsEntryFormProps;
     use BuildsCmsFormData;
-    use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
     use ProvidesBlueprintForm;
+    use RedirectsToContentBrowser;
     use SavesContentRevisions;
 
-    /** @var list<string> */
-    private const SORTABLE = ['status', 'hazard_level', 'starts_at', 'created_at'];
-
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $filters = $this->listFilters($request, 'created_at', 'desc');
-
-        $alerts = $this->paginateTranslatable(
-            Alert::query()->with(['translations', 'region.translations']),
-            $request,
-            self::SORTABLE,
-            'created_at',
-            'desc',
-            fn (Alert $alert, string $locale) => $this->toRow($alert, $locale),
-        );
-
-        return Inertia::render('admin/alerts/index', [
-            'alerts' => $alerts,
-            'filters' => $filters,
-            'trashedCount' => Alert::onlyTrashed()->count(),
-        ]);
+        return $this->redirectToContentBrowser('alert');
     }
 
-    public function trash(): Response
+    public function trash(): RedirectResponse
     {
-        $alerts = $this->paginateTrashed(
-            Alert::onlyTrashed()->with(['translations', 'region.translations']),
-            fn (Alert $alert, string $locale) => $this->toRow($alert, $locale),
-        );
-
-        return Inertia::render('admin/alerts/trash', ['alerts' => $alerts]);
+        return $this->redirectToContentBrowserTrash('alert');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/alerts/form', $this->formData(null));
+        return Inertia::render('admin/content/form', $this->formData(null));
     }
 
     public function store(StoreAlertRequest $request): RedirectResponse
@@ -80,14 +59,14 @@ class AlertController extends Controller
         $this->saveContentRevision($alert);
         $this->flashContentSaved(__('Alert created.'));
 
-        return to_route('admin.alerts.index');
+        return $this->toContentBrowser('alert');
     }
 
     public function edit(Alert $alert): Response
     {
         $alert->load('translations');
 
-        return Inertia::render('admin/alerts/form', $this->formData($alert));
+        return Inertia::render('admin/content/form', $this->formData($alert));
     }
 
     public function update(UpdateAlertRequest $request, Alert $alert): RedirectResponse
@@ -100,22 +79,22 @@ class AlertController extends Controller
         $this->saveContentRevision($alert);
         $this->flashContentSaved(__('Alert updated.'));
 
-        return to_route('admin.alerts.index');
+        return $this->toContentBrowser('alert');
     }
 
     public function destroy(Alert $alert): RedirectResponse
     {
-        return $this->moveToTrash($alert, 'admin.alerts.index', __('Alert moved to trash.'));
+        return $this->moveToTrash($alert, 'admin.content.index', __('Alert moved to trash.'), 'alert');
     }
 
     public function restore(Alert $alert): RedirectResponse
     {
-        return $this->restoreFromTrash($alert, 'admin.alerts.trash', __('Alert restored.'));
+        return $this->restoreFromTrash($alert, 'admin.content.index', __('Alert restored.'), ['type' => 'alert', 'trashed' => 1]);
     }
 
     public function forceDelete(Alert $alert): RedirectResponse
     {
-        return $this->permanentlyDelete($alert, 'admin.alerts.trash', __('Alert permanently deleted.'));
+        return $this->permanentlyDelete($alert, 'admin.content.index', __('Alert permanently deleted.'), ['type' => 'alert', 'trashed' => 1]);
     }
 
     public function estimateRecipients(Request $request): JsonResponse
@@ -161,27 +140,6 @@ class AlertController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function toRow(Alert $alert, string $locale): array
-    {
-        return [
-            'id' => $alert->id,
-            'title' => $alert->translation($locale)?->title ?? '—',
-            'locales' => $alert->translatedLocales(),
-            'hazard_level' => $alert->hazard_level->value,
-            'hazard_label' => $alert->hazard_level->label(),
-            'hazard_color' => $alert->hazard_level->color(),
-            'status' => $alert->status->value,
-            'status_label' => $alert->status->label(),
-            'region' => $alert->region?->translation($locale)?->name,
-            'starts_at' => $alert->starts_at?->format('d.m.Y H:i'),
-            'ends_at' => $alert->ends_at?->format('d.m.Y H:i'),
-            'deleted_at' => $alert->deleted_at?->toDateString(),
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
     private function formData(?Alert $alert): array
     {
         $locale = app()->getLocale();
@@ -196,8 +154,9 @@ class AlertController extends Controller
             }
         }
 
-        return [
-            'alert' => $alert ? [
+        return $this->contentEntryFormProps(
+            'alert',
+            $alert ? [
                 'id' => $alert->id,
                 'hazard_level' => $alert->hazard_level->value,
                 'status' => $alert->status->value,
@@ -207,8 +166,7 @@ class AlertController extends Controller
                 'ends_at' => $alert->ends_at?->format('Y-m-d\TH:i'),
                 'translations' => $translations,
             ] : null,
-            ...$this->blueprintFormProps('alert'),
-            'fieldOptions' => [
+            [
                 'hazard_level' => HazardLevel::options(),
                 'status' => AlertStatus::options(),
                 'region_id' => Region::query()
@@ -221,9 +179,11 @@ class AlertController extends Controller
                     ])
                     ->all(),
             ],
-            'locales' => $this->localeOptions(),
-            'defaultLocale' => $this->publicationFormMeta()['defaultLocale'],
-        ];
+            [],
+            [
+                'estimate' => route('admin.alerts.estimate'),
+            ],
+        );
     }
 
     /**

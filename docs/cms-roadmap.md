@@ -75,7 +75,7 @@ Public: Inertia Pages + Block Renderer + Headless API
 - [x] `PageController` и `PostController` используют shared traits
 - [x] Unified Entry Browser `/admin/content/{type}`
 - [x] `CpBlueprintForm` для posts и pages
-- [x] Дублирование в контроллерах < 30% — `ListsTranslatableContent`, `ManagesSoftDeletableContent`, `SavesContentRevisions` на pages/posts/documents/guides/vacancies/tenders/incidents/alerts
+- [x] Дублирование в контроллерах < 30% — `ManagesSoftDeletableContent`, `RedirectsToContentBrowser`, `SavesContentRevisions` на soft-delete коллекциях; listing через Entry Browser (`ContentBrowserService`)
 
 ---
 

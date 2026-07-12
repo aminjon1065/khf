@@ -45,7 +45,7 @@ it('forbids users without a CMS role', function () {
 it('creates a page with translations, skipping empty locales', function () {
     $this->actingAs($this->editor)
         ->post(route('admin.pages.store'), pagePayload())
-        ->assertRedirect(route('admin.pages.index'));
+        ->assertRedirect(route('admin.content.index', 'page'));
 
     expect(Page::count())->toBe(1);
 
@@ -85,7 +85,7 @@ it('allows the same slug across different locales', function () {
 
     $this->actingAs($this->editor)
         ->post(route('admin.pages.store'), $payload)
-        ->assertRedirect(route('admin.pages.index'));
+        ->assertRedirect(route('admin.content.index', 'page'));
 
     expect(Page::first()->translations)->toHaveCount(2);
 });
@@ -99,7 +99,7 @@ it('updates a page and adds a new translation', function () {
 
     $this->actingAs($this->editor)
         ->put(route('admin.pages.update', $page), $payload)
-        ->assertRedirect(route('admin.pages.index'));
+        ->assertRedirect(route('admin.content.index', 'page'));
 
     expect($page->fresh()->load('translations')->translations)->toHaveCount(2);
 });
@@ -109,22 +109,43 @@ it('renders the list, create, edit and trash screens', function () {
     $page->upsertTranslations(['tj' => ['title' => 'Тест', 'slug' => 'test-render']]);
 
     $this->actingAs($this->editor)->get(route('admin.pages.index'))
+        ->assertRedirect(route('admin.content.index', 'page'));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', 'page'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/pages/index')->has('pages.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'page')
+            ->has('entries.data', 1));
 
     $this->actingAs($this->editor)->get(route('admin.pages.create'))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/pages/form')->has('locales', 3));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/editorial-form')
+            ->where('contentType.handle', 'page')
+            ->has('locales', 3)
+            ->has('blockset'));
 
     $this->actingAs($this->editor)->get(route('admin.pages.edit', $page))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/pages/form')->where('page.id', $page->id));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/editorial-form')
+            ->where('entry.id', $page->id)
+            ->has('urls.autosave')
+            ->has('previewUrls'));
 
     $page->delete();
 
     $this->actingAs($this->editor)->get(route('admin.pages.trash'))
+        ->assertRedirect(route('admin.content.index', ['type' => 'page', 'trashed' => 1]));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', ['type' => 'page', 'trashed' => 1]))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/pages/trash')->has('pages.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'page')
+            ->where('filters.trashed', true)
+            ->has('entries.data', 1));
 });
 
 it('attaches an og image picked from the media library', function () {
@@ -140,7 +161,7 @@ it('attaches an og image picked from the media library', function () {
 
     $this->actingAs($this->editor)
         ->put(route('admin.pages.update', $page), $payload)
-        ->assertRedirect(route('admin.pages.index'));
+        ->assertRedirect(route('admin.content.index', 'page'));
 
     expect($page->fresh()->getFirstMedia(Page::COVER_COLLECTION))->not->toBeNull();
 });

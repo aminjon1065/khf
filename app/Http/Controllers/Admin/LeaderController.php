@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\BuildsCmsEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreLeaderRequest;
 use App\Http\Requests\Admin\UpdateLeaderRequest;
 use App\Models\Leader;
 use App\Support\HtmlSanitizer;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,47 +18,21 @@ use Inertia\Response;
 
 class LeaderController extends Controller
 {
+    use BuildsCmsEntryFormProps;
     use BuildsCmsFormData;
     use ProvidesBlueprintForm;
+    use RedirectsToContentBrowser;
 
     public function __construct(private HtmlSanitizer $sanitizer) {}
 
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-        $sort = (string) $request->string('sort') === 'created_at' ? 'created_at' : 'sort_order';
-        $direction = (string) $request->string('direction') === 'desc' ? 'desc' : 'asc';
-
-        $leaders = Leader::query()
-            ->with(['translations', 'media'])
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('full_name', 'like', "%{$search}%"),
-            ))
-            ->orderBy($sort, $direction)
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Leader $leader) => [
-                'id' => $leader->id,
-                'full_name' => $leader->translation($locale)?->full_name ?? '—',
-                'position' => $leader->translation($locale)?->position,
-                'status' => $leader->status->value,
-                'status_label' => $leader->status->label(),
-                'photo_url' => $leader->getFirstMediaUrl(Leader::PHOTO_COLLECTION, 'thumb') ?: null,
-                'locales' => $leader->translatedLocales(),
-                'sort_order' => $leader->sort_order,
-            ]);
-
-        return Inertia::render('admin/leadership/index', [
-            'leaders' => $leaders,
-            'filters' => ['search' => $search, 'sort' => $sort, 'direction' => $direction],
-        ]);
+        return $this->redirectToContentBrowser('leader');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/leadership/form', $this->formData(null));
+        return Inertia::render('admin/content/form', $this->formData(null));
     }
 
     public function store(StoreLeaderRequest $request): RedirectResponse
@@ -75,14 +50,14 @@ class LeaderController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Leader created.')]);
 
-        return to_route('admin.leadership.index');
+        return $this->toContentBrowser('leader');
     }
 
     public function edit(Leader $leader): Response
     {
         $leader->load(['translations', 'media']);
 
-        return Inertia::render('admin/leadership/form', $this->formData($leader));
+        return Inertia::render('admin/content/form', $this->formData($leader));
     }
 
     public function update(UpdateLeaderRequest $request, Leader $leader): RedirectResponse
@@ -100,7 +75,7 @@ class LeaderController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Leader updated.')]);
 
-        return to_route('admin.leadership.index');
+        return $this->toContentBrowser('leader');
     }
 
     public function destroy(Leader $leader): RedirectResponse
@@ -109,7 +84,7 @@ class LeaderController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Leader deleted.')]);
 
-        return to_route('admin.leadership.index');
+        return $this->toContentBrowser('leader');
     }
 
     /**
@@ -142,8 +117,9 @@ class LeaderController extends Controller
             }
         }
 
-        return [
-            'leader' => $leader ? [
+        return $this->contentEntryFormProps(
+            'leader',
+            $leader ? [
                 'id' => $leader->id,
                 'status' => $leader->status->value,
                 'sort_order' => $leader->sort_order,
@@ -151,12 +127,11 @@ class LeaderController extends Controller
                 'phone' => $leader->phone,
                 'translations' => $translations,
             ] : null,
-            ...$this->publicationFormMeta($leader?->status),
-            ...$this->blueprintFormProps('leader'),
-            'fieldOptions' => [],
-            'locales' => $this->localeOptions(),
-            'photoUrl' => $leader?->getFirstMediaUrl(Leader::PHOTO_COLLECTION, 'thumb') ?: null,
-        ];
+            [],
+            [
+                'photoUrl' => $leader?->getFirstMediaUrl(Leader::PHOTO_COLLECTION, 'thumb') ?: null,
+            ],
+        );
     }
 
     /**

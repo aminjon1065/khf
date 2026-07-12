@@ -54,7 +54,7 @@ class PreviewController extends Controller
         Gate::authorize(Permission::ManagePages->value);
 
         $page = Page::query()
-            ->with(['translations', 'media'])
+            ->with(PageShowPresenter::SHOW_WITH)
             ->findOrFail($id);
 
         return Inertia::render(
@@ -68,7 +68,7 @@ class PreviewController extends Controller
         Gate::authorize(Permission::ManagePosts->value);
 
         $post = Post::query()
-            ->with(['category.translations', 'media', 'author', 'translations', 'tags.translations'])
+            ->with(PostShowPresenter::SHOW_WITH)
             ->findOrFail($id);
 
         return Inertia::render(

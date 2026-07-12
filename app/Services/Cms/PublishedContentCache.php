@@ -257,7 +257,7 @@ class PublishedContentCache
 
         $this->remember('post', $locale, 'home.latest', function () use ($locale, $publishedVersions, $postPresenter): array {
             return Post::published()
-                ->with(['translations', 'category.translations', 'media'])
+                ->with(PostShowPresenter::CARD_WITH)
                 ->whereHas('translations', fn ($query) => $query->where('locale', $locale))
                 ->orderByDesc('published_at')
                 ->limit(6)
@@ -271,7 +271,7 @@ class PublishedContentCache
 
         foreach ($this->slugIndex('page') as $slug => $pageId) {
             $this->remember('page', $locale, "show.{$slug}", function () use ($locale, $pageId, $publishedVersions, $pagePresenter): ?array {
-                $page = Page::published()->with(['translations', 'media'])->whereKey($pageId)->first();
+                $page = Page::published()->with(PageShowPresenter::SHOW_WITH)->whereKey($pageId)->first();
 
                 if ($page === null) {
                     return null;
@@ -285,7 +285,7 @@ class PublishedContentCache
             $this->remember('post', $locale, "show.{$slug}", function () use ($locale, $postId, $publishedVersions, $postPresenter): ?array {
                 $post = Post::published()
                     ->whereKey($postId)
-                    ->with(['category.translations', 'media', 'author', 'translations', 'tags.translations'])
+                    ->with(PostShowPresenter::SHOW_WITH)
                     ->first();
 
                 if ($post === null) {

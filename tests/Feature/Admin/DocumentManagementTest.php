@@ -47,7 +47,7 @@ it('creates a document with files on the private disk', function () {
         ->post(route('admin.documents.store'), documentPayload([
             'files' => [UploadedFile::fake()->create('law.pdf', 100, 'application/pdf')],
         ]))
-        ->assertRedirect(route('admin.documents.index'));
+        ->assertRedirect(route('admin.content.index', 'document'));
 
     $document = Document::with('translations')->first();
 
@@ -84,18 +84,21 @@ it('renders the admin create and edit screens', function () {
     $this->actingAs($this->editor)->get(route('admin.documents.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('admin/documents/form')
+            ->component('admin/content/form')
+            ->where('contentType.handle', 'document')
             ->has('blueprint')
             ->has('fieldOptions')
             ->has('statuses')
-            ->has('locales'));
+            ->has('locales')
+            ->has('existingFiles'));
 
     $this->actingAs($this->editor)->get(route('admin.documents.edit', $document))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('admin/documents/form')
-            ->where('document.id', $document->id)
-            ->has('blueprint.sections.main.fields'));
+            ->component('admin/content/form')
+            ->where('entry.id', $document->id)
+            ->has('blueprint.sections.main.fields')
+            ->has('existingFiles'));
 });
 
 it('renders the public registry and downloads a file via the controlled route', function () {

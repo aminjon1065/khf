@@ -98,6 +98,48 @@ it('bulk soft-deletes selected entries', function () {
         ->and(Post::onlyTrashed()->count())->toBe(2);
 });
 
+it('lists documents, guides and alerts with corrected default sorts', function (string $type) {
+    $this->actingAs($this->admin)
+        ->get(route('admin.content.index', $type))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/content/index')
+            ->where('contentType.handle', $type)
+        );
+})->with(['document', 'guide', 'alert']);
+
+it('exposes incident status filters in the unified browser', function () {
+    $this->actingAs($this->admin)
+        ->get(route('admin.content.index', 'incident'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'incident')
+            ->has('statuses')
+        );
+});
+
+it('lists trashed entries in the unified browser with restore actions', function () {
+    $post = Post::factory()->create(['status' => ContentStatus::Published]);
+    $post->upsertTranslations([
+        'ru' => ['title' => 'В корзине', 'slug' => 'in-trash'],
+    ]);
+    $post->delete();
+
+    $this->actingAs($this->admin)
+        ->get(route('admin.content.index', ['type' => 'post', 'trashed' => 1]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'post')
+            ->where('filters.trashed', true)
+            ->has('entries.data', 1)
+            ->where('entries.data.0.title', 'В корзине')
+            ->has('entries.data.0.restore_url')
+            ->has('entries.data.0.force_delete_url')
+        );
+});
+
 it('returns 404 for unknown content types', function () {
     $this->actingAs($this->admin)
         ->get(route('admin.content.index', 'unknown'))

@@ -48,7 +48,7 @@ it('forbids users without a CMS role', function () {
 it('creates an alert with translations', function () {
     $this->actingAs($this->operator)
         ->post(route('admin.alerts.store'), alertPayload())
-        ->assertRedirect(route('admin.alerts.index'));
+        ->assertRedirect(route('admin.content.index', 'alert'));
 
     $alert = Alert::with('translations')->first();
 
@@ -71,7 +71,7 @@ it('creates a revision when an alert is updated', function () {
                 'en' => ['title' => '', 'body' => ''],
             ],
         ]))
-        ->assertRedirect(route('admin.alerts.index'));
+        ->assertRedirect(route('admin.content.index', 'alert'));
 
     expect(Revision::query()->where('revisionable_type', Alert::class)->count())->toBe(1);
 });
@@ -91,24 +91,37 @@ it('renders the list, create and trash screens', function () {
     $alert->upsertTranslations(['tj' => ['title' => 'Т']]);
 
     $this->actingAs($this->operator)->get(route('admin.alerts.index'))
+        ->assertRedirect(route('admin.content.index', 'alert'));
+
+    $this->actingAs($this->operator)->get(route('admin.content.index', 'alert'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->component('admin/alerts/index')
-            ->has('alerts.data', 1)
-            ->where('alerts.data.0.locales', ['tj']));
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'alert')
+            ->has('entries.data', 1)
+            ->where('entries.data.0.locales', ['tj']));
 
     $this->actingAs($this->operator)->get(route('admin.alerts.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->component('admin/alerts/form')
+            ->component('admin/content/form')
+            ->where('contentType.handle', 'alert')
             ->has('blueprint')
-            ->has('fieldOptions.hazard_level', 4));
+            ->has('fieldOptions.hazard_level', 4)
+            ->has('urls.estimate'));
 
     $alert->delete();
 
     $this->actingAs($this->operator)->get(route('admin.alerts.trash'))
+        ->assertRedirect(route('admin.content.index', ['type' => 'alert', 'trashed' => 1]));
+
+    $this->actingAs($this->operator)->get(route('admin.content.index', ['type' => 'alert', 'trashed' => 1]))
         ->assertOk()
-        ->assertInertia(fn (Assert $inertia) => $inertia->component('admin/alerts/trash')->has('alerts.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'alert')
+            ->where('filters.trashed', true)
+            ->has('entries.data', 1));
 });
 
 it('only the active scope returns published, in-window alerts', function () {

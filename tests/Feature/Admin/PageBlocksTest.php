@@ -111,7 +111,7 @@ function pageBlocksPayload(array $overrides = []): array
 it('stores all eight block types when saving a page', function () {
     $this->actingAs($this->editor)
         ->post(route('admin.pages.store'), pageBlocksPayload())
-        ->assertRedirect(route('admin.pages.index'));
+        ->assertRedirect(route('admin.content.index', 'page'));
 
     $blocks = Page::first()->translation('ru')->blocks;
 
@@ -157,7 +157,7 @@ it('sanitizes html and unsafe urls inside blocks on save', function () {
 
     $this->actingAs($this->editor)
         ->post(route('admin.pages.store'), $payload)
-        ->assertRedirect(route('admin.pages.index'));
+        ->assertRedirect(route('admin.content.index', 'page'));
 
     $blocks = Page::first()->translation('tj')->blocks;
 

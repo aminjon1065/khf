@@ -35,7 +35,7 @@ class PostController extends Controller
             'index.cat.'.($categoryId ?? 'all').'.page.'.$page,
             function () use ($locale, $categoryId) {
                 return Post::published()
-                    ->with(['translations', 'category.translations', 'media'])
+                    ->with(PostShowPresenter::CARD_WITH)
                     ->whereHas('translations', fn ($query) => $query->where('locale', $locale))
                     ->when($categoryId, fn ($query) => $query->where('category_id', $categoryId))
                     ->orderByDesc('published_at')
@@ -82,7 +82,7 @@ class PostController extends Controller
 
             $post = Post::published()
                 ->whereKey($postId)
-                ->with(['category.translations', 'media', 'author', 'translations', 'tags.translations'])
+                ->with(PostShowPresenter::SHOW_WITH)
                 ->first();
 
             if ($post === null) {

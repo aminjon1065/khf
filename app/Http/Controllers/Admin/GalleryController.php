@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\BuildsCmsEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGalleryRequest;
 use App\Http\Requests\Admin\UpdateGalleryRequest;
 use App\Models\Gallery;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -18,44 +19,20 @@ use Inertia\Response;
 
 class GalleryController extends Controller
 {
+    use BuildsCmsEntryFormProps;
     use BuildsCmsFormData;
     use ProvidesBlueprintForm;
+    use RedirectsToContentBrowser;
     use SavesContentRevisions;
 
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $locale = app()->getLocale();
-        $search = trim((string) $request->string('search'));
-
-        $galleries = Gallery::query()
-            ->with(['translations', 'media'])
-            ->when($search !== '', fn (Builder $query) => $query->whereHas(
-                'translations',
-                fn (Builder $inner) => $inner->where('title', 'like', "%{$search}%"),
-            ))
-            ->orderBy('sort_order')
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Gallery $gallery) => [
-                'id' => $gallery->id,
-                'title' => $gallery->translation($locale)?->title ?? '—',
-                'status' => $gallery->status->value,
-                'status_label' => $gallery->status->label(),
-                'photos_count' => $gallery->getMedia(Gallery::PHOTOS_COLLECTION)->count(),
-                'cover_url' => $gallery->getFirstMediaUrl(Gallery::PHOTOS_COLLECTION, 'thumb') ?: null,
-                'locales' => $gallery->translatedLocales(),
-                'sort_order' => $gallery->sort_order,
-            ]);
-
-        return Inertia::render('admin/gallery/index', [
-            'galleries' => $galleries,
-            'filters' => ['search' => $search],
-        ]);
+        return $this->redirectToContentBrowser('gallery');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/gallery/form', $this->formData(null));
+        return Inertia::render('admin/content/form', $this->formData(null));
     }
 
     public function store(StoreGalleryRequest $request): RedirectResponse
@@ -73,14 +50,14 @@ class GalleryController extends Controller
 
         $this->flashContentSaved(__('Gallery created.'));
 
-        return to_route('admin.gallery.index');
+        return $this->toContentBrowser('gallery');
     }
 
     public function edit(Gallery $gallery): Response
     {
         $gallery->load(['translations', 'media']);
 
-        return Inertia::render('admin/gallery/form', $this->formData($gallery));
+        return Inertia::render('admin/content/form', $this->formData($gallery));
     }
 
     public function update(UpdateGalleryRequest $request, Gallery $gallery): RedirectResponse
@@ -98,7 +75,7 @@ class GalleryController extends Controller
 
         $this->flashContentSaved(__('Gallery updated.'));
 
-        return to_route('admin.gallery.index');
+        return $this->toContentBrowser('gallery');
     }
 
     public function destroy(Gallery $gallery): RedirectResponse
@@ -107,7 +84,7 @@ class GalleryController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Gallery deleted.')]);
 
-        return to_route('admin.gallery.index');
+        return $this->toContentBrowser('gallery');
     }
 
     /**
@@ -154,19 +131,19 @@ class GalleryController extends Controller
                 ->all();
         }
 
-        return [
-            'gallery' => $gallery ? [
+        return $this->contentEntryFormProps(
+            'gallery',
+            $gallery ? [
                 'id' => $gallery->id,
                 'status' => $gallery->status->value,
                 'sort_order' => $gallery->sort_order,
                 'translations' => $translations,
             ] : null,
-            ...$this->publicationFormMeta($gallery?->status),
-            ...$this->blueprintFormProps('gallery'),
-            'fieldOptions' => [],
-            'locales' => $this->localeOptions(),
-            'existingPhotos' => $existingPhotos,
-        ];
+            [],
+            [
+                'existingPhotos' => $existingPhotos,
+            ],
+        );
     }
 
     /**

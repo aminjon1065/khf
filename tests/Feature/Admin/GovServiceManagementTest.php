@@ -66,13 +66,22 @@ it('renders the services list and form', function () {
     ]);
 
     $this->actingAs($this->editor)->get(route('admin.services.index'))
+        ->assertRedirect(route('admin.content.index', 'gov_service'));
+
+    $this->actingAs($this->editor)->get(route('admin.content.index', 'gov_service'))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('admin/services/index')->has('services.data', 1));
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/content/index')
+            ->where('contentType.handle', 'gov_service')
+            ->has('entries.data', 1));
 
     $this->actingAs($this->editor)->get(route('admin.services.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('admin/services/form')
+            ->component('admin/content/form')
+            ->where('contentType.handle', 'gov_service')
+            ->has('entry')
+            ->has('urls.store')
             ->has('blueprint')
             ->has('fieldOptions.category', 6)
             ->has('statuses', 4));
@@ -84,7 +93,7 @@ it('creates a service with translations', function () {
 
     $this->actingAs($this->editor)
         ->post(route('admin.services.store'), $payload)
-        ->assertRedirect(route('admin.services.index'));
+        ->assertRedirect(route('admin.content.index', 'gov_service'));
 
     $service = GovService::with('translations')->first();
 
@@ -110,13 +119,13 @@ it('updates and deletes a service', function () {
 
     $this->actingAs($this->editor)
         ->put(route('admin.services.update', $service), govServicePayload())
-        ->assertRedirect(route('admin.services.index'));
+        ->assertRedirect(route('admin.content.index', 'gov_service'));
 
     expect($service->fresh()->translation('ru')->title)->toBe('Тестовая услуга');
 
     $this->actingAs($this->editor)
         ->delete(route('admin.services.destroy', $service))
-        ->assertRedirect(route('admin.services.index'));
+        ->assertRedirect(route('admin.content.index', 'gov_service'));
 
     expect(GovService::find($service->id))->toBeNull();
 });

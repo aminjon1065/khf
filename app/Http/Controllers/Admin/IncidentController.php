@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\HazardLevel;
 use App\Enums\IncidentStatus;
 use App\Enums\IncidentType;
+use App\Http\Controllers\Admin\Concerns\BuildsCmsEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
-use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreIncidentRequest;
@@ -16,54 +17,31 @@ use App\Http\Requests\Admin\UpdateIncidentRequest;
 use App\Models\Incident;
 use App\Models\Region;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class IncidentController extends Controller
 {
+    use BuildsCmsEntryFormProps;
     use BuildsCmsFormData;
-    use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
     use ProvidesBlueprintForm;
+    use RedirectsToContentBrowser;
     use SavesContentRevisions;
 
-    /** @var list<string> */
-    private const SORTABLE = ['status', 'hazard_level', 'type', 'occurred_at', 'created_at'];
-
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $filters = $this->listFilters($request, 'occurred_at', 'desc');
-
-        $incidents = $this->paginateTranslatable(
-            Incident::query()->with(['translations', 'region.translations']),
-            $request,
-            self::SORTABLE,
-            'occurred_at',
-            'desc',
-            fn (Incident $incident, string $locale) => $this->toRow($incident, $locale),
-        );
-
-        return Inertia::render('admin/incidents/index', [
-            'incidents' => $incidents,
-            'filters' => $filters,
-            'trashedCount' => Incident::onlyTrashed()->count(),
-        ]);
+        return $this->redirectToContentBrowser('incident');
     }
 
-    public function trash(): Response
+    public function trash(): RedirectResponse
     {
-        $incidents = $this->paginateTrashed(
-            Incident::onlyTrashed()->with(['translations', 'region.translations']),
-            fn (Incident $incident, string $locale) => $this->toRow($incident, $locale),
-        );
-
-        return Inertia::render('admin/incidents/trash', ['incidents' => $incidents]);
+        return $this->redirectToContentBrowserTrash('incident');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/incidents/form', $this->formData(null));
+        return Inertia::render('admin/content/form', $this->formData(null));
     }
 
     public function store(StoreIncidentRequest $request): RedirectResponse
@@ -83,14 +61,14 @@ class IncidentController extends Controller
         $this->saveContentRevision($incident);
         $this->flashContentSaved(__('Incident created.'));
 
-        return to_route('admin.incidents.index');
+        return $this->toContentBrowser('incident');
     }
 
     public function edit(Incident $incident): Response
     {
         $incident->load('translations');
 
-        return Inertia::render('admin/incidents/form', $this->formData($incident));
+        return Inertia::render('admin/content/form', $this->formData($incident));
     }
 
     public function update(UpdateIncidentRequest $request, Incident $incident): RedirectResponse
@@ -110,44 +88,22 @@ class IncidentController extends Controller
         $this->saveContentRevision($incident);
         $this->flashContentSaved(__('Incident updated.'));
 
-        return to_route('admin.incidents.index');
+        return $this->toContentBrowser('incident');
     }
 
     public function destroy(Incident $incident): RedirectResponse
     {
-        return $this->moveToTrash($incident, 'admin.incidents.index', __('Incident moved to trash.'));
+        return $this->moveToTrash($incident, 'admin.content.index', __('Incident moved to trash.'), 'incident');
     }
 
     public function restore(Incident $incident): RedirectResponse
     {
-        return $this->restoreFromTrash($incident, 'admin.incidents.trash', __('Incident restored.'));
+        return $this->restoreFromTrash($incident, 'admin.content.index', __('Incident restored.'), ['type' => 'incident', 'trashed' => 1]);
     }
 
     public function forceDelete(Incident $incident): RedirectResponse
     {
-        return $this->permanentlyDelete($incident, 'admin.incidents.trash', __('Incident permanently deleted.'));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function toRow(Incident $incident, string $locale): array
-    {
-        return [
-            'id' => $incident->id,
-            'title' => $incident->translation($locale)?->title ?? '—',
-            'locales' => $incident->translatedLocales(),
-            'type' => $incident->type->value,
-            'type_label' => $incident->type->label(),
-            'hazard_level' => $incident->hazard_level->value,
-            'hazard_label' => $incident->hazard_level->label(),
-            'hazard_color' => $incident->hazard_level->color(),
-            'status' => $incident->status->value,
-            'status_label' => $incident->status->label(),
-            'region' => $incident->region?->translation($locale)?->name,
-            'occurred_at' => $incident->occurred_at?->format('d.m.Y H:i'),
-            'deleted_at' => $incident->deleted_at?->toDateString(),
-        ];
+        return $this->permanentlyDelete($incident, 'admin.content.index', __('Incident permanently deleted.'), ['type' => 'incident', 'trashed' => 1]);
     }
 
     /**
@@ -167,8 +123,9 @@ class IncidentController extends Controller
             }
         }
 
-        return [
-            'incident' => $incident ? [
+        return $this->contentEntryFormProps(
+            'incident',
+            $incident ? [
                 'id' => $incident->id,
                 'type' => $incident->type->value,
                 'hazard_level' => $incident->hazard_level->value,
@@ -179,8 +136,7 @@ class IncidentController extends Controller
                 'occurred_at' => $incident->occurred_at?->format('Y-m-d\TH:i'),
                 'translations' => $translations,
             ] : null,
-            ...$this->blueprintFormProps('incident'),
-            'fieldOptions' => [
+            [
                 'type' => IncidentType::options(),
                 'hazard_level' => HazardLevel::options(),
                 'status' => IncidentStatus::options(),
@@ -194,19 +150,21 @@ class IncidentController extends Controller
                     ])
                     ->all(),
             ],
-            'regionCoordinates' => Region::query()
-                ->orderBy('sort_order')
-                ->get()
-                ->mapWithKeys(fn (Region $region) => [
-                    $region->id => [
-                        'lat' => (float) $region->latitude,
-                        'lng' => (float) $region->longitude,
-                    ],
-                ])
-                ->all(),
-            'locales' => $this->localeOptions(),
-            'defaultLocale' => $this->publicationFormMeta()['defaultLocale'],
-        ];
+            [
+                'regionCoordinates' => Region::query()
+                    ->whereNotNull('latitude')
+                    ->whereNotNull('longitude')
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->mapWithKeys(fn (Region $region) => [
+                        $region->id => [
+                            'lat' => (float) $region->latitude,
+                            'lng' => (float) $region->longitude,
+                        ],
+                    ])
+                    ->all(),
+            ],
+        );
     }
 
     /**

@@ -5,11 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\ContentStatus;
 use App\Http\Controllers\Admin\Concerns\AutosavesEditorialContent;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
+use App\Http\Controllers\Admin\Concerns\BuildsEditorialEntryFormProps;
 use App\Http\Controllers\Admin\Concerns\BuildsTranslationPayload;
-use App\Http\Controllers\Admin\Concerns\ListsTranslatableContent;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Admin\Concerns\PublishesWorkingCopy;
+use App\Http\Controllers\Admin\Concerns\RedirectsToContentBrowser;
 use App\Http\Controllers\Admin\Concerns\SavesContentRevisions;
 use App\Http\Controllers\Concerns\SyncsCoverFromLibrary;
 use App\Http\Controllers\Controller;
@@ -25,7 +26,6 @@ use App\Support\PublicContentUrls;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,16 +33,14 @@ class PageController extends Controller
 {
     use AutosavesEditorialContent;
     use BuildsCmsFormData;
+    use BuildsEditorialEntryFormProps;
     use BuildsTranslationPayload;
-    use ListsTranslatableContent;
     use ManagesSoftDeletableContent;
     use ProvidesBlueprintForm;
     use PublishesWorkingCopy;
+    use RedirectsToContentBrowser;
     use SavesContentRevisions;
     use SyncsCoverFromLibrary;
-
-    /** @var list<string> */
-    private const SORTABLE = ['sort_order', 'status', 'created_at', 'updated_at'];
 
     public function __construct(
         private HtmlSanitizer $sanitizer,
@@ -50,43 +48,19 @@ class PageController extends Controller
         private TaxonomyService $taxonomies,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(): RedirectResponse
     {
-        $locale = app()->getLocale();
-        $filters = $this->listFilters($request, 'sort_order', 'asc');
-
-        $pages = $this->paginateTranslatable(
-            Page::query()->with('translations'),
-            $request,
-            self::SORTABLE,
-            'sort_order',
-            'asc',
-            fn (Page $page) => $this->toRow($page, $locale),
-        );
-
-        return Inertia::render('admin/pages/index', [
-            'pages' => $pages,
-            'filters' => $filters,
-            'trashedCount' => Page::onlyTrashed()->count(),
-        ]);
+        return $this->redirectToContentBrowser('page');
     }
 
-    public function trash(): Response
+    public function trash(): RedirectResponse
     {
-        $locale = app()->getLocale();
-
-        $pages = Page::onlyTrashed()
-            ->with('translations')
-            ->orderByDesc('deleted_at')
-            ->paginate(15)
-            ->through(fn (Page $page) => $this->toRow($page, $locale));
-
-        return Inertia::render('admin/pages/trash', ['pages' => $pages]);
+        return $this->redirectToContentBrowserTrash('page');
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/pages/form', $this->formData(null));
+        return Inertia::render('admin/content/editorial-form', $this->formData(null));
     }
 
     public function store(StorePageRequest $request): RedirectResponse
@@ -113,14 +87,14 @@ class PageController extends Controller
         $this->saveContentRevision($page);
         $this->flashContentSaved(__('Page created.'));
 
-        return to_route('admin.pages.index');
+        return $this->toContentBrowser('page');
     }
 
     public function edit(Page $page): Response
     {
         $page->load(['translations', 'media', 'tags.translations']);
 
-        return Inertia::render('admin/pages/form', $this->formData($page));
+        return Inertia::render('admin/content/editorial-form', $this->formData($page));
     }
 
     public function update(UpdatePageRequest $request, Page $page): RedirectResponse
@@ -148,7 +122,7 @@ class PageController extends Controller
         $this->saveContentRevision($page);
         $this->flashContentSaved(__('Page updated.'));
 
-        return to_route('admin.pages.index');
+        return $this->toContentBrowser('page');
     }
 
     public function autosave(AutosavePageRequest $request, Page $page): JsonResponse
@@ -180,17 +154,17 @@ class PageController extends Controller
 
     public function destroy(Page $page): RedirectResponse
     {
-        return $this->moveToTrash($page, 'admin.pages.index', __('Page moved to trash.'));
+        return $this->moveToTrash($page, 'admin.content.index', __('Page moved to trash.'), 'page');
     }
 
     public function restore(Page $page): RedirectResponse
     {
-        return $this->restoreFromTrash($page, 'admin.pages.trash', __('Page restored.'));
+        return $this->restoreFromTrash($page, 'admin.content.index', __('Page restored.'), ['type' => 'page', 'trashed' => 1]);
     }
 
     public function forceDelete(Page $page): RedirectResponse
     {
-        return $this->permanentlyDelete($page, 'admin.pages.trash', __('Page permanently deleted.'));
+        return $this->permanentlyDelete($page, 'admin.content.index', __('Page permanently deleted.'), ['type' => 'page', 'trashed' => 1]);
     }
 
     private function ensureSingleHomepage(Page $page): void
@@ -198,22 +172,6 @@ class PageController extends Controller
         if ($page->is_home) {
             Page::where('id', '!=', $page->id)->update(['is_home' => false]);
         }
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function toRow(Page $page, string $locale): array
-    {
-        return [
-            'id' => $page->id,
-            'title' => $page->translation($locale)?->title ?? '—',
-            'status' => $page->status->value,
-            'status_label' => $page->status->label(),
-            'locales' => $page->translatedLocales(),
-            'updated_at' => $page->updated_at?->toDateString(),
-            'deleted_at' => $page->deleted_at?->toDateString(),
-        ];
     }
 
     /**
@@ -236,8 +194,9 @@ class PageController extends Controller
             }
         }
 
-        return [
-            'page' => $page ? [
+        return $this->editorialEntryFormProps(
+            'page',
+            $page ? [
                 'id' => $page->id,
                 'parent_id' => $page->parent_id,
                 'status' => $page->status->value,
@@ -247,11 +206,7 @@ class PageController extends Controller
                 'cover_url' => $page->getFirstMediaUrl(Page::COVER_COLLECTION, 'thumb') ?: null,
                 'translations' => $translations,
             ] : null,
-            'locales' => $this->localeOptions(),
-            ...$this->publicationFormMeta($page?->status),
-            ...$this->blueprintFormProps('page'),
-            ...$this->blocksetFormProps('page'),
-            'fieldOptions' => array_merge(
+            array_merge(
                 [
                     'parent_id' => Page::query()
                         ->when($page, fn (Builder $query) => $query->whereKeyNot($page->id))
@@ -262,10 +217,13 @@ class PageController extends Controller
                 ],
                 $this->taxonomies->fieldOptionsForCollection('page'),
             ),
-            'publicUrls' => $page ? PublicContentUrls::forPage($page) : [],
-            'previewUrls' => $page ? app(PreviewUrls::class)->forPage($page->id) : [],
-            'hasUnpublishedChanges' => $page?->hasUnpublishedChanges() ?? false,
-        ];
+            [
+                'publicUrls' => $page ? PublicContentUrls::forPage($page) : [],
+                'previewUrls' => $page ? app(PreviewUrls::class)->forPage($page->id) : [],
+                'hasUnpublishedChanges' => $page?->hasUnpublishedChanges() ?? false,
+                'blocksetHandle' => 'page',
+            ],
+        );
     }
 
     /**
