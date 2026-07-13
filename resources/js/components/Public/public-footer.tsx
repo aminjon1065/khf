@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { ExternalLink, Eye, Phone } from 'lucide-react';
 import { AppEmblem } from '@/components/app-emblem';
 import { SocialLinks } from '@/components/Public/social-links';
+import { TajikistanEmblem } from '@/components/Public/symbols/state-emblem';
 import { useTranslations } from '@/hooks/use-translations';
 import { show as pageShow } from '@/routes/pages';
 import type {
@@ -37,9 +38,10 @@ export function PublicFooter({
                     <div className="flex flex-col gap-3">
                         <div className="flex items-center gap-2.5">
                             <AppEmblem alt="" className="size-10 shrink-0" />
-                            <span className="text-base font-bold">
-                                {t('site.short_name')}
-                            </span>
+                            <TajikistanEmblem
+                                alt=""
+                                className="size-10 shrink-0"
+                            />
                         </div>
                         <p className="text-sm leading-relaxed text-brand-strong-foreground/70">
                             {t('site.full_name')}

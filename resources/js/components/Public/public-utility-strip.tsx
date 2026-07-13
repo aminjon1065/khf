@@ -16,8 +16,11 @@ export function PublicUtilityStrip({ onSearchOpen }: PublicUtilityStripProps) {
         <div className="border-b border-border bg-card text-muted-foreground print:hidden">
             <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-1.5 text-xs">
                 <div className="flex min-w-0 items-center gap-2.5">
-                    <TajikistanEmblem className="size-5 shrink-0" />
-                    <TajikistanFlag className="h-3.5 w-7 shrink-0 rounded-xs" />
+                    <TajikistanEmblem
+                        alt=""
+                        className="size-5 shrink-0 sm:size-6"
+                    />
+                    <TajikistanFlag className="h-3.5 w-7" />
                     <span className="truncate">{t('govbar.identifier')}</span>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">

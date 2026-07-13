@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { Eye, Menu, Search } from 'lucide-react';
 import { AppEmblem } from '@/components/app-emblem';
+import { TajikistanEmblem } from '@/components/Public/symbols/state-emblem';
 import { ThemeToggle } from '@/components/theme-toggle';
 import {
     Sheet,
@@ -52,8 +53,12 @@ export function PublicMobileNav({
                     <SheetHeader className="flex justify-start border-b border-slate-800 pb-4 text-left">
                         <SheetTitle className="flex items-center gap-2 text-lg font-bold text-white">
                             <AppEmblem alt="" className="size-8 shrink-0" />
-                            <span className="truncate">
-                                {t('site.short_name')}
+                            <TajikistanEmblem
+                                alt=""
+                                className="size-8 shrink-0"
+                            />
+                            <span className="sr-only">
+                                {t('site.full_name')}
                             </span>
                         </SheetTitle>
                     </SheetHeader>

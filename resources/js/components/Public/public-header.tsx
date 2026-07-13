@@ -3,6 +3,7 @@ import { Eye, Phone } from 'lucide-react';
 import { AppEmblem } from '@/components/app-emblem';
 import { PublicMobileNav } from '@/components/Public/public-mobile-nav';
 import { PublicPrimaryNav } from '@/components/Public/public-primary-nav';
+import { TajikistanEmblem } from '@/components/Public/symbols/state-emblem';
 import { useTranslations } from '@/hooks/use-translations';
 import { welcome } from '@/routes';
 import type { NavEntry, NavLeaf, PublicLocale } from '@/types/public-layout';
@@ -52,11 +53,13 @@ export function PublicHeader({
                 <Link
                     href={welcome({ locale }).url}
                     className="flex shrink-0 items-center gap-3 transition-opacity hover:opacity-80"
+                    aria-label={t('site.full_name')}
                 >
                     <AppEmblem alt="" className="size-10 shrink-0 md:size-11" />
-                    <span className="text-lg font-bold tracking-tight md:text-xl">
-                        {t('site.short_name')}
-                    </span>
+                    <TajikistanEmblem
+                        alt=""
+                        className="size-10 shrink-0 md:size-11"
+                    />
                 </Link>
 
                 <div className="mx-auto hidden max-w-md flex-1 px-4 text-center lg:block">
