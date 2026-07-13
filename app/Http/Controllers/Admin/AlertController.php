@@ -18,6 +18,7 @@ use App\Jobs\SendAlertNotifications;
 use App\Models\Alert;
 use App\Models\Region;
 use App\Models\Subscriber;
+use App\Services\Admin\ContentEntryService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -33,6 +34,8 @@ class AlertController extends Controller
     use ProvidesBlueprintForm;
     use RedirectsToContentBrowser;
     use SavesContentRevisions;
+
+    public function __construct(private ContentEntryService $entries) {}
 
     public function index(): RedirectResponse
     {
@@ -51,12 +54,9 @@ class AlertController extends Controller
 
     public function store(StoreAlertRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-
-        $alert = Alert::create($this->attributes($data));
-        $alert->upsertTranslations($this->translationsPayload($data));
+        /** @var Alert $alert */
+        $alert = $this->entries->store('alert', $request->validated());
         $this->dispatchNotifications($alert);
-        $this->saveContentRevision($alert);
         $this->flashContentSaved(__('Alert created.'));
 
         return $this->toContentBrowser('alert');
@@ -64,19 +64,14 @@ class AlertController extends Controller
 
     public function edit(Alert $alert): Response
     {
-        $alert->load('translations');
-
         return Inertia::render('admin/content/form', $this->formData($alert));
     }
 
     public function update(UpdateAlertRequest $request, Alert $alert): RedirectResponse
     {
-        $data = $request->validated();
-
-        $alert->update($this->attributes($data));
-        $alert->upsertTranslations($this->translationsPayload($data));
+        /** @var Alert $alert */
+        $alert = $this->entries->update('alert', $alert, $request->validated());
         $this->dispatchNotifications($alert);
-        $this->saveContentRevision($alert);
         $this->flashContentSaved(__('Alert updated.'));
 
         return $this->toContentBrowser('alert');
@@ -122,50 +117,15 @@ class AlertController extends Controller
     }
 
     /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
-     */
-    private function attributes(array $data): array
-    {
-        return [
-            'hazard_level' => $data['hazard_level'],
-            'status' => $data['status'],
-            'region_id' => $data['region_id'] ?? null,
-            'is_dismissible' => $data['is_dismissible'] ?? true,
-            'starts_at' => $data['starts_at'] ?? null,
-            'ends_at' => $data['ends_at'] ?? null,
-        ];
-    }
-
-    /**
      * @return array<string, mixed>
      */
     private function formData(?Alert $alert): array
     {
         $locale = app()->getLocale();
-        $translations = [];
-
-        if ($alert) {
-            foreach ($alert->translations as $translation) {
-                $translations[$translation->locale] = [
-                    'title' => $translation->title,
-                    'body' => $translation->body,
-                ];
-            }
-        }
 
         return $this->contentEntryFormProps(
             'alert',
-            $alert ? [
-                'id' => $alert->id,
-                'hazard_level' => $alert->hazard_level->value,
-                'status' => $alert->status->value,
-                'region_id' => $alert->region_id,
-                'is_dismissible' => $alert->is_dismissible,
-                'starts_at' => $alert->starts_at?->format('Y-m-d\TH:i'),
-                'ends_at' => $alert->ends_at?->format('Y-m-d\TH:i'),
-                'translations' => $translations,
-            ] : null,
+            $alert ? $this->entries->entryArray($alert, 'alert') : null,
             [
                 'hazard_level' => HazardLevel::options(),
                 'status' => AlertStatus::options(),
@@ -184,20 +144,5 @@ class AlertController extends Controller
                 'estimate' => route('admin.alerts.estimate'),
             ],
         );
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, array<string, mixed>>
-     */
-    private function translationsPayload(array $data): array
-    {
-        return collect($data['translations'] ?? [])
-            ->filter(fn (array $translation) => filled($translation['title'] ?? null))
-            ->map(fn (array $translation) => [
-                'title' => $translation['title'],
-                'body' => $translation['body'] ?? null,
-            ])
-            ->all();
     }
 }

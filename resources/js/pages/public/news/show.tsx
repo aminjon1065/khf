@@ -26,6 +26,7 @@ type Article = {
     published_at: string | null;
     gallery: MediaItem[];
     attachments: MediaItem[];
+    locale?: string;
 };
 
 type RelatedItem = {
@@ -47,7 +48,9 @@ export default function NewsShow({ post, related }: PageProps) {
         <>
             <Head title={post.title} />
 
-            {post.locale && <MissingTranslationAlert contentLocale={post.locale} />}
+            {post.locale && (
+                <MissingTranslationAlert contentLocale={post.locale} />
+            )}
 
             <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
                 <article className="min-w-0">
@@ -63,7 +66,9 @@ export default function NewsShow({ post, related }: PageProps) {
                             {post.category ?? post.type_label}
                         </span>
                         {post.published_at && (
-                            <span>· {formatDate(post.published_at, locale)}</span>
+                            <span>
+                                · {formatDate(post.published_at, locale)}
+                            </span>
                         )}
                     </div>
 
@@ -111,11 +116,23 @@ export default function NewsShow({ post, related }: PageProps) {
 
                     {post.gallery && post.gallery.length > 0 && (
                         <div className="mt-8">
-                            <h3 className="mb-4 text-lg font-semibold">{t('common.photo_gallery')}</h3>
+                            <h3 className="mb-4 text-lg font-semibold">
+                                {t('common.photo_gallery')}
+                            </h3>
                             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                                 {post.gallery.map((img, i) => (
-                                    <a key={i} href={img.url} target="_blank" rel="noreferrer" className="block aspect-video overflow-hidden rounded-lg bg-muted border hover:border-primary transition-colors">
-                                        <img src={img.thumb || img.url} alt="" className="h-full w-full object-cover transition-transform hover:scale-105" />
+                                    <a
+                                        key={i}
+                                        href={img.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="block aspect-video overflow-hidden rounded-lg border bg-muted transition-colors hover:border-primary"
+                                    >
+                                        <img
+                                            src={img.thumb || img.url}
+                                            alt=""
+                                            className="h-full w-full object-cover transition-transform hover:scale-105"
+                                        />
                                     </a>
                                 ))}
                             </div>
@@ -131,13 +148,21 @@ export default function NewsShow({ post, related }: PageProps) {
                             <ul className="flex flex-col gap-3">
                                 {post.attachments.map((file, i) => (
                                     <li key={i}>
-                                        <a href={file.url} download className="group flex items-center gap-3 rounded-lg border bg-card p-3 shadow-sm hover:border-primary hover:shadow-md transition-all">
+                                        <a
+                                            href={file.url}
+                                            download
+                                            className="group flex items-center gap-3 rounded-lg border bg-card p-3 shadow-sm transition-all hover:border-primary hover:shadow-md"
+                                        >
                                             <div className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
                                                 <FileIcon className="size-5" />
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">{file.name}</span>
-                                                <span className="text-xs text-muted-foreground uppercase">{file.ext} · {file.size}</span>
+                                                <span className="line-clamp-1 text-sm font-medium text-foreground transition-colors group-hover:text-primary">
+                                                    {file.name}
+                                                </span>
+                                                <span className="text-xs text-muted-foreground uppercase">
+                                                    {file.ext} · {file.size}
+                                                </span>
                                             </div>
                                         </a>
                                     </li>
@@ -169,8 +194,11 @@ export default function NewsShow({ post, related }: PageProps) {
                                 >
                                     {item.title}
                                     {item.published_at && (
-                                        <span className="block text-xs text-muted-foreground mt-1">
-                                            {formatDate(item.published_at, locale)}
+                                        <span className="mt-1 block text-xs text-muted-foreground">
+                                            {formatDate(
+                                                item.published_at,
+                                                locale,
+                                            )}
                                         </span>
                                     )}
                                 </Link>

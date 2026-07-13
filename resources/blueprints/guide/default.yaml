@@ -1,55 +1,55 @@
 title: Памятка
 sections:
-  main:
-    display: Содержание
-    fields:
-      - handle: title
-        type: text
-        display: Заголовок
-        localizable: true
-        required: true
-      - handle: slug
-        type: slug
-        display: ЧПУ (slug)
-        localizable: true
-      - handle: summary
-        type: textarea
-        display: Краткое описание
-        localizable: true
-        rows: 2
-        max: 500
-      - handle: content
-        type: rich_text
-        display: Полный текст
-        localizable: true
-      - handle: seo_title
-        type: text
-        display: SEO заголовок
-        localizable: true
-      - handle: seo_description
-        type: textarea
-        display: SEO описание
-        localizable: true
-        rows: 2
-        max: 500
-  sidebar:
-    display: Публикация
-    fields:
-      - handle: status
-        type: status
-        display: Статус
-      - handle: audience
-        type: select
-        display: Аудитория
-        required: true
-      - handle: hazard_type
-        type: select
-        display: Тип опасности
-      - handle: sort_order
-        type: number
-        display: Порядок
-      - handle: files
-        type: assets
-        display: Вложения
-        instructions: PDF, DOC, изображения для скачивания
-        mimes: pdf,doc,docx,jpg,jpeg,png
+    main:
+        display: Содержание
+        fields:
+            - handle: title
+              type: text
+              display: Заголовок
+              localizable: true
+              required: true
+            - handle: slug
+              type: slug
+              display: ЧПУ (slug)
+              localizable: true
+            - handle: summary
+              type: textarea
+              display: Краткое описание
+              localizable: true
+              rows: 2
+              max: 500
+            - handle: content
+              type: rich_text
+              display: Полный текст
+              localizable: true
+            - handle: seo_title
+              type: text
+              display: SEO заголовок
+              localizable: true
+            - handle: seo_description
+              type: textarea
+              display: SEO описание
+              localizable: true
+              rows: 2
+              max: 500
+    sidebar:
+        display: Публикация
+        fields:
+            - handle: status
+              type: status
+              display: Статус
+            - handle: audience
+              type: select
+              display: Аудитория
+              required: true
+            - handle: hazard_type
+              type: select
+              display: Тип опасности
+            - handle: sort_order
+              type: number
+              display: Порядок
+            - handle: files
+              type: assets
+              display: Вложения
+              instructions: PDF, DOC, изображения для скачивания
+              mimes: pdf,doc,docx,jpg,jpeg,png

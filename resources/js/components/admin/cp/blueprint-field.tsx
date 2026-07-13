@@ -1,5 +1,3 @@
-import { CpMultiAssetsField } from '@/components/admin/cp/multi-assets-field';
-import { CpPhotoGalleryField } from '@/components/admin/cp/photo-gallery-field';
 import { CpAssetsField } from '@/components/admin/cp/assets-field';
 import { CpBlocksField } from '@/components/admin/cp/blocks-field';
 import type { BlockData } from '@/components/admin/cp/blocks-field';
@@ -11,8 +9,10 @@ import {
     CpTextField,
     CpToggleField,
 } from '@/components/admin/cp/fields';
+import { CpMultiAssetsField } from '@/components/admin/cp/multi-assets-field';
 import { CpMultiRelationField } from '@/components/admin/cp/multi-relation-field';
 import { CpNestedRowsField } from '@/components/admin/cp/nested-rows-field';
+import { CpPhotoGalleryField } from '@/components/admin/cp/photo-gallery-field';
 import { CpRelationField } from '@/components/admin/cp/relation-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +25,14 @@ import type {
     SelectOption,
 } from '@/types/cms';
 
-type FieldValue = string | number | boolean | number[] | BlockData[] | null;
+type FieldValue =
+    | string
+    | number
+    | boolean
+    | number[]
+    | BlockData[]
+    | Record<string, string>[]
+    | null;
 
 function relationOptions(
     fieldOptions: BlueprintFieldOptions,
@@ -85,7 +92,12 @@ export function CpBlueprintField({
     onAssetChange: (patch: Record<string, unknown>) => void;
     blockset?: BlockSetDefinition;
 }) {
-    const error = fieldError(errors, field.handle, activeLocale, field.localizable);
+    const error = fieldError(
+        errors,
+        field.handle,
+        activeLocale,
+        field.localizable,
+    );
     const id = `${field.handle}-${activeLocale}`;
 
     if (field.type === 'status') {
@@ -136,7 +148,8 @@ export function CpBlueprintField({
         if (field.handle === 'photos') {
             const existingPhotos = meta.existingPhotos ?? [];
             const pendingPhotos = (data.photos as File[] | undefined) ?? [];
-            const removeIds = (data.remove_photos as number[] | undefined) ?? [];
+            const removeIds =
+                (data.remove_photos as number[] | undefined) ?? [];
 
             return (
                 <CpPhotoGalleryField
@@ -365,7 +378,11 @@ export function CpBlueprintField({
                 instructions={field.instructions ?? undefined}
                 mode={field.type === 'grid' ? 'grid' : 'replicator'}
                 subFields={subFields}
-                value={Array.isArray(value) ? (value as Record<string, string>[]) : []}
+                value={
+                    Array.isArray(value)
+                        ? (value as unknown as Record<string, string>[])
+                        : []
+                }
                 onChange={(rows) => onChange(rows)}
                 max={field.max}
                 error={error}

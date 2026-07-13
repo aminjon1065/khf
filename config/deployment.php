@@ -89,4 +89,43 @@ return [
 
     'failed_jobs_alert_threshold' => (int) env('HEALTH_FAILED_JOBS_THRESHOLD', 10),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Post-deploy smoke checks (`php artisan deploy:smoke`)
+    |--------------------------------------------------------------------------
+    |
+    | Absolute paths are checked once. Locale paths are expanded for each
+    | entry in config('app.locales'). Homepage also asserts csrf-token meta
+    | and Content-Security-Policy for push/Matomo readiness.
+    |
+    */
+
+    'smoke' => [
+        'timeout' => (int) env('DEPLOY_SMOKE_TIMEOUT', 15),
+
+        'paths' => [
+            ['path' => '/up', 'expect' => [200]],
+            ['path' => '/health', 'expect' => [200], 'json_status' => 'ok'],
+            ['path' => '/sitemap.xml', 'expect' => [200]],
+        ],
+
+        'locale_paths' => [
+            '/',
+            '/news',
+            '/map',
+            '/incidents',
+            '/search?q=test',
+            '/appeals',
+            '/subscribe',
+            '/vacancies',
+            '/tenders',
+            '/guides',
+            '/faq',
+            '/contacts',
+            '/gallery',
+            '/leadership',
+            '/structure',
+        ],
+    ],
+
 ];

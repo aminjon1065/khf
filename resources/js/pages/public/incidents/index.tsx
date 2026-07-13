@@ -7,8 +7,9 @@ import type { HazardLevel } from '@/components/hazard-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/hooks/use-translations';
-import { index as mapIndex } from '@/routes/map';
 import { formatDate } from '@/lib/utils';
+import { index as incidentsIndex } from '@/routes/incidents';
+import { index as mapIndex } from '@/routes/map';
 
 type Option = { value: string; label: string };
 
@@ -75,12 +76,12 @@ export default function IncidentsArchive({
     const applyFilter = useCallback(
         (key: string, value: string) => {
             router.get(
-                route('incidents.index', { locale }),
+                incidentsIndex.url(locale as string),
                 { ...filters, [key]: value === 'all' ? null : value, page: 1 },
-                { preserveState: true, replace: true }
+                { preserveState: true, replace: true },
             );
         },
-        [filters, locale]
+        [filters, locale],
     );
 
     return (
@@ -98,7 +99,7 @@ export default function IncidentsArchive({
                 </div>
                 <Button variant="outline" asChild>
                     <Link href={mapIndex({ locale }).url}>
-                        <Map className="size-4 mr-2" />
+                        <Map className="mr-2 size-4" />
                         {t('incidents.view_map')}
                     </Link>
                 </Button>
@@ -131,9 +132,7 @@ export default function IncidentsArchive({
                         onChange={(e) => applyFilter('type', e.target.value)}
                         className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
                     >
-                        <option value="all">
-                            {t('map.filter_type_all')}
-                        </option>
+                        <option value="all">{t('map.filter_type_all')}</option>
                         {types.map((type) => (
                             <option key={type.value} value={type.value}>
                                 {type.label}
@@ -155,9 +154,7 @@ export default function IncidentsArchive({
                         onChange={(e) => applyFilter('level', e.target.value)}
                         className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
                     >
-                        <option value="all">
-                            {t('map.filter_level_all')}
-                        </option>
+                        <option value="all">{t('map.filter_level_all')}</option>
                         {levels.map((level) => (
                             <option key={level.value} value={level.value}>
                                 {level.label}
@@ -234,7 +231,10 @@ export default function IncidentsArchive({
                                 )}
                                 {incident.occurred_at && (
                                     <span className="ml-auto text-sm text-muted-foreground">
-                                        {formatDate(incident.occurred_at, locale)}
+                                        {formatDate(
+                                            incident.occurred_at,
+                                            locale,
+                                        )}
                                     </span>
                                 )}
                             </div>
@@ -262,7 +262,7 @@ export default function IncidentsArchive({
                             router.get(incidents.prev_page_url)
                         }
                     >
-                        <ChevronLeft className="size-4 mr-2" />
+                        <ChevronLeft className="mr-2 size-4" />
                         {t('common.back')}
                     </Button>
                     <Button
@@ -275,7 +275,7 @@ export default function IncidentsArchive({
                         }
                     >
                         {t('common.next')}
-                        <ChevronRight className="size-4 ml-2" />
+                        <ChevronRight className="ml-2 size-4" />
                     </Button>
                 </div>
             )}

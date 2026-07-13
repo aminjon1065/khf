@@ -27,8 +27,8 @@ it('seeds a full public test dataset with grouped menus', function () {
         ->and(Gallery::query()->count())->toBe(2)
         ->and(Faq::query()->count())->toBe(3)
         ->and(Poll::query()->count())->toBe(2)
-        ->and(Vacancy::query()->count())->toBe(2)
-        ->and(Tender::query()->count())->toBe(2)
+        ->and(Vacancy::query()->count())->toBe(3)
+        ->and(Tender::query()->count())->toBe(3)
         ->and(GovService::query()->count())->toBe(3)
         ->and(Statistic::query()->count())->toBe(3)
         ->and(Tag::query()->count())->toBe(3);

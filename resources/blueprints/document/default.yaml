@@ -1,44 +1,44 @@
 title: Документ
 sections:
-  main:
-    display: Содержание
-    fields:
-      - handle: name
-        type: text
-        display: Наименование
-        localizable: true
-        required: true
-      - handle: description
-        type: textarea
-        display: Описание
-        localizable: true
-        rows: 3
-        max: 2000
-  sidebar:
-    display: Публикация
-    fields:
-      - handle: status
-        type: status
-        display: Статус
-      - handle: type
-        type: select
-        display: Тип документа
-        required: true
-      - handle: source
-        type: text
-        display: Источник
-      - handle: document_date
-        type: date
-        display: Дата документа
-      - handle: sort_order
-        type: number
-        display: Порядок
-      - handle: tag_ids
-        type: entries
-        display: Теги
-        collection: tags
-      - handle: files
-        type: assets
-        display: Файлы
-        instructions: PDF, DOC, XLS, изображения — до 20 МБ каждый
-        mimes: pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,jpg,jpeg,png
+    main:
+        display: Содержание
+        fields:
+            - handle: name
+              type: text
+              display: Наименование
+              localizable: true
+              required: true
+            - handle: description
+              type: textarea
+              display: Описание
+              localizable: true
+              rows: 3
+              max: 2000
+    sidebar:
+        display: Публикация
+        fields:
+            - handle: status
+              type: status
+              display: Статус
+            - handle: type
+              type: select
+              display: Тип документа
+              required: true
+            - handle: source
+              type: text
+              display: Источник
+            - handle: document_date
+              type: date
+              display: Дата документа
+            - handle: sort_order
+              type: number
+              display: Порядок
+            - handle: tag_ids
+              type: entries
+              display: Теги
+              collection: tags
+            - handle: files
+              type: assets
+              display: Файлы
+              instructions: PDF, DOC, XLS, изображения — до 20 МБ каждый
+              mimes: pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,jpg,jpeg,png

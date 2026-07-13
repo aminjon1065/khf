@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils';
 import type { AutosaveState } from '@/hooks/use-autosave';
+import { cn } from '@/lib/utils';
 
 const labels: Record<AutosaveState, string | null> = {
     idle: null,

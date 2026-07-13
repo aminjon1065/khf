@@ -10,6 +10,7 @@ use App\Models\VacancyApplication;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -18,6 +19,8 @@ class VacancyApplicationController extends Controller
 {
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', VacancyApplication::class);
+
         $locale = app()->getLocale();
         $search = trim((string) $request->string('search'));
         $status = in_array((string) $request->string('status'), AppealStatus::values(), true)
@@ -53,6 +56,8 @@ class VacancyApplicationController extends Controller
 
     public function show(VacancyApplication $application): Response
     {
+        Gate::authorize('view', $application);
+
         $locale = app()->getLocale();
         $application->load(['assignee:id,name', 'vacancy.translations', 'media']);
         $resume = $application->getFirstMedia(VacancyApplication::RESUME_COLLECTION);
@@ -94,6 +99,8 @@ class VacancyApplicationController extends Controller
 
     public function destroy(VacancyApplication $application): RedirectResponse
     {
+        Gate::authorize('delete', $application);
+
         $application->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Application deleted.')]);
@@ -107,6 +114,8 @@ class VacancyApplicationController extends Controller
      */
     public function downloadResume(VacancyApplication $application): BinaryFileResponse
     {
+        Gate::authorize('download', $application);
+
         $resume = $application->getFirstMedia(VacancyApplication::RESUME_COLLECTION);
 
         abort_if($resume === null, 404);

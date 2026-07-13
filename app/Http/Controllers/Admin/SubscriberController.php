@@ -9,6 +9,7 @@ use App\Models\Subscriber;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,6 +17,8 @@ class SubscriberController extends Controller
 {
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', Subscriber::class);
+
         $search = trim((string) $request->string('search'));
         $status = in_array((string) $request->string('status'), SubscriptionStatus::values(), true)
             ? (string) $request->string('status')
@@ -54,6 +57,8 @@ class SubscriberController extends Controller
 
     public function destroy(Subscriber $subscriber): RedirectResponse
     {
+        Gate::authorize('delete', $subscriber);
+
         $subscriber->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Subscriber removed.')]);

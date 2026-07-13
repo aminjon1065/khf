@@ -1,24 +1,24 @@
 title: Вопрос и ответ
 sections:
-  main:
-    display: Содержание
-    fields:
-      - handle: question
-        type: text
-        display: Вопрос
-        localizable: true
-        required: true
-        max: 500
-      - handle: answer
-        type: rich_text
-        display: Ответ
-        localizable: true
-  sidebar:
-    display: Публикация
-    fields:
-      - handle: status
-        type: status
-        display: Статус
-      - handle: sort_order
-        type: number
-        display: Порядок
+    main:
+        display: Содержание
+        fields:
+            - handle: question
+              type: text
+              display: Вопрос
+              localizable: true
+              required: true
+              max: 500
+            - handle: answer
+              type: rich_text
+              display: Ответ
+              localizable: true
+    sidebar:
+        display: Публикация
+        fields:
+            - handle: status
+              type: status
+              display: Статус
+            - handle: sort_order
+              type: number
+              display: Порядок

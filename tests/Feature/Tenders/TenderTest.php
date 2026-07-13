@@ -98,6 +98,16 @@ it('rejects a bid with the honeypot filled', function () {
     expect(TenderBid::count())->toBe(0);
 });
 
+it('rejects an executable bid document upload', function () {
+    $tender = openTender();
+
+    $this->post(route('tenders.bid', ['locale' => 'tj', 'tender' => $tender->id]), bidForm([
+        'document' => UploadedFile::fake()->create('shell.php', 100, 'application/x-httpd-php'),
+    ]))->assertSessionHasErrors('document');
+
+    expect(TenderBid::count())->toBe(0);
+});
+
 it('validates required bid fields including the document', function () {
     $tender = openTender();
 

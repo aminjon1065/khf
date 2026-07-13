@@ -150,10 +150,9 @@ export default function ContentIndex({
 
     const switchType = (handle: string) => {
         const target = types.find((type) => type.handle === handle);
+
         if (target) {
-            router.visit(
-                viewingTrash ? `${target.url}?trashed=1` : target.url,
-            );
+            router.visit(viewingTrash ? `${target.url}?trashed=1` : target.url);
         }
     };
 
@@ -220,9 +219,7 @@ export default function ContentIndex({
         }
 
         if (
-            !confirm(
-                `Переместить ${selected.length} материал(ов) в корзину?`,
-            )
+            !confirm(`Переместить ${selected.length} материал(ов) в корзину?`)
         ) {
             return;
         }
@@ -284,9 +281,7 @@ export default function ContentIndex({
                         return (
                             <Badge
                                 key={locale}
-                                variant={
-                                    hasTranslation ? 'default' : 'outline'
-                                }
+                                variant={hasTranslation ? 'default' : 'outline'}
                                 className={
                                     hasTranslation
                                         ? 'px-1.5 text-[10px] uppercase'

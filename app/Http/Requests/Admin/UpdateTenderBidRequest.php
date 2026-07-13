@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\AppealStatus;
-use App\Enums\Permission;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -15,7 +14,9 @@ class UpdateTenderBidRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can(Permission::ManageTenderBids->value) ?? false;
+        $bid = $this->route('bid');
+
+        return $bid !== null && ($this->user()?->can('update', $bid) ?? false);
     }
 
     /**

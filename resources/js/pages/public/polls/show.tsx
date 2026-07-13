@@ -80,7 +80,9 @@ export default function PollShow({ poll }: { poll: PollData }) {
                     {poll.description && (
                         <div
                             className="rte-content mt-4 leading-relaxed text-muted-foreground"
-                            dangerouslySetInnerHTML={{ __html: poll.description }}
+                            dangerouslySetInnerHTML={{
+                                __html: poll.description,
+                            }}
                         />
                     )}
                 </div>
@@ -102,7 +104,9 @@ export default function PollShow({ poll }: { poll: PollData }) {
                                             id={`option-${option.id}`}
                                             name="poll_option"
                                             value={option.id}
-                                            checked={selected === String(option.id)}
+                                            checked={
+                                                selected === String(option.id)
+                                            }
                                             onChange={() =>
                                                 setSelected(String(option.id))
                                             }
@@ -133,7 +137,10 @@ export default function PollShow({ poll }: { poll: PollData }) {
                             className="hidden"
                         />
 
-                        <Button type="submit" disabled={!selected || form.processing}>
+                        <Button
+                            type="submit"
+                            disabled={!selected || form.processing}
+                        >
                             {t('polls.vote')}
                         </Button>
                     </form>

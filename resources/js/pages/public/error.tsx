@@ -26,7 +26,7 @@ export default function ErrorPage({ status }: PageProps) {
             <Head title={`${status} — ${title}`} />
 
             <div className="mx-auto flex max-w-xl flex-col items-center gap-4 py-16 text-center">
-                <AppEmblem className="size-20 mb-2" />
+                <AppEmblem className="mb-2 size-20" />
                 <p className="text-6xl font-semibold tracking-tight text-primary">
                     {status}
                 </p>

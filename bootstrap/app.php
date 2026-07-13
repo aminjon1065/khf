@@ -28,6 +28,21 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        // Shared hosting / panel TLS terminators forward the original scheme via
+        // X-Forwarded-*. Without this, HTTPS, secure cookies and HSTS look like HTTP.
+        $trustedProxies = env('TRUSTED_PROXIES');
+
+        if (is_string($trustedProxies) && $trustedProxies !== '') {
+            $middleware->trustProxies(
+                at: $trustedProxies === '*'
+                    ? '*'
+                    : array_values(array_filter(array_map(
+                        trim(...),
+                        explode(',', $trustedProxies),
+                    ))),
+            );
+        }
+
         // Security headers on every response (ТЗ §12.1/§12.2).
         $middleware->append(SecurityHeaders::class);
 

@@ -1,10 +1,11 @@
 import { Link } from '@inertiajs/react';
 import { Check, History } from 'lucide-react';
-import { type FormEvent, type ReactNode, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { CpAutosaveIndicator } from '@/components/admin/cp/autosave-indicator';
 import { Button } from '@/components/ui/button';
-import { useCmsFormShortcuts } from '@/hooks/use-cms-form-shortcuts';
 import type { AutosaveState } from '@/hooks/use-autosave';
+import { useCmsFormShortcuts } from '@/hooks/use-cms-form-shortcuts';
 import { cn } from '@/lib/utils';
 import { RevisionsSlideOver } from './revisions-slide-over';
 

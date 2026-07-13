@@ -49,15 +49,16 @@ export function SocialLinks({ links }: { links: SocialLink[] }) {
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label={t(
-                                    `footer.social.${link.platform}`,
-                                )}
+                                aria-label={t(`footer.social.${link.platform}`)}
                                 className="inline-flex size-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-brand-strong-foreground/80 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                             >
                                 {link.platform === 'x' ? (
                                     <XIcon className="size-4" />
                                 ) : Icon ? (
-                                    <Icon className="size-4" aria-hidden="true" />
+                                    <Icon
+                                        className="size-4"
+                                        aria-hidden="true"
+                                    />
                                 ) : null}
                             </a>
                         </li>

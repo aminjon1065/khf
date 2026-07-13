@@ -13,10 +13,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreTenderRequest;
 use App\Http\Requests\Admin\UpdateTenderRequest;
 use App\Models\Tender;
-use App\Support\HtmlSanitizer;
-use App\Support\PublicationScheduler;
+use App\Services\Admin\ContentEntryService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,7 +27,7 @@ class TenderController extends Controller
     use RedirectsToContentBrowser;
     use SavesContentRevisions;
 
-    public function __construct(private HtmlSanitizer $sanitizer) {}
+    public function __construct(private ContentEntryService $entries) {}
 
     public function index(): RedirectResponse
     {
@@ -48,20 +46,9 @@ class TenderController extends Controller
 
     public function store(StoreTenderRequest $request): RedirectResponse
     {
-        $data = PublicationScheduler::normalize($request->validated());
-
-        $tender = Tender::create([
-            'tender_number' => $data['tender_number'] ?? null,
-            'type' => $data['type'],
-            'status' => $data['status'],
-            'budget' => $data['budget'] ?? null,
-            'lots_count' => $data['lots_count'],
-            'published_at' => $data['published_at'] ?? null,
-            'unpublished_at' => $data['unpublished_at'] ?? null,
-            'deadline_at' => $data['deadline_at'] ?? null,
+        $this->entries->store('tender', $request->validated(), [
             'created_by' => $request->user()->id,
         ]);
-        $tender->upsertTranslations($this->translationsPayload($data));
         $this->flashContentSaved(__('Tender created.'));
 
         return $this->toContentBrowser('tender');
@@ -69,26 +56,12 @@ class TenderController extends Controller
 
     public function edit(Tender $tender): Response
     {
-        $tender->load('translations');
-
         return Inertia::render('admin/content/form', $this->formData($tender));
     }
 
     public function update(UpdateTenderRequest $request, Tender $tender): RedirectResponse
     {
-        $data = PublicationScheduler::normalize($request->validated());
-
-        $tender->update([
-            'tender_number' => $data['tender_number'] ?? null,
-            'type' => $data['type'],
-            'status' => $data['status'],
-            'budget' => $data['budget'] ?? null,
-            'lots_count' => $data['lots_count'],
-            'published_at' => $data['published_at'] ?? null,
-            'unpublished_at' => $data['unpublished_at'] ?? null,
-            'deadline_at' => $data['deadline_at'] ?? null,
-        ]);
-        $tender->upsertTranslations($this->translationsPayload($data));
+        $this->entries->update('tender', $tender, $request->validated());
         $this->flashContentSaved(__('Tender updated.'));
 
         return $this->toContentBrowser('tender');
@@ -114,63 +87,12 @@ class TenderController extends Controller
      */
     private function formData(?Tender $tender): array
     {
-        $translations = [];
-
-        if ($tender) {
-            foreach ($tender->translations as $translation) {
-                $translations[$translation->locale] = [
-                    'title' => $translation->title,
-                    'slug' => $translation->slug,
-                    'organizer' => $translation->organizer,
-                    'summary' => $translation->summary,
-                    'description' => $translation->description,
-                    'requirements' => $translation->requirements,
-                    'terms' => $translation->terms,
-                    'seo_title' => $translation->seo_title,
-                    'seo_description' => $translation->seo_description,
-                ];
-            }
-        }
-
         return $this->contentEntryFormProps(
             'tender',
-            $tender ? [
-                'id' => $tender->id,
-                'tender_number' => $tender->tender_number,
-                'type' => $tender->type->value,
-                'status' => $tender->status->value,
-                'budget' => $tender->budget,
-                'lots_count' => $tender->lots_count,
-                'published_at' => $tender->published_at?->format('Y-m-d\TH:i'),
-                'unpublished_at' => $tender->unpublished_at?->format('Y-m-d\TH:i'),
-                'deadline_at' => $tender->deadline_at?->format('Y-m-d'),
-                'translations' => $translations,
-            ] : null,
+            $tender ? $this->entries->entryArray($tender, 'tender') : null,
             [
                 'type' => TenderType::options(),
             ],
         );
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, array<string, mixed>>
-     */
-    private function translationsPayload(array $data): array
-    {
-        return collect($data['translations'] ?? [])
-            ->filter(fn (array $translation) => filled($translation['title'] ?? null))
-            ->map(fn (array $translation) => [
-                'title' => $translation['title'],
-                'slug' => $translation['slug'] ?? Str::tajikSlug($translation['title']),
-                'organizer' => $translation['organizer'] ?? null,
-                'summary' => $translation['summary'] ?? null,
-                'description' => $this->sanitizer->clean($translation['description'] ?? null),
-                'requirements' => $this->sanitizer->clean($translation['requirements'] ?? null),
-                'terms' => $this->sanitizer->clean($translation['terms'] ?? null),
-                'seo_title' => $translation['seo_title'] ?? null,
-                'seo_description' => $translation['seo_description'] ?? null,
-            ])
-            ->all();
     }
 }

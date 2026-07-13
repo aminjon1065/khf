@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\AppealCategory;
+use App\Rules\SafeFileUpload;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -32,7 +33,7 @@ class StoreAppealRequest extends FormRequest
             'subject' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:5000'],
             'attachments' => ['nullable', 'array', 'max:5'],
-            'attachments.*' => ['file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:5120'],
+            'attachments.*' => ['file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:5120', new SafeFileUpload],
             // Honeypot — must stay empty; bots that fill it are rejected (ТЗ §12.4 anti-spam).
             'website' => ['prohibited'],
         ];

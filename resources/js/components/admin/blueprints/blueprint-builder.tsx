@@ -1,3 +1,18 @@
+import {
+    DndContext,
+    KeyboardSensor,
+    PointerSensor,
+    closestCenter,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { Plus } from 'lucide-react';
 import { BlueprintFieldRow } from '@/components/admin/blueprints/blueprint-field-row';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,23 +37,8 @@ import {
     nextFieldIndex,
     removeSectionField,
     updateSectionField,
-    type BuilderSchema,
 } from '@/lib/blueprint-builder';
-import {
-    DndContext,
-    KeyboardSensor,
-    PointerSensor,
-    closestCenter,
-    useSensor,
-    useSensors,
-    type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    SortableContext,
-    sortableKeyboardCoordinates,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { Plus } from 'lucide-react';
+import type { BuilderSchema } from '@/lib/blueprint-builder';
 
 export function BlueprintBuilder({
     schema,
@@ -109,7 +109,9 @@ export function BlueprintBuilder({
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor={`section-${section.handle}-display`}>
+                            <Label
+                                htmlFor={`section-${section.handle}-display`}
+                            >
                                 Заголовок секции
                             </Label>
                             <Input

@@ -1,3 +1,4 @@
+import type { BlockComponentProps } from '@/components/Public/blocks/types';
 import {
     Table,
     TableBody,
@@ -6,7 +7,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type { BlockComponentProps } from '@/components/Public/blocks/types';
 
 export function TableBlock({ block }: BlockComponentProps) {
     const headers: string[] = block.data.headers ?? [];

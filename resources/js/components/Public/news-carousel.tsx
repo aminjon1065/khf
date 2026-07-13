@@ -139,7 +139,10 @@ export function NewsCarousel({
             onKeyDown={onKeyDown}
             className={`relative isolate overflow-hidden rounded-2xl border border-border bg-brand shadow-sm ${SLIDE_HEIGHT}`}
         >
-            <div aria-live={liveValue} className="relative h-full overflow-hidden">
+            <div
+                aria-live={liveValue}
+                className="relative h-full overflow-hidden"
+            >
                 <div
                     className={`flex h-full w-full will-change-transform ${
                         reducedMotion
@@ -183,7 +186,7 @@ export function NewsCarousel({
                                             </span>
                                         )}
                                         {post.published_at && (
-                                            <span className="normal-case tracking-normal text-white/85">
+                                            <span className="tracking-normal text-white/85 normal-case">
                                                 {post.published_at}
                                             </span>
                                         )}

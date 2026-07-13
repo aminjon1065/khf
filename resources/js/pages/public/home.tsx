@@ -36,7 +36,12 @@ type PageProps = {
     blocks?: any[];
 };
 
-export default function Home({ latestPosts, operational, mapIncidents = [], blocks }: PageProps) {
+export default function Home({
+    latestPosts,
+    operational,
+    mapIncidents = [],
+    blocks,
+}: PageProps) {
     const { locale, activeAlerts } = usePage().props as {
         locale: string;
         activeAlerts?: ActiveAlert[];
@@ -100,13 +105,32 @@ export default function Home({ latestPosts, operational, mapIncidents = [], bloc
 
             {blocks && blocks.length > 0 ? (
                 <section className="mt-12">
-                    <BlockRenderer blocks={blocks} latestPosts={latestPosts} />
+                    <BlockRenderer
+                        blocks={blocks}
+                        latestPosts={latestPosts
+                            .filter(
+                                (
+                                    p,
+                                ): p is NewsCard & {
+                                    slug: string;
+                                    title: string;
+                                } => Boolean(p.slug && p.title),
+                            )
+                            .map((p) => ({
+                                slug: p.slug,
+                                title: p.title,
+                                cover_url: p.cover_url,
+                            }))}
+                    />
                 </section>
             ) : (
                 <>
                     <section className="mt-12 grid gap-6 lg:grid-cols-4">
                         <div className="lg:col-span-3">
-                            <MapWidget locale={locale} incidents={mapIncidents} />
+                            <MapWidget
+                                locale={locale}
+                                incidents={mapIncidents}
+                            />
                         </div>
                         <div className="flex flex-col gap-6">
                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
@@ -166,7 +190,10 @@ export default function Home({ latestPosts, operational, mapIncidents = [], bloc
                                     <Link
                                         key={post.slug}
                                         href={
-                                            show({ locale, slug: post.slug ?? '' }).url
+                                            show({
+                                                locale,
+                                                slug: post.slug ?? '',
+                                            }).url
                                         }
                                         className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                                     >
@@ -184,7 +211,9 @@ export default function Home({ latestPosts, operational, mapIncidents = [], bloc
                                                     </span>
                                                 )}
                                                 {post.published_at && (
-                                                    <span>{post.published_at}</span>
+                                                    <span>
+                                                        {post.published_at}
+                                                    </span>
                                                 )}
                                             </div>
                                             <h3 className="text-xl leading-tight font-bold text-foreground transition-colors group-hover:text-primary">

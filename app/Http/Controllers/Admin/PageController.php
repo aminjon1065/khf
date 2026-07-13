@@ -6,7 +6,6 @@ use App\Enums\ContentStatus;
 use App\Http\Controllers\Admin\Concerns\AutosavesEditorialContent;
 use App\Http\Controllers\Admin\Concerns\BuildsCmsFormData;
 use App\Http\Controllers\Admin\Concerns\BuildsEditorialEntryFormProps;
-use App\Http\Controllers\Admin\Concerns\BuildsTranslationPayload;
 use App\Http\Controllers\Admin\Concerns\ManagesSoftDeletableContent;
 use App\Http\Controllers\Admin\Concerns\ProvidesBlueprintForm;
 use App\Http\Controllers\Admin\Concerns\PublishesWorkingCopy;
@@ -18,9 +17,8 @@ use App\Http\Requests\Admin\AutosavePageRequest;
 use App\Http\Requests\Admin\StorePageRequest;
 use App\Http\Requests\Admin\UpdatePageRequest;
 use App\Models\Page;
+use App\Services\Admin\ContentEntryService;
 use App\Services\Cms\TaxonomyService;
-use App\Support\BlockSanitizer;
-use App\Support\HtmlSanitizer;
 use App\Support\PreviewUrls;
 use App\Support\PublicContentUrls;
 use Illuminate\Database\Eloquent\Builder;
@@ -34,7 +32,6 @@ class PageController extends Controller
     use AutosavesEditorialContent;
     use BuildsCmsFormData;
     use BuildsEditorialEntryFormProps;
-    use BuildsTranslationPayload;
     use ManagesSoftDeletableContent;
     use ProvidesBlueprintForm;
     use PublishesWorkingCopy;
@@ -43,8 +40,7 @@ class PageController extends Controller
     use SyncsCoverFromLibrary;
 
     public function __construct(
-        private HtmlSanitizer $sanitizer,
-        private BlockSanitizer $blockSanitizer,
+        private ContentEntryService $entries,
         private TaxonomyService $taxonomies,
     ) {}
 
@@ -67,16 +63,10 @@ class PageController extends Controller
     {
         $data = $request->validated();
 
-        $page = Page::create([
-            'parent_id' => $data['parent_id'] ?? null,
-            'status' => $data['status'],
-            'sort_order' => $data['sort_order'] ?? 0,
-            'is_home' => $data['is_home'] ?? false,
-        ]);
+        /** @var Page $page */
+        $page = $this->entries->store('page', $data, saveRevision: false);
 
         $this->ensureSingleHomepage($page);
-
-        $page->upsertTranslations($this->translationsPayload($data));
         $this->taxonomies->syncForModel($page, $data);
         $this->syncCover($request, $page, Page::COVER_COLLECTION);
         $this->syncPublishedSnapshot(
@@ -102,16 +92,8 @@ class PageController extends Controller
         $data = $request->validated();
         $previousStatus = $page->status;
 
-        $page->update([
-            'parent_id' => $data['parent_id'] ?? null,
-            'status' => $data['status'],
-            'sort_order' => $data['sort_order'] ?? 0,
-            'is_home' => $data['is_home'] ?? false,
-        ]);
-
+        $this->entries->update('page', $page, $data, saveRevision: false);
         $this->ensureSingleHomepage($page);
-
-        $page->upsertTranslations($this->translationsPayload($data));
         $this->taxonomies->syncForModel($page, $data);
         $this->syncCover($request, $page, Page::COVER_COLLECTION);
         $this->syncPublishedSnapshot(
@@ -129,14 +111,8 @@ class PageController extends Controller
     {
         $data = $request->validated();
 
-        $page->update([
-            'parent_id' => $data['parent_id'] ?? null,
-            'sort_order' => $data['sort_order'] ?? 0,
-            'is_home' => $data['is_home'] ?? false,
-        ]);
-
+        $this->entries->update('page', $page, $data, saveRevision: false);
         $this->ensureSingleHomepage($page);
-        $page->upsertTranslations($this->translationsPayload($data));
         $this->taxonomies->syncForModel($page, $data);
 
         return $this->autosaveResponse($page);
@@ -179,33 +155,17 @@ class PageController extends Controller
      */
     private function formData(?Page $page): array
     {
-        $translations = [];
+        $entry = null;
 
         if ($page) {
-            foreach ($page->translations as $translation) {
-                $translations[$translation->locale] = [
-                    'title' => $translation->title,
-                    'slug' => $translation->slug,
-                    'content' => $translation->content,
-                    'blocks' => $translation->blocks ?? [],
-                    'seo_title' => $translation->seo_title,
-                    'seo_description' => $translation->seo_description,
-                ];
-            }
+            $entry = $this->entries->entryArray($page, 'page');
+            $entry['tag_ids'] = $page->tags->pluck('id')->all();
+            $entry['cover_url'] = $page->getFirstMediaUrl(Page::COVER_COLLECTION, 'thumb') ?: null;
         }
 
         return $this->editorialEntryFormProps(
             'page',
-            $page ? [
-                'id' => $page->id,
-                'parent_id' => $page->parent_id,
-                'status' => $page->status->value,
-                'sort_order' => $page->sort_order,
-                'is_home' => $page->is_home,
-                'tag_ids' => $page->tags->pluck('id')->all(),
-                'cover_url' => $page->getFirstMediaUrl(Page::COVER_COLLECTION, 'thumb') ?: null,
-                'translations' => $translations,
-            ] : null,
+            $entry,
             array_merge(
                 [
                     'parent_id' => Page::query()
@@ -222,22 +182,6 @@ class PageController extends Controller
                 'previewUrls' => $page ? app(PreviewUrls::class)->forPage($page->id) : [],
                 'hasUnpublishedChanges' => $page?->hasUnpublishedChanges() ?? false,
                 'blocksetHandle' => 'page',
-            ],
-        );
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, array<string, mixed>>
-     */
-    private function translationsPayload(array $data): array
-    {
-        return $this->buildTranslationPayload(
-            $data,
-            fn (array $translation) => [
-                ...$this->baseTranslationFields($translation, $this->sanitizer),
-                'content' => $this->sanitizedHtml($translation['content'] ?? null, $this->sanitizer),
-                'blocks' => $this->blockSanitizer->sanitize($translation['blocks'] ?? null),
             ],
         );
     }

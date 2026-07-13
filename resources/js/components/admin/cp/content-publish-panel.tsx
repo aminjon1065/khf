@@ -110,9 +110,7 @@ export function CpContentPublishPanel({
                                     status === transition.value &&
                                         'pointer-events-none opacity-50',
                                 )}
-                                onClick={() =>
-                                    onStatusChange(transition.value)
-                                }
+                                onClick={() => onStatusChange(transition.value)}
                             >
                                 {transition.label}
                             </Button>

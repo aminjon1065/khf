@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\SafeFileUpload;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -30,7 +31,7 @@ class StoreVacancyApplicationRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'cover_letter' => ['nullable', 'string', 'max:5000'],
-            'resume' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
+            'resume' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120', new SafeFileUpload],
             // Honeypot — must stay empty; bots that fill it are rejected (ТЗ §12.4 anti-spam).
             'website' => ['prohibited'],
         ];

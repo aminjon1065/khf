@@ -12,9 +12,8 @@ use App\Http\Requests\Admin\StorePollRequest;
 use App\Http\Requests\Admin\UpdatePollRequest;
 use App\Models\Poll;
 use App\Models\PollOption;
-use App\Support\HtmlSanitizer;
+use App\Services\Admin\ContentEntryService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,7 +24,7 @@ class PollController extends Controller
     use ProvidesBlueprintForm;
     use RedirectsToContentBrowser;
 
-    public function __construct(private HtmlSanitizer $sanitizer) {}
+    public function __construct(private ContentEntryService $entries) {}
 
     public function index(): RedirectResponse
     {
@@ -40,17 +39,7 @@ class PollController extends Controller
     public function store(StorePollRequest $request): RedirectResponse
     {
         $data = $request->validated();
-
-        $poll = Poll::create([
-            'type' => $data['type'],
-            'status' => $data['status'],
-            'starts_at' => filled($data['starts_at'] ?? null) ? $data['starts_at'] : null,
-            'ends_at' => filled($data['ends_at'] ?? null) ? $data['ends_at'] : null,
-            'show_results' => (bool) ($data['show_results'] ?? true),
-            'sort_order' => $data['sort_order'] ?? 0,
-        ]);
-
-        $poll->upsertTranslations($this->translationsPayload($data));
+        $poll = $this->entries->store('poll', $data);
         $this->syncOptions($poll, $data['options'] ?? []);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Poll created.')]);
@@ -68,17 +57,7 @@ class PollController extends Controller
     public function update(UpdatePollRequest $request, Poll $poll): RedirectResponse
     {
         $data = $request->validated();
-
-        $poll->update([
-            'type' => $data['type'],
-            'status' => $data['status'],
-            'starts_at' => filled($data['starts_at'] ?? null) ? $data['starts_at'] : null,
-            'ends_at' => filled($data['ends_at'] ?? null) ? $data['ends_at'] : null,
-            'show_results' => (bool) ($data['show_results'] ?? true),
-            'sort_order' => $data['sort_order'] ?? 0,
-        ]);
-
-        $poll->upsertTranslations($this->translationsPayload($data));
+        $this->entries->update('poll', $poll, $data);
         $this->syncOptions($poll, $data['options'] ?? []);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Poll updated.')]);
@@ -88,7 +67,7 @@ class PollController extends Controller
 
     public function destroy(Poll $poll): RedirectResponse
     {
-        $poll->delete();
+        $this->entries->destroy('poll', $poll);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Poll deleted.')]);
 
@@ -100,19 +79,16 @@ class PollController extends Controller
      */
     private function formData(?Poll $poll): array
     {
-        $translations = [];
-        $options = [];
+        $entry = null;
 
         if ($poll) {
-            foreach ($poll->translations as $translation) {
-                $translations[$translation->locale] = [
-                    'title' => $translation->title,
-                    'description' => $translation->description,
-                    'slug' => $translation->slug,
-                ];
-            }
+            $entry = $this->entries->entryArray($poll, 'poll');
+            $entry['starts_at'] = $poll->starts_at?->format('Y-m-d\TH:i');
+            $entry['ends_at'] = $poll->ends_at?->format('Y-m-d\TH:i');
+            $entry['total_votes'] = $poll->totalVotes();
 
             $voteCounts = $poll->voteCounts();
+            $options = [];
 
             foreach ($poll->options as $option) {
                 $optionTranslations = [];
@@ -130,44 +106,17 @@ class PollController extends Controller
                     'translations' => $optionTranslations,
                 ];
             }
+
+            $entry['options'] = $options;
         }
 
         return $this->contentEntryFormProps(
             'poll',
-            $poll ? [
-                'id' => $poll->id,
-                'type' => $poll->type->value,
-                'status' => $poll->status->value,
-                'starts_at' => $poll->starts_at?->format('Y-m-d\TH:i'),
-                'ends_at' => $poll->ends_at?->format('Y-m-d\TH:i'),
-                'show_results' => $poll->show_results,
-                'sort_order' => $poll->sort_order,
-                'total_votes' => $poll->totalVotes(),
-                'translations' => $translations,
-                'options' => $options,
-            ] : null,
+            $entry,
             [
                 'type' => PollType::options(),
             ],
         );
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, array<string, mixed>>
-     */
-    private function translationsPayload(array $data): array
-    {
-        return collect($data['translations'] ?? [])
-            ->filter(fn (array $translation) => filled($translation['title'] ?? null))
-            ->map(fn (array $translation, string $locale) => [
-                'title' => $translation['title'],
-                'description' => $this->sanitizer->clean($translation['description'] ?? null),
-                'slug' => filled($translation['slug'] ?? null)
-                    ? $translation['slug']
-                    : Str::tajikSlug($translation['title']).'-'.$locale,
-            ])
-            ->all();
     }
 
     /**

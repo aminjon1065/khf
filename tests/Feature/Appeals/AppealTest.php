@@ -116,6 +116,17 @@ it('accepts file attachments', function () {
     expect($appeal->getMedia(Appeal::ATTACHMENTS_COLLECTION))->toHaveCount(1);
 });
 
+it('rejects executable appeal attachments', function () {
+    Storage::fake('local');
+    $file = UploadedFile::fake()->create('shell.php', 100, 'application/x-httpd-php');
+
+    $this->post(route('appeals.store', ['locale' => 'tj']), appealForm([
+        'attachments' => [$file],
+    ]))->assertSessionHasErrors('attachments.0');
+
+    expect(Appeal::count())->toBe(0);
+});
+
 it('exports appeals to csv', function () {
     $moderator = User::factory()->withTwoFactor()->create();
     $moderator->assignRole(Role::Moderator->value);

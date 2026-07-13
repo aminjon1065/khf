@@ -4,7 +4,11 @@ import React from 'react';
  * Official State Flag of the Republic of Tajikistan (Resolution №499).
  * Ratios: 2:3:2 (Red, White, Green) stripes, with a golden crown and seven stars arc in the center.
  */
-export function TajikistanFlag({ className = 'w-12 h-6' }: { className?: string }) {
+export function TajikistanFlag({
+    className = 'w-12 h-6',
+}: {
+    className?: string;
+}) {
     return (
         <svg
             viewBox="0 0 14 7"
@@ -25,7 +29,7 @@ export function TajikistanFlag({ className = 'w-12 h-6' }: { className?: string 
                 {/* Crown Base */}
                 <path d="M-45 35 L45 35 L33 5 L-33 5 Z" />
                 <rect x="-25" y="-1" width="50" height="5" />
-                
+
                 {/* Crown Arches */}
                 <path d="M-45 5 C-45 -35, -15 -65, 0 -65 C15 -65, 45 -35, 45 5 C40 -10, 25 -20, 10 -20 C-10 -20, -10 5, -10 5 C-10 5, -10 -20, -30 -20 C-40 -20, -42 -10, -45 5 Z" />
                 <circle cx="0" cy="-75" r="8" />

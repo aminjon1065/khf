@@ -14,11 +14,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGuideRequest;
 use App\Http\Requests\Admin\UpdateGuideRequest;
 use App\Models\Guide;
-use App\Models\GuideTranslation;
-use App\Support\HtmlSanitizer;
+use App\Services\Admin\ContentEntryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -31,7 +29,7 @@ class GuideController extends Controller
     use RedirectsToContentBrowser;
     use SavesContentRevisions;
 
-    public function __construct(private HtmlSanitizer $sanitizer) {}
+    public function __construct(private ContentEntryService $entries) {}
 
     public function index(): RedirectResponse
     {
@@ -50,12 +48,8 @@ class GuideController extends Controller
 
     public function store(StoreGuideRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-
-        $guide = Guide::create($this->attributes($data));
-        $guide->upsertTranslations($this->translationsPayload($data, $guide->id));
+        $guide = $this->entries->store('guide', $request->validated());
         $this->syncFiles($request, $guide);
-        $this->saveContentRevision($guide);
         $this->flashContentSaved(__('Guide created.'));
 
         return $this->toContentBrowser('guide');
@@ -63,19 +57,15 @@ class GuideController extends Controller
 
     public function edit(Guide $guide): Response
     {
-        $guide->load(['translations', 'media']);
+        $guide->loadMissing('media');
 
         return Inertia::render('admin/content/form', $this->formData($guide));
     }
 
     public function update(UpdateGuideRequest $request, Guide $guide): RedirectResponse
     {
-        $data = $request->validated();
-
-        $guide->update($this->attributes($data));
-        $guide->upsertTranslations($this->translationsPayload($data, $guide->id));
+        $this->entries->update('guide', $guide, $request->validated());
         $this->syncFiles($request, $guide);
-        $this->saveContentRevision($guide);
         $this->flashContentSaved(__('Guide updated.'));
 
         return $this->toContentBrowser('guide');
@@ -112,38 +102,16 @@ class GuideController extends Controller
     }
 
     /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
-     */
-    private function attributes(array $data): array
-    {
-        return [
-            'hazard_type' => filled($data['hazard_type'] ?? null) ? $data['hazard_type'] : null,
-            'audience' => $data['audience'],
-            'status' => $data['status'],
-            'sort_order' => $data['sort_order'] ?? 0,
-        ];
-    }
-
-    /**
      * @return array<string, mixed>
      */
     private function formData(?Guide $guide): array
     {
-        $translations = [];
+        $entry = null;
         $files = [];
 
         if ($guide) {
-            foreach ($guide->translations as $translation) {
-                $translations[$translation->locale] = [
-                    'title' => $translation->title,
-                    'slug' => $translation->slug,
-                    'summary' => $translation->summary,
-                    'content' => $translation->content,
-                    'seo_title' => $translation->seo_title,
-                    'seo_description' => $translation->seo_description,
-                ];
-            }
+            $entry = $this->entries->entryArray($guide, 'guide');
+            $entry['hazard_type'] = $entry['hazard_type'] ?? '';
 
             $files = $guide->getMedia(Guide::FILES_COLLECTION)
                 ->map(fn ($media) => [
@@ -161,14 +129,7 @@ class GuideController extends Controller
 
         return $this->contentEntryFormProps(
             'guide',
-            $guide ? [
-                'id' => $guide->id,
-                'hazard_type' => $guide->hazard_type?->value ?? '',
-                'audience' => $guide->audience->value,
-                'status' => $guide->status->value,
-                'sort_order' => $guide->sort_order,
-                'translations' => $translations,
-            ] : null,
+            $entry,
             [
                 'hazard_type' => array_merge(
                     [['value' => '', 'label' => 'Без привязки']],
@@ -183,52 +144,5 @@ class GuideController extends Controller
                 'existingFiles' => $files,
             ],
         );
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, array<string, mixed>>
-     */
-    private function translationsPayload(array $data, ?int $guideId): array
-    {
-        return collect($data['translations'] ?? [])
-            ->filter(fn (array $translation) => filled($translation['title'] ?? null))
-            ->map(fn (array $translation, string $locale) => [
-                'title' => $translation['title'],
-                'slug' => $this->uniqueSlug(
-                    filled($translation['slug'] ?? null) ? $translation['slug'] : Str::tajikSlug($translation['title']),
-                    $locale,
-                    $guideId,
-                ),
-                'summary' => $translation['summary'] ?? null,
-                'content' => $this->sanitizer->clean($translation['content'] ?? null),
-                'seo_title' => $translation['seo_title'] ?? null,
-                'seo_description' => $translation['seo_description'] ?? null,
-            ])
-            ->all();
-    }
-
-    /**
-     * Guarantee a (locale, slug) unique slug — auto-generated slugs can collapse to the same value
-     * (e.g. Tajik titles that `Str::slug` strips to empty), which the DB unique index would reject.
-     * Empty bases fall back to `guide`, and collisions get a numeric suffix.
-     */
-    private function uniqueSlug(string $base, string $locale, ?int $exceptGuideId): string
-    {
-        $base = $base !== '' ? $base : 'guide';
-        $slug = $base;
-        $suffix = 2;
-
-        while (GuideTranslation::query()
-            ->where('locale', $locale)
-            ->where('slug', $slug)
-            ->when($exceptGuideId !== null, fn ($query) => $query->where('guide_id', '!=', $exceptGuideId))
-            ->exists()
-        ) {
-            $slug = $base.'-'.$suffix;
-            $suffix++;
-        }
-
-        return $slug;
     }
 }

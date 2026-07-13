@@ -1,19 +1,19 @@
 blocks:
-  text:
-    label: Текст
-    defaults:
-      content: ''
-  accordion:
-    label: Аккордеон
-    defaults:
-      items:
-        - title: ''
-          content: ''
-  contacts:
-    label: Контакты
-    defaults:
-      heading: ''
-      address: ''
-      phone: ''
-      email: ''
-      hours: ''
+    text:
+        label: Текст
+        defaults:
+            content: ''
+    accordion:
+        label: Аккордеон
+        defaults:
+            items:
+                - title: ''
+                  content: ''
+    contacts:
+        label: Контакты
+        defaults:
+            heading: ''
+            address: ''
+            phone: ''
+            email: ''
+            hours: ''

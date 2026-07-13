@@ -212,17 +212,95 @@ Workflow `.github/workflows/deploy.yml` (ручной запуск **Actions →
 - Сертификат покрывает `khf.tj` и `www.khf.tj`
 - `APP_URL` использует `https://`
 - Редирект HTTP→HTTPS включён на уровне хостинга
+- `TRUSTED_PROXIES=*` (или IP edge-прокси) — иначе Laravel видит HTTP за TLS-терминатором,
+  и secure cookies / HSTS / `URL::forceScheme` работают некорректно
+- `SESSION_SECURE_COOKIE=true` на HTTPS-окружениях
 
 ---
 
-## 9. UAT на staging (§18.1)
+## 9. Legacy 301 redirects (§15.1)
 
-Чеклист перед production:
+Механизм редиректов уже в коде (`LegacyRedirects` + таблица `redirects` + `config/redirects.php`).
+Перед запуском нужно заполнить карту старых URL с kchs.tj / khf.tj.
+
+**Вариант A — CSV (рекомендуется для bulk):**
+
+1. Скопируйте шаблон `database/data/legacy-redirects.example.csv`
+2. Заполните колонки `from_path,to_url` (опционально `status_code`, `notes`)
+3. Импортируйте:
+   ```bash
+   php artisan redirects:import path/to/legacy-redirects.csv
+   php artisan redirects:import path/to/legacy-redirects.csv --dry-run
+   php artisan redirects:import path/to/legacy-redirects.csv --skip-existing
+   ```
+4. Проверьте пару URL вручную (`curl -I https://khf.tj/tj/node/123`)
+
+**Вариант B — статичный config:** правки в `config/redirects.php` (деплой-тайм, без админки).
+
+**Вариант C — админка:** `/admin/redirects` для точечных правок. При конфликте **DB побеждает config**.
+
+---
+
+## 10. UAT на staging (§18.1)
+
+### 10.1 Автоматический smoke (после деплоя)
+
+На сервере staging (или с машины с доступом к URL):
+
+```bash
+php artisan deploy:env-check --env=staging
+php artisan deploy:smoke --http --base-url="$APP_URL"
+# локальный Laragon/Herd (.test self-signed):
+php artisan deploy:smoke --http --base-url="https://khf.test"
+# подробный health (БД/кеш/очередь):
+curl -fsS "$APP_URL/health?token=$HEALTH_CHECK_TOKEN" | jq .
+```
+
+Для `.test` / localhost TLS verification отключается автоматически; на боевом HTTPS
+используйте валидный сертификат без `--insecure`.
+
+Локально / в CI без HTTP:
+
+```bash
+php artisan deploy:smoke --in-process
+```
+
+Команда проверяет `/up`, `/health`, `sitemap.xml`, `robots.txt`, CSRF meta + CSP на главной,
+и ключевые публичные маршруты для `tj` / `ru` / `en` (новости, карта, инциденты, поиск,
+обращения, подписка, вакансии, тендеры, гайды, FAQ, контакты и др.).
+
+### 10.2 Ручной чеклист перед production
+
+**Инфра**
+
+```bash
+# TLS и proxy
+curl -sI https://staging.example/tj | grep -iE 'HTTP/|strict-transport|content-security'
+# ожидается: HTTP/2 200, HSTS, CSP
+
+php artisan about
+php artisan schedule:list
+php artisan queue:failed
+php artisan storage:link   # если ещё не сделано
+```
+
+**Мониторинг**
+
+```bash
+curl -fsS "$APP_URL/up"
+curl -fsS "$APP_URL/health"
+curl -fsS "$APP_URL/health?token=$HEALTH_CHECK_TOKEN"
+```
+
+**Контент / i18n**
 
 - [ ] `deploy:env-check --env=staging` проходит
-- [ ] Все 3 языка (tj/ru/en) открываются
+- [ ] `deploy:smoke --http` проходит
+- [ ] Все 3 языка (tj/ru/en) открываются в браузере, меню и футер на месте
 - [ ] CMS: создание/публикация новости, оповещения, инцидента
-- [ ] Web push: подписка + тестовое оповещение (VAPID staging)
-- [ ] Карта, поиск, обращения, подписка на email
-- [ ] `/health?token=…` — все checks `ok`
-- [ ] Cron `schedule:run` активен, очередь дренируется
+- [ ] Web push: подписка на `/tj/subscribe` + тестовое оповещение (VAPID staging)
+- [ ] Карта (фильтры), поиск, обращения + вложение, email-подписка
+- [ ] Matomo: pageview без CSP violations в DevTools
+- [ ] Legacy 301: импортирована карта URL, выборочная проверка (`curl -I`)
+- [ ] Cron `* * * * * php artisan schedule:run` активен, очередь дренируется
+- [ ] Backup: есть свежий dump БД + `storage/app`; пробный restore на копии

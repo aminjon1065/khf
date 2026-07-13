@@ -1,0 +1,4 @@
+from_path,to_url,status_code,notes
+tj/node/123,/tj/news/example-slug,301,Drupal node → news (example)
+ru/about-us,/ru/pages/about,301,Legacy about page (example)
+/en/old-faq,/en/faq,301,Leading slash normalized on import

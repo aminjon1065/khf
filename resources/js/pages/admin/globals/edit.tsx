@@ -14,7 +14,7 @@ type GlobalMeta = {
 
 type PageProps = {
     global: GlobalMeta;
-    fields: Record<string, string>;
+    fields: Record<string, unknown>;
     blueprint: BlueprintDefinition;
 };
 
@@ -37,8 +37,8 @@ function mapFieldErrors(
 }
 
 export default function GlobalEdit({ global, fields, blueprint }: PageProps) {
-    const form = useForm({
-        fields: { ...fields },
+    const form = useForm<Record<string, any>>({
+        fields: { ...fields } as Record<string, any>,
     });
 
     const errors = mapFieldErrors(form.errors as Record<string, string>);

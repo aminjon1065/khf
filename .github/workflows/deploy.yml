@@ -92,4 +92,4 @@ jobs:
       #     chmod 600 deploy_key
       #     scp -i deploy_key -o StrictHostKeyChecking=no khf-release.tar.gz "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
       #     ssh -i deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
-      #       "cd $DEPLOY_PATH && tar xzf khf-release.tar.gz && php artisan migrate --force && php artisan optimize"
+      #       "cd $DEPLOY_PATH && tar xzf khf-release.tar.gz && php artisan migrate --force && php artisan optimize && php artisan deploy:smoke --http"

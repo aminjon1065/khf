@@ -2,13 +2,13 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { CalendarClock, CheckCircle2, Layers, Tag, Wallet } from 'lucide-react';
 import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
+import { MissingTranslationAlert } from '@/components/Public/missing-translation-alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/hooks/use-translations';
 import { bid, index as tendersIndex, track } from '@/routes/tenders';
-import { MissingTranslationAlert } from '@/components/Public/missing-translation-alert';
 
 type Tender = {
     id: number;
@@ -26,6 +26,7 @@ type Tender = {
     updated_at: string | null;
     deadline_at: string | null;
     is_open: boolean;
+    locale?: string;
 };
 
 type PageProps = {
@@ -67,7 +68,9 @@ export default function TenderShow({ tender, submittedReference }: PageProps) {
         <>
             <Head title={tender.title} />
 
-            {tender.locale && <MissingTranslationAlert contentLocale={tender.locale} />}
+            {tender.locale && (
+                <MissingTranslationAlert contentLocale={tender.locale} />
+            )}
 
             <div className="grid gap-10 lg:grid-cols-[1fr_380px]">
                 {/* Left col: Details */}

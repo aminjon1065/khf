@@ -39,8 +39,8 @@ export function FocalPointPicker({
     return (
         <div className={cn('space-y-2', className)}>
             <p className="text-xs text-muted-foreground">
-                Кликните по изображению, чтобы задать точку фокуса для обрезки
-                и превью.
+                Кликните по изображению, чтобы задать точку фокуса для обрезки и
+                превью.
             </p>
             <div
                 role="button"
@@ -58,7 +58,9 @@ export function FocalPointPicker({
                     src={imageUrl}
                     alt=""
                     className="max-h-56 w-full object-cover"
-                    style={{ objectPosition: mediaFocalPosition(focalX, focalY) }}
+                    style={{
+                        objectPosition: mediaFocalPosition(focalX, focalY),
+                    }}
                     draggable={false}
                 />
                 <span

@@ -242,6 +242,9 @@ return [
         'layer_risk_zones' => 'Risk zones',
         'layer_incidents' => 'Incidents by type',
         'unit_title' => 'KCHS — :region',
+        'unavailable_title' => 'Map unavailable',
+        'unavailable_webgl' => 'Your browser does not support WebGL, which is required for the interactive map. Update your browser or enable hardware acceleration.',
+        'unavailable_error' => 'The map could not be loaded. Check your network connection and try refreshing the page.',
     ],
     'documents' => [
         'title' => 'Documents',

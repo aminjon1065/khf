@@ -37,6 +37,10 @@ it('renders the map with active incidents that have coordinates', function () {
             ->has('units')
             ->has('riskZones.features')
             ->has('incidentTypes', count(IncidentType::cases()))
+            ->where('map.tileUrl', config('map.tiles.url'))
+            ->where('map.attribution', config('map.tiles.attribution'))
+            ->has('map.tileSize')
+            ->has('map.glyphsUrl')
         );
 });
 

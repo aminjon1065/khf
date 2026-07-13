@@ -1,8 +1,8 @@
-import { BlueprintBuilder } from '@/components/admin/blueprints/blueprint-builder';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, Eye } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useMemo, useState } from 'react';
+import { BlueprintBuilder } from '@/components/admin/blueprints/blueprint-builder';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,8 +18,8 @@ import {
     stripBuilderIds,
     validateBuilderSchema,
     withBuilderIds,
-    type BuilderSchema,
 } from '@/lib/blueprint-builder';
+import type { BuilderSchema } from '@/lib/blueprint-builder';
 import { dashboard } from '@/routes/admin';
 import { index as blueprintsIndex, update } from '@/routes/admin/blueprints';
 import type { BlueprintDefinition } from '@/types/cms';
@@ -150,8 +150,12 @@ export default function BlueprintEdit({
                             ) : null}
                             <InputError
                                 message={
-                                    (builderForm.errors as Record<string, string>)
-                                        .schema
+                                    (
+                                        builderForm.errors as Record<
+                                            string,
+                                            string
+                                        >
+                                    ).schema
                                 }
                             />
 
@@ -193,7 +197,9 @@ export default function BlueprintEdit({
                                         className="font-mono text-xs leading-relaxed"
                                         spellCheck={false}
                                     />
-                                    <InputError message={yamlForm.errors.yaml} />
+                                    <InputError
+                                        message={yamlForm.errors.yaml}
+                                    />
                                 </CardContent>
                             </Card>
 

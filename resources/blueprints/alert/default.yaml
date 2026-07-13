@@ -1,42 +1,42 @@
 title: Оповещение
 sections:
-  main:
-    display: Содержание
-    fields:
-      - handle: title
-        type: text
-        display: Заголовок
-        localizable: true
-        required: true
-      - handle: body
-        type: textarea
-        display: Текст оповещения
-        localizable: true
-        rows: 4
-        max: 2000
-  sidebar:
-    display: Публикация
-    fields:
-      - handle: status
-        type: select
-        display: Статус
-        required: true
-      - handle: hazard_level
-        type: select
-        display: Уровень опасности
-        required: true
-      - handle: region_id
-        type: entries
-        display: Регион
-        collection: regions
-        max: 1
-        instructions: Оставьте пустым для всей страны
-      - handle: starts_at
-        type: date
-        display: Начало действия
-      - handle: ends_at
-        type: date
-        display: Окончание действия
-      - handle: is_dismissible
-        type: toggle
-        display: Можно закрыть
+    main:
+        display: Содержание
+        fields:
+            - handle: title
+              type: text
+              display: Заголовок
+              localizable: true
+              required: true
+            - handle: body
+              type: textarea
+              display: Текст оповещения
+              localizable: true
+              rows: 4
+              max: 2000
+    sidebar:
+        display: Публикация
+        fields:
+            - handle: status
+              type: select
+              display: Статус
+              required: true
+            - handle: hazard_level
+              type: select
+              display: Уровень опасности
+              required: true
+            - handle: region_id
+              type: entries
+              display: Регион
+              collection: regions
+              max: 1
+              instructions: Оставьте пустым для всей страны
+            - handle: starts_at
+              type: date
+              display: Начало действия
+            - handle: ends_at
+              type: date
+              display: Окончание действия
+            - handle: is_dismissible
+              type: toggle
+              display: Можно закрыть

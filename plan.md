@@ -272,7 +272,7 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 - [x] Goal tracking: subscriptions / tourist / appeals (§15.2) — `config/matomo.php` + shared `matomo` Inertia props + `useMatomoGoal` on subscribe (pending), appeals & tourist success screens; `trackGoal` when goal IDs set, `trackEvent` fallback otherwise — `MatomoGoalsTest`
 - [x] sitemap.xml (with language versions) + robots.txt (§15.1)
 - [x] schema.org markup (Organization, NewsArticle) (§15.1)
-- [~] 301 redirect **mechanism** done & tested (`LegacyRedirects` middleware + `fallback`), but the legacy kchs.tj/khf.tj **URL map is empty** (`config/redirects.php` has only commented examples) — must be populated before launch (§15.1)
+- [~] 301 redirect **mechanism** done & tested (`LegacyRedirects` middleware + `fallback`), bulk CSV import via `php artisan redirects:import` + `database/data/legacy-redirects.example.csv` — **populate the real kchs.tj/khf.tj URL map before launch** (§15.1)
 - [x] Social account links/widgets (data/perf-safe) (§6.12, §15.3) — `config/social.php` + env URLs; outbound icon links in public footer (`SocialLinks` component, no embeds); shared via Inertia — `SocialLinksTest`
 - [x] Tests: sitemap generation, redirects, structured data presence
 

@@ -1,79 +1,79 @@
 title: Вакансия
 sections:
-  main:
-    display: Содержание
-    fields:
-      - handle: title
-        type: text
-        display: Название
-        localizable: true
-        required: true
-      - handle: slug
-        type: slug
-        display: ЧПУ (slug)
-        localizable: true
-      - handle: department
-        type: text
-        display: Подразделение
-        localizable: true
-      - handle: location
-        type: text
-        display: Место работы
-        localizable: true
-      - handle: salary
-        type: text
-        display: Зарплата
-        localizable: true
-      - handle: summary
-        type: textarea
-        display: Краткое описание
-        localizable: true
-        rows: 2
-        max: 500
-      - handle: description
-        type: rich_text
-        display: Описание
-        localizable: true
-      - handle: requirements
-        type: rich_text
-        display: Требования
-        localizable: true
-      - handle: responsibilities
-        type: rich_text
-        display: Обязанности
-        localizable: true
-      - handle: seo_title
-        type: text
-        display: SEO заголовок
-        localizable: true
-      - handle: seo_description
-        type: textarea
-        display: SEO описание
-        localizable: true
-        rows: 2
-        max: 500
-  sidebar:
-    display: Публикация
-    fields:
-      - handle: status
-        type: status
-        display: Статус
-      - handle: employment_type
-        type: select
-        display: Тип занятости
-        required: true
-      - handle: positions_count
-        type: number
-        display: Количество мест
-        required: true
-        min: 1
-        max: 1000
-      - handle: published_at
-        type: date
-        display: Дата публикации
-      - handle: unpublished_at
-        type: date
-        display: Дата снятия
-      - handle: deadline_at
-        type: date
-        display: Срок подачи заявок
+    main:
+        display: Содержание
+        fields:
+            - handle: title
+              type: text
+              display: Название
+              localizable: true
+              required: true
+            - handle: slug
+              type: slug
+              display: ЧПУ (slug)
+              localizable: true
+            - handle: department
+              type: text
+              display: Подразделение
+              localizable: true
+            - handle: location
+              type: text
+              display: Место работы
+              localizable: true
+            - handle: salary
+              type: text
+              display: Зарплата
+              localizable: true
+            - handle: summary
+              type: textarea
+              display: Краткое описание
+              localizable: true
+              rows: 2
+              max: 500
+            - handle: description
+              type: rich_text
+              display: Описание
+              localizable: true
+            - handle: requirements
+              type: rich_text
+              display: Требования
+              localizable: true
+            - handle: responsibilities
+              type: rich_text
+              display: Обязанности
+              localizable: true
+            - handle: seo_title
+              type: text
+              display: SEO заголовок
+              localizable: true
+            - handle: seo_description
+              type: textarea
+              display: SEO описание
+              localizable: true
+              rows: 2
+              max: 500
+    sidebar:
+        display: Публикация
+        fields:
+            - handle: status
+              type: status
+              display: Статус
+            - handle: employment_type
+              type: select
+              display: Тип занятости
+              required: true
+            - handle: positions_count
+              type: number
+              display: Количество мест
+              required: true
+              min: 1
+              max: 1000
+            - handle: published_at
+              type: date
+              display: Дата публикации
+            - handle: unpublished_at
+              type: date
+              display: Дата снятия
+            - handle: deadline_at
+              type: date
+              display: Срок подачи заявок

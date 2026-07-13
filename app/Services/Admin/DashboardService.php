@@ -1,0 +1,309 @@
+<?php
+
+namespace App\Services\Admin;
+
+use App\Enums\AlertStatus;
+use App\Enums\AppealStatus;
+use App\Enums\ContentStatus;
+use App\Enums\IncidentStatus;
+use App\Enums\Permission;
+use App\Enums\SubscriptionStatus;
+use App\Models\Alert;
+use App\Models\Appeal;
+use App\Models\Document;
+use App\Models\Guide;
+use App\Models\Incident;
+use App\Models\Language;
+use App\Models\Page;
+use App\Models\Post;
+use App\Models\Subscriber;
+use App\Models\TouristGroup;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Spatie\Permission\Models\Role;
+
+/**
+ * Permission-gated operational overview for the CMS dashboard (ТЗ §7).
+ */
+class DashboardService
+{
+    public function __construct(private ModerationQueueService $moderationQueue) {}
+
+    /**
+     * @return array{
+     *     stats: array<string, mixed>,
+     *     recentAppeals: list<array<string, mixed>>,
+     *     recentIncidents: list<array<string, mixed>>,
+     *     editorial: array<string, mixed>|null
+     * }
+     */
+    public function payload(?User $user, string $locale): array
+    {
+        $can = fn (Permission $permission): bool => (bool) $user?->can($permission->value);
+
+        return [
+            'stats' => [
+                'appeals' => $can(Permission::ViewAppeals) ? $this->appealStats() : null,
+                'incidents' => $can(Permission::ViewIncidents) ? $this->incidentStats() : null,
+                'alerts' => $can(Permission::ViewAlerts) ? $this->alertStats() : null,
+                'touristGroups' => $can(Permission::ViewTouristGroups) ? $this->touristGroupStats() : null,
+                'subscribers' => $can(Permission::ViewSubscribers) ? $this->subscriberStats() : null,
+                'content' => $can(Permission::ViewPosts) ? $this->contentStats() : null,
+                'system' => $can(Permission::ViewUsers) ? $this->systemStats() : null,
+            ],
+            'recentAppeals' => $can(Permission::ViewAppeals) ? $this->recentAppeals() : [],
+            'recentIncidents' => $can(Permission::ViewIncidents) ? $this->recentIncidents($locale) : [],
+            'editorial' => $this->editorialOverview($can, $locale),
+        ];
+    }
+
+    /**
+     * @param  callable(Permission): bool  $can
+     * @return array<string, mixed>|null
+     */
+    private function editorialOverview(callable $can, string $locale): ?array
+    {
+        if (! $can(Permission::ViewPosts) && ! $can(Permission::ViewPages)) {
+            return null;
+        }
+
+        return [
+            'moderation_queue' => $can(Permission::ViewModeration)
+                ? $this->moderationQueue->count()
+                : null,
+            'recent_updates' => $this->recentEditorialUpdates($can, $locale),
+            'scheduled_posts' => $can(Permission::ViewPosts)
+                ? $this->scheduledPosts($locale)
+                : [],
+        ];
+    }
+
+    /**
+     * @param  callable(Permission): bool  $can
+     * @return list<array{id: int, type: string, type_label: string, title: string, status: string, status_label: string, updated_at: string|null, edit_url: string}>
+     */
+    private function recentEditorialUpdates(callable $can, string $locale): array
+    {
+        $items = collect();
+
+        if ($can(Permission::ViewPages)) {
+            $items = $items->merge(
+                Page::query()
+                    ->with('translations')
+                    ->latest('updated_at')
+                    ->limit(5)
+                    ->get()
+                    ->map(fn (Page $page): array => [
+                        'id' => $page->id,
+                        'type' => 'page',
+                        'type_label' => 'Страница',
+                        'title' => $page->translation($locale)?->title ?? '—',
+                        'status' => $page->status->value,
+                        'status_label' => $page->status->label(),
+                        'updated_at' => $page->updated_at?->format('d.m.Y H:i'),
+                        'edit_url' => route('admin.pages.edit', $page),
+                    ]),
+            );
+        }
+
+        if ($can(Permission::ViewPosts)) {
+            $items = $items->merge(
+                Post::query()
+                    ->with('translations')
+                    ->latest('updated_at')
+                    ->limit(5)
+                    ->get()
+                    ->map(fn (Post $post): array => [
+                        'id' => $post->id,
+                        'type' => 'post',
+                        'type_label' => 'Материал',
+                        'title' => $post->translation($locale)?->title ?? '—',
+                        'status' => $post->status->value,
+                        'status_label' => $post->status->label(),
+                        'updated_at' => $post->updated_at?->format('d.m.Y H:i'),
+                        'edit_url' => route('admin.posts.edit', $post),
+                    ]),
+            );
+        }
+
+        return $items
+            ->sortByDesc('updated_at')
+            ->take(8)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array{id: int, title: string, published_at: string|null, edit_url: string}>
+     */
+    private function scheduledPosts(string $locale): array
+    {
+        return Post::query()
+            ->with('translations')
+            ->where('status', ContentStatus::Published)
+            ->whereNotNull('published_at')
+            ->where('published_at', '>', now())
+            ->orderBy('published_at')
+            ->limit(6)
+            ->get()
+            ->map(fn (Post $post): array => [
+                'id' => $post->id,
+                'title' => $post->translation($locale)?->title ?? '—',
+                'published_at' => $post->published_at?->format('d.m.Y H:i'),
+                'edit_url' => route('admin.posts.edit', $post),
+            ])
+            ->all();
+    }
+
+    /**
+     * @return array{new: int, in_progress: int, total: int}
+     */
+    private function appealStats(): array
+    {
+        $byStatus = $this->countByStatus(Appeal::query());
+
+        return [
+            'new' => (int) ($byStatus[AppealStatus::New->value] ?? 0),
+            'in_progress' => (int) ($byStatus[AppealStatus::InProgress->value] ?? 0),
+            'total' => (int) $byStatus->sum(),
+        ];
+    }
+
+    /**
+     * @return array{active: int, controlled: int, total: int}
+     */
+    private function incidentStats(): array
+    {
+        $byStatus = $this->countByStatus(Incident::query());
+
+        return [
+            'active' => (int) ($byStatus[IncidentStatus::Active->value] ?? 0),
+            'controlled' => (int) ($byStatus[IncidentStatus::Controlled->value] ?? 0),
+            'total' => (int) $byStatus->sum(),
+        ];
+    }
+
+    /**
+     * @return array{active: int, total: int}
+     */
+    private function alertStats(): array
+    {
+        return [
+            'active' => Alert::query()
+                ->where('status', AlertStatus::Published)
+                ->where(fn (Builder $query) => $query->whereNull('starts_at')->orWhere('starts_at', '<=', now()))
+                ->where(fn (Builder $query) => $query->whereNull('ends_at')->orWhere('ends_at', '>=', now()))
+                ->count(),
+            'total' => Alert::query()->count(),
+        ];
+    }
+
+    /**
+     * @return array{pending: int, on_route: int, total: int}
+     */
+    private function touristGroupStats(): array
+    {
+        return [
+            'pending' => TouristGroup::query()->where('status', AppealStatus::New)->count(),
+            'on_route' => TouristGroup::query()
+                ->whereDate('start_date', '<=', today())
+                ->whereDate('end_date', '>=', today())
+                ->count(),
+            'total' => TouristGroup::query()->count(),
+        ];
+    }
+
+    /**
+     * @return array{confirmed: int, pending: int}
+     */
+    private function subscriberStats(): array
+    {
+        $byStatus = $this->countByStatus(Subscriber::query());
+
+        return [
+            'confirmed' => (int) ($byStatus[SubscriptionStatus::Confirmed->value] ?? 0),
+            'pending' => (int) ($byStatus[SubscriptionStatus::Pending->value] ?? 0),
+        ];
+    }
+
+    /**
+     * @return array{posts_published: int, posts_total: int, pages: int, documents: int, guides: int}
+     */
+    private function contentStats(): array
+    {
+        $posts = $this->countByStatus(Post::query());
+
+        return [
+            'posts_published' => (int) ($posts[ContentStatus::Published->value] ?? 0),
+            'posts_total' => (int) $posts->sum(),
+            'pages' => Page::query()->count(),
+            'documents' => Document::query()->count(),
+            'guides' => Guide::query()->count(),
+        ];
+    }
+
+    /**
+     * @return array{users: int, languages: int, roles: int}
+     */
+    private function systemStats(): array
+    {
+        return [
+            'users' => User::query()->count(),
+            'languages' => Language::query()->where('is_active', true)->count(),
+            'roles' => Role::query()->count(),
+        ];
+    }
+
+    /**
+     * @param  Builder<covariant \Illuminate\Database\Eloquent\Model>  $query
+     * @return Collection<string, int>
+     */
+    private function countByStatus(Builder $query): Collection
+    {
+        return $query->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+    }
+
+    /**
+     * @return list<array{id: int, reference: string, subject: string, status: string, status_label: string, created_at: string|null}>
+     */
+    private function recentAppeals(): array
+    {
+        return Appeal::query()
+            ->latest()
+            ->limit(6)
+            ->get(['id', 'reference', 'subject', 'status', 'created_at'])
+            ->map(fn (Appeal $appeal): array => [
+                'id' => $appeal->id,
+                'reference' => $appeal->reference,
+                'subject' => $appeal->subject,
+                'status' => $appeal->status->value,
+                'status_label' => $appeal->status->label(),
+                'created_at' => $appeal->created_at?->format('d.m.Y H:i'),
+            ])
+            ->all();
+    }
+
+    /**
+     * @return list<array{id: int, title: string|null, status: string, status_label: string, hazard_level: string, occurred_at: string|null}>
+     */
+    private function recentIncidents(string $locale): array
+    {
+        return Incident::query()
+            ->with('translations')
+            ->latest('occurred_at')
+            ->limit(6)
+            ->get()
+            ->map(fn (Incident $incident): array => [
+                'id' => $incident->id,
+                'title' => $incident->translation($locale)?->title,
+                'status' => $incident->status->value,
+                'status_label' => $incident->status->label(),
+                'hazard_level' => $incident->hazard_level->value,
+                'occurred_at' => $incident->occurred_at?->format('d.m.Y H:i'),
+            ])
+            ->all();
+    }
+}

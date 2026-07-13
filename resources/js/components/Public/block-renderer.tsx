@@ -1,7 +1,10 @@
 import { resolveBlockComponent } from '@/components/Public/blocks/registry';
 import type { BlockRendererProps } from '@/components/Public/blocks/types';
 
-export type { BlockRendererProps, LatestPostSummary } from '@/components/Public/blocks/types';
+export type {
+    BlockRendererProps,
+    LatestPostSummary,
+} from '@/components/Public/blocks/types';
 
 export function BlockRenderer({
     blocks,
@@ -19,11 +22,7 @@ export function BlockRenderer({
                 const Component = resolveBlockComponent(block.type);
 
                 return (
-                    <Component
-                        key={block.id}
-                        block={block}
-                        context={context}
-                    />
+                    <Component key={block.id} block={block} context={context} />
                 );
             })}
         </div>

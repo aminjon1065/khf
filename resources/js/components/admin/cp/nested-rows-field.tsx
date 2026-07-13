@@ -1,8 +1,8 @@
+import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Trash2 } from 'lucide-react';
 import type { BlueprintSubFieldDefinition } from '@/types/cms';
 
 type RowValue = Record<string, string>;
@@ -91,7 +91,9 @@ export function CpNestedRowsField({
             <div className="space-y-1">
                 <Label htmlFor={id}>{label}</Label>
                 {instructions ? (
-                    <p className="text-xs text-muted-foreground">{instructions}</p>
+                    <p className="text-xs text-muted-foreground">
+                        {instructions}
+                    </p>
                 ) : null}
             </div>
 

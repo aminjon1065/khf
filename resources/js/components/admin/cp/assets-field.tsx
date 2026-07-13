@@ -1,12 +1,12 @@
 import { ImageIcon, Upload, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { CpStack } from '@/components/admin/cp/stack';
 import {
     MediaBrowserFilters,
     MediaBrowserGrid,
-    type MediaLibraryItem,
     useMediaLibrary,
 } from '@/components/admin/media-browser';
-import { CpStack } from '@/components/admin/cp/stack';
+import type { MediaLibraryItem } from '@/components/admin/media-browser';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -49,7 +49,7 @@ export function CpAssetsField({
 
     const { items, loading, page, lastPage, loadMore } = useMediaLibrary({
         enabled: open,
-        filters: { search, type },
+        filters: { search, type, folder_id: '', tag: '' },
         imagesOnly: true,
     });
 

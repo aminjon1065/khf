@@ -55,10 +55,7 @@ export function NewsCover({
                     alt={alt}
                     loading={loading}
                     onError={() => setHasError(true)}
-                    className={cn(
-                        'h-full w-full object-cover',
-                        imgClassName,
-                    )}
+                    className={cn('h-full w-full object-cover', imgClassName)}
                 />
             )}
         </div>

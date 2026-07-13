@@ -16,6 +16,7 @@ import {
     Users,
     Vote,
 } from 'lucide-react';
+import { ContentHubHelp } from '@/components/admin/cp/content-help-topics';
 import {
     Card,
     CardContent,
@@ -25,7 +26,6 @@ import {
 } from '@/components/ui/card';
 import { dashboard } from '@/routes/admin';
 import { hub as contentHub } from '@/routes/admin/content';
-import { ContentHubHelp } from '@/components/admin/cp/content-help-topics';
 
 type ContentTypeCard = {
     handle: string;

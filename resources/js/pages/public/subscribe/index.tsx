@@ -14,8 +14,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useTranslations } from '@/hooks/use-translations';
 import { useMatomoGoal } from '@/hooks/use-matomo-goal';
+import { useTranslations } from '@/hooks/use-translations';
 import { subscribe as pushSubscribeRoute } from '@/routes/push';
 import { store } from '@/routes/subscriptions';
 

@@ -37,9 +37,7 @@ export default function ServiceShow({ service }: { service: Service }) {
 
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{service.category_label}</Badge>
-                    {service.is_online && (
-                        <Badge>{t('services.online')}</Badge>
-                    )}
+                    {service.is_online && <Badge>{t('services.online')}</Badge>}
                 </div>
 
                 <h1 className="mt-2 text-3xl font-semibold">{service.title}</h1>

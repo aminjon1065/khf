@@ -1,16 +1,3 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CpTextField, CpRichTextField } from '@/components/admin/cp/fields';
-import { CpStack } from '@/components/admin/cp/stack';
-import {
-    MediaBrowserFilters,
-    MediaBrowserGrid,
-    type MediaLibraryItem,
-    useMediaLibrary,
-} from '@/components/admin/media-browser';
-import { ImageIcon, Plus, Trash, GripVertical } from 'lucide-react';
-import { useState } from 'react';
 import {
     DndContext,
     closestCenter,
@@ -18,8 +5,8 @@ import {
     PointerSensor,
     useSensor,
     useSensors,
-    type DragEndEvent,
 } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
 import {
     SortableContext,
     arrayMove,
@@ -28,6 +15,24 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { ImageIcon, Plus, Trash, GripVertical } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { CpTextField, CpRichTextField } from '@/components/admin/cp/fields';
+import { CpStack } from '@/components/admin/cp/stack';
+import {
+    MediaBrowserFilters,
+    MediaBrowserGrid,
+    useMediaLibrary,
+} from '@/components/admin/media-browser';
+import type { MediaLibraryItem } from '@/components/admin/media-browser';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { BlockTypeDefinition } from '@/types/cms';
 
 export type BlockData = {
@@ -56,7 +61,11 @@ const FALLBACK_BLOCK_TYPES: BlockTypeDefinition[] = [
         label: 'Виджет карты',
         defaults: { lat: '38.5598', lng: '68.7870', zoom: '10', title: '' },
     },
-    { type: 'cta', label: 'Призыв к действию', defaults: { label: '', url: '' } },
+    {
+        type: 'cta',
+        label: 'Призыв к действию',
+        defaults: { label: '', url: '' },
+    },
     {
         type: 'accordion',
         label: 'Аккордеон',
@@ -91,11 +100,13 @@ export function CpBlocksField({
     blockTypes = FALLBACK_BLOCK_TYPES,
 }: CpBlocksFieldProps) {
     const blocks = Array.isArray(value) ? value : [];
+    const nextBlockId = useRef(0);
 
     const addBlock = (type: string) => {
         const definition = blockTypes.find((item) => item.type === type);
+        nextBlockId.current += 1;
         const newBlock: BlockData = {
-            id: Math.random().toString(36).substring(2, 9),
+            id: `block-${nextBlockId.current}`,
             type,
             data: structuredClone(definition?.defaults ?? {}),
         };
@@ -112,8 +123,9 @@ export function CpBlocksField({
                 if (b.id === id) {
                     return { ...b, data: { ...b.data, [key]: val } };
                 }
+
                 return b;
-            })
+            }),
         );
     };
 
@@ -152,7 +164,7 @@ export function CpBlocksField({
                     items={blocks.map((block) => block.id)}
                     strategy={verticalListSortingStrategy}
                 >
-                    {blocks.map((block, index) => (
+                    {blocks.map((block) => (
                         <SortableBlockItem
                             key={`${editorKey}-${block.id}`}
                             block={block}
@@ -233,7 +245,9 @@ function SortableBlockItem({
                     >
                         <GripVertical className="h-4 w-4" />
                     </button>
-                    <CardTitle className="text-sm font-medium">{label}</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                        {label}
+                    </CardTitle>
                 </div>
                 <Button
                     type="button"
@@ -378,15 +392,27 @@ function GalleryEditor({
     const items = Array.isArray(images) ? images : [];
     const [pickerOpen, setPickerOpen] = useState(false);
     const [search, setSearch] = useState('');
-    const { items: libraryItems, loading, page, lastPage, loadMore } = useMediaLibrary({
+    const {
+        items: libraryItems,
+        loading,
+        page,
+        lastPage,
+        loadMore,
+    } = useMediaLibrary({
         enabled: pickerOpen,
-        filters: { search, type: 'image' },
+        filters: { search, type: 'image', folder_id: '', tag: '' },
         imagesOnly: true,
     });
 
-    const updateImage = (index: number, key: keyof GalleryImage, value: string) => {
+    const updateImage = (
+        index: number,
+        key: keyof GalleryImage,
+        value: string,
+    ) => {
         onChange(
-            items.map((image, i) => (i === index ? { ...image, [key]: value } : image)),
+            items.map((image, i) =>
+                i === index ? { ...image, [key]: value } : image,
+            ),
         );
     };
 
@@ -421,7 +447,9 @@ function GalleryEditor({
             {items.map((image, index) => (
                 <div key={index} className="space-y-2 rounded-lg border p-3">
                     <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Image {index + 1}</span>
+                        <span className="text-sm font-medium">
+                            Image {index + 1}
+                        </span>
                         <Button
                             type="button"
                             variant="ghost"
@@ -453,13 +481,20 @@ function GalleryEditor({
                         <CpTextField
                             label="Caption"
                             value={image.caption}
-                            onChange={(val) => updateImage(index, 'caption', val)}
+                            onChange={(val) =>
+                                updateImage(index, 'caption', val)
+                            }
                         />
                     </div>
                 </div>
             ))}
             <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={addImage}>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addImage}
+                >
                     <Plus className="mr-1 h-3.5 w-3.5" />
                     Add Image
                 </Button>
@@ -524,8 +559,16 @@ function AccordionEditor({
 }) {
     const rows = Array.isArray(items) ? items : [];
 
-    const updateItem = (index: number, key: keyof AccordionItem, value: string) => {
-        onChange(rows.map((item, i) => (i === index ? { ...item, [key]: value } : item)));
+    const updateItem = (
+        index: number,
+        key: keyof AccordionItem,
+        value: string,
+    ) => {
+        onChange(
+            rows.map((item, i) =>
+                i === index ? { ...item, [key]: value } : item,
+            ),
+        );
     };
 
     const addItem = () => {
@@ -541,7 +584,9 @@ function AccordionEditor({
             {rows.map((item, index) => (
                 <div key={index} className="space-y-2 rounded-lg border p-3">
                     <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Item {index + 1}</span>
+                        <span className="text-sm font-medium">
+                            Item {index + 1}
+                        </span>
                         <Button
                             type="button"
                             variant="ghost"
@@ -588,7 +633,8 @@ function TableEditor({
     onHeadersChange: (headers: string[]) => void;
     onRowsChange: (rows: string[][]) => void;
 }) {
-    const headerList = Array.isArray(headers) && headers.length > 0 ? headers : ['Column 1'];
+    const headerList =
+        Array.isArray(headers) && headers.length > 0 ? headers : ['Column 1'];
     const rowList = Array.isArray(rows) ? rows : [];
 
     const updateHeader = (index: number, value: string) => {
@@ -603,7 +649,10 @@ function TableEditor({
     };
 
     const removeColumn = (index: number) => {
-        if (headerList.length <= 1) return;
+        if (headerList.length <= 1) {
+            return;
+        }
+
         onHeadersChange(headerList.filter((_, i) => i !== index));
         onRowsChange(rowList.map((row) => row.filter((_, i) => i !== index)));
     };
@@ -628,15 +677,29 @@ function TableEditor({
 
     return (
         <div className="space-y-4">
-            <CpTextField label="Caption" value={caption} onChange={onCaptionChange} />
+            <CpTextField
+                label="Caption"
+                value={caption}
+                onChange={onCaptionChange}
+            />
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Headers</span>
-                    <Button type="button" variant="outline" size="sm" onClick={addColumn}>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addColumn}
+                    >
                         Add Column
                     </Button>
                 </div>
-                <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${headerList.length}, 1fr)` }}>
+                <div
+                    className="grid gap-2"
+                    style={{
+                        gridTemplateColumns: `repeat(${headerList.length}, 1fr)`,
+                    }}
+                >
                     {headerList.map((header, index) => (
                         <div key={index} className="flex gap-1">
                             <CpTextField
@@ -661,7 +724,12 @@ function TableEditor({
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Rows</span>
-                    <Button type="button" variant="outline" size="sm" onClick={addRow}>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addRow}
+                    >
                         Add Row
                     </Button>
                 </div>
@@ -669,13 +737,17 @@ function TableEditor({
                     <div key={rowIndex} className="flex items-start gap-2">
                         <div
                             className="grid flex-1 gap-2"
-                            style={{ gridTemplateColumns: `repeat(${headerList.length}, 1fr)` }}
+                            style={{
+                                gridTemplateColumns: `repeat(${headerList.length}, 1fr)`,
+                            }}
                         >
                             {headerList.map((_, colIndex) => (
                                 <CpTextField
                                     key={colIndex}
                                     value={row[colIndex] ?? ''}
-                                    onChange={(val) => updateCell(rowIndex, colIndex, val)}
+                                    onChange={(val) =>
+                                        updateCell(rowIndex, colIndex, val)
+                                    }
                                 />
                             ))}
                         </div>

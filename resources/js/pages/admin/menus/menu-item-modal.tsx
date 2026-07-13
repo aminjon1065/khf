@@ -1,5 +1,6 @@
 import { router, useForm } from '@inertiajs/react';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -105,20 +106,30 @@ export default function MenuItemModal({
 }) {
     const isEditing = !!item;
 
-    const initialTranslations = locales.reduce((acc, locale) => {
-        acc[locale.code] = { title: item?.translations?.[locale.code]?.title || '' };
-        return acc;
-    }, {} as Record<string, { title: string }>);
+    const initialTranslations = locales.reduce(
+        (acc, locale) => {
+            acc[locale.code] = {
+                title: item?.translations?.[locale.code]?.title || '',
+            };
+
+            return acc;
+        },
+        {} as Record<string, { title: string }>,
+    );
 
     const [linkType, setLinkType] = useState<LinkType>(resolveLinkType(item));
-    const [sectionRoute, setSectionRoute] = useState(item?.route && !item.route.startsWith('page.') ? item.route : 'welcome');
+    const [sectionRoute, setSectionRoute] = useState(
+        item?.route && !item.route.startsWith('page.') ? item.route : 'welcome',
+    );
     const [pageId, setPageId] = useState(resolvePageId(item));
     const [externalUrl, setExternalUrl] = useState(
         item?.url && /^https?:\/\//i.test(item.url) ? item.url : '',
     );
 
     const initialEntry = resolveEntryLink(item);
-    const [entryCollection, setEntryCollection] = useState(initialEntry.handle || linkCollectionEntries[0]?.handle || '');
+    const [entryCollection, setEntryCollection] = useState(
+        initialEntry.handle || linkCollectionEntries[0]?.handle || '',
+    );
     const [entryId, setEntryId] = useState(initialEntry.id);
 
     const { data, setData, processing, errors, reset, clearErrors } = useForm({
@@ -128,16 +139,24 @@ export default function MenuItemModal({
         target: item?.target || '_self',
         translations: initialTranslations,
     });
+    const fieldErrors = errors as Record<string, string | undefined>;
 
     const sectionGroups = useMemo(() => {
-        return linkSections.reduce<Record<string, LinkSection[]>>((groups, section) => {
-            (groups[section.group] ??= []).push(section);
-            return groups;
-        }, {});
+        return linkSections.reduce<Record<string, LinkSection[]>>(
+            (groups, section) => {
+                (groups[section.group] ??= []).push(section);
+
+                return groups;
+            },
+            {},
+        );
     }, [linkSections]);
 
     const selectedCollection = useMemo(
-        () => linkCollectionEntries.find((group) => group.handle === entryCollection),
+        () =>
+            linkCollectionEntries.find(
+                (group) => group.handle === entryCollection,
+            ),
         [entryCollection, linkCollectionEntries],
     );
 
@@ -145,12 +164,22 @@ export default function MenuItemModal({
         if (isOpen) {
             clearErrors();
             setLinkType(resolveLinkType(item));
-            setSectionRoute(item?.route && !item.route.startsWith('page.') && !item.route.startsWith('entry.') ? item.route : 'welcome');
+            setSectionRoute(
+                item?.route &&
+                    !item.route.startsWith('page.') &&
+                    !item.route.startsWith('entry.')
+                    ? item.route
+                    : 'welcome',
+            );
             setPageId(resolvePageId(item));
             const entry = resolveEntryLink(item);
-            setEntryCollection(entry.handle || linkCollectionEntries[0]?.handle || '');
+            setEntryCollection(
+                entry.handle || linkCollectionEntries[0]?.handle || '',
+            );
             setEntryId(entry.id);
-            setExternalUrl(item?.url && /^https?:\/\//i.test(item.url) ? item.url : '');
+            setExternalUrl(
+                item?.url && /^https?:\/\//i.test(item.url) ? item.url : '',
+            );
         }
     }, [isOpen, item, clearErrors, linkCollectionEntries]);
 
@@ -166,7 +195,10 @@ export default function MenuItemModal({
         if (linkType === 'entry') {
             return {
                 url: '',
-                route: entryCollection && entryId ? `entry.${entryCollection}.${entryId}` : '',
+                route:
+                    entryCollection && entryId
+                        ? `entry.${entryCollection}.${entryId}`
+                        : '',
             };
         }
 
@@ -205,10 +237,13 @@ export default function MenuItemModal({
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
                         <DialogTitle>
-                            {isEditing ? 'Редактировать пункт' : 'Новый пункт меню'}
+                            {isEditing
+                                ? 'Редактировать пункт'
+                                : 'Новый пункт меню'}
                         </DialogTitle>
                         <DialogDescription>
-                            Укажите название на языках и выберите, куда ведёт пункт меню.
+                            Укажите название на языках и выберите, куда ведёт
+                            пункт меню.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -227,30 +262,49 @@ export default function MenuItemModal({
                             </TabsList>
 
                             {locales.map((locale) => (
-                                <TabsContent key={locale.code} value={locale.code} className="space-y-4">
+                                <TabsContent
+                                    key={locale.code}
+                                    value={locale.code}
+                                    className="space-y-4"
+                                >
                                     <div className="space-y-2">
                                         <Label htmlFor={`title-${locale.code}`}>
-                                            Название ({locale.code.toUpperCase()})
+                                            Название (
+                                            {locale.code.toUpperCase()})
                                             {locale.code === defaultLocale && (
-                                                <span className="text-destructive"> *</span>
+                                                <span className="text-destructive">
+                                                    {' '}
+                                                    *
+                                                </span>
                                             )}
                                         </Label>
                                         <Input
                                             id={`title-${locale.code}`}
-                                            value={data.translations[locale.code].title}
+                                            value={
+                                                data.translations[locale.code]
+                                                    .title
+                                            }
                                             onChange={(e) =>
                                                 setData('translations', {
                                                     ...data.translations,
                                                     [locale.code]: {
-                                                        ...data.translations[locale.code],
+                                                        ...data.translations[
+                                                            locale.code
+                                                        ],
                                                         title: e.target.value,
                                                     },
                                                 })
                                             }
                                         />
-                                        {errors[`translations.${locale.code}.title`] && (
+                                        {fieldErrors[
+                                            `translations.${locale.code}.title`
+                                        ] && (
                                             <p className="text-xs text-destructive">
-                                                {errors[`translations.${locale.code}.title`]}
+                                                {
+                                                    fieldErrors[
+                                                        `translations.${locale.code}.title`
+                                                    ]
+                                                }
                                             </p>
                                         )}
                                     </div>
@@ -263,16 +317,26 @@ export default function MenuItemModal({
                                 <Label>Куда ведёт ссылка</Label>
                                 <Select
                                     value={linkType}
-                                    onValueChange={(value) => setLinkType(value as LinkType)}
+                                    onValueChange={(value) =>
+                                        setLinkType(value as LinkType)
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="section">Раздел сайта</SelectItem>
-                                        <SelectItem value="page">CMS-страница</SelectItem>
-                                        <SelectItem value="entry">Запись коллекции</SelectItem>
-                                        <SelectItem value="external">Внешняя ссылка</SelectItem>
+                                        <SelectItem value="section">
+                                            Раздел сайта
+                                        </SelectItem>
+                                        <SelectItem value="page">
+                                            CMS-страница
+                                        </SelectItem>
+                                        <SelectItem value="entry">
+                                            Запись коллекции
+                                        </SelectItem>
+                                        <SelectItem value="external">
+                                            Внешняя ссылка
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -280,25 +344,44 @@ export default function MenuItemModal({
                             {linkType === 'section' && (
                                 <div className="space-y-2">
                                     <Label>Раздел</Label>
-                                    <Select value={sectionRoute} onValueChange={setSectionRoute}>
+                                    <Select
+                                        value={sectionRoute}
+                                        onValueChange={setSectionRoute}
+                                    >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Выберите раздел" />
                                         </SelectTrigger>
                                         <SelectContent className="max-h-72">
-                                            {Object.entries(sectionGroups).map(([group, sections]) => (
-                                                <SelectGroup key={group}>
-                                                    <SelectLabel>{group}</SelectLabel>
-                                                    {sections.map((section) => (
-                                                        <SelectItem key={section.value} value={section.value}>
-                                                            {section.label}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            ))}
+                                            {Object.entries(sectionGroups).map(
+                                                ([group, sections]) => (
+                                                    <SelectGroup key={group}>
+                                                        <SelectLabel>
+                                                            {group}
+                                                        </SelectLabel>
+                                                        {sections.map(
+                                                            (section) => (
+                                                                <SelectItem
+                                                                    key={
+                                                                        section.value
+                                                                    }
+                                                                    value={
+                                                                        section.value
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        section.label
+                                                                    }
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
+                                                    </SelectGroup>
+                                                ),
+                                            )}
                                         </SelectContent>
                                     </Select>
                                     <p className="text-xs text-muted-foreground">
-                                        Ссылка автоматически подставится с учётом языка посетителя.
+                                        Ссылка автоматически подставится с
+                                        учётом языка посетителя.
                                     </p>
                                 </div>
                             )}
@@ -306,22 +389,35 @@ export default function MenuItemModal({
                             {linkType === 'page' && (
                                 <div className="space-y-2">
                                     <Label>Страница</Label>
-                                    <Select value={pageId || 'none'} onValueChange={(v) => setPageId(v === 'none' ? '' : v)}>
+                                    <Select
+                                        value={pageId || 'none'}
+                                        onValueChange={(v) =>
+                                            setPageId(v === 'none' ? '' : v)
+                                        }
+                                    >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Выберите страницу" />
                                         </SelectTrigger>
                                         <SelectContent className="max-h-72">
-                                            <SelectItem value="none">— Не выбрано —</SelectItem>
+                                            <SelectItem value="none">
+                                                — Не выбрано —
+                                            </SelectItem>
                                             {linkPages.map((page) => (
-                                                <SelectItem key={page.id} value={String(page.id)}>
+                                                <SelectItem
+                                                    key={page.id}
+                                                    value={String(page.id)}
+                                                >
                                                     {page.title}
-                                                    {page.is_home ? ' (главная)' : ''}
+                                                    {page.is_home
+                                                        ? ' (главная)'
+                                                        : ''}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                     <p className="text-xs text-muted-foreground">
-                                        Дерево CMS-страниц: вложенность отображается отступом в списке.
+                                        Дерево CMS-страниц: вложенность
+                                        отображается отступом в списке.
                                     </p>
                                 </div>
                             )}
@@ -330,32 +426,55 @@ export default function MenuItemModal({
                                 <div className="space-y-3">
                                     <div className="space-y-2">
                                         <Label>Коллекция</Label>
-                                        <Select value={entryCollection} onValueChange={(value) => {
-                                            setEntryCollection(value);
-                                            setEntryId('');
-                                        }}>
+                                        <Select
+                                            value={entryCollection}
+                                            onValueChange={(value) => {
+                                                setEntryCollection(value);
+                                                setEntryId('');
+                                            }}
+                                        >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Выберите коллекцию" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {linkCollectionEntries.map((group) => (
-                                                    <SelectItem key={group.handle} value={group.handle}>
-                                                        {group.label}
-                                                    </SelectItem>
-                                                ))}
+                                                {linkCollectionEntries.map(
+                                                    (group) => (
+                                                        <SelectItem
+                                                            key={group.handle}
+                                                            value={group.handle}
+                                                        >
+                                                            {group.label}
+                                                        </SelectItem>
+                                                    ),
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Запись</Label>
-                                        <Select value={entryId || 'none'} onValueChange={(v) => setEntryId(v === 'none' ? '' : v)}>
+                                        <Select
+                                            value={entryId || 'none'}
+                                            onValueChange={(v) =>
+                                                setEntryId(
+                                                    v === 'none' ? '' : v,
+                                                )
+                                            }
+                                        >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Выберите запись" />
                                             </SelectTrigger>
                                             <SelectContent className="max-h-72">
-                                                <SelectItem value="none">— Не выбрано —</SelectItem>
-                                                {(selectedCollection?.entries ?? []).map((entry) => (
-                                                    <SelectItem key={entry.id} value={String(entry.id)}>
+                                                <SelectItem value="none">
+                                                    — Не выбрано —
+                                                </SelectItem>
+                                                {(
+                                                    selectedCollection?.entries ??
+                                                    []
+                                                ).map((entry) => (
+                                                    <SelectItem
+                                                        key={entry.id}
+                                                        value={String(entry.id)}
+                                                    >
                                                         {entry.title}
                                                     </SelectItem>
                                                 ))}
@@ -363,7 +482,8 @@ export default function MenuItemModal({
                                         </Select>
                                     </div>
                                     <p className="text-xs text-muted-foreground">
-                                        Ссылка ведёт на опубликованную запись с учётом языка посетителя.
+                                        Ссылка ведёт на опубликованную запись с
+                                        учётом языка посетителя.
                                     </p>
                                 </div>
                             )}
@@ -376,9 +496,15 @@ export default function MenuItemModal({
                                         type="url"
                                         placeholder="https://example.tj"
                                         value={externalUrl}
-                                        onChange={(e) => setExternalUrl(e.target.value)}
+                                        onChange={(e) =>
+                                            setExternalUrl(e.target.value)
+                                        }
                                     />
-                                    {errors.url && <p className="text-xs text-destructive">{errors.url}</p>}
+                                    {errors.url && (
+                                        <p className="text-xs text-destructive">
+                                            {errors.url}
+                                        </p>
+                                    )}
                                 </div>
                             )}
 
@@ -386,14 +512,20 @@ export default function MenuItemModal({
                                 <Label>Открытие</Label>
                                 <Select
                                     value={data.target}
-                                    onValueChange={(value) => setData('target', value)}
+                                    onValueChange={(value) =>
+                                        setData('target', value)
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="_self">В этой вкладке</SelectItem>
-                                        <SelectItem value="_blank">В новой вкладке</SelectItem>
+                                        <SelectItem value="_self">
+                                            В этой вкладке
+                                        </SelectItem>
+                                        <SelectItem value="_blank">
+                                            В новой вкладке
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -401,7 +533,11 @@ export default function MenuItemModal({
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                        >
                             Отмена
                         </Button>
                         <Button type="submit" disabled={processing}>

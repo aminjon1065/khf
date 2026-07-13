@@ -2,21 +2,21 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { FolderInput, Scissors, Trash2, UploadCloud } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { MediaLibraryHelp } from '@/components/admin/cp/content-help-topics';
+import { CpLocaleTabs } from '@/components/admin/cp/publish-form';
 import { FocalPointPicker } from '@/components/admin/focal-point-picker';
-import {
-    MediaFolderTree,
-    type MediaFolderNode,
-} from '@/components/admin/media-folder-tree';
+import { ImageCropModal } from '@/components/admin/image-crop-modal';
 import {
     MediaBrowserDetail,
     MediaBrowserFilters,
     MediaBrowserGrid,
-    type MediaLibraryFilters,
-    type MediaLibraryItem,
 } from '@/components/admin/media-browser';
-import { CpLocaleTabs } from '@/components/admin/cp/publish-form';
-import { MediaLibraryHelp } from '@/components/admin/cp/content-help-topics';
-import { ImageCropModal } from '@/components/admin/image-crop-modal';
+import type {
+    MediaLibraryFilters,
+    MediaLibraryItem,
+} from '@/components/admin/media-browser';
+import { MediaFolderTree } from '@/components/admin/media-folder-tree';
+import type { MediaFolderNode } from '@/components/admin/media-folder-tree';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -111,7 +111,9 @@ export default function MediaLibraryIndex({
             return null;
         }
 
-        return mediaFiles.data.find((item) => item.id === selected.id) ?? selected;
+        return (
+            mediaFiles.data.find((item) => item.id === selected.id) ?? selected
+        );
     }, [mediaFiles.data, selected]);
 
     const detailForm = useForm({
@@ -315,8 +317,8 @@ export default function MediaLibraryIndex({
                         Медиабиблиотека
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Папки, точка фокуса, alt-тексты и повторное использование
-                        файлов
+                        Папки, точка фокуса, alt-тексты и повторное
+                        использование файлов
                     </p>
                 </div>
                 <Button
@@ -464,9 +466,8 @@ export default function MediaLibraryIndex({
                                         Назад
                                     </Button>
                                 )}
-                                {mediaFiles.links[
-                                    mediaFiles.links.length - 1
-                                ]?.url && (
+                                {mediaFiles.links[mediaFiles.links.length - 1]
+                                    ?.url && (
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -499,20 +500,21 @@ export default function MediaLibraryIndex({
 
                     {selectedItem && (
                         <div className="space-y-3 rounded-lg border border-border bg-card p-4">
-                            {selectedItem.is_image && selectedItem.original_url && (
-                                <FocalPointPicker
-                                    imageUrl={selectedItem.original_url}
-                                    focalX={detailForm.data.focal_x}
-                                    focalY={detailForm.data.focal_y}
-                                    onChange={(focal_x, focal_y) =>
-                                        detailForm.setData({
-                                            ...detailForm.data,
-                                            focal_x,
-                                            focal_y,
-                                        })
-                                    }
-                                />
-                            )}
+                            {selectedItem.is_image &&
+                                selectedItem.original_url && (
+                                    <FocalPointPicker
+                                        imageUrl={selectedItem.original_url}
+                                        focalX={detailForm.data.focal_x}
+                                        focalY={detailForm.data.focal_y}
+                                        onChange={(focal_x, focal_y) =>
+                                            detailForm.setData({
+                                                ...detailForm.data,
+                                                focal_x,
+                                                focal_y,
+                                            })
+                                        }
+                                    />
+                                )}
 
                             <div className="space-y-2">
                                 <Label htmlFor="media-name">Название</Label>

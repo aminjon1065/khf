@@ -1,51 +1,51 @@
 blocks:
-  text:
-    label: Текст
-    defaults:
-      content: ''
-  image_gallery:
-    label: Галерея изображений
-    defaults:
-      images:
-        - url: ''
-          alt: ''
-          caption: ''
-  news_list:
-    label: Лента новостей
-    defaults:
-      count: '6'
-  map_widget:
-    label: Виджет карты
-    defaults:
-      lat: '38.5598'
-      lng: '68.7870'
-      zoom: '10'
-      title: ''
-  cta:
-    label: Призыв к действию
-    defaults:
-      label: ''
-      url: ''
-  accordion:
-    label: Аккордеон
-    defaults:
-      items:
-        - title: ''
-          content: ''
-  table:
-    label: Таблица
-    defaults:
-      caption: ''
-      headers:
-        - Колонка 1
-        - Колонка 2
-      rows:
-        - ['', '']
-  contacts:
-    label: Контакты
-    defaults:
-      heading: ''
-      address: ''
-      phone: ''
-      email: ''
-      hours: ''
+    text:
+        label: Текст
+        defaults:
+            content: ''
+    image_gallery:
+        label: Галерея изображений
+        defaults:
+            images:
+                - url: ''
+                  alt: ''
+                  caption: ''
+    news_list:
+        label: Лента новостей
+        defaults:
+            count: '6'
+    map_widget:
+        label: Виджет карты
+        defaults:
+            lat: '38.5598'
+            lng: '68.7870'
+            zoom: '10'
+            title: ''
+    cta:
+        label: Призыв к действию
+        defaults:
+            label: ''
+            url: ''
+    accordion:
+        label: Аккордеон
+        defaults:
+            items:
+                - title: ''
+                  content: ''
+    table:
+        label: Таблица
+        defaults:
+            caption: ''
+            headers:
+                - Колонка 1
+                - Колонка 2
+            rows:
+                - ['', '']
+    contacts:
+        label: Контакты
+        defaults:
+            heading: ''
+            address: ''
+            phone: ''
+            email: ''
+            hours: ''

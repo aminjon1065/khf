@@ -23,7 +23,10 @@ export function CpViewOnSite({
 }) {
     const entries = locales
         .map((locale) => ({ locale, url: urls[locale.code] }))
-        .filter((entry): entry is { locale: LocaleOption; url: string } => !!entry.url);
+        .filter(
+            (entry): entry is { locale: LocaleOption; url: string } =>
+                !!entry.url,
+        );
 
     if (entries.length === 0) {
         return null;
@@ -32,7 +35,11 @@ export function CpViewOnSite({
     if (entries.length === 1) {
         return (
             <Button type="button" variant="outline" size="sm" asChild>
-                <a href={entries[0].url} target="_blank" rel="noopener noreferrer">
+                <a
+                    href={entries[0].url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
                     <ExternalLink className="size-4" />
                     На сайте
                 </a>

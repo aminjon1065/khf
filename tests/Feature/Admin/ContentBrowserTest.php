@@ -98,6 +98,25 @@ it('bulk soft-deletes selected entries', function () {
         ->and(Post::onlyTrashed()->count())->toBe(2);
 });
 
+it('rejects bulk destroy without ids', function () {
+    $this->actingAs($this->admin)
+        ->from(route('admin.content.index', 'post'))
+        ->post(route('admin.content.bulk-destroy', 'post'), [])
+        ->assertSessionHasErrors('ids');
+});
+
+it('forbids bulk destroy for users without the content manage permission', function () {
+    $user = User::factory()->withTwoFactor()->create();
+    $user->assignRole(Role::Moderator->value);
+    // Moderator can manage posts, so use a plain authenticated CMS-ineligible path:
+    // strip roles by using a verified 2FA user without CMS role (role middleware 403).
+    $outsider = User::factory()->withTwoFactor()->create();
+
+    $this->actingAs($outsider)
+        ->post(route('admin.content.bulk-destroy', 'post'), ['ids' => [1]])
+        ->assertForbidden();
+});
+
 it('lists documents, guides and alerts with corrected default sorts', function (string $type) {
     $this->actingAs($this->admin)
         ->get(route('admin.content.index', $type))

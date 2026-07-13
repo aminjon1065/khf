@@ -43,8 +43,12 @@ export default function ServicesIndex({
         <>
             <Head title={t('services.title')} />
 
-            <h1 className="mb-2 text-3xl font-semibold">{t('services.title')}</h1>
-            <p className="mb-6 text-muted-foreground">{t('services.subtitle')}</p>
+            <h1 className="mb-2 text-3xl font-semibold">
+                {t('services.title')}
+            </h1>
+            <p className="mb-6 text-muted-foreground">
+                {t('services.subtitle')}
+            </p>
 
             <div className="mb-6 flex flex-wrap gap-2">
                 <Button

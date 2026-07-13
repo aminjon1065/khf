@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Language;
+use App\Http\Requests\Admin\ReorderMenuItemsRequest;
+use App\Http\Requests\Admin\StoreMenuItemRequest;
+use App\Http\Requests\Admin\UpdateMenuItemRequest;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class MenuItemController extends Controller
 {
-    public function store(Request $request, Menu $menu): RedirectResponse
+    public function store(StoreMenuItemRequest $request, Menu $menu): RedirectResponse
     {
-        $data = $request->validate($this->rules());
+        $data = $request->validated();
 
         $parentId = $data['parent_id'] ?? null;
         $maxSort = $menu->items()->where('parent_id', $parentId)->max('sort_order') ?? 0;
@@ -32,9 +32,9 @@ class MenuItemController extends Controller
         return back()->with('toast', ['type' => 'success', 'message' => __('Menu item created.')]);
     }
 
-    public function update(Request $request, Menu $menu, MenuItem $item): RedirectResponse
+    public function update(UpdateMenuItemRequest $request, Menu $menu, MenuItem $item): RedirectResponse
     {
-        $data = $request->validate($this->rules());
+        $data = $request->validated();
 
         $parentId = $data['parent_id'] ?? null;
 
@@ -61,14 +61,9 @@ class MenuItemController extends Controller
         return back()->with('toast', ['type' => 'success', 'message' => __('Menu item deleted.')]);
     }
 
-    public function reorder(Request $request, Menu $menu): RedirectResponse
+    public function reorder(ReorderMenuItemsRequest $request, Menu $menu): RedirectResponse
     {
-        $data = $request->validate([
-            'items' => ['required', 'array'],
-            'items.*.id' => ['required', 'exists:menu_items,id'],
-            'items.*.parent_id' => ['nullable', 'exists:menu_items,id'],
-            'items.*.sort_order' => ['required', 'integer'],
-        ]);
+        $data = $request->validated();
 
         foreach ($data['items'] as $itemData) {
             MenuItem::where('id', $itemData['id'])
@@ -80,34 +75,6 @@ class MenuItemController extends Controller
         }
 
         return back()->with('toast', ['type' => 'success', 'message' => __('Menu order saved.')]);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function rules(): array
-    {
-        $default = Language::defaultCode();
-        $locales = Language::codes() ?: config('app.locales');
-
-        $rules = [
-            'parent_id' => ['nullable', 'exists:menu_items,id'],
-            'url' => ['nullable', 'string', 'max:255'],
-            'route' => ['nullable', 'string', 'max:255', 'regex:/^(page\.\d+|entry\.[a-z_]+\.\d+|[a-z0-9_.-]+)$/i'],
-            'target' => ['nullable', 'string', Rule::in(['_self', '_blank'])],
-            'translations' => ['required', 'array'],
-            "translations.{$default}.title" => ['required', 'string', 'max:255'],
-        ];
-
-        foreach ($locales as $locale) {
-            if ($locale === $default) {
-                continue;
-            }
-
-            $rules["translations.{$locale}.title"] = ['nullable', 'string', 'max:255'];
-        }
-
-        return $rules;
     }
 
     /**

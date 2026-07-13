@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
-import { trackMatomoGoal, type MatomoSharedProps } from '@/lib/matomo';
+import { trackMatomoGoal } from '@/lib/matomo';
+import type { MatomoSharedProps } from '@/lib/matomo';
 
 /**
  * Track a Matomo goal once when `condition` becomes true (e.g. success screen rendered).

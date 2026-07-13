@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -18,6 +19,8 @@ class TenderBidController extends Controller
 {
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', TenderBid::class);
+
         $locale = app()->getLocale();
         $search = trim((string) $request->string('search'));
         $status = in_array((string) $request->string('status'), AppealStatus::values(), true)
@@ -53,6 +56,8 @@ class TenderBidController extends Controller
 
     public function show(TenderBid $bid): Response
     {
+        Gate::authorize('view', $bid);
+
         $locale = app()->getLocale();
         $bid->load(['assignee:id,name', 'tender.translations', 'media']);
         $document = $bid->getFirstMedia(TenderBid::DOCUMENT_COLLECTION);
@@ -95,6 +100,8 @@ class TenderBidController extends Controller
 
     public function destroy(TenderBid $bid): RedirectResponse
     {
+        Gate::authorize('delete', $bid);
+
         $bid->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Bid deleted.')]);
@@ -108,6 +115,8 @@ class TenderBidController extends Controller
      */
     public function downloadDocument(TenderBid $bid): BinaryFileResponse
     {
+        Gate::authorize('download', $bid);
+
         $document = $bid->getFirstMedia(TenderBid::DOCUMENT_COLLECTION);
 
         abort_if($document === null, 404);

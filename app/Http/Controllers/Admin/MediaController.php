@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BulkMediaRequest;
 use App\Http\Requests\Admin\BulkMoveMediaRequest;
+use App\Http\Requests\Admin\StoreMediaRequest;
 use App\Http\Requests\Admin\UpdateMediaRequest;
 use App\Models\Language;
 use App\Models\MediaFile;
@@ -40,13 +41,8 @@ class MediaController extends Controller
         return response()->json(MediaFilePresenter::paginate($paginator));
     }
 
-    public function store(Request $request): JsonResponse|RedirectResponse
+    public function store(StoreMediaRequest $request): JsonResponse|RedirectResponse
     {
-        $request->validate([
-            'file' => ['required', 'file', 'max:10240'],
-            'folder_id' => ['nullable', 'integer', 'exists:media_folders,id'],
-        ]);
-
         $mediaFile = MediaFile::create([
             'user_id' => $request->user()->id,
             'name' => $request->file('file')->getClientOriginalName(),

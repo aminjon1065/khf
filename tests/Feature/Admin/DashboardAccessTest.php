@@ -42,6 +42,22 @@ it('shows the CMS dashboard to a privileged user with confirmed 2FA', function (
         );
 });
 
+it('hides permission-gated dashboard blocks for editors', function () {
+    $user = User::factory()->withTwoFactor()->create();
+    $user->assignRole(Role::Editor->value);
+
+    $this->actingAs($user)
+        ->get('/admin')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/dashboard')
+            ->where('stats.system', null)
+            ->where('stats.appeals', null)
+            ->has('stats.content')
+            ->has('editorial.recent_updates')
+        );
+});
+
 it('allows privileged users without 2FA when enforcement is disabled', function () {
     config(['fortify.require_two_factor' => false]);
 

@@ -4,27 +4,19 @@ namespace App\Http\Controllers\Public;
 
 use App\Enums\SubscriptionStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DestroyPushSubscriptionRequest;
+use App\Http\Requests\StorePushSubscriptionRequest;
 use App\Models\Subscriber;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class PushSubscriptionController extends Controller
 {
     /**
      * Subscribe to Web Push notifications.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StorePushSubscriptionRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'endpoint' => 'required|url',
-            'keys.auth' => 'required|string|max:255',
-            'keys.p256dh' => 'required|string|max:255',
-            'subscriber_token' => 'required|string|max:255',
-            'topics' => 'nullable|array',
-            'topics.*' => 'string|max:64',
-            'region_id' => 'nullable|exists:regions,id',
-            'locale' => 'required|string|max:5',
-        ]);
+        $validated = $request->validated();
 
         // Find or create subscriber by token
         $subscriber = Subscriber::firstOrCreate(
@@ -58,12 +50,9 @@ class PushSubscriptionController extends Controller
     /**
      * Unsubscribe from Web Push notifications.
      */
-    public function destroy(Request $request): JsonResponse
+    public function destroy(DestroyPushSubscriptionRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'endpoint' => 'required|url',
-            'subscriber_token' => 'required|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         $subscriber = Subscriber::where('token', $validated['subscriber_token'])->first();
 

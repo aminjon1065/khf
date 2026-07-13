@@ -92,7 +92,8 @@ export default function RedirectsIndex({ redirects, filters }: PageProps) {
         {
             key: 'notes',
             label: 'Заметка',
-            className: 'hidden lg:table-cell text-muted-foreground max-w-xs truncate',
+            className:
+                'hidden lg:table-cell text-muted-foreground max-w-xs truncate',
         },
     ];
 
@@ -162,6 +163,7 @@ export default function RedirectsIndex({ redirects, filters }: PageProps) {
                 redirect={editing}
                 onOpenChange={(open) => {
                     setFormOpen(open);
+
                     if (!open) {
                         setEditing(null);
                     }
@@ -176,8 +178,7 @@ export default function RedirectsIndex({ redirects, filters }: PageProps) {
                     <DialogHeader>
                         <DialogTitle>Удалить редирект?</DialogTitle>
                         <DialogDescription>
-                            Путь{' '}
-                            <code>/{deleting?.from_path}</code> перестанет
+                            Путь <code>/{deleting?.from_path}</code> перестанет
                             перенаправляться.
                         </DialogDescription>
                     </DialogHeader>
@@ -257,8 +258,7 @@ function RedirectFormDialog({
                     </DialogTitle>
                     <DialogDescription>
                         Укажите старый путь без домена, например{' '}
-                        <code>tj/node/123</code> или{' '}
-                        <code>ru/about-us</code>.
+                        <code>tj/node/123</code> или <code>ru/about-us</code>.
                     </DialogDescription>
                 </DialogHeader>
 

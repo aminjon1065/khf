@@ -1,3 +1,7 @@
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { ChevronDown, ChevronUp, GripVertical, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,11 +15,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { fieldTypeLabel, BLUEPRINT_FIELD_TYPES, type BuilderField } from '@/lib/blueprint-builder';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { ChevronDown, ChevronUp, GripVertical, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { fieldTypeLabel, BLUEPRINT_FIELD_TYPES } from '@/lib/blueprint-builder';
+import type { BuilderField } from '@/lib/blueprint-builder';
 
 export function BlueprintFieldRow({
     field,
@@ -74,7 +75,9 @@ export function BlueprintFieldRow({
                         size="icon"
                         className="size-8"
                         onClick={() => setExpanded((value) => !value)}
-                        aria-label={expanded ? 'Свернуть поле' : 'Развернуть поле'}
+                        aria-label={
+                            expanded ? 'Свернуть поле' : 'Развернуть поле'
+                        }
                     >
                         {expanded ? (
                             <ChevronUp className="size-4" />
@@ -124,7 +127,10 @@ export function BlueprintFieldRow({
                             </SelectTrigger>
                             <SelectContent>
                                 {BLUEPRINT_FIELD_TYPES.map((item) => (
-                                    <SelectItem key={item.type} value={item.type}>
+                                    <SelectItem
+                                        key={item.type}
+                                        value={item.type}
+                                    >
                                         {item.label}
                                     </SelectItem>
                                 ))}

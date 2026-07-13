@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -18,6 +19,8 @@ class AppealController extends Controller
 {
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', Appeal::class);
+
         $search = trim((string) $request->string('search'));
         $status = in_array((string) $request->string('status'), AppealStatus::values(), true)
             ? (string) $request->string('status')
@@ -53,6 +56,8 @@ class AppealController extends Controller
 
     public function show(Appeal $appeal): Response
     {
+        Gate::authorize('view', $appeal);
+
         $appeal->load(['assignee:id,name', 'media']);
 
         return Inertia::render('admin/appeals/show', [
@@ -86,6 +91,8 @@ class AppealController extends Controller
 
     public function downloadAttachment(Appeal $appeal, Media $media)
     {
+        Gate::authorize('download', $appeal);
+
         if ($media->model_id !== $appeal->id || $media->model_type !== Appeal::class) {
             abort(404);
         }
@@ -95,6 +102,8 @@ class AppealController extends Controller
 
     public function export(Request $request)
     {
+        Gate::authorize('export', Appeal::class);
+
         $search = trim((string) $request->string('search'));
         $status = in_array((string) $request->string('status'), AppealStatus::values(), true)
             ? (string) $request->string('status')
@@ -162,6 +171,8 @@ class AppealController extends Controller
 
     public function destroy(Appeal $appeal): RedirectResponse
     {
+        Gate::authorize('delete', $appeal);
+
         $appeal->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Appeal deleted.')]);

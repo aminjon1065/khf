@@ -3,12 +3,21 @@
 use App\Enums\HazardLevel;
 
 /**
- * Static map overlays for the public portal (ТЗ §6.3).
+ * Static map overlays and tile sources for the public portal (ТЗ §6.3, §10.8).
  *
  * Risk-zone geometry is config-driven until a CMS model exists. Each ring is a closed polygon
  * ([lng, lat] pairs). Hazard values must match {@see HazardLevel}.
+ *
+ * Tile URL should point at the Committee's own OSM-compatible tile server in production.
  */
 return [
+    'tiles' => [
+        'url' => env('MAP_TILE_URL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+        'attribution' => env('MAP_TILE_ATTRIBUTION', '© OpenStreetMap'),
+        'tile_size' => (int) env('MAP_TILE_SIZE', 256),
+        'glyphs' => env('MAP_GLYPHS_URL', 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'),
+    ],
+
     'risk_zones' => [
         [
             'id' => 'sugd-flood',

@@ -68,7 +68,8 @@ export function MenuMegaPreview({
     return (
         <div className="space-y-3">
             <p className="text-xs text-muted-foreground">
-                Превью навигации ({location === 'primary' ? 'шапка сайта' : location}) на языке{' '}
+                Превью навигации (
+                {location === 'primary' ? 'шапка сайта' : location}) на языке{' '}
                 <span className="font-medium uppercase">{defaultLocale}</span>
             </p>
             <div className="overflow-hidden rounded-xl border bg-slate-950 text-slate-100 shadow-sm">
@@ -88,19 +89,22 @@ export function MenuMegaPreview({
                         </span>
                     ))}
                 </div>
-                {location === 'primary' && items.some((item) => (item.children?.length ?? 0) > 0) && (
-                    <div className="grid gap-4 bg-card p-4 text-card-foreground md:grid-cols-2 lg:grid-cols-3">
-                        {items
-                            .filter((item) => (item.children?.length ?? 0) > 0)
-                            .map((item) => (
-                                <MegaColumn
-                                    key={item.id}
-                                    node={item}
-                                    locale={defaultLocale}
-                                />
-                            ))}
-                    </div>
-                )}
+                {location === 'primary' &&
+                    items.some((item) => (item.children?.length ?? 0) > 0) && (
+                        <div className="grid gap-4 bg-card p-4 text-card-foreground md:grid-cols-2 lg:grid-cols-3">
+                            {items
+                                .filter(
+                                    (item) => (item.children?.length ?? 0) > 0,
+                                )
+                                .map((item) => (
+                                    <MegaColumn
+                                        key={item.id}
+                                        node={item}
+                                        locale={defaultLocale}
+                                    />
+                                ))}
+                        </div>
+                    )}
             </div>
         </div>
     );

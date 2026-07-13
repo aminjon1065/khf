@@ -1,10 +1,10 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ChevronLeft, FileText, Printer } from 'lucide-react';
+import { MissingTranslationAlert } from '@/components/Public/missing-translation-alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/hooks/use-translations';
 import { index as guidesIndex } from '@/routes/guides';
-import { MissingTranslationAlert } from '@/components/Public/missing-translation-alert';
 
 type GuideFile = {
     name: string;
@@ -20,6 +20,7 @@ type Guide = {
     audience_label: string;
     files: GuideFile[];
     is_missing_translation?: boolean;
+    locale?: string;
 };
 
 type PageProps = {
@@ -38,11 +39,13 @@ export default function GuideShow({ guide }: PageProps) {
         <>
             <Head title={guide.title} />
 
-            {guide.locale && <MissingTranslationAlert contentLocale={guide.locale} />}
+            {guide.locale && (
+                <MissingTranslationAlert contentLocale={guide.locale} />
+            )}
 
             <article className="mx-auto max-w-3xl">
                 <Link
-                    href={index({ locale }).url}
+                    href={guidesIndex({ locale: locale as string }).url}
                     className="inline-flex items-center gap-1 text-sm text-primary hover:underline print:hidden"
                 >
                     <ChevronLeft className="size-4" />

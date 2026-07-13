@@ -16,7 +16,6 @@ import {
     ChevronRight,
 } from 'lucide-react';
 import { useTranslations } from '@/hooks/use-translations';
-import PublicLayout from '@/layouts/public/public-layout';
 import type { SharedData } from '@/types';
 
 interface SearchResult {
@@ -54,7 +53,10 @@ export default function Search({
     const { locale } = usePage<SharedData>().props;
     const activeType = filters?.type ?? null;
 
-    const buildSearchUrl = (overrides: { type?: string | null; page?: number }) => {
+    const buildSearchUrl = (overrides: {
+        type?: string | null;
+        page?: number;
+    }) => {
         const params = new URLSearchParams();
 
         if (query) {
@@ -137,7 +139,7 @@ export default function Search({
     };
 
     return (
-        <PublicLayout>
+        <>
             <Head title={`${t('actions.search')} - ${query}`} />
 
             <div className="mx-auto max-w-3xl py-8">
@@ -153,7 +155,9 @@ export default function Search({
                     </p>
                     {pagination && pagination.total > 0 && (
                         <p className="mt-1 text-sm text-muted-foreground">
-                            {t('search.results_count', { count: pagination.total })}
+                            {t('search.results_count', {
+                                count: pagination.total,
+                            })}
                         </p>
                     )}
                 </div>
@@ -189,7 +193,9 @@ export default function Search({
                 {query && results.length === 0 && (
                     <div className="rounded-lg border bg-card py-16 text-center shadow-sm">
                         <SearchIcon className="mx-auto mb-4 size-12 text-muted-foreground/30" />
-                        <h3 className="text-lg font-medium">{t('table.empty')}</h3>
+                        <h3 className="text-lg font-medium">
+                            {t('table.empty')}
+                        </h3>
                         <p className="mt-1 text-muted-foreground">
                             {t('search.no_results_hint')}
                         </p>
@@ -286,6 +292,6 @@ export default function Search({
                     </nav>
                 )}
             </div>
-        </PublicLayout>
+        </>
     );
 }

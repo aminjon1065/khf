@@ -15,7 +15,7 @@ export function SubscriptionWidget({ locale }: { locale: string }) {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(subscriptionsStore().url, {
+        post(subscriptionsStore({ locale }).url, {
             preserveScroll: true,
             onSuccess: () => setData('email', ''),
         });
@@ -58,7 +58,11 @@ export function SubscriptionWidget({ locale }: { locale: string }) {
                             </p>
                         )}
                     </div>
-                    <Button type="submit" disabled={processing} className="w-full">
+                    <Button
+                        type="submit"
+                        disabled={processing}
+                        className="w-full"
+                    >
                         {processing && (
                             <Loader2 className="mr-2 size-4 animate-spin" />
                         )}

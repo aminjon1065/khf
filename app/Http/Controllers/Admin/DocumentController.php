@@ -14,6 +14,7 @@ use App\Http\Requests\Admin\StoreDocumentRequest;
 use App\Http\Requests\Admin\UpdateDocumentRequest;
 use App\Models\Document;
 use App\Models\Tag;
+use App\Services\Admin\ContentEntryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -27,6 +28,8 @@ class DocumentController extends Controller
     use ProvidesBlueprintForm;
     use RedirectsToContentBrowser;
     use SavesContentRevisions;
+
+    public function __construct(private ContentEntryService $entries) {}
 
     public function index(): RedirectResponse
     {
@@ -46,12 +49,9 @@ class DocumentController extends Controller
     public function store(StoreDocumentRequest $request): RedirectResponse
     {
         $data = $request->validated();
-
-        $document = Document::create($this->attributes($data));
-        $document->upsertTranslations($this->translationsPayload($data));
+        $document = $this->entries->store('document', $data);
         $document->tags()->sync($data['tag_ids'] ?? []);
         $this->syncFiles($request, $document);
-        $this->saveContentRevision($document);
         $this->flashContentSaved(__('Document created.'));
 
         return $this->toContentBrowser('document');
@@ -59,7 +59,7 @@ class DocumentController extends Controller
 
     public function edit(Document $document): Response
     {
-        $document->load(['translations', 'media', 'tags.translations']);
+        $document->loadMissing(['media', 'tags.translations']);
 
         return Inertia::render('admin/content/form', $this->formData($document));
     }
@@ -67,12 +67,9 @@ class DocumentController extends Controller
     public function update(UpdateDocumentRequest $request, Document $document): RedirectResponse
     {
         $data = $request->validated();
-
-        $document->update($this->attributes($data));
-        $document->upsertTranslations($this->translationsPayload($data));
+        $this->entries->update('document', $document, $data);
         $document->tags()->sync($data['tag_ids'] ?? []);
         $this->syncFiles($request, $document);
-        $this->saveContentRevision($document);
         $this->flashContentSaved(__('Document updated.'));
 
         return $this->toContentBrowser('document');
@@ -109,36 +106,18 @@ class DocumentController extends Controller
     }
 
     /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
-     */
-    private function attributes(array $data): array
-    {
-        return [
-            'type' => $data['type'],
-            'source' => $data['source'] ?? null,
-            'document_date' => $data['document_date'] ?? null,
-            'status' => $data['status'],
-            'sort_order' => $data['sort_order'] ?? 0,
-        ];
-    }
-
-    /**
      * @return array<string, mixed>
      */
     private function formData(?Document $document): array
     {
         $locale = app()->getLocale();
-        $translations = [];
+        $entry = null;
         $files = [];
 
         if ($document) {
-            foreach ($document->translations as $translation) {
-                $translations[$translation->locale] = [
-                    'name' => $translation->name,
-                    'description' => $translation->description,
-                ];
-            }
+            $entry = $this->entries->entryArray($document, 'document');
+            $entry['document_date'] = $document->document_date?->format('Y-m-d');
+            $entry['tag_ids'] = $document->tags->pluck('id')->all();
 
             $files = $document->getMedia(Document::FILES_COLLECTION)
                 ->map(fn ($media) => [
@@ -156,16 +135,7 @@ class DocumentController extends Controller
 
         return $this->contentEntryFormProps(
             'document',
-            $document ? [
-                'id' => $document->id,
-                'type' => $document->type->value,
-                'source' => $document->source,
-                'document_date' => $document->document_date?->format('Y-m-d'),
-                'status' => $document->status->value,
-                'sort_order' => $document->sort_order,
-                'tag_ids' => $document->tags->pluck('id')->all(),
-                'translations' => $translations,
-            ] : null,
+            $entry,
             [
                 'type' => DocumentType::options(),
                 'tag_ids' => Tag::query()
@@ -178,20 +148,5 @@ class DocumentController extends Controller
                 'existingFiles' => $files,
             ],
         );
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, array<string, mixed>>
-     */
-    private function translationsPayload(array $data): array
-    {
-        return collect($data['translations'] ?? [])
-            ->filter(fn (array $translation) => filled($translation['name'] ?? null))
-            ->map(fn (array $translation) => [
-                'name' => $translation['name'],
-                'description' => $translation['description'] ?? null,
-            ])
-            ->all();
     }
 }

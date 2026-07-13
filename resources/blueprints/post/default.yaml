@@ -1,65 +1,65 @@
 title: Новость
 sections:
-  main:
-    display: Содержание
-    fields:
-      - handle: title
-        type: text
-        display: Заголовок
-        localizable: true
-        required: true
-      - handle: slug
-        type: slug
-        display: ЧПУ (slug)
-        localizable: true
-        instructions: Оставьте пустым для автогенерации
-      - handle: excerpt
-        type: textarea
-        display: Анонс
-        localizable: true
-        rows: 2
-        max: 500
-      - handle: body
-        type: rich_text
-        display: Полный текст
-        localizable: true
-      - handle: seo_title
-        type: text
-        display: SEO заголовок
-        localizable: true
-      - handle: seo_description
-        type: textarea
-        display: SEO описание
-        localizable: true
-        rows: 2
-        max: 500
-  sidebar:
-    display: Публикация
-    fields:
-      - handle: status
-        type: status
-        display: Статус
-      - handle: type
-        type: select
-        display: Тип
-        required: true
-      - handle: category_id
-        type: entries
-        display: Рубрика
-        collection: categories
-        max: 1
-      - handle: tag_ids
-        type: entries
-        display: Теги
-        collection: tags
-      - handle: published_at
-        type: date
-        display: Дата публикации
-      - handle: unpublished_at
-        type: date
-        display: Дата снятия
-      - handle: cover
-        type: assets
-        display: Обложка
-        instructions: Загрузите файл или выберите из медиабиблиотеки
-        max: 1
+    main:
+        display: Содержание
+        fields:
+            - handle: title
+              type: text
+              display: Заголовок
+              localizable: true
+              required: true
+            - handle: slug
+              type: slug
+              display: ЧПУ (slug)
+              localizable: true
+              instructions: Оставьте пустым для автогенерации
+            - handle: excerpt
+              type: textarea
+              display: Анонс
+              localizable: true
+              rows: 2
+              max: 500
+            - handle: body
+              type: rich_text
+              display: Полный текст
+              localizable: true
+            - handle: seo_title
+              type: text
+              display: SEO заголовок
+              localizable: true
+            - handle: seo_description
+              type: textarea
+              display: SEO описание
+              localizable: true
+              rows: 2
+              max: 500
+    sidebar:
+        display: Публикация
+        fields:
+            - handle: status
+              type: status
+              display: Статус
+            - handle: type
+              type: select
+              display: Тип
+              required: true
+            - handle: category_id
+              type: entries
+              display: Рубрика
+              collection: categories
+              max: 1
+            - handle: tag_ids
+              type: entries
+              display: Теги
+              collection: tags
+            - handle: published_at
+              type: date
+              display: Дата публикации
+            - handle: unpublished_at
+              type: date
+              display: Дата снятия
+            - handle: cover
+              type: assets
+              display: Обложка
+              instructions: Загрузите файл или выберите из медиабиблиотеки
+              max: 1

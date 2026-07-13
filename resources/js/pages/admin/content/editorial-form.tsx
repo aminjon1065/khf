@@ -193,9 +193,9 @@ function EditorialHelp({ handle }: { handle: string }): ReactNode {
             <CpContentHelp title="Страницы и разделы сайта">
                 <p>
                     CMS-страница публикуется по адресу{' '}
-                    <code>/язык/pages/адрес</code>. Разделы вроде «Контакты»
-                    или «Новости» — отдельные модули портала; их адреса
-                    задаются системой.
+                    <code>/язык/pages/адрес</code>. Разделы вроде «Контакты» или
+                    «Новости» — отдельные модули портала; их адреса задаются
+                    системой.
                 </p>
                 <p>
                     Флаг «Сделать главной» подключает блоки этой страницы на
@@ -229,8 +229,11 @@ export default function EditorialEntryForm({
     canPublish = false,
 }: PageProps) {
     const isEdit = Boolean(entry?.id);
-    const form = useForm(
-        buildInitialFormData(blueprint, entry, locales, statuses),
+    const form = useForm<Record<string, any>>(
+        buildInitialFormData(blueprint, entry, locales, statuses) as Record<
+            string,
+            any
+        >,
     );
     const [activeLocale, setActiveLocale] = useState(defaultLocale);
     const [previewOpen, setPreviewOpen] = useState(false);

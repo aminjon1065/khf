@@ -3,15 +3,13 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { AlertPublishConfirmDialog } from '@/components/admin/cp/alert-publish-dialog';
 import { CpBlueprintForm } from '@/components/admin/cp/blueprint-form';
-import {
-    IncidentLocationPanel,
-    type RegionCoordinatesMap,
-} from '@/components/admin/cp/incident-location-panel';
+import { IncidentLocationPanel } from '@/components/admin/cp/incident-location-panel';
+import type { RegionCoordinatesMap } from '@/components/admin/cp/incident-location-panel';
 import {
     CpPollOptionsField,
     emptyPollOption,
-    type PollOptionRow,
 } from '@/components/admin/cp/poll-options-field';
+import type { PollOptionRow } from '@/components/admin/cp/poll-options-field';
 import {
     CpLocaleTabs,
     CpPanel,
@@ -182,8 +180,7 @@ function normalizePollOptions(
             translations: locales.reduce(
                 (acc, locale) => {
                     acc[locale.code] = {
-                        label:
-                            option.translations?.[locale.code]?.label ?? '',
+                        label: option.translations?.[locale.code]?.label ?? '',
                     };
 
                     return acc;
@@ -295,14 +292,14 @@ export default function ContentEntryForm({
     const hasPollOptions = fields.some(isPollOptionsField);
     const hasIncidentLocation = hasIncidentLocationFields(fields);
     const regionCoordinates = normalizeRegionCoordinates(regionCoordinatesProp);
-    const form = useForm(
+    const form = useForm<Record<string, any>>(
         buildInitialFormData(
             blueprint,
             entry,
             locales,
             statuses,
             fieldOptions,
-        ),
+        ) as Record<string, any>,
     );
     const [activeLocale, setActiveLocale] = useState(defaultLocale);
     const [showPublishConfirm, setShowPublishConfirm] = useState(false);
@@ -323,8 +320,7 @@ export default function ContentEntryForm({
             return;
         }
 
-        const regionId =
-            value === null || value === '' ? null : Number(value);
+        const regionId = value === null || value === '' ? null : Number(value);
         const selected = regionId ? regionCoordinates[regionId] : undefined;
 
         if (selected) {
@@ -354,18 +350,19 @@ export default function ContentEntryForm({
     const submit = async (event: FormEvent) => {
         event.preventDefault();
 
+        const estimateUrl = urls.estimate;
         const publishingAlert =
             isAlert &&
             form.data.status === 'published' &&
             entry?.status !== 'published' &&
-            urls.estimate;
+            estimateUrl;
 
         if (publishingAlert) {
             setIsEstimating(true);
             setShowPublishConfirm(true);
 
             try {
-                const url = new URL(urls.estimate, window.location.origin);
+                const url = new URL(estimateUrl, window.location.origin);
                 const regionId = form.data.region_id;
 
                 if (regionId) {

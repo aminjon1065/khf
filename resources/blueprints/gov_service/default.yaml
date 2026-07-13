@@ -1,68 +1,69 @@
 title: Госуслуга
 sections:
-  main:
-    display: Содержание
-    fields:
-      - handle: title
-        type: text
-        display: Название
-        localizable: true
-        required: true
-      - handle: slug
-        type: slug
-        display: ЧПУ (slug)
-        localizable: true
-      - handle: summary
-        type: textarea
-        display: Краткое описание
-        localizable: true
-        rows: 2
-        max: 500
-      - handle: description
-        type: rich_text
-        display: Полное описание
-        localizable: true
-      - handle: eligibility
-        type: textarea
-        display: Кто может получить
-        localizable: true
-      - handle: required_documents
-        type: textarea
-        display: Необходимые документы
-        localizable: true
-      - handle: seo_title
-        type: text
-        display: SEO заголовок
-        localizable: true
-      - handle: seo_description
-        type: textarea
-        display: SEO описание
-        localizable: true
-        rows: 2
-        max: 500
-  sidebar:
-    display: Публикация
-    fields:
-      - handle: status
-        type: status
-        display: Статус
-      - handle: category
-        type: select
-        display: Категория
-        required: true
-      - handle: is_online
-        type: toggle
-        display: Онлайн-услуга
-      - handle: external_url
-        type: text
-        display: Внешняя ссылка
-        max: 2048
-      - handle: processing_time
-        type: text
-        display: Срок оказания
-      - handle: fee
-        type: text
-        display: Стоимость
-      - handle: sort_order
-        type: number
-        display: Порядок
+    main:
+        display: Содержание
+        fields:
+            - handle: title
+              type: text
+              display: Название
+              localizable: true
+              required: true
+            - handle: slug
+              type: slug
+              display: ЧПУ (slug)
+              localizable: true
+            - handle: summary
+              type: textarea
+              display: Краткое описание
+              localizable: true
+              rows: 2
+              max: 500
+            - handle: description
+              type: rich_text
+              display: Полное описание
+              localizable: true
+            - handle: eligibility
+              type: textarea
+              display: Кто может получить
+              localizable: true
+            - handle: required_documents
+              type: textarea
+              display: Необходимые документы
+              localizable: true
+            - handle: seo_title
+              type: text
+              display: SEO заголовок
+              localizable: true
+            - handle: seo_description
+              type: textarea
+              display: SEO описание
+              localizable: true
+              rows: 2
+              max: 500
+    sidebar:
+        display: Публикация
+        fields:
+            - handle: status
+              type: status
+              display: Статус
+            - handle: category
+              type: select
+              display: Категория
+              required: true
+            - handle: is_online
+              type: toggle
+              display: Онлайн-услуга
+              default: false
+            - handle: external_url
+              type: text
+              display: Внешняя ссылка
+              max: 2048
+            - handle: processing_time
+              type: text
+              display: Срок оказания
+            - handle: fee
+              type: text
+              display: Стоимость
+            - handle: sort_order
+              type: number
+              display: Порядок

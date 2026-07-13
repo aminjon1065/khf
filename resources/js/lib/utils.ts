@@ -11,13 +11,20 @@ export function toUrl(url: NonNullable<InertiaLinkProps['href']>): string {
     return typeof url === 'string' ? url : url.url;
 }
 
-export function formatDate(dateString: string | null | undefined, locale: string = 'tj'): string {
-    if (!dateString) return '';
+export function formatDate(
+    dateString: string | null | undefined,
+    locale: string = 'tj',
+): string {
+    if (!dateString) {
+        return '';
+    }
 
     let date = new Date(dateString);
+
     if (isNaN(date.getTime())) {
         // Try parsing dd.mm.yyyy (e.g. 22.06.2026)
         const parts = dateString.split(/[\s.]+/);
+
         if (parts.length >= 3) {
             const day = parseInt(parts[0], 10);
             const month = parseInt(parts[1], 10) - 1;
@@ -26,14 +33,17 @@ export function formatDate(dateString: string | null | undefined, locale: string
         }
     }
 
-    if (isNaN(date.getTime())) return dateString;
+    if (isNaN(date.getTime())) {
+        return dateString;
+    }
 
     // Use Intl.DateTimeFormat to localize month names, e.g. 15 января 2026
-    const mappedLocale = locale === 'tj' ? 'tg-TJ' : locale === 'ru' ? 'ru-RU' : 'en-US';
-    
+    const mappedLocale =
+        locale === 'tj' ? 'tg-TJ' : locale === 'ru' ? 'ru-RU' : 'en-US';
+
     return new Intl.DateTimeFormat(mappedLocale, {
         day: 'numeric',
         month: 'long',
-        year: 'numeric'
+        year: 'numeric',
     }).format(date);
 }

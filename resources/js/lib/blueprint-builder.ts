@@ -29,7 +29,11 @@ export const BLUEPRINT_FIELD_TYPES: BlueprintFieldTypeOption[] = [
     { type: 'textarea', label: 'Многострочный текст', defaults: { rows: 4 } },
     { type: 'rich_text', label: 'Rich text' },
     { type: 'select', label: 'Выбор (select)' },
-    { type: 'entries', label: 'Связь (entries)', defaults: { collection: 'categories' } },
+    {
+        type: 'entries',
+        label: 'Связь (entries)',
+        defaults: { collection: 'categories' },
+    },
     { type: 'date', label: 'Дата' },
     { type: 'assets', label: 'Медиа (assets)', defaults: { max: 1 } },
     { type: 'toggle', label: 'Переключатель' },
@@ -52,10 +56,7 @@ function createFieldId(): string {
     return Math.random().toString(36).slice(2, 11);
 }
 
-export function createBuilderField(
-    type: string,
-    index = 1,
-): BuilderField {
+export function createBuilderField(type: string, index = 1): BuilderField {
     const definition = BLUEPRINT_FIELD_TYPES.find((item) => item.type === type);
     const handle = `field_${index}`;
 
@@ -105,13 +106,22 @@ export function stripBuilderIds(
                 {
                     handle: section.handle,
                     display: section.display,
-                    fields: section.fields.map(({ id: _id, ...field }) => field),
+                    fields: section.fields.map((field) => {
+                        const { id, ...withoutId } = field;
+                        void id;
+
+                        return withoutId;
+                    }),
                 },
             ]),
         ),
     };
 
-    return handle ? { ...payload, handle } : payload;
+    return (
+        handle ? { ...payload, handle } : payload
+    ) as BlueprintDefinition & {
+        handle?: string;
+    };
 }
 
 export function validateBuilderSchema(schema: BuilderSchema): string | null {
@@ -248,13 +258,19 @@ export function addSectionField(
             ...schema.sections,
             [sectionHandle]: {
                 ...section,
-                fields: [...section.fields, createBuilderField(type, nextIndex)],
+                fields: [
+                    ...section.fields,
+                    createBuilderField(type, nextIndex),
+                ],
             },
         },
     };
 }
 
-export function nextFieldIndex(schema: BuilderSchema, sectionHandle: string): number {
+export function nextFieldIndex(
+    schema: BuilderSchema,
+    sectionHandle: string,
+): number {
     const section = schema.sections[sectionHandle];
 
     return (section?.fields.length ?? 0) + 1;

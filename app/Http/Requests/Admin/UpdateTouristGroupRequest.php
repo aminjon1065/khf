@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\AppealStatus;
-use App\Enums\Permission;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -12,7 +11,9 @@ class UpdateTouristGroupRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can(Permission::ManageTouristGroups->value) ?? false;
+        $touristGroup = $this->route('touristGroup');
+
+        return $touristGroup !== null && ($this->user()?->can('update', $touristGroup) ?? false);
     }
 
     /**

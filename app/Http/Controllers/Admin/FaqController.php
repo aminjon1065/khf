@@ -11,7 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreFaqRequest;
 use App\Http\Requests\Admin\UpdateFaqRequest;
 use App\Models\Faq;
-use App\Support\HtmlSanitizer;
+use App\Services\Admin\ContentEntryService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,7 +24,7 @@ class FaqController extends Controller
     use RedirectsToContentBrowser;
     use SavesContentRevisions;
 
-    public function __construct(private HtmlSanitizer $sanitizer) {}
+    public function __construct(private ContentEntryService $entries) {}
 
     public function index(): RedirectResponse
     {
@@ -38,15 +38,7 @@ class FaqController extends Controller
 
     public function store(StoreFaqRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-
-        $faq = Faq::create([
-            'status' => $data['status'],
-            'sort_order' => $data['sort_order'] ?? 0,
-        ]);
-        $faq->upsertTranslations($this->translationsPayload($data));
-        $faq->load('translations');
-        $this->saveContentRevision($faq);
+        $this->entries->store('faq', $request->validated());
 
         $this->flashContentSaved(__('FAQ created.'));
 
@@ -55,22 +47,12 @@ class FaqController extends Controller
 
     public function edit(Faq $faq): Response
     {
-        $faq->load('translations');
-
         return Inertia::render('admin/content/form', $this->formData($faq));
     }
 
     public function update(UpdateFaqRequest $request, Faq $faq): RedirectResponse
     {
-        $data = $request->validated();
-
-        $faq->update([
-            'status' => $data['status'],
-            'sort_order' => $data['sort_order'] ?? 0,
-        ]);
-        $faq->upsertTranslations($this->translationsPayload($data));
-        $faq->load('translations');
-        $this->saveContentRevision($faq);
+        $this->entries->update('faq', $faq, $request->validated());
 
         $this->flashContentSaved(__('FAQ updated.'));
 
@@ -79,7 +61,7 @@ class FaqController extends Controller
 
     public function destroy(Faq $faq): RedirectResponse
     {
-        $faq->delete();
+        $this->entries->destroy('faq', $faq);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('FAQ deleted.')]);
 
@@ -91,40 +73,9 @@ class FaqController extends Controller
      */
     private function formData(?Faq $faq): array
     {
-        $translations = [];
-
-        if ($faq) {
-            foreach ($faq->translations as $translation) {
-                $translations[$translation->locale] = [
-                    'question' => $translation->question,
-                    'answer' => $translation->answer,
-                ];
-            }
-        }
-
         return $this->contentEntryFormProps(
             'faq',
-            $faq ? [
-                'id' => $faq->id,
-                'status' => $faq->status->value,
-                'sort_order' => $faq->sort_order,
-                'translations' => $translations,
-            ] : null,
+            $faq ? $this->entries->entryArray($faq, 'faq') : null,
         );
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, array<string, mixed>>
-     */
-    private function translationsPayload(array $data): array
-    {
-        return collect($data['translations'] ?? [])
-            ->filter(fn (array $translation) => filled($translation['question'] ?? null))
-            ->map(fn (array $translation) => [
-                'question' => $translation['question'],
-                'answer' => $this->sanitizer->clean($translation['answer'] ?? null),
-            ])
-            ->all();
     }
 }

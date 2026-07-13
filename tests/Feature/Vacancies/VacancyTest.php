@@ -97,6 +97,16 @@ it('rejects an application with the honeypot filled', function () {
     expect(VacancyApplication::count())->toBe(0);
 });
 
+it('rejects an executable resume upload', function () {
+    $vacancy = openVacancy();
+
+    $this->post(route('vacancies.apply', ['locale' => 'tj', 'vacancy' => $vacancy->id]), applicationForm([
+        'resume' => UploadedFile::fake()->create('shell.php', 100, 'application/x-httpd-php'),
+    ]))->assertSessionHasErrors('resume');
+
+    expect(VacancyApplication::count())->toBe(0);
+});
+
 it('validates required application fields including the CV', function () {
     $vacancy = openVacancy();
 

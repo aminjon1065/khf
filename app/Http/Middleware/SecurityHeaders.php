@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\MapTiles;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -50,6 +51,13 @@ class SecurityHeaders
         /** @var array<string, list<string>> $directives */
         $directives = config('security.csp.directives');
 
+        $directives['connect-src'] = [
+            ...($directives['connect-src'] ?? ["'self'"]),
+            ...MapTiles::cspConnectSources(),
+        ];
+
+        $directives = $this->withAnalyticsSources($directives);
+
         if (app()->isLocal()) {
             $directives = $this->withDevSources($directives);
         }
@@ -57,6 +65,47 @@ class SecurityHeaders
         return collect($directives)
             ->map(fn (array $sources, string $directive): string => $directive.' '.implode(' ', array_unique($sources)))
             ->implode('; ');
+    }
+
+    /**
+     * Allow Matomo tracker origin in script-src / connect-src when configured.
+     *
+     * @param  array<string, list<string>>  $directives
+     * @return array<string, list<string>>
+     */
+    private function withAnalyticsSources(array $directives): array
+    {
+        $origin = $this->originFromUrl((string) config('matomo.url'));
+
+        if ($origin === null) {
+            return $directives;
+        }
+
+        $directives['script-src'] = [...($directives['script-src'] ?? ["'self'"]), $origin];
+        $directives['connect-src'] = [...($directives['connect-src'] ?? ["'self'"]), $origin];
+
+        return $directives;
+    }
+
+    private function originFromUrl(string $url): ?string
+    {
+        if ($url === '') {
+            return null;
+        }
+
+        $parts = parse_url($url);
+
+        if (! is_array($parts) || ! isset($parts['scheme'], $parts['host'])) {
+            return null;
+        }
+
+        $origin = $parts['scheme'].'://'.$parts['host'];
+
+        if (isset($parts['port'])) {
+            $origin .= ':'.$parts['port'];
+        }
+
+        return $origin;
     }
 
     /**

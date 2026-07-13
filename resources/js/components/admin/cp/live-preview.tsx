@@ -34,7 +34,8 @@ export function CpLivePreview({
     const [locale, setLocale] = useState(activeLocale);
 
     const availableLocales = locales.filter((item) => previewUrls[item.code]);
-    const src = previewUrls[locale] ?? previewUrls[availableLocales[0]?.code ?? ''];
+    const src =
+        previewUrls[locale] ?? previewUrls[availableLocales[0]?.code ?? ''];
 
     useEffect(() => {
         if (open) {
@@ -53,7 +54,12 @@ export function CpLivePreview({
 
     return (
         <>
-            <Button type="button" variant="outline" size="sm" onClick={openPreview}>
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openPreview}
+            >
                 <Eye className="size-4" />
                 Предпросмотр
             </Button>
@@ -66,8 +72,8 @@ export function CpLivePreview({
                     <SheetHeader className="border-b px-4 py-3">
                         <SheetTitle>Предпросмотр на сайте</SheetTitle>
                         <SheetDescription>
-                            Черновик отображается так же, как на публичном сайте. Ссылка
-                            действует ограниченное время.
+                            Черновик отображается так же, как на публичном
+                            сайте. Ссылка действует ограниченное время.
                         </SheetDescription>
                         {availableLocales.length > 1 && (
                             <div className="flex flex-wrap gap-1 pt-2">

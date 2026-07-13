@@ -37,9 +37,8 @@ return [
             'style-src' => ["'self'", "'unsafe-inline'"],
             'img-src' => ["'self'", 'data:', 'blob:', 'https:'],
             'font-src' => ["'self'", 'data:'],
-            // MapLibre GL fetches OSM raster tiles via fetch() (connect-src) and runs its renderer in
-            // a blob: web worker (worker-src) — both must be allowed for the incident map (ТЗ §6.3).
-            'connect-src' => ["'self'", 'https://tile.openstreetmap.org', 'https://*.tile.openstreetmap.org'],
+            // Map tile / glyph hosts are merged at runtime from config/map.php (see MapTiles + SecurityHeaders).
+            'connect-src' => ["'self'"],
             'worker-src' => ["'self'", 'blob:'],
             'frame-ancestors' => ["'self'"],
             'base-uri' => ["'self'"],

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\AppealStatus;
-use App\Enums\Permission;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -15,7 +14,9 @@ class UpdateAppealRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can(Permission::ManageAppeals->value) ?? false;
+        $appeal = $this->route('appeal');
+
+        return $appeal !== null && ($this->user()?->can('update', $appeal) ?? false);
     }
 
     /**

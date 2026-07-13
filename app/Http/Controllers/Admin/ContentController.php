@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Cms\ContentTypeDefinition;
 use App\Cms\ContentTypeRegistry;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\BulkDestroyContentRequest;
 use App\Http\Requests\Admin\ImportContentRequest;
 use App\Services\Admin\ContentBrowserService;
 use App\Services\Admin\ContentExportService;
@@ -40,23 +41,16 @@ class ContentController extends Controller
         return Inertia::render('admin/content/index', $this->browser->indexProps($definition, $request));
     }
 
-    public function bulkDestroy(Request $request, string $type): RedirectResponse
+    public function bulkDestroy(BulkDestroyContentRequest $request, string $type): RedirectResponse
     {
-        $definition = $this->resolveType($request, $type);
-
+        $definition = $request->contentType();
         abort_unless($definition->hasFeature('soft_deletes'), 404);
-
-        /** @var array{ids: list<int>} $validated */
-        $validated = $request->validate([
-            'ids' => ['required', 'array', 'min:1'],
-            'ids.*' => ['integer'],
-        ]);
 
         /** @var class-string<Model> $modelClass */
         $modelClass = $definition->modelClass;
 
         $modelClass::query()
-            ->whereIn('id', $validated['ids'])
+            ->whereIn('id', $request->ids())
             ->get()
             ->each->delete();
 

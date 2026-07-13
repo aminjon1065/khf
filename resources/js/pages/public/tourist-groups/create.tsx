@@ -2,6 +2,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { CheckCircle2 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
+import { MapView } from '@/components/map-view';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,9 +14,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { MapView } from '@/components/map-view';
-import { useTranslations } from '@/hooks/use-translations';
 import { useMatomoGoal } from '@/hooks/use-matomo-goal';
+import { useTranslations } from '@/hooks/use-translations';
 import { create, store, track } from '@/routes/tourist-groups';
 
 type RegionOption = { id: number; name: string };
@@ -42,6 +42,8 @@ export default function TouristGroupCreate({
         start_date: '',
         end_date: '',
         region_id: null as number | null,
+        start_latitude: null as number | null,
+        start_longitude: null as number | null,
         website: '',
     });
 

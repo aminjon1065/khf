@@ -28,19 +28,38 @@ trait HasTranslations
     /**
      * Translation for a locale, falling back to the configured fallback locale and then to any
      * available translation (ТЗ §14 — graceful missing-translation handling).
+     *
+     * Prefer eager-loading `translations` on list/hot paths. When the relation is not loaded,
+     * this queries the database instead of lazy-loading the full collection (avoids
+     * {@see Model::preventLazyLoading()} violations and accidental N+1 via relation access).
      */
     public function translation(?string $locale = null): ?Model
     {
         $locale ??= app()->getLocale();
+        $fallback = (string) config('app.fallback_locale');
 
-        return $this->translations->firstWhere('locale', $locale)
-            ?? $this->translations->firstWhere('locale', config('app.fallback_locale'))
-            ?? $this->translations->first();
+        if ($this->relationLoaded('translations')) {
+            return $this->translations->firstWhere('locale', $locale)
+                ?? $this->translations->firstWhere('locale', $fallback)
+                ?? $this->translations->first();
+        }
+
+        $preferred = $this->translations()
+            ->whereIn('locale', array_values(array_unique([$locale, $fallback])))
+            ->get();
+
+        return $preferred->firstWhere('locale', $locale)
+            ?? $preferred->firstWhere('locale', $fallback)
+            ?? $this->translations()->first();
     }
 
     public function hasTranslation(string $locale): bool
     {
-        return $this->translations->contains('locale', $locale);
+        if ($this->relationLoaded('translations')) {
+            return $this->translations->contains('locale', $locale);
+        }
+
+        return $this->translations()->where('locale', $locale)->exists();
     }
 
     /**
@@ -50,7 +69,11 @@ trait HasTranslations
      */
     public function translatedLocales(): array
     {
-        return $this->translations->pluck('locale')->all();
+        if ($this->relationLoaded('translations')) {
+            return $this->translations->pluck('locale')->all();
+        }
+
+        return $this->translations()->pluck('locale')->all();
     }
 
     /**

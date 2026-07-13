@@ -8,15 +8,13 @@ import {
 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
+import { MissingTranslationAlert } from '@/components/Public/missing-translation-alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Icon } from '@/components/ui/icon';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/hooks/use-translations';
 import { apply, index as vacanciesIndex, track } from '@/routes/vacancies';
-import { MissingTranslationAlert } from '@/components/Public/missing-translation-alert';
 
 type Vacancy = {
     id: number;
@@ -78,7 +76,9 @@ export default function VacancyShow({
         <>
             <Head title={vacancy.title} />
 
-            {vacancy.locale && <MissingTranslationAlert contentLocale={vacancy.locale} />}
+            {vacancy.locale && (
+                <MissingTranslationAlert contentLocale={vacancy.locale} />
+            )}
 
             <div className="grid gap-10 lg:grid-cols-[1fr_380px]">
                 {/* Left col: Details */}

@@ -1,11 +1,14 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/react-starter-kit",
+    "name": "kchs/khf-portal",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Official multilingual portal of the Committee for Emergency Situations and Civil Defense (КЧС / КҲФ).",
     "keywords": [
         "laravel",
-        "framework"
+        "inertia",
+        "kchs",
+        "khf",
+        "tajikistan"
     ],
     "license": "MIT",
     "require": {

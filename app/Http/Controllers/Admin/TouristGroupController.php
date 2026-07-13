@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,6 +18,8 @@ class TouristGroupController extends Controller
 {
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', TouristGroup::class);
+
         $locale = app()->getLocale();
         $search = trim((string) $request->string('search'));
         $status = in_array((string) $request->string('status'), AppealStatus::values(), true)
@@ -53,6 +56,8 @@ class TouristGroupController extends Controller
 
     public function show(TouristGroup $touristGroup): Response
     {
+        Gate::authorize('view', $touristGroup);
+
         $locale = app()->getLocale();
         $touristGroup->load(['assignee:id,name', 'region.translations']);
 
@@ -93,6 +98,8 @@ class TouristGroupController extends Controller
 
     public function destroy(TouristGroup $touristGroup): RedirectResponse
     {
+        Gate::authorize('delete', $touristGroup);
+
         $touristGroup->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Application deleted.')]);

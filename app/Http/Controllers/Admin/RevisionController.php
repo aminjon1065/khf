@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Cms\ContentTypeRegistry;
 use App\Http\Controllers\Controller;
 use App\Models\Alert;
 use App\Models\Document;
@@ -31,6 +32,8 @@ class RevisionController extends Controller
     {
         $model = $this->resolveModel($type, $id);
 
+        $this->authorizeManage($request, $model);
+
         if (! method_exists($model, 'revisions')) {
             abort(404, 'Model does not support revisions.');
         }
@@ -53,10 +56,12 @@ class RevisionController extends Controller
     /**
      * Show a revision with a diff against the next newer version or the live model.
      */
-    public function show(Revision $revision): JsonResponse
+    public function show(Request $request, Revision $revision): JsonResponse
     {
         /** @var Model $model */
         $model = $revision->revisionable;
+
+        $this->authorizeManage($request, $model);
 
         if (! method_exists($model, 'revisions')) {
             abort(404, 'Model does not support revisions.');
@@ -98,7 +103,7 @@ class RevisionController extends Controller
     /**
      * Restore a specific revision.
      */
-    public function restore(Revision $revision): RedirectResponse
+    public function restore(Request $request, Revision $revision): RedirectResponse
     {
         /** @var Model $model */
         $model = $revision->revisionable;
@@ -107,11 +112,23 @@ class RevisionController extends Controller
             abort(404, 'Model does not support restoring revisions.');
         }
 
+        $this->authorizeManage($request, $model);
+
         $model->restoreRevision($revision);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Restored to version from :date', ['date' => $revision->created_at?->format('d.m.Y H:i')])]);
 
         return back();
+    }
+
+    private function authorizeManage(Request $request, Model $model): void
+    {
+        $definition = app(ContentTypeRegistry::class)->forModel($model);
+
+        abort_unless(
+            $definition !== null && $request->user()?->can($definition->managePermission),
+            403,
+        );
     }
 
     private function resolveModel(string $type, int $id): Model

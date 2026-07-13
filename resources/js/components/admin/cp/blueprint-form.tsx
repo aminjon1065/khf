@@ -1,6 +1,6 @@
-import InputError from '@/components/input-error';
-import { CpPanel } from '@/components/admin/cp/publish-form';
 import { CpBlueprintField } from '@/components/admin/cp/blueprint-field';
+import { CpPanel } from '@/components/admin/cp/publish-form';
+import InputError from '@/components/input-error';
 import type {
     BlueprintDefinition,
     BlueprintFieldDefinition,

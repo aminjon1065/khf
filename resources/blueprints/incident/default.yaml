@@ -1,43 +1,43 @@
 title: Инцидент
 sections:
-  main:
-    display: Содержание
-    fields:
-      - handle: title
-        type: text
-        display: Заголовок
-        localizable: true
-        required: true
-      - handle: description
-        type: rich_text
-        display: Описание
-        localizable: true
-  sidebar:
-    display: Событие
-    fields:
-      - handle: type
-        type: select
-        display: Тип инцидента
-        required: true
-      - handle: hazard_level
-        type: select
-        display: Уровень опасности
-        required: true
-      - handle: status
-        type: select
-        display: Статус
-        required: true
-      - handle: region_id
-        type: entries
-        display: Регион
-        collection: regions
-        max: 1
-      - handle: latitude
-        type: number
-        display: Широта
-      - handle: longitude
-        type: number
-        display: Долгота
-      - handle: occurred_at
-        type: date
-        display: Дата и время
+    main:
+        display: Содержание
+        fields:
+            - handle: title
+              type: text
+              display: Заголовок
+              localizable: true
+              required: true
+            - handle: description
+              type: rich_text
+              display: Описание
+              localizable: true
+    sidebar:
+        display: Событие
+        fields:
+            - handle: type
+              type: select
+              display: Тип инцидента
+              required: true
+            - handle: hazard_level
+              type: select
+              display: Уровень опасности
+              required: true
+            - handle: status
+              type: select
+              display: Статус
+              required: true
+            - handle: region_id
+              type: entries
+              display: Регион
+              collection: regions
+              max: 1
+            - handle: latitude
+              type: number
+              display: Широта
+            - handle: longitude
+              type: number
+              display: Долгота
+            - handle: occurred_at
+              type: date
+              display: Дата и время

@@ -1,13 +1,10 @@
+import { CpPanel } from '@/components/admin/cp/publish-form';
 import InputError from '@/components/input-error';
 import { MapView } from '@/components/map-view';
-import { CpPanel } from '@/components/admin/cp/publish-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-export type RegionCoordinatesMap = Record<
-    number,
-    { lat: number; lng: number }
->;
+export type RegionCoordinatesMap = Record<number, { lat: number; lng: number }>;
 
 export function IncidentLocationPanel({
     latitude,

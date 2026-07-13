@@ -9,11 +9,11 @@ import { cn } from '@/lib/utils';
 import { create as createAlert } from '@/routes/admin/alerts';
 import { create as createCategory } from '@/routes/admin/categories';
 import { create as createDocument } from '@/routes/admin/documents';
-import { create as createTag } from '@/routes/admin/tags';
 import { create as createGuide } from '@/routes/admin/guides';
 import { create as createIncident } from '@/routes/admin/incidents';
 import { create as createPage } from '@/routes/admin/pages';
 import { create as createPost } from '@/routes/admin/posts';
+import { create as createTag } from '@/routes/admin/tags';
 
 type Href = string | { url: string };
 type ContentResult = {
@@ -242,9 +242,7 @@ function CommandPaletteBody({ onClose }: { onClose: () => void }) {
         } else if (event.key === 'ArrowUp') {
             event.preventDefault();
             setActive((value) =>
-                items.length
-                    ? (value - 1 + items.length) % items.length
-                    : 0,
+                items.length ? (value - 1 + items.length) % items.length : 0,
             );
         } else if (event.key === 'Enter') {
             event.preventDefault();

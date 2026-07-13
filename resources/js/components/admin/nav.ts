@@ -31,19 +31,22 @@ import {
     Users,
 } from 'lucide-react';
 import { dashboard as adminDashboard } from '@/routes/admin';
-import { hub as contentHub, index as contentIndex } from '@/routes/admin/content';
 import { index as appealsIndex } from '@/routes/admin/appeals';
 import { index as auditLogsIndex } from '@/routes/admin/audit-logs';
-import { index as categoriesIndex } from '@/routes/admin/categories';
 import { index as blueprintsIndex } from '@/routes/admin/blueprints';
+import { index as categoriesIndex } from '@/routes/admin/categories';
+import {
+    hub as contentHub,
+    index as contentIndex,
+} from '@/routes/admin/content';
 import { index as globalsIndex } from '@/routes/admin/globals';
 import { index as languagesIndex } from '@/routes/admin/languages';
 import { index as mediaIndex } from '@/routes/admin/media';
 import { index as menusIndex } from '@/routes/admin/menus';
 import { index as moderationIndex } from '@/routes/admin/moderation';
 import { index as redirectsIndex } from '@/routes/admin/redirects';
-import { index as tagsIndex } from '@/routes/admin/tags';
 import { index as subscribersIndex } from '@/routes/admin/subscribers';
+import { index as tagsIndex } from '@/routes/admin/tags';
 import { index as tenderBidsIndex } from '@/routes/admin/tender-bids';
 import { index as touristGroupsIndex } from '@/routes/admin/tourist-groups';
 import { index as usersIndex } from '@/routes/admin/users';

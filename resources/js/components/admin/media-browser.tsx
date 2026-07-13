@@ -185,7 +185,10 @@ export function MediaBrowserFilters({
                         )
                     }
                 >
-                    <SelectTrigger className="w-full sm:w-44" aria-label="Тип файла">
+                    <SelectTrigger
+                        className="w-full sm:w-44"
+                        aria-label="Тип файла"
+                    >
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -267,32 +270,35 @@ export function MediaBrowserGrid({
                                 !clickable && 'cursor-default',
                             )}
                         >
-                        {item.is_image && previewUrl ? (
-                            <img
-                                src={previewUrl}
-                                alt={item.alt_text || item.name}
-                                className="size-full object-cover transition-transform group-hover:scale-105"
-                                style={{
-                                    objectPosition: mediaFocalPosition(
-                                        item.focal_x,
-                                        item.focal_y,
-                                    ),
-                                }}
-                            />
-                        ) : (
-                            <div className="flex size-full flex-col items-center justify-center p-2 text-center text-xs break-all text-muted-foreground">
-                                <div className="mb-1 text-sm font-bold uppercase">
-                                    {item.mime_type?.split('/')[1] ?? 'file'}
+                            {item.is_image && previewUrl ? (
+                                <img
+                                    src={previewUrl}
+                                    alt={item.alt_text || item.name}
+                                    className="size-full object-cover transition-transform group-hover:scale-105"
+                                    style={{
+                                        objectPosition: mediaFocalPosition(
+                                            item.focal_x,
+                                            item.focal_y,
+                                        ),
+                                    }}
+                                />
+                            ) : (
+                                <div className="flex size-full flex-col items-center justify-center p-2 text-center text-xs break-all text-muted-foreground">
+                                    <div className="mb-1 text-sm font-bold uppercase">
+                                        {item.mime_type?.split('/')[1] ??
+                                            'file'}
+                                    </div>
+                                    <span className="line-clamp-3">
+                                        {item.name}
+                                    </span>
                                 </div>
-                                <span className="line-clamp-3">{item.name}</span>
+                            )}
+                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
+                                <p className="truncate text-xs text-white">
+                                    {item.name}
+                                </p>
                             </div>
-                        )}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
-                            <p className="truncate text-xs text-white">
-                                {item.name}
-                            </p>
-                        </div>
-                    </button>
+                        </button>
                     </div>
                 );
             })}
@@ -340,7 +346,7 @@ export function MediaBrowserDetail({
             <dl className="space-y-2 text-sm">
                 <div>
                     <dt className="text-muted-foreground">Название</dt>
-                    <dd className="break-all font-medium">{item.name}</dd>
+                    <dd className="font-medium break-all">{item.name}</dd>
                 </div>
                 {item.human_size && (
                     <div>
@@ -352,7 +358,9 @@ export function MediaBrowserDetail({
                     <div>
                         <dt className="text-muted-foreground">URL</dt>
                         <dd className="flex items-start gap-2">
-                            <span className="break-all">{item.original_url}</span>
+                            <span className="break-all">
+                                {item.original_url}
+                            </span>
                             {onCopyUrl && (
                                 <Button
                                     type="button"
@@ -360,7 +368,9 @@ export function MediaBrowserDetail({
                                     size="icon"
                                     className="shrink-0"
                                     aria-label="Копировать URL"
-                                    onClick={() => onCopyUrl(item.original_url!)}
+                                    onClick={() =>
+                                        onCopyUrl(item.original_url!)
+                                    }
                                 >
                                     <Copy className="size-4" />
                                 </Button>
@@ -385,7 +395,9 @@ export function MediaBrowserDetail({
                 )}
                 {item.usages.length > 0 && (
                     <div>
-                        <dt className="text-muted-foreground">Используется в</dt>
+                        <dt className="text-muted-foreground">
+                            Используется в
+                        </dt>
                         <dd className="space-y-1 pt-1">
                             {item.usages.map((usage) => (
                                 <div key={`${usage.context}-${usage.label}`}>
@@ -397,7 +409,9 @@ export function MediaBrowserDetail({
                                             {usage.label}
                                         </a>
                                     ) : (
-                                        <span className="text-sm">{usage.label}</span>
+                                        <span className="text-sm">
+                                            {usage.label}
+                                        </span>
                                     )}
                                 </div>
                             ))}

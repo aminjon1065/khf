@@ -16,6 +16,7 @@ use App\Http\Requests\Admin\StoreIncidentRequest;
 use App\Http\Requests\Admin\UpdateIncidentRequest;
 use App\Models\Incident;
 use App\Models\Region;
+use App\Services\Admin\ContentEntryService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,6 +29,8 @@ class IncidentController extends Controller
     use ProvidesBlueprintForm;
     use RedirectsToContentBrowser;
     use SavesContentRevisions;
+
+    public function __construct(private ContentEntryService $entries) {}
 
     public function index(): RedirectResponse
     {
@@ -46,19 +49,7 @@ class IncidentController extends Controller
 
     public function store(StoreIncidentRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-
-        $incident = Incident::create([
-            'type' => $data['type'],
-            'hazard_level' => $data['hazard_level'],
-            'status' => $data['status'],
-            'region_id' => $data['region_id'] ?? null,
-            'latitude' => $data['latitude'] ?? null,
-            'longitude' => $data['longitude'] ?? null,
-            'occurred_at' => $data['occurred_at'] ?? null,
-        ]);
-        $incident->upsertTranslations($this->translationsPayload($data));
-        $this->saveContentRevision($incident);
+        $this->entries->store('incident', $request->validated());
         $this->flashContentSaved(__('Incident created.'));
 
         return $this->toContentBrowser('incident');
@@ -66,26 +57,12 @@ class IncidentController extends Controller
 
     public function edit(Incident $incident): Response
     {
-        $incident->load('translations');
-
         return Inertia::render('admin/content/form', $this->formData($incident));
     }
 
     public function update(UpdateIncidentRequest $request, Incident $incident): RedirectResponse
     {
-        $data = $request->validated();
-
-        $incident->update([
-            'type' => $data['type'],
-            'hazard_level' => $data['hazard_level'],
-            'status' => $data['status'],
-            'region_id' => $data['region_id'] ?? null,
-            'latitude' => $data['latitude'] ?? null,
-            'longitude' => $data['longitude'] ?? null,
-            'occurred_at' => $data['occurred_at'] ?? null,
-        ]);
-        $incident->upsertTranslations($this->translationsPayload($data));
-        $this->saveContentRevision($incident);
+        $this->entries->update('incident', $incident, $request->validated());
         $this->flashContentSaved(__('Incident updated.'));
 
         return $this->toContentBrowser('incident');
@@ -112,30 +89,10 @@ class IncidentController extends Controller
     private function formData(?Incident $incident): array
     {
         $locale = app()->getLocale();
-        $translations = [];
-
-        if ($incident) {
-            foreach ($incident->translations as $translation) {
-                $translations[$translation->locale] = [
-                    'title' => $translation->title,
-                    'description' => $translation->description,
-                ];
-            }
-        }
 
         return $this->contentEntryFormProps(
             'incident',
-            $incident ? [
-                'id' => $incident->id,
-                'type' => $incident->type->value,
-                'hazard_level' => $incident->hazard_level->value,
-                'status' => $incident->status->value,
-                'region_id' => $incident->region_id,
-                'latitude' => $incident->latitude,
-                'longitude' => $incident->longitude,
-                'occurred_at' => $incident->occurred_at?->format('Y-m-d\TH:i'),
-                'translations' => $translations,
-            ] : null,
+            $incident ? $this->entries->entryArray($incident, 'incident') : null,
             [
                 'type' => IncidentType::options(),
                 'hazard_level' => HazardLevel::options(),
@@ -165,20 +122,5 @@ class IncidentController extends Controller
                     ->all(),
             ],
         );
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, array<string, mixed>>
-     */
-    private function translationsPayload(array $data): array
-    {
-        return collect($data['translations'] ?? [])
-            ->filter(fn (array $translation) => filled($translation['title'] ?? null))
-            ->map(fn (array $translation) => [
-                'title' => $translation['title'],
-                'description' => $translation['description'] ?? null,
-            ])
-            ->all();
     }
 }

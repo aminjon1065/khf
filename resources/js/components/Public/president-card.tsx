@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { AppEmblem } from '@/components/app-emblem';
 import { useTranslations } from '@/hooks/use-translations';
 
-const DESKTOP_HEIGHT =
-    'lg:min-h-[460px] lg:h-[460px]';
+const DESKTOP_HEIGHT = 'lg:min-h-[460px] lg:h-[460px]';
 
 /**
  * "Leader of the Nation" portrait card beside the homepage news slider. The whole card opens

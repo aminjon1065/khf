@@ -20,6 +20,12 @@ declare module '@inertiajs/core' {
             navPages: { title: string; slug: string }[];
             activeAlerts: ActiveAlert[];
             matomo?: { enabled: boolean; goals: Record<string, number> };
+            map?: {
+                tileUrl: string;
+                attribution: string;
+                tileSize: number;
+                glyphsUrl: string;
+            };
             president?: { url: string; photo: string };
             socialLinks?: Array<{ platform: string; url: string }>;
             footerContent?: {

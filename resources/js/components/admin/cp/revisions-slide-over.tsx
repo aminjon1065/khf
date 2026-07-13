@@ -1,8 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 import { useForm } from '@inertiajs/react';
 import { ChevronDown, ChevronUp, Loader2, History } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
 
 interface Revision {
     id: number;
@@ -62,6 +68,7 @@ export function RevisionsSlideOver({
     useEffect(() => {
         if (!selectedId) {
             setDetail(null);
+
             return;
         }
 
@@ -75,7 +82,11 @@ export function RevisionsSlideOver({
     }, [selectedId]);
 
     const restore = (id: number) => {
-        if (!confirm('Вы уверены, что хотите восстановить эту версию? Текущие несохраненные изменения будут потеряны.')) {
+        if (
+            !confirm(
+                'Вы уверены, что хотите восстановить эту версию? Текущие несохраненные изменения будут потеряны.',
+            )
+        ) {
             return;
         }
 
@@ -97,24 +108,35 @@ export function RevisionsSlideOver({
                         История версий
                     </SheetTitle>
                     <SheetDescription>
-                        Просматривайте изменения между версиями и восстанавливайте нужную.
+                        Просматривайте изменения между версиями и
+                        восстанавливайте нужную.
                     </SheetDescription>
                 </SheetHeader>
 
-                <div className="mt-6 flex-1 overflow-y-auto pr-4 -mr-4">
+                <div className="mt-6 -mr-4 flex-1 overflow-y-auto pr-4">
                     {!modelId ? (
-                        <p className="text-sm text-muted-foreground">Сохраните материал, чтобы появилась история версий.</p>
+                        <p className="text-sm text-muted-foreground">
+                            Сохраните материал, чтобы появилась история версий.
+                        </p>
                     ) : loading ? (
                         <div className="flex h-32 items-center justify-center">
                             <Loader2 className="size-6 animate-spin text-muted-foreground" />
                         </div>
                     ) : revisions.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">История версий пуста.</p>
+                        <p className="text-sm text-muted-foreground">
+                            История версий пуста.
+                        </p>
                     ) : (
                         <div className="space-y-4">
                             {revisions.map((rev, index) => {
                                 const d = new Date(rev.created_at);
-                                const dateStr = d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                                const dateStr =
+                                    d.toLocaleDateString('ru-RU') +
+                                    ' ' +
+                                    d.toLocaleTimeString('ru-RU', {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    });
                                 const isSelected = selectedId === rev.id;
                                 const isLatest = index === 0;
 
@@ -127,25 +149,34 @@ export function RevisionsSlideOver({
                                             <button
                                                 type="button"
                                                 className="min-w-0 flex-1 text-left"
-                                                onClick={() => toggleDetail(rev.id)}
+                                                onClick={() =>
+                                                    toggleDetail(rev.id)
+                                                }
                                             >
                                                 <div className="flex items-center gap-2">
-                                                    <p className="font-medium text-sm">{dateStr}</p>
+                                                    <p className="text-sm font-medium">
+                                                        {dateStr}
+                                                    </p>
                                                     {isSelected ? (
                                                         <ChevronUp className="size-4 text-muted-foreground" />
                                                     ) : (
                                                         <ChevronDown className="size-4 text-muted-foreground" />
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-muted-foreground mt-1">
-                                                    {rev.user ? rev.user.name : 'Система'}
-                                                    {isLatest && ' (Последняя версия)'}
+                                                <p className="mt-1 text-xs text-muted-foreground">
+                                                    {rev.user
+                                                        ? rev.user.name
+                                                        : 'Система'}
+                                                    {isLatest &&
+                                                        ' (Последняя версия)'}
                                                 </p>
                                             </button>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                disabled={processing || isLatest}
+                                                disabled={
+                                                    processing || isLatest
+                                                }
                                                 onClick={() => restore(rev.id)}
                                             >
                                                 Восстановить
@@ -158,41 +189,58 @@ export function RevisionsSlideOver({
                                                     <div className="flex h-20 items-center justify-center">
                                                         <Loader2 className="size-5 animate-spin text-muted-foreground" />
                                                     </div>
-                                                ) : detail && detail.changes.length > 0 ? (
+                                                ) : detail &&
+                                                  detail.changes.length > 0 ? (
                                                     <div className="space-y-4">
-                                                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                                                            Изменения до: {detail.compare_label}
+                                                        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                                            Изменения до:{' '}
+                                                            {
+                                                                detail.compare_label
+                                                            }
                                                         </p>
-                                                        {detail.changes.map((change) => (
-                                                            <div key={`${change.group}-${change.locale ?? 'root'}-${change.field}`} className="space-y-2">
-                                                                <p className="text-sm font-medium">
-                                                                    {change.label}
-                                                                    {change.locale && (
-                                                                        <span className="ml-2 font-mono text-xs text-muted-foreground">
-                                                                            {change.locale}
-                                                                        </span>
-                                                                    )}
-                                                                </p>
-                                                                <div className="grid gap-2 sm:grid-cols-2">
-                                                                    <div className="rounded-md border border-border bg-background p-3">
-                                                                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                                                            Было
-                                                                        </p>
-                                                                        <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">
-                                                                            {change.before}
-                                                                        </p>
-                                                                    </div>
-                                                                    <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
-                                                                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                                                                            Стало
-                                                                        </p>
-                                                                        <p className="whitespace-pre-wrap break-words text-sm">
-                                                                            {change.after}
-                                                                        </p>
+                                                        {detail.changes.map(
+                                                            (change) => (
+                                                                <div
+                                                                    key={`${change.group}-${change.locale ?? 'root'}-${change.field}`}
+                                                                    className="space-y-2"
+                                                                >
+                                                                    <p className="text-sm font-medium">
+                                                                        {
+                                                                            change.label
+                                                                        }
+                                                                        {change.locale && (
+                                                                            <span className="ml-2 font-mono text-xs text-muted-foreground">
+                                                                                {
+                                                                                    change.locale
+                                                                                }
+                                                                            </span>
+                                                                        )}
+                                                                    </p>
+                                                                    <div className="grid gap-2 sm:grid-cols-2">
+                                                                        <div className="rounded-md border border-border bg-background p-3">
+                                                                            <p className="mb-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                                                                                Было
+                                                                            </p>
+                                                                            <p className="text-sm break-words whitespace-pre-wrap text-muted-foreground">
+                                                                                {
+                                                                                    change.before
+                                                                                }
+                                                                            </p>
+                                                                        </div>
+                                                                        <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
+                                                                            <p className="mb-1 text-[10px] font-semibold tracking-wide text-primary uppercase">
+                                                                                Стало
+                                                                            </p>
+                                                                            <p className="text-sm break-words whitespace-pre-wrap">
+                                                                                {
+                                                                                    change.after
+                                                                                }
+                                                                            </p>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        ))}
+                                                            ),
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <p className="text-sm text-muted-foreground">

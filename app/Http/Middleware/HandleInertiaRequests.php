@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\Cms\GlobalResolver;
 use App\Services\Public\SharedPublicProps;
 use App\Support\LocaleUrls;
+use App\Support\MapTiles;
 use App\Support\Matomo;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -59,6 +60,7 @@ class HandleInertiaRequests extends Middleware
             'menus' => $this->safeShared(fn (): array => $shared->menus($locale)),
             'activeAlerts' => $this->safeShared(fn (): array => $shared->activeAlerts($locale)),
             'matomo' => Matomo::inertiaProps(),
+            'map' => MapTiles::inertiaProps(),
             'socialLinks' => app(GlobalResolver::class)->socialLinks(),
             'president' => app(GlobalResolver::class)->president(),
             'footerContent' => app(GlobalResolver::class)->footer(),

@@ -14,15 +14,17 @@ use App\Models\Statistic;
 use App\Models\Subdivision;
 use App\Models\Tender;
 use App\Models\Vacancy;
+use App\Services\Public\Search\TranslatableContentSearcher;
 use App\Support\SearchHighlighter;
-use App\Support\TranslationSearch;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 class SearchService
 {
     public function __construct(
-        private TranslationSearch $translationSearch,
+        private TranslatableContentSearcher $searcher,
         private SearchHighlighter $highlighter,
     ) {}
 
@@ -41,19 +43,7 @@ class SearchService
         $types = $type !== null ? [$type] : SearchContentType::cases();
 
         foreach ($types as $contentType) {
-            $results = $results->concat(match ($contentType) {
-                SearchContentType::Post => $this->searchPosts($query, $locale, $limit),
-                SearchContentType::Page => $this->searchPages($query, $locale, $limit),
-                SearchContentType::Guide => $this->searchGuides($query, $locale, $limit),
-                SearchContentType::Document => $this->searchDocuments($query, $locale, $limit),
-                SearchContentType::Vacancy => $this->searchVacancies($query, $locale, $limit),
-                SearchContentType::Tender => $this->searchTenders($query, $locale, $limit),
-                SearchContentType::Leader => $this->searchLeaders($query, $locale, $limit),
-                SearchContentType::Subdivision => $this->searchSubdivisions($query, $locale, $limit),
-                SearchContentType::Gallery => $this->searchGalleries($query, $locale, $limit),
-                SearchContentType::Faq => $this->searchFaqs($query, $locale, $limit),
-                SearchContentType::Statistic => $this->searchStatistics($query, $locale, $limit),
-            });
+            $results = $results->concat($this->searchType($contentType, $query, $locale, $limit));
         }
 
         return $this->withHighlights(
@@ -92,330 +82,241 @@ class SearchService
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    private function searchPosts(string $query, string $locale, int $limit): Collection
+    private function searchType(SearchContentType $type, string $query, string $locale, int $limit): Collection
     {
-        return Post::published()
-            ->whereHas('translations', fn ($q) => $this->translationSearch->apply(
-                $q,
+        return match ($type) {
+            SearchContentType::Post => $this->searcher->search(
+                Post::class,
                 $locale,
+                $query,
                 ['title', 'excerpt', 'body'],
-                $query,
-            ))
-            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
-            ->latest('published_at')
-            ->take($limit)
-            ->get()
-            ->map(function (Post $post) use ($locale): array {
-                $translation = $post->translations->first();
+                $limit,
+                fn (Builder $q) => $q->published()->latest('published_at'),
+                function (Model $post, string $locale): array {
+                    /** @var Post $post */
+                    $translation = $post->translations->first();
 
-                return $this->result(
-                    id: $post->id,
-                    type: 'post',
-                    title: $translation?->title ?? '',
-                    excerpt: $translation?->excerpt ?? str($translation?->body ?? '')->limit(100)->toString(),
-                    url: route('news.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
-                    date: $post->published_at?->format('Y-m-d'),
-                );
-            });
-    }
-
-    /**
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function searchPages(string $query, string $locale, int $limit): Collection
-    {
-        return Page::published()
-            ->whereHas('translations', fn ($q) => $this->translationSearch->apply(
-                $q,
+                    return $this->result(
+                        $post->id,
+                        'post',
+                        $translation?->title ?? '',
+                        $translation?->excerpt ?? str($translation?->body ?? '')->limit(100)->toString(),
+                        route('news.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
+                        $post->published_at?->format('Y-m-d'),
+                    );
+                },
+            ),
+            SearchContentType::Page => $this->searcher->search(
+                Page::class,
                 $locale,
+                $query,
                 ['title', 'content'],
-                $query,
-            ))
-            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
-            ->take($limit)
-            ->get()
-            ->map(function (Page $page) use ($locale): array {
-                $translation = $page->translations->first();
+                $limit,
+                fn (Builder $q) => $q->published(),
+                function (Model $page, string $locale): array {
+                    /** @var Page $page */
+                    $translation = $page->translations->first();
 
-                return $this->result(
-                    id: $page->id,
-                    type: 'page',
-                    title: $translation?->title ?? '',
-                    excerpt: str(strip_tags($translation?->content ?? ''))->limit(100)->toString(),
-                    url: route('pages.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
-                    date: $page->updated_at?->format('Y-m-d'),
-                );
-            });
-    }
-
-    /**
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function searchGuides(string $query, string $locale, int $limit): Collection
-    {
-        return Guide::query()
-            ->whereNull('deleted_at')
-            ->whereHas('translations', fn ($q) => $this->translationSearch->apply(
-                $q,
+                    return $this->result(
+                        $page->id,
+                        'page',
+                        $translation?->title ?? '',
+                        str(strip_tags($translation?->content ?? ''))->limit(100)->toString(),
+                        route('pages.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
+                        $page->updated_at?->format('Y-m-d'),
+                    );
+                },
+            ),
+            SearchContentType::Guide => $this->searcher->search(
+                Guide::class,
                 $locale,
+                $query,
                 ['title', 'summary', 'content'],
-                $query,
-            ))
-            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
-            ->take($limit)
-            ->get()
-            ->map(function (Guide $guide) use ($locale): array {
-                $translation = $guide->translations->first();
+                $limit,
+                fn (Builder $q) => $q->whereNull('deleted_at'),
+                function (Model $guide, string $locale): array {
+                    /** @var Guide $guide */
+                    $translation = $guide->translations->first();
 
-                return $this->result(
-                    id: $guide->id,
-                    type: 'guide',
-                    title: $translation?->title ?? '',
-                    excerpt: $translation?->summary ?? str(strip_tags($translation?->content ?? ''))->limit(100)->toString(),
-                    url: route('guides.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
-                    date: $guide->updated_at?->format('Y-m-d'),
-                );
-            });
-    }
-
-    /**
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function searchDocuments(string $query, string $locale, int $limit): Collection
-    {
-        return Document::query()
-            ->whereNull('deleted_at')
-            ->whereHas('translations', fn ($q) => $this->translationSearch->apply(
-                $q,
+                    return $this->result(
+                        $guide->id,
+                        'guide',
+                        $translation?->title ?? '',
+                        $translation?->summary ?? str(strip_tags($translation?->content ?? ''))->limit(100)->toString(),
+                        route('guides.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
+                        $guide->updated_at?->format('Y-m-d'),
+                    );
+                },
+            ),
+            SearchContentType::Document => $this->searcher->search(
+                Document::class,
                 $locale,
+                $query,
                 ['name', 'description'],
-                $query,
-            ))
-            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
-            ->take($limit)
-            ->get()
-            ->map(function (Document $document) use ($locale): array {
-                $translation = $document->translations->first();
+                $limit,
+                fn (Builder $q) => $q->whereNull('deleted_at'),
+                function (Model $document, string $locale): array {
+                    /** @var Document $document */
+                    $translation = $document->translations->first();
 
-                return $this->result(
-                    id: $document->id,
-                    type: 'document',
-                    title: $translation?->name ?? '',
-                    excerpt: $translation?->description,
-                    url: route('documents.index', ['locale' => $locale, 'search' => $translation?->name]),
-                    date: $document->document_date?->format('Y-m-d') ?? $document->created_at?->format('Y-m-d'),
-                );
-            });
-    }
-
-    /**
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function searchVacancies(string $query, string $locale, int $limit): Collection
-    {
-        return Vacancy::published()
-            ->whereHas('translations', fn ($q) => $this->translationSearch->apply(
-                $q,
+                    return $this->result(
+                        $document->id,
+                        'document',
+                        $translation?->name ?? '',
+                        $translation?->description,
+                        route('documents.index', ['locale' => $locale, 'search' => $translation?->name]),
+                        $document->document_date?->format('Y-m-d') ?? $document->created_at?->format('Y-m-d'),
+                    );
+                },
+            ),
+            SearchContentType::Vacancy => $this->searcher->search(
+                Vacancy::class,
                 $locale,
+                $query,
                 ['title', 'summary', 'description', 'requirements', 'responsibilities'],
-                $query,
-            ))
-            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
-            ->latest('published_at')
-            ->take($limit)
-            ->get()
-            ->map(function (Vacancy $vacancy) use ($locale): array {
-                $translation = $vacancy->translations->first();
+                $limit,
+                fn (Builder $q) => $q->published()->latest('published_at'),
+                function (Model $vacancy, string $locale): array {
+                    /** @var Vacancy $vacancy */
+                    $translation = $vacancy->translations->first();
 
-                return $this->result(
-                    id: $vacancy->id,
-                    type: 'vacancy',
-                    title: $translation?->title ?? '',
-                    excerpt: $translation?->summary ?? str(strip_tags($translation?->description ?? ''))->limit(100)->toString(),
-                    url: route('vacancies.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
-                    date: $vacancy->published_at?->format('Y-m-d'),
-                );
-            });
-    }
-
-    /**
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function searchTenders(string $query, string $locale, int $limit): Collection
-    {
-        return Tender::published()
-            ->whereHas('translations', fn ($q) => $this->translationSearch->apply(
-                $q,
+                    return $this->result(
+                        $vacancy->id,
+                        'vacancy',
+                        $translation?->title ?? '',
+                        $translation?->summary ?? str(strip_tags($translation?->description ?? ''))->limit(100)->toString(),
+                        route('vacancies.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
+                        $vacancy->published_at?->format('Y-m-d'),
+                    );
+                },
+            ),
+            SearchContentType::Tender => $this->searcher->search(
+                Tender::class,
                 $locale,
+                $query,
                 ['title', 'summary', 'description', 'requirements', 'terms'],
-                $query,
-            ))
-            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
-            ->latest('published_at')
-            ->take($limit)
-            ->get()
-            ->map(function (Tender $tender) use ($locale): array {
-                $translation = $tender->translations->first();
+                $limit,
+                fn (Builder $q) => $q->published()->latest('published_at'),
+                function (Model $tender, string $locale): array {
+                    /** @var Tender $tender */
+                    $translation = $tender->translations->first();
 
-                return $this->result(
-                    id: $tender->id,
-                    type: 'tender',
-                    title: $translation?->title ?? '',
-                    excerpt: $translation?->summary ?? str(strip_tags($translation?->description ?? ''))->limit(100)->toString(),
-                    url: route('tenders.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
-                    date: $tender->published_at?->format('Y-m-d'),
-                );
-            });
-    }
-
-    /**
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function searchLeaders(string $query, string $locale, int $limit): Collection
-    {
-        return Leader::published()
-            ->whereHas('translations', fn ($q) => $this->translationSearch->apply(
-                $q,
+                    return $this->result(
+                        $tender->id,
+                        'tender',
+                        $translation?->title ?? '',
+                        $translation?->summary ?? str(strip_tags($translation?->description ?? ''))->limit(100)->toString(),
+                        route('tenders.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
+                        $tender->published_at?->format('Y-m-d'),
+                    );
+                },
+            ),
+            SearchContentType::Leader => $this->searcher->search(
+                Leader::class,
                 $locale,
+                $query,
                 ['full_name', 'position', 'bio'],
-                $query,
-            ))
-            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
-            ->orderBy('sort_order')
-            ->take($limit)
-            ->get()
-            ->map(function (Leader $leader) use ($locale): array {
-                $translation = $leader->translations->first();
+                $limit,
+                fn (Builder $q) => $q->published()->orderBy('sort_order'),
+                function (Model $leader, string $locale): array {
+                    /** @var Leader $leader */
+                    $translation = $leader->translations->first();
 
-                return $this->result(
-                    id: $leader->id,
-                    type: 'leader',
-                    title: $translation?->full_name ?? '',
-                    excerpt: $translation?->position,
-                    url: route('leadership.index', ['locale' => $locale]),
-                    date: null,
-                );
-            });
-    }
-
-    /**
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function searchSubdivisions(string $query, string $locale, int $limit): Collection
-    {
-        return Subdivision::published()
-            ->whereHas('translations', fn ($q) => $this->translationSearch->apply(
-                $q,
+                    return $this->result(
+                        $leader->id,
+                        'leader',
+                        $translation?->full_name ?? '',
+                        $translation?->position,
+                        route('leadership.index', ['locale' => $locale]),
+                        null,
+                    );
+                },
+            ),
+            SearchContentType::Subdivision => $this->searcher->search(
+                Subdivision::class,
                 $locale,
+                $query,
                 ['name', 'functions'],
-                $query,
-            ))
-            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
-            ->orderBy('sort_order')
-            ->take($limit)
-            ->get()
-            ->map(function (Subdivision $subdivision) use ($locale): array {
-                $translation = $subdivision->translations->first();
+                $limit,
+                fn (Builder $q) => $q->published()->orderBy('sort_order'),
+                function (Model $subdivision, string $locale): array {
+                    /** @var Subdivision $subdivision */
+                    $translation = $subdivision->translations->first();
 
-                return $this->result(
-                    id: $subdivision->id,
-                    type: 'subdivision',
-                    title: $translation?->name ?? '',
-                    excerpt: $translation?->head,
-                    url: route('structure.index', ['locale' => $locale]),
-                    date: null,
-                );
-            });
-    }
-
-    /**
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function searchGalleries(string $query, string $locale, int $limit): Collection
-    {
-        return Gallery::published()
-            ->whereHas('translations', fn ($q) => $this->translationSearch->apply(
-                $q,
+                    return $this->result(
+                        $subdivision->id,
+                        'subdivision',
+                        $translation?->name ?? '',
+                        $translation?->head,
+                        route('structure.index', ['locale' => $locale]),
+                        null,
+                    );
+                },
+            ),
+            SearchContentType::Gallery => $this->searcher->search(
+                Gallery::class,
                 $locale,
+                $query,
                 ['title', 'description'],
-                $query,
-            ))
-            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
-            ->orderBy('sort_order')
-            ->take($limit)
-            ->get()
-            ->map(function (Gallery $gallery) use ($locale): array {
-                $translation = $gallery->translations->first();
+                $limit,
+                fn (Builder $q) => $q->published()->orderBy('sort_order'),
+                function (Model $gallery, string $locale): array {
+                    /** @var Gallery $gallery */
+                    $translation = $gallery->translations->first();
 
-                return $this->result(
-                    id: $gallery->id,
-                    type: 'gallery',
-                    title: $translation?->title ?? '',
-                    excerpt: $translation?->description,
-                    url: route('gallery.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
-                    date: null,
-                );
-            });
-    }
-
-    /**
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function searchFaqs(string $query, string $locale, int $limit): Collection
-    {
-        return Faq::published()
-            ->whereHas('translations', fn ($q) => $this->translationSearch->apply(
-                $q,
+                    return $this->result(
+                        $gallery->id,
+                        'gallery',
+                        $translation?->title ?? '',
+                        $translation?->description,
+                        route('gallery.show', ['locale' => $locale, 'slug' => $translation?->slug ?? '']),
+                        null,
+                    );
+                },
+            ),
+            SearchContentType::Faq => $this->searcher->search(
+                Faq::class,
                 $locale,
+                $query,
                 ['question', 'answer'],
-                $query,
-            ))
-            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
-            ->orderBy('sort_order')
-            ->take($limit)
-            ->get()
-            ->map(function (Faq $faq) use ($locale): array {
-                $translation = $faq->translations->first();
+                $limit,
+                fn (Builder $q) => $q->published()->orderBy('sort_order'),
+                function (Model $faq, string $locale): array {
+                    /** @var Faq $faq */
+                    $translation = $faq->translations->first();
 
-                return $this->result(
-                    id: $faq->id,
-                    type: 'faq',
-                    title: $translation?->question ?? '',
-                    excerpt: $translation?->answer ? str(strip_tags($translation->answer))->limit(100)->toString() : null,
-                    url: route('faq.index', ['locale' => $locale]),
-                    date: null,
-                );
-            });
-    }
-
-    /**
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function searchStatistics(string $query, string $locale, int $limit): Collection
-    {
-        return Statistic::published()
-            ->whereHas('translations', fn ($q) => $this->translationSearch->apply(
-                $q,
+                    return $this->result(
+                        $faq->id,
+                        'faq',
+                        $translation?->question ?? '',
+                        $translation?->answer ? str(strip_tags($translation->answer))->limit(100)->toString() : null,
+                        route('faq.index', ['locale' => $locale]),
+                        null,
+                    );
+                },
+            ),
+            SearchContentType::Statistic => $this->searcher->search(
+                Statistic::class,
                 $locale,
-                ['label'],
                 $query,
-            ))
-            ->with(['translations' => fn ($q) => $q->where('locale', $locale)])
-            ->orderBy('sort_order')
-            ->take($limit)
-            ->get()
-            ->map(function (Statistic $statistic) use ($locale): array {
-                $translation = $statistic->translations->first();
+                ['label'],
+                $limit,
+                fn (Builder $q) => $q->published()->orderBy('sort_order'),
+                function (Model $statistic, string $locale): array {
+                    /** @var Statistic $statistic */
+                    $translation = $statistic->translations->first();
 
-                return $this->result(
-                    id: $statistic->id,
-                    type: 'statistic',
-                    title: $translation?->label ?? '',
-                    excerpt: trim($statistic->value.' '.($translation?->unit ?? '')),
-                    url: route('statistics.index', ['locale' => $locale]),
-                    date: null,
-                );
-            });
+                    return $this->result(
+                        $statistic->id,
+                        'statistic',
+                        $translation?->label ?? '',
+                        trim($statistic->value.' '.($translation?->unit ?? '')),
+                        route('statistics.index', ['locale' => $locale]),
+                        null,
+                    );
+                },
+            ),
+        };
     }
 
     /**

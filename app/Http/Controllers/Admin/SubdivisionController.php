@@ -10,7 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSubdivisionRequest;
 use App\Http\Requests\Admin\UpdateSubdivisionRequest;
 use App\Models\Subdivision;
-use App\Support\HtmlSanitizer;
+use App\Services\Admin\ContentEntryService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -23,7 +23,7 @@ class SubdivisionController extends Controller
     use ProvidesBlueprintForm;
     use RedirectsToContentBrowser;
 
-    public function __construct(private HtmlSanitizer $sanitizer) {}
+    public function __construct(private ContentEntryService $entries) {}
 
     public function index(): RedirectResponse
     {
@@ -37,17 +37,7 @@ class SubdivisionController extends Controller
 
     public function store(StoreSubdivisionRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-
-        $subdivision = Subdivision::create([
-            'status' => $data['status'],
-            'parent_id' => $data['parent_id'] ?? null,
-            'sort_order' => $data['sort_order'] ?? 0,
-            'email' => $data['email'] ?? null,
-            'phone' => $data['phone'] ?? null,
-            'staff_count' => $data['staff_count'] ?? null,
-        ]);
-        $subdivision->upsertTranslations($this->translationsPayload($data));
+        $this->entries->store('subdivision', $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Subdivision created.')]);
 
@@ -56,24 +46,12 @@ class SubdivisionController extends Controller
 
     public function edit(Subdivision $subdivision): Response
     {
-        $subdivision->load('translations');
-
         return Inertia::render('admin/content/form', $this->formData($subdivision));
     }
 
     public function update(UpdateSubdivisionRequest $request, Subdivision $subdivision): RedirectResponse
     {
-        $data = $request->validated();
-
-        $subdivision->update([
-            'status' => $data['status'],
-            'parent_id' => $data['parent_id'] ?? null,
-            'sort_order' => $data['sort_order'] ?? 0,
-            'email' => $data['email'] ?? null,
-            'phone' => $data['phone'] ?? null,
-            'staff_count' => $data['staff_count'] ?? null,
-        ]);
-        $subdivision->upsertTranslations($this->translationsPayload($data));
+        $this->entries->update('subdivision', $subdivision, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Subdivision updated.')]);
 
@@ -82,7 +60,7 @@ class SubdivisionController extends Controller
 
     public function destroy(Subdivision $subdivision): RedirectResponse
     {
-        $subdivision->delete();
+        $this->entries->destroy('subdivision', $subdivision);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Subdivision deleted.')]);
 
@@ -95,18 +73,6 @@ class SubdivisionController extends Controller
     private function formData(?Subdivision $subdivision): array
     {
         $locale = app()->getLocale();
-        $translations = [];
-
-        if ($subdivision) {
-            foreach ($subdivision->translations as $translation) {
-                $translations[$translation->locale] = [
-                    'name' => $translation->name,
-                    'head' => $translation->head,
-                    'functions' => $translation->functions,
-                    'address' => $translation->address,
-                ];
-            }
-        }
 
         $parents = Subdivision::query()
             ->with('translations')
@@ -121,36 +87,10 @@ class SubdivisionController extends Controller
 
         return $this->contentEntryFormProps(
             'subdivision',
-            $subdivision ? [
-                'id' => $subdivision->id,
-                'status' => $subdivision->status->value,
-                'parent_id' => $subdivision->parent_id,
-                'sort_order' => $subdivision->sort_order,
-                'email' => $subdivision->email,
-                'phone' => $subdivision->phone,
-                'staff_count' => $subdivision->staff_count,
-                'translations' => $translations,
-            ] : null,
+            $subdivision ? $this->entries->entryArray($subdivision, 'subdivision') : null,
             [
                 'parent_id' => $parents,
             ],
         );
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, array<string, mixed>>
-     */
-    private function translationsPayload(array $data): array
-    {
-        return collect($data['translations'] ?? [])
-            ->filter(fn (array $translation) => filled($translation['name'] ?? null))
-            ->map(fn (array $translation) => [
-                'name' => $translation['name'],
-                'head' => $translation['head'] ?? null,
-                'functions' => $this->sanitizer->clean($translation['functions'] ?? null),
-                'address' => $translation['address'] ?? null,
-            ])
-            ->all();
     }
 }

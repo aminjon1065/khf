@@ -71,7 +71,9 @@ function SubFieldsTable({
                 {subFields.map((subField) => (
                     <TableRow key={subField.handle}>
                         <TableCell>
-                            <div className="font-medium">{subField.display}</div>
+                            <div className="font-medium">
+                                {subField.display}
+                            </div>
                             <div className="font-mono text-xs text-muted-foreground">
                                 {subField.handle}
                             </div>
@@ -86,7 +88,11 @@ function SubFieldsTable({
     );
 }
 
-export default function BlueprintShow({ blueprint, source, edit_url }: PageProps) {
+export default function BlueprintShow({
+    blueprint,
+    source,
+    edit_url,
+}: PageProps) {
     const sections = Object.values(blueprint.sections);
 
     return (
@@ -155,7 +161,7 @@ export default function BlueprintShow({ blueprint, source, edit_url }: PageProps
                                             {field.sub_fields &&
                                             field.sub_fields.length > 0 ? (
                                                 <div className="mt-4">
-                                                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                                    <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                                                         Вложенные поля
                                                     </p>
                                                     <SubFieldsTable

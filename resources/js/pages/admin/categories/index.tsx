@@ -81,7 +81,8 @@ export default function CategoriesIndex({ categories, filters }: PageProps) {
                 <div>
                     <h1 className="text-2xl font-semibold">Рубрики</h1>
                     <p className="text-sm text-muted-foreground">
-                        Категории для группировки новостей и материалов в разделе «Новости»
+                        Категории для группировки новостей и материалов в
+                        разделе «Новости»
                     </p>
                 </div>
 

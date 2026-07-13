@@ -34,7 +34,12 @@ type PageProps = {
         prev_page_url: string | null;
         next_page_url: string | null;
     };
-    filters: { search: string; type: string | null; date_from: string; date_to: string };
+    filters: {
+        search: string;
+        type: string | null;
+        date_from: string;
+        date_to: string;
+    };
     types: Option[];
 };
 
@@ -75,7 +80,11 @@ export default function DocumentsRegistry({
                 className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center"
                 onSubmit={(event) => {
                     event.preventDefault();
-                    apply({ search: search || undefined, date_from: dateFrom || undefined, date_to: dateTo || undefined });
+                    apply({
+                        search: search || undefined,
+                        date_from: dateFrom || undefined,
+                        date_to: dateTo || undefined,
+                    });
                 }}
             >
                 <Input
@@ -110,7 +119,7 @@ export default function DocumentsRegistry({
                         ))}
                     </SelectContent>
                 </Select>
-                
+
                 <div className="flex items-center gap-2">
                     <Input
                         type="date"

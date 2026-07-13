@@ -36,7 +36,7 @@ export default function NewsIndex({ posts, categories, filters }: PageProps) {
         router.get(
             newsIndex({ locale }).url,
             categoryId ? { category_id: categoryId } : {},
-            { preserveState: true }
+            { preserveState: true },
         );
     };
 
@@ -92,20 +92,23 @@ export default function NewsIndex({ posts, categories, filters }: PageProps) {
                             />
                             <div className="flex flex-1 flex-col gap-2 p-4">
                                 {post.category && (
-                                    <span className="text-sm font-medium text-primary mb-2 block">
+                                    <span className="mb-2 block text-sm font-medium text-primary">
                                         {post.category}
                                     </span>
                                 )}
-                                <h3 className="text-xl font-bold leading-snug group-hover:underline">
+                                <h3 className="text-xl leading-snug font-bold group-hover:underline">
                                     {post.title}
                                 </h3>
-                                <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
+                                <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
                                     {post.excerpt}
                                 </p>
-                                <div className="mt-4 flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                <div className="mt-4 flex items-center gap-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
                                     <span>
                                         {post.published_at
-                                            ? formatDate(post.published_at, locale)
+                                            ? formatDate(
+                                                  post.published_at,
+                                                  locale,
+                                              )
                                             : null}
                                     </span>
                                 </div>

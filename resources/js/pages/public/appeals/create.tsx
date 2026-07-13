@@ -13,8 +13,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useTranslations } from '@/hooks/use-translations';
 import { useMatomoGoal } from '@/hooks/use-matomo-goal';
+import { useTranslations } from '@/hooks/use-translations';
 import { create, store, track } from '@/routes/appeals';
 
 type Option = { value: string; label: string };
@@ -243,7 +243,10 @@ export default function AppealCreate({
 
                     <div className="space-y-2">
                         <Label htmlFor="attachments">
-                            {t('common.attachments') || 'Прикрепленные файлы'} <span className="text-muted-foreground font-normal">(Макс 5 файлов, до 5МБ каждый)</span>
+                            {t('common.attachments') || 'Прикрепленные файлы'}{' '}
+                            <span className="font-normal text-muted-foreground">
+                                (Макс 5 файлов, до 5МБ каждый)
+                            </span>
                         </Label>
                         <Input
                             id="attachments"
@@ -251,12 +254,17 @@ export default function AppealCreate({
                             multiple
                             onChange={(e) => {
                                 if (e.target.files) {
-                                    form.setData('attachments', Array.from(e.target.files));
+                                    form.setData(
+                                        'attachments',
+                                        Array.from(e.target.files),
+                                    );
                                 }
                             }}
                             aria-invalid={!!errors.attachments}
                             aria-describedby={
-                                errors.attachments ? 'attachments-error' : undefined
+                                errors.attachments
+                                    ? 'attachments-error'
+                                    : undefined
                             }
                         />
                         <InputError
@@ -264,12 +272,11 @@ export default function AppealCreate({
                             message={errors.attachments}
                         />
                         {/* Display errors for individual files if any */}
-                        {Object.keys(errors).filter(k => k.startsWith('attachments.')).map(key => (
-                            <InputError
-                                key={key}
-                                message={errors[key]}
-                            />
-                        ))}
+                        {Object.keys(errors)
+                            .filter((k) => k.startsWith('attachments.'))
+                            .map((key) => (
+                                <InputError key={key} message={errors[key]} />
+                            ))}
                     </div>
 
                     {/* Honeypot — hidden from users, traps bots (ТЗ §12.4). */}

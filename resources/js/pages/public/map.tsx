@@ -1,9 +1,15 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useCallback, useMemo, useState } from 'react';
 import { MapView } from '@/components/map-view';
-import type { MapLayerVisibility, MapMarker, MapUnitMarker } from '@/components/map-view';
+import type {
+    MapLayerVisibility,
+    MapMarker,
+    MapUnitMarker,
+} from '@/components/map-view';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from '@/hooks/use-translations';
+import { index as mapIndex } from '@/routes/map';
+import type { SharedData } from '@/types';
 
 type Option = { value: string; label: string };
 
@@ -56,9 +62,7 @@ type PageProps = {
 function buildInitialTypeVisibility(
     incidentTypes: IncidentTypeOption[],
 ): Record<string, boolean> {
-    return Object.fromEntries(
-        incidentTypes.map((type) => [type.value, true]),
-    );
+    return Object.fromEntries(incidentTypes.map((type) => [type.value, true]));
 }
 
 export default function PublicMap({
@@ -71,6 +75,7 @@ export default function PublicMap({
     levels,
     regions,
 }: PageProps) {
+    const { locale } = usePage<SharedData>().props;
     const { t } = useTranslations();
     const [typeVisibility, setTypeVisibility] = useState(() =>
         buildInitialTypeVisibility(incidentTypes),
@@ -81,16 +86,19 @@ export default function PublicMap({
     const applyFilter = useCallback(
         (key: string, value: string) => {
             router.get(
-                route('map.index'),
+                mapIndex.url(locale),
                 { ...filters, [key]: value === 'all' ? null : value },
                 { preserveState: true, replace: true },
             );
         },
-        [filters],
+        [filters, locale],
     );
 
     const visibleIncidents = useMemo(
-        () => incidents.filter((incident) => typeVisibility[incident.type_key] !== false),
+        () =>
+            incidents.filter(
+                (incident) => typeVisibility[incident.type_key] !== false,
+            ),
         [incidents, typeVisibility],
     );
 
@@ -122,9 +130,12 @@ export default function PublicMap({
         [typeVisibility, showUnits, showRiskZones],
     );
 
-    const toggleIncidentType = useCallback((value: string, checked: boolean) => {
-        setTypeVisibility((current) => ({ ...current, [value]: checked }));
-    }, []);
+    const toggleIncidentType = useCallback(
+        (value: string, checked: boolean) => {
+            setTypeVisibility((current) => ({ ...current, [value]: checked }));
+        },
+        [],
+    );
 
     return (
         <>
@@ -149,7 +160,9 @@ export default function PublicMap({
                         <select
                             id="map-filter-type"
                             value={filters.type ?? 'all'}
-                            onChange={(e) => applyFilter('type', e.target.value)}
+                            onChange={(e) =>
+                                applyFilter('type', e.target.value)
+                            }
                             className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
                         >
                             <option value="all">
@@ -173,7 +186,9 @@ export default function PublicMap({
                         <select
                             id="map-filter-level"
                             value={filters.level ?? 'all'}
-                            onChange={(e) => applyFilter('level', e.target.value)}
+                            onChange={(e) =>
+                                applyFilter('level', e.target.value)
+                            }
                             className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
                         >
                             <option value="all">
@@ -197,7 +212,9 @@ export default function PublicMap({
                         <select
                             id="map-filter-region"
                             value={filters.region ?? 'all'}
-                            onChange={(e) => applyFilter('region', e.target.value)}
+                            onChange={(e) =>
+                                applyFilter('region', e.target.value)
+                            }
                             className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
                         >
                             <option value="all">
@@ -221,13 +238,23 @@ export default function PublicMap({
                         <select
                             id="map-filter-period"
                             value={filters.period ?? 'all'}
-                            onChange={(e) => applyFilter('period', e.target.value)}
+                            onChange={(e) =>
+                                applyFilter('period', e.target.value)
+                            }
                             className="w-full cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-xs shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
                         >
-                            <option value="all">{t('map.filter_period_all')}</option>
-                            <option value="today">{t('map.filter_period_today')}</option>
-                            <option value="week">{t('map.filter_period_week')}</option>
-                            <option value="month">{t('map.filter_period_month')}</option>
+                            <option value="all">
+                                {t('map.filter_period_all')}
+                            </option>
+                            <option value="today">
+                                {t('map.filter_period_today')}
+                            </option>
+                            <option value="week">
+                                {t('map.filter_period_week')}
+                            </option>
+                            <option value="month">
+                                {t('map.filter_period_month')}
+                            </option>
                         </select>
                     </div>
                 </div>
@@ -271,7 +298,10 @@ export default function PublicMap({
                                         className="flex cursor-pointer items-center gap-2 text-sm"
                                     >
                                         <Checkbox
-                                            checked={typeVisibility[type.value] !== false}
+                                            checked={
+                                                typeVisibility[type.value] !==
+                                                false
+                                            }
                                             onCheckedChange={(checked) =>
                                                 toggleIncidentType(
                                                     type.value,
@@ -281,9 +311,13 @@ export default function PublicMap({
                                         />
                                         <span
                                             className="size-2.5 shrink-0 rounded-full"
-                                            style={{ backgroundColor: type.color }}
+                                            style={{
+                                                backgroundColor: type.color,
+                                            }}
                                         />
-                                        <span className="truncate">{type.label}</span>
+                                        <span className="truncate">
+                                            {type.label}
+                                        </span>
                                     </label>
                                 ))}
                             </div>

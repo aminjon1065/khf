@@ -1,6 +1,8 @@
+import { usePage } from '@inertiajs/react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from '@/hooks/use-translations';
 import { cn } from '@/lib/utils';
 
 export type MapMarker = {
@@ -121,21 +123,45 @@ function parseMarkerLines(rawLines: unknown): string[] {
     return [];
 }
 
-// OSM raster tiles. For production, point this at the Committee's own OSM-compatible tile server
-// for independence from external providers (ТЗ §10.8).
-const mapStyle: maplibregl.StyleSpecification = {
-    version: 8,
-    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-    sources: {
-        osm: {
-            type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: '© OpenStreetMap',
+// Default OSM raster tiles — overridden at runtime from shared Inertia `map` props (ТЗ §10.8).
+const defaultTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const defaultGlyphsUrl =
+    'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf';
+
+function buildMapStyle(options: {
+    tileUrl: string;
+    glyphsUrl: string;
+    attribution: string;
+    tileSize: number;
+}): maplibregl.StyleSpecification {
+    return {
+        version: 8,
+        glyphs: options.glyphsUrl,
+        sources: {
+            osm: {
+                type: 'raster',
+                tiles: [options.tileUrl],
+                tileSize: options.tileSize,
+                attribution: options.attribution,
+            },
         },
-    },
-    layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-};
+        layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+    };
+}
+
+function isWebGlAvailable(): boolean {
+    try {
+        const canvas = document.createElement('canvas');
+
+        return Boolean(
+            canvas.getContext('webgl2') ||
+            canvas.getContext('webgl') ||
+            canvas.getContext('experimental-webgl'),
+        );
+    } catch {
+        return false;
+    }
+}
 
 /**
  * Reusable MapLibre map (ТЗ §6.3). Plots colour-coded markers with popups and optionally lets the
@@ -152,14 +178,26 @@ export function MapView({
     onPick,
     initialPickedCoords,
 }: MapViewProps) {
+    const { props } = usePage();
+    const { t } = useTranslations();
+    const mapConfig = props.map;
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<maplibregl.Map | null>(null);
     const pickMarkerRef = useRef<maplibregl.Marker | null>(null);
+    const [failure, setFailure] = useState<'unsupported' | 'error' | null>(
+        null,
+    );
 
     useEffect(() => {
         const container = containerRef.current;
 
         if (!container) {
+            return;
+        }
+
+        if (!isWebGlAvailable()) {
+            setFailure('unsupported');
+
             return;
         }
 
@@ -170,17 +208,32 @@ export function MapView({
                 ? [initialPickedCoords.lng, initialPickedCoords.lat]
                 : center;
 
-        const map = new maplibregl.Map({
-            container,
-            style: mapStyle,
-            center: initialCenter,
-            zoom:
-                initialPickedCoords &&
-                initialPickedCoords.lat &&
-                initialPickedCoords.lng
-                    ? 10
-                    : zoom,
-        });
+        let map: maplibregl.Map;
+
+        try {
+            map = new maplibregl.Map({
+                container,
+                style: buildMapStyle({
+                    tileUrl: mapConfig?.tileUrl ?? defaultTileUrl,
+                    glyphsUrl: mapConfig?.glyphsUrl ?? defaultGlyphsUrl,
+                    attribution: mapConfig?.attribution ?? '© OpenStreetMap',
+                    tileSize: mapConfig?.tileSize ?? 256,
+                }),
+                center: initialCenter,
+                zoom:
+                    initialPickedCoords &&
+                    initialPickedCoords.lat &&
+                    initialPickedCoords.lng
+                        ? 10
+                        : zoom,
+            });
+        } catch {
+            setFailure('error');
+
+            return;
+        }
+
+        let loaded = false;
 
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
         map.addControl(new maplibregl.FullscreenControl(), 'top-right');
@@ -193,7 +246,14 @@ export function MapView({
         );
 
         map.on('load', () => {
+            loaded = true;
             map.resize();
+        });
+
+        map.on('error', () => {
+            if (!loaded) {
+                setFailure('error');
+            }
         });
 
         mapRef.current = map;
@@ -353,17 +413,18 @@ export function MapView({
                         'incidents',
                     ) as maplibregl.GeoJSONSource;
 
-                    source.getClusterExpansionZoom(clusterId, (err, zoom) => {
-                        if (err) {
-                            return;
-                        }
-
-                        const geom = features[0].geometry as GeoJSON.Point;
-                        map.easeTo({
-                            center: geom.coordinates as [number, number],
-                            zoom: zoom,
+                    source
+                        .getClusterExpansionZoom(clusterId)
+                        .then((expansionZoom) => {
+                            const geom = features[0].geometry as GeoJSON.Point;
+                            map.easeTo({
+                                center: geom.coordinates as [number, number],
+                                zoom: expansionZoom,
+                            });
+                        })
+                        .catch(() => {
+                            // Ignore cluster expansion failures.
                         });
-                    });
                 });
 
                 map.on('click', 'unclustered-point', (e) => {
@@ -619,6 +680,25 @@ export function MapView({
     }, [onPick]);
 
     return (
-        <div ref={containerRef} className={cn('h-full w-full', className)} />
+        <div className={cn('relative h-full w-full', className)}>
+            {failure !== null && (
+                <div
+                    role="status"
+                    className="absolute inset-0 z-10 flex items-center justify-center bg-muted/80 p-6 text-center"
+                >
+                    <div className="max-w-md space-y-2">
+                        <p className="text-sm font-medium text-foreground">
+                            {t('map.unavailable_title')}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            {failure === 'unsupported'
+                                ? t('map.unavailable_webgl')
+                                : t('map.unavailable_error')}
+                        </p>
+                    </div>
+                </div>
+            )}
+            <div ref={containerRef} className="h-full w-full" />
+        </div>
     );
 }

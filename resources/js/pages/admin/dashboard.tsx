@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import type { ShieldAlert } from 'lucide-react';
 import { motion } from 'framer-motion';
+import type { ShieldAlert } from 'lucide-react';
 import {
     ArrowRight,
     Bell,
@@ -28,11 +28,11 @@ import {
     create as incidentsCreate,
     index as incidentsIndex,
 } from '@/routes/admin/incidents';
+import { index as moderationIndex } from '@/routes/admin/moderation';
 import {
     create as postsCreate,
     index as postsIndex,
 } from '@/routes/admin/posts';
-import { index as moderationIndex } from '@/routes/admin/moderation';
 import { index as subscribersIndex } from '@/routes/admin/subscribers';
 import { index as touristGroupsIndex } from '@/routes/admin/tourist-groups';
 import { index as usersIndex } from '@/routes/admin/users';
@@ -163,7 +163,7 @@ const item = {
     show: {
         opacity: 1,
         y: 0,
-        transition: { type: 'spring', stiffness: 300, damping: 24 },
+        transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
     },
 };
 
@@ -399,30 +399,38 @@ export default function AdminDashboard({
                                     <EmptyRow text="Недавних правок нет." />
                                 ) : (
                                     <ul className="divide-y divide-border/50">
-                                        {editorial.recent_updates.map((item) => (
-                                            <li key={`${item.type}-${item.id}`}>
-                                                <Link
-                                                    href={item.edit_url}
-                                                    className="group flex items-center justify-between gap-4 p-4 transition-colors hover:bg-muted/30"
+                                        {editorial.recent_updates.map(
+                                            (item) => (
+                                                <li
+                                                    key={`${item.type}-${item.id}`}
                                                 >
-                                                    <div className="min-w-0">
-                                                        <p className="truncate text-sm font-medium text-foreground">
-                                                            {item.title}
-                                                        </p>
-                                                        <p className="mt-1 text-xs text-muted-foreground">
-                                                            {item.type_label}
-                                                            {item.updated_at
-                                                                ? ` · ${item.updated_at}`
-                                                                : ''}
-                                                        </p>
-                                                    </div>
-                                                    <StatusBadge
-                                                        status={item.status}
-                                                        label={item.status_label}
-                                                    />
-                                                </Link>
-                                            </li>
-                                        ))}
+                                                    <Link
+                                                        href={item.edit_url}
+                                                        className="group flex items-center justify-between gap-4 p-4 transition-colors hover:bg-muted/30"
+                                                    >
+                                                        <div className="min-w-0">
+                                                            <p className="truncate text-sm font-medium text-foreground">
+                                                                {item.title}
+                                                            </p>
+                                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                                {
+                                                                    item.type_label
+                                                                }
+                                                                {item.updated_at
+                                                                    ? ` · ${item.updated_at}`
+                                                                    : ''}
+                                                            </p>
+                                                        </div>
+                                                        <StatusBadge
+                                                            status={item.status}
+                                                            label={
+                                                                item.status_label
+                                                            }
+                                                        />
+                                                    </Link>
+                                                </li>
+                                            ),
+                                        )}
                                     </ul>
                                 )}
                             </CardContent>
@@ -440,21 +448,23 @@ export default function AdminDashboard({
                                     <EmptyRow text="Нет материалов с отложенной публикацией." />
                                 ) : (
                                     <ul className="divide-y divide-border/50">
-                                        {editorial.scheduled_posts.map((post) => (
-                                            <li key={post.id}>
-                                                <Link
-                                                    href={post.edit_url}
-                                                    className="group flex items-center justify-between gap-4 p-4 transition-colors hover:bg-muted/30"
-                                                >
-                                                    <p className="min-w-0 truncate text-sm font-medium text-foreground">
-                                                        {post.title}
-                                                    </p>
-                                                    <span className="shrink-0 text-xs text-muted-foreground">
-                                                        {post.published_at}
-                                                    </span>
-                                                </Link>
-                                            </li>
-                                        ))}
+                                        {editorial.scheduled_posts.map(
+                                            (post) => (
+                                                <li key={post.id}>
+                                                    <Link
+                                                        href={post.edit_url}
+                                                        className="group flex items-center justify-between gap-4 p-4 transition-colors hover:bg-muted/30"
+                                                    >
+                                                        <p className="min-w-0 truncate text-sm font-medium text-foreground">
+                                                            {post.title}
+                                                        </p>
+                                                        <span className="shrink-0 text-xs text-muted-foreground">
+                                                            {post.published_at}
+                                                        </span>
+                                                    </Link>
+                                                </li>
+                                            ),
+                                        )}
                                     </ul>
                                 )}
                             </CardContent>

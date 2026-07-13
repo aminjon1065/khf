@@ -173,7 +173,10 @@ export function MediaFolderTree({
         });
     };
 
-    const flatFolders = (nodes: MediaFolderNode[], depth = 0): Array<{ id: number; label: string }> => {
+    const flatFolders = (
+        nodes: MediaFolderNode[],
+        depth = 0,
+    ): Array<{ id: number; label: string }> => {
         return nodes.flatMap((node) => [
             { id: node.id, label: `${'— '.repeat(depth)}${node.name}` },
             ...flatFolders(node.children, depth + 1),
@@ -222,7 +225,9 @@ export function MediaFolderTree({
     };
 
     const deleteFolder = async (id: number) => {
-        if (!confirm('Удалить папку? Файлы будут перемещены на уровень выше.')) {
+        if (
+            !confirm('Удалить папку? Файлы будут перемещены на уровень выше.')
+        ) {
             return;
         }
 
@@ -322,13 +327,18 @@ export function MediaFolderTree({
                             <Input
                                 id="folder-name"
                                 value={name}
-                                onChange={(event) => setName(event.target.value)}
+                                onChange={(event) =>
+                                    setName(event.target.value)
+                                }
                                 placeholder="Например, Баннеры"
                             />
                         </div>
                         <div className="space-y-2">
                             <Label>Родительская папка</Label>
-                            <Select value={parentId} onValueChange={setParentId}>
+                            <Select
+                                value={parentId}
+                                onValueChange={setParentId}
+                            >
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
@@ -351,7 +361,9 @@ export function MediaFolderTree({
                                 <Select
                                     value={container}
                                     onValueChange={(value) =>
-                                        setContainer(value as 'public' | 'private')
+                                        setContainer(
+                                            value as 'public' | 'private',
+                                        )
                                     }
                                 >
                                     <SelectTrigger>

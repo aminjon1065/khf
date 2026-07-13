@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useTranslations } from '@/hooks/use-translations';
-import { index as pollsIndex, show } from '@/routes/polls';
+import { show } from '@/routes/polls';
 
 type PollListItem = {
     id: number;

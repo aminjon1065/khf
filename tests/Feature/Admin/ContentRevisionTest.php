@@ -169,3 +169,33 @@ it('fetches alert revisions via api', function () {
         ->assertOk()
         ->assertJsonCount(1);
 });
+
+it('forbids revision index without manage permission for that content type', function () {
+    $incident = Incident::factory()->create();
+    $incident->upsertTranslations([
+        'ru' => ['title' => 'Событие', 'description' => 'Описание'],
+    ]);
+    $incident->saveRevision();
+
+    $editor = User::factory()->withTwoFactor()->create();
+    $editor->assignRole('editor');
+
+    $this->actingAs($editor)
+        ->get(route('admin.revisions.index', ['type' => 'incident', 'id' => $incident->id]))
+        ->assertForbidden();
+});
+
+it('forbids revision show without manage permission for that content type', function () {
+    $incident = Incident::factory()->create();
+    $incident->upsertTranslations([
+        'ru' => ['title' => 'Событие', 'description' => 'Описание'],
+    ]);
+    $revision = $incident->saveRevision();
+
+    $editor = User::factory()->withTwoFactor()->create();
+    $editor->assignRole('editor');
+
+    $this->actingAs($editor)
+        ->get(route('admin.revisions.show', $revision))
+        ->assertForbidden();
+});

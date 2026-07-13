@@ -10,7 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreLeaderRequest;
 use App\Http\Requests\Admin\UpdateLeaderRequest;
 use App\Models\Leader;
-use App\Support\HtmlSanitizer;
+use App\Services\Admin\ContentEntryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -23,7 +23,7 @@ class LeaderController extends Controller
     use ProvidesBlueprintForm;
     use RedirectsToContentBrowser;
 
-    public function __construct(private HtmlSanitizer $sanitizer) {}
+    public function __construct(private ContentEntryService $entries) {}
 
     public function index(): RedirectResponse
     {
@@ -37,15 +37,7 @@ class LeaderController extends Controller
 
     public function store(StoreLeaderRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-
-        $leader = Leader::create([
-            'status' => $data['status'],
-            'sort_order' => $data['sort_order'] ?? 0,
-            'email' => $data['email'] ?? null,
-            'phone' => $data['phone'] ?? null,
-        ]);
-        $leader->upsertTranslations($this->translationsPayload($data));
+        $leader = $this->entries->store('leader', $request->validated());
         $this->syncPhoto($request, $leader);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Leader created.')]);
@@ -55,22 +47,14 @@ class LeaderController extends Controller
 
     public function edit(Leader $leader): Response
     {
-        $leader->load(['translations', 'media']);
+        $leader->loadMissing('media');
 
         return Inertia::render('admin/content/form', $this->formData($leader));
     }
 
     public function update(UpdateLeaderRequest $request, Leader $leader): RedirectResponse
     {
-        $data = $request->validated();
-
-        $leader->update([
-            'status' => $data['status'],
-            'sort_order' => $data['sort_order'] ?? 0,
-            'email' => $data['email'] ?? null,
-            'phone' => $data['phone'] ?? null,
-        ]);
-        $leader->upsertTranslations($this->translationsPayload($data));
+        $this->entries->update('leader', $leader, $request->validated());
         $this->syncPhoto($request, $leader);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Leader updated.')]);
@@ -80,7 +64,7 @@ class LeaderController extends Controller
 
     public function destroy(Leader $leader): RedirectResponse
     {
-        $leader->delete();
+        $this->entries->destroy('leader', $leader);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Leader deleted.')]);
 
@@ -104,50 +88,13 @@ class LeaderController extends Controller
      */
     private function formData(?Leader $leader): array
     {
-        $translations = [];
-
-        if ($leader) {
-            foreach ($leader->translations as $translation) {
-                $translations[$translation->locale] = [
-                    'full_name' => $translation->full_name,
-                    'position' => $translation->position,
-                    'bio' => $translation->bio,
-                    'reception' => $translation->reception,
-                ];
-            }
-        }
-
         return $this->contentEntryFormProps(
             'leader',
-            $leader ? [
-                'id' => $leader->id,
-                'status' => $leader->status->value,
-                'sort_order' => $leader->sort_order,
-                'email' => $leader->email,
-                'phone' => $leader->phone,
-                'translations' => $translations,
-            ] : null,
+            $leader ? $this->entries->entryArray($leader, 'leader') : null,
             [],
             [
                 'photoUrl' => $leader?->getFirstMediaUrl(Leader::PHOTO_COLLECTION, 'thumb') ?: null,
             ],
         );
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, array<string, mixed>>
-     */
-    private function translationsPayload(array $data): array
-    {
-        return collect($data['translations'] ?? [])
-            ->filter(fn (array $translation) => filled($translation['full_name'] ?? null))
-            ->map(fn (array $translation) => [
-                'full_name' => $translation['full_name'],
-                'position' => $translation['position'] ?? '',
-                'bio' => $this->sanitizer->clean($translation['bio'] ?? null),
-                'reception' => $translation['reception'] ?? null,
-            ])
-            ->all();
     }
 }

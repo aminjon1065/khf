@@ -9,7 +9,15 @@ import { destroy } from '@/routes/admin/menus/items';
 import MenuItemModal from './menu-item-modal';
 import { MenuMegaPreview } from './menu-mega-preview';
 
-export default function MenuShow({ menu, items, locales, defaultLocale, linkSections, linkPages, linkCollectionEntries }: any) {
+export default function MenuShow({
+    menu,
+    items,
+    locales,
+    defaultLocale,
+    linkSections,
+    linkPages,
+    linkCollectionEntries,
+}: any) {
     const [modalOpen, setModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<any>(null);
     const [parentForNew, setParentForNew] = useState<number | null>(null);
@@ -34,8 +42,13 @@ export default function MenuShow({ menu, items, locales, defaultLocale, linkSect
         }
     };
 
-    const handleMove = (item: any, direction: 'up' | 'down', siblings: any[]) => {
+    const handleMove = (
+        item: any,
+        direction: 'up' | 'down',
+        siblings: any[],
+    ) => {
         const currentIndex = siblings.findIndex((s) => s.id === item.id);
+
         if (direction === 'up' && currentIndex > 0) {
             swapAndSave(siblings, currentIndex, currentIndex - 1);
         } else if (direction === 'down' && currentIndex < siblings.length - 1) {
@@ -55,7 +68,11 @@ export default function MenuShow({ menu, items, locales, defaultLocale, linkSect
             sort_order: idx + 1,
         }));
 
-        router.post(reorder({ menu: menu.id }).url, { items: payload }, { preserveScroll: true });
+        router.post(
+            reorder({ menu: menu.id }).url,
+            { items: payload },
+            { preserveScroll: true },
+        );
     };
 
     const renderItems = (nodes: any[], level = 0) => {
@@ -68,17 +85,22 @@ export default function MenuShow({ menu, items, locales, defaultLocale, linkSect
         }
 
         return (
-            <div className={`flex flex-col gap-2 ${level > 0 ? 'mt-2 ml-6 border-l pl-4' : ''}`}>
+            <div
+                className={`flex flex-col gap-2 ${level > 0 ? 'mt-2 ml-6 border-l pl-4' : ''}`}
+            >
                 {nodes.map((node, index) => (
                     <div key={node.id} className="flex flex-col gap-2">
                         <div className="flex items-center justify-between rounded-md border bg-card p-3 shadow-sm">
                             <div className="flex items-center gap-3">
                                 <div className="font-medium">
-                                    {node.translations[defaultLocale]?.title || '—'}
+                                    {node.translations[defaultLocale]?.title ||
+                                        '—'}
                                 </div>
                                 <div className="flex gap-1">
                                     {locales.map((locale: { code: string }) => {
-                                        const hasTranslation = (node.locales ?? []).includes(locale.code);
+                                        const hasTranslation = (
+                                            node.locales ?? []
+                                        ).includes(locale.code);
 
                                         return (
                                             <span
@@ -114,7 +136,9 @@ export default function MenuShow({ menu, items, locales, defaultLocale, linkSect
                                 <div className="mr-2 flex flex-col gap-0.5">
                                     <button
                                         type="button"
-                                        onClick={() => handleMove(node, 'up', nodes)}
+                                        onClick={() =>
+                                            handleMove(node, 'up', nodes)
+                                        }
                                         disabled={index === 0}
                                         className="text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground"
                                     >
@@ -122,25 +146,43 @@ export default function MenuShow({ menu, items, locales, defaultLocale, linkSect
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => handleMove(node, 'down', nodes)}
+                                        onClick={() =>
+                                            handleMove(node, 'down', nodes)
+                                        }
                                         disabled={index === nodes.length - 1}
                                         className="text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground"
                                     >
                                         <ChevronDown className="size-4" />
                                     </button>
                                 </div>
-                                <Button variant="ghost" size="icon" onClick={() => handleAdd(node.id)} title="Добавить подпункт">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleAdd(node.id)}
+                                    title="Добавить подпункт"
+                                >
                                     <Plus className="size-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleEdit(node)}>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEdit(node)}
+                                >
                                     <Edit2 className="size-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(node)}>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive"
+                                    onClick={() => handleDelete(node)}
+                                >
                                     <Trash2 className="size-4" />
                                 </Button>
                             </div>
                         </div>
-                        {node.children && node.children.length > 0 && renderItems(node.children, level + 1)}
+                        {node.children &&
+                            node.children.length > 0 &&
+                            renderItems(node.children, level + 1)}
                     </div>
                 ))}
             </div>
@@ -154,10 +196,12 @@ export default function MenuShow({ menu, items, locales, defaultLocale, linkSect
             <div className="flex h-full flex-1 flex-col gap-6 p-4">
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{menu.name}</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            {menu.name}
+                        </h1>
                         <p className="text-sm text-muted-foreground">
-                            {menu.location_label ?? menu.location} · добавляйте пункты, вложенность и
-                            порядок отображения на сайте
+                            {menu.location_label ?? menu.location} · добавляйте
+                            пункты, вложенность и порядок отображения на сайте
                         </p>
                     </div>
                     <Button onClick={() => handleAdd(null)}>
@@ -183,9 +227,7 @@ export default function MenuShow({ menu, items, locales, defaultLocale, linkSect
                     <CardHeader>
                         <CardTitle>Пункты меню</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        {renderItems(items)}
-                    </CardContent>
+                    <CardContent>{renderItems(items)}</CardContent>
                 </Card>
 
                 {modalOpen && (
