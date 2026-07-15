@@ -1,5 +1,5 @@
-import { usePage, usePoll } from '@inertiajs/react';
-import { TriangleAlert, X } from 'lucide-react';
+import { Link, usePage, usePoll } from '@inertiajs/react';
+import { ArrowRight, TriangleAlert, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslations } from '@/hooks/use-translations';
 
@@ -100,6 +100,13 @@ export function AlertBanner() {
                                     {alert.body}
                                 </p>
                             )}
+                            <Link
+                                href={alert.url}
+                                className={`mt-1 inline-flex items-center gap-1 text-xs font-medium ${accentFor(alert.level)} hover:underline`}
+                            >
+                                {t('alerts.more')}
+                                <ArrowRight className="size-3.5" aria-hidden="true" />
+                            </Link>
                         </div>
                         {alert.dismissible && (
                             <button

@@ -1,9 +1,14 @@
 import { Link } from '@inertiajs/react';
 import { ArrowRight, Map } from 'lucide-react';
-import { MapView } from '@/components/map-view';
+import { lazy, Suspense } from 'react';
 import type { MapMarker } from '@/components/map-view';
 import { useTranslations } from '@/hooks/use-translations';
 import { index as mapIndex } from '@/routes/map';
+
+// MapLibre GL is ~1 MB; code-split it so home-page visitors don't eagerly download the map engine.
+const MapView = lazy(() =>
+    import('@/components/map-view').then((m) => ({ default: m.MapView })),
+);
 
 type MapWidgetProps = {
     locale: string;
@@ -64,7 +69,13 @@ export function MapWidget({ locale, incidents }: MapWidgetProps) {
                 </Link>
             </div>
             <div className="relative h-44 w-full sm:h-52 lg:h-56">
-                <MapView markers={markers} />
+                <Suspense
+                    fallback={
+                        <div className="h-full w-full animate-pulse bg-muted" />
+                    }
+                >
+                    <MapView markers={markers} />
+                </Suspense>
             </div>
         </div>
     );

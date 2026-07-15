@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\AlertStatus;
 use App\Enums\HazardLevel;
+use App\Models\Concerns\ClearsResponseCache;
 use App\Models\Concerns\HasRevisions;
 use App\Models\Concerns\HasTranslations;
 use Database\Factories\AlertFactory;
@@ -29,6 +30,8 @@ use Spatie\Activitylog\Support\LogOptions;
  */
 class Alert extends Model
 {
+    use ClearsResponseCache;
+
     /** @use HasFactory<AlertFactory> */
     use HasFactory;
 

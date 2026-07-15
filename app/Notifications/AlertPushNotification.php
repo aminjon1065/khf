@@ -16,7 +16,8 @@ class AlertPushNotification extends Notification implements ShouldQueue
         public string $title,
         public string $body,
         public string $url,
-        public string $hazardLevel
+        public string $hazardLevel,
+        public ?int $logId = null,
     ) {}
 
     public function via($notifiable): array

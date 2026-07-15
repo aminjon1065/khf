@@ -7,6 +7,10 @@
 {{ $body }}
 @endif
 
+<x-mail::button :url="$alertUrl">
+{{ __('mail.alert.view') }}
+</x-mail::button>
+
 {{ __('mail.alert.auto_notice') }}
 
 <x-mail::subcopy>

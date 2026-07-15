@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Enums\Role;
 use App\Listeners\LogAuthenticationActivity;
+use App\Listeners\RecordNotificationDelivery;
 use App\Models\User;
 use App\Services\Public\SharedPublicProps;
 use Carbon\CarbonImmutable;
@@ -54,6 +55,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Security audit trail: log sign-in / sign-out / failed-login / 2FA events (ТЗ §12.7).
         Event::subscribe(LogAuthenticationActivity::class);
+
+        // Delivery journal for emergency-alert e-mail + web-push (ТЗ §6.4.4).
+        Event::subscribe(RecordNotificationDelivery::class);
 
         $this->app->make(SharedPublicProps::class)->registerInvalidation();
     }

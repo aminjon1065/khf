@@ -60,6 +60,7 @@ class Post extends Model implements HasMedia
 
     /** @var list<string> */
     protected $fillable = [
+        'legacy_node_id',
         'type',
         'category_id',
         'author_id',

@@ -21,4 +21,7 @@ export interface ActiveAlert {
     title: string | null;
     body: string | null;
     dismissible: boolean;
+    published_at: string | null;
+    expires_at: string | null;
+    url: string;
 }

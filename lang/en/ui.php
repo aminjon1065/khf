@@ -213,6 +213,16 @@ return [
         'back_to_list' => '← Back to news list',
         'author' => 'Author: :author',
     ],
+    'alerts' => [
+        'more' => 'Details',
+        'active' => 'Active',
+        'expired' => 'Ended',
+        'published' => 'Published',
+        'expires' => 'Until',
+        'region' => 'Region',
+        'back' => 'Back to home',
+    ],
+
     'incidents' => [
         'subtitle' => 'Incidents and emergencies',
         'empty' => 'No registered incidents.',

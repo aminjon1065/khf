@@ -66,10 +66,13 @@ it('renders the matomo tracker snippet when analytics is configured', function (
         'matomo.site_id' => '5',
     ]);
 
+    // The tracker config is exposed via meta tags and the external /js/matomo.js bootstrap so the
+    // CSP needs no inline script (ТЗ §12.2).
     $this->get(route('subscriptions.create', ['locale' => 'tj']))
         ->assertOk()
-        ->assertSee('analytics.example.com', false)
-        ->assertSee("setSiteId', '5'", false);
+        ->assertSee('<meta name="matomo-url" content="https://analytics.example.com/">', false)
+        ->assertSee('<meta name="matomo-site-id" content="5">', false)
+        ->assertSee('/js/matomo.js', false);
 });
 
 it('does not render the matomo tracker snippet when analytics is disabled', function () {

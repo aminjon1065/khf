@@ -41,16 +41,28 @@ class IncidentController extends Controller
 
         // No locale filter here: active incidents must never be hidden from a locale, and this keeps
         // the list consistent with the unfiltered summary counts above (translation() falls back).
-        $page = request('page', 1);
-        $filters = request()->only(['type', 'level', 'region', 'period']);
-        $filterKey = md5(json_encode($filters));
+        // Whitelist every filter to its known option set and clamp the page so an attacker can't
+        // explode the cache-key space (unbounded rows in the database cache store) by fuzzing the
+        // query string (ТЗ §13.1). Only real, resolvable filters ever reach the cache key or query.
+        $validRegionIds = Region::query()->pluck('id')->map(fn ($id): string => (string) $id)->all();
+
+        $filters = array_filter([
+            'type' => in_array(request('type'), IncidentType::values(), true) ? (string) request('type') : null,
+            'level' => in_array(request('level'), HazardLevel::values(), true) ? (string) request('level') : null,
+            'region' => in_array((string) request('region'), $validRegionIds, true) ? (string) request('region') : null,
+            'period' => in_array(request('period'), ['today', 'week', 'month'], true) ? (string) request('period') : null,
+        ], fn (?string $value): bool => $value !== null);
+
+        $page = max(1, min((int) request('page', 1), 1000));
+        $highLoad = SystemLoadService::isHighLoad();
+        $filterKey = md5(json_encode($filters + ['hl' => $highLoad]));
 
         $incidentsCacheKey = 'incidents.archive.'.$locale.'.page.'.$page.'.'.$filterKey.'.'.$cacheKeyVersion;
 
-        $incidents = Cache::remember($incidentsCacheKey, 3600, function () use ($locale, $filters) {
+        $incidents = Cache::remember($incidentsCacheKey, 3600, function () use ($locale, $filters, $highLoad) {
             $query = Incident::query()->with(['translations', 'region.translations']);
 
-            if (SystemLoadService::isHighLoad()) {
+            if ($highLoad) {
                 $query->active();
             }
 

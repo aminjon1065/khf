@@ -39,13 +39,23 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 
 ## Progress Summary
 
-- **Total Tasks:** 211 (was 196; +10 Phase 21 §20-module lines added this pass)
-- **Fully done `[x]`:** 173
-- **Partial `[~]`:** 25
+- **Total Tasks:** 230 (was 211; +19 across Phase 22 hardening + Phase 23 real-data lines)
+- **Fully done `[x]`:** 191
+- **Partial `[~]`:** 24
 - **Not started `[ ]`:** 11
-- **Deferred `[→]`:** 3
+- **Deferred `[→]`:** 4
 - **In Progress:** 0
-- **Completion:** ~81% fully done (~88% counting partials as half). Base suite: **395 green**.
+- **Completion:** ~85% fully done. Base suite: **746 green** (was 715; +31 alert-path/media/scheduler/CSP/PII/incident/real-data/media-migration tests).
+
+> **Launch-hardening pass 2026-07-14 (14-agent legacy-harvest + 8-dimension production audit,
+> adversarially verified — 62 findings survived of 69).** The audit converged on the emergency
+> **alert path** as the single most broken subsystem. **Phase 22** now tracks the Tier-1 code fixes
+> shipped this pass: two-layer alert-cache correctness, a priority `alerts` queue, idempotent fan-out
+> with a real delivery journal, a public alert-detail page with banner/e-mail/push deep-links +
+> SpecialAnnouncement JSON-LD, scheduler hardening, and the media-upload XSS lockdown. A latent
+> production bug was fixed in passing: `Subscriber` had no `notify()` (web-push fan-out would have
+> thrown). Remaining verified findings are catalogued as WP-3…WP-16 in the launch plan
+> (`scratchpad/` harvest + audit artefacts); real-data seeding from khf.tj/kchs.tj is Phase 23.
 
 > **Reconciled 2026-07-07 (10-agent code↔plan audit against the 342-green suite).** The checkbox body
 > had been bulk-marked `[x]` ahead of the code, so this pass found the *reverse* of the old problem —
@@ -96,7 +106,7 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 - [x] Cyrillic/Tajik-capable sans font: switched to **Inter** (Bunny self-hosted, weights 400/500/600/700) in `vite.config.ts` + `--font-sans`; build bundles Latin+Cyrillic subsets
 - [→] Realtime polling: active-alerts JSON endpoint + client poll abstraction (D-11) — DEFERRED to Phase 6 (needs the `alerts` model)
 - [→] MapLibre GL JS base map component + OSM tiles + offline fallback (D-5) — DEFERRED to Phase 7 (needs the map page/data)
-- [ ] Configure Laravel scheduler entries (queue drain, cleanup, digests, maintenance) + document the single shared-hosting cron `schedule:run` (D-10/D-13)
+- [x] Configure Laravel scheduler entries (priority queue drain `--queue=alerts,default`, alert-cache refresh, `activitylog:clean --force`, `queue:prune-failed`) + document the single shared-hosting cron `schedule:run` (D-10/D-13) — `routes/console.php`, tested (`SchedulerTest`)
 - [x] Establish `languages` table + Language model (cached `active()`/`codes()`/`default()`) + seeder (tj, ru, en) + `config('app.locales')` — tested
 - [x] Locale routing + `SetLocale` middleware: `/{locale}` prefix (tj|ru|en) for public content, `/` → resolved localized home, CMS/auth unprefixed; resolves URL → session → browser (tg→tj) → default — tested
 - [x] Inertia shared props: current `locale`, active `locales` (code/native_name/hreflang/is_default), `localeSwitch` URL map + TS types + `LanguageSwitcher` component (wired into public header) — tested. (auth user already shared; permissions added in Phase 2, active alerts in Phase 6)
@@ -358,6 +368,40 @@ schema.org); background work runs via a single **cron `schedule:run`**.
 - [x] **Polls / Опросы** (ТЗ §8 + §20«к», incl. anti-corruption expertise of draft acts) — `Poll`/`PollTranslation`/`PollOption`/`PollVote`, admin CRUD (`polls.manage`), public `/{locale}/polls` + vote form, anti-corruption type; `PollManagementTest`/`PollTest`
 - [x] **Services / Услуги** (ТЗ §20«ф» — government-services catalogue) — `GovService`/`GovServiceTranslation`, categories (`ServiceCategory`), admin CRUD (`services.manage`), public `/{locale}/services` catalogue + detail; `GovServiceManagementTest`/`GovServiceTest`
 
+## Phase 22 — Launch Hardening (Tier-1 audit fixes, 2026-07-14)
+
+> Shipped from the 8-dimension production audit (adversarially verified). Tier-1 code fixes that
+> would endanger or embarrass the Committee at launch, centred on the emergency alert path. All
+> covered by new Pest tests (733 green). Remaining verified findings live as WP-3…WP-16 in the
+> launch plan (`scratchpad/` audit + harvest artefacts).
+
+- [x] **WP-1 alert-cache correctness** — `Alert`/`AlertTranslation` now `ClearsResponseCache` (publish/cancel purges the full-page Spatie cache); new `alerts:refresh-cache` cron command detects scheduled `starts_at`/`ends_at` transitions via an active-set signature and bumps the shared-props version + clears response cache within one tick, so a timed alert can no longer serve a stale "no alert" for up to 1h (§6.4.1, §10.6). `SharedPublicProps.activeAlerts` gains `published_at`/`expires_at`/`url`. Tested (`AlertCacheTest`)
+- [x] **WP-1 priority queue** — `SendAlertNotifications` + alert mail dispatch on a dedicated `alerts` queue; scheduler drains `--queue=alerts,default` so emergency delivery preempts digests + image conversions (§6.4, §13). Tested (`AlertDispatchTest`, `SchedulerTest`)
+- [x] **WP-1 idempotent fan-out + delivery journal** — unique `notifications_log(alert_id, subscriber_id, channel)` makes a queue retry resume instead of re-blasting; `RecordNotificationDelivery` listener flips each row `queued → sent/failed` (with error) via `MessageSent`/`NotificationSent`/`NotificationFailed` (§6.4.4). Tested (`AlertDispatchTest`)
+- [x] **WP-1 public alert-detail page + deep-links** — `Public/AlertController@show` + `/{locale}/alerts/{alert}` + `public/alerts/show.tsx`; banner «Подробнее» link + published time; e-mail «Подробнее» button + web-push now deep-link the alert page (was homepage); `SpecialAnnouncement` JSON-LD per active alert (§6.4.1, §15.1). Tested (`AlertPageTest`)
+- [x] **WP-1 fix latent bug** — `Subscriber` lacked `notify()` (only `HasPushSubscriptions`); added `RoutesNotifications` so the web-push fan-out no longer throws in production
+- [x] **WP-2 media-upload XSS lockdown** — `SafeFileUpload` now checks the real finfo MIME + every filename segment and hard-blocks svg/html/xml/xhtml + double extensions; `StoreMediaRequest` adds an image/document `mimetypes:` allowlist; `MEDIA_DISK` set explicitly (§12.4). Tested (`MediaManagementTest`)
+- [x] **WP-9 CSP hardening** — dropped `'unsafe-inline'` from `script-src` by moving the theme + Matomo bootstrap to static `/js/*.js` files served from `'self'` (cache-safe — per-request nonces are defeated by the full-page response cache); tightened `img-src` off the `https:` wildcard to `'self' data: blob:` + tile + Matomo origins (§12.2). Tested (`SecurityHeadersTest`, `MatomoGoalsTest`)
+- [x] **WP-9 appeal PII at rest** — `encrypted` casts on Appeal `email`/`phone`/`message` (columns widened to TEXT); `name`/`subject`/`reference` stay plaintext for the moderator search (§12.5). Tested (`AppealPiiEncryptionTest`)
+- [x] **WP-10 lazy-load MapLibre** — `MapView` (~1 MB maplibre-gl) is now a `React.lazy` async chunk in `map-widget` + the map page, so home visitors no longer eagerly download the map engine (verified split out of the app bundle) (§13.1, §11.4)
+- [x] **WP-10 incidents archive** — index on `incidents.updated_at` (scanned as the cache stamp every request); page clamped + all filter values whitelisted before the cache key so the query string can't explode the DB cache-key space (§13.1). Tested (`IncidentsTest`)
+- [x] **Ops** — `activitylog:clean --force` (was never running unattended), `queue:prune-failed`, and `LOG_STACK=daily` + 30-day retention in `.env.production.example` (§16.3)
+
+## Phase 23 — Real-Data Migration (WP-4, 2026-07-14)
+
+> Loads the content harvested verbatim from khf.tj/kchs.tj (`database/data/legacy/*.json`) into the
+> DB via a new **`ProductionSeeder`** (`php artisan db:seed --class=ProductionSeeder`). Tajik +
+> Russian only; nothing fabricated. `DatabaseSeeder` stays the demo/QA fixture (tests depend on it).
+
+- [x] **Real leadership** — `RealLeadershipSeeder`: 4 verbatim leaders (chairman Назарзода Рустам + 3 deputies), tj/ru, rank kept inside the bio prose (no column) (§20«г»)
+- [x] **Real structure** — `RealStructureSeeder`: 27 subdivisions with the `parentKey` tree resolved; the 4 regional offices are part of that list (not duplicated) (§20«б»)
+- [x] **Real legal acts** — `RealDocumentSeeder`: 67 documents (law/regulation/departmental/plan), tj/ru, adoption dates only where published; `document_translations.name` widened to TEXT for long legal titles (§6.8)
+- [x] **Real news** — `RealNewsSeeder`: 95 posts (news/press-release/announcement/summary), single- or bi-lingual as harvested, each carrying `posts.legacy_node_id` for the WP-3 301 map (§6.2)
+- [x] **Real social channels** — `RealContactsSeeder`: real Telegram/Facebook/YouTube into the `social` global + copyright; deprecated links skipped; emergency-number CTA left for Committee confirmation (§6.9)
+- [x] `ProductionSeeder` orchestrator + `ReadsLegacyData` trait; tested (`RealDataSeederTest` — counts, real chairman name, no fabricated English, page render, idempotency). **744 green**
+- [x] **WP-4b media migrated** — `legacy:migrate-media` command downloads the legacy portraits + PDFs into the media library (idempotent, resilient, skips harvest-flagged broken files). Run result: **4/4 leader photos** (public disk) + **64/67 documents → 83 PDFs** (private `local` disk); 0 errors. Tested offline (`MigrateLegacyMediaTest` — skip/idempotency + option validation)
+- [→] **Committee-gated facts** (WP-8) — emergency number (code `112` vs published reception `+992 37 223-13-11`), chairman rank/tenure, full English layer, missing НПА dates/numbers — seeded verbatim-or-omitted, never invented; await confirmation
+
 ---
 
 ## Decision Log
@@ -474,6 +518,49 @@ schema.org); background work runs via a single **cron `schedule:run`**.
   unused. Presentation + one read-only controller prop; all 251 tests green.
 
 ## Change Log
+
+- **2026-07-14** — **Phase 23 WP-4b (legacy media migration).** New `legacy:migrate-media` artisan
+  command downloads the leader portraits + legal-act PDFs still hosted on khf.tj/kchs.tj into the
+  media library — idempotent (skips records that already have media), resilient (per-file try/catch,
+  never aborts the run), skips harvest-flagged broken files, dedupes to one PDF per locale. Run
+  against the dev DB: **4/4 leader photos** (public disk) + **64/67 documents → 83 PDFs** (private
+  disk), 0 errors; the leadership page now serves the real chairman portrait. Offline test
+  (`MigrateLegacyMediaTest`). **746 green** (+2).
+- **2026-07-14** — **Phase 23 WP-4 (real-data migration).** The site was still showing
+  `TestContentSeeder` demo content while the data harvested from khf.tj/kchs.tj sat unused in
+  `database/data/legacy/*.json`. Added `ProductionSeeder` + five Real* seeders + a `ReadsLegacyData`
+  trait that load the verbatim tj/ru content: 4 leaders, 27 subdivisions (tree resolved), 67 legal
+  acts, 95 news posts (each with `legacy_node_id`), and real social channels. Migrations:
+  `posts.legacy_node_id`, `document_translations.name`→TEXT (long legal titles). Nothing fabricated
+  — English, the emergency number and the chairman's rank stay null/verbatim pending Committee
+  confirmation. `DatabaseSeeder` untouched (demo fixture for tests). `RealDataSeederTest` added.
+  **744 green** (+6). pint clean. DEPLOY.md updated with the ProductionSeeder path.
+- **2026-07-14** — **Phase 22 WP-9/WP-10 (security + performance).** **CSP:** removed `'unsafe-inline'`
+  from `script-src` — the theme + Matomo bootstrap scripts moved to static `/js/theme.js` +
+  `/js/matomo.js` (Matomo config via meta tags) served from `'self'`, which is cache-safe where
+  per-request nonces would be baked into the full-page response cache; `img-src` tightened off the
+  `https:` wildcard to `'self' data: blob:` + tile/Matomo origins (also added tile origins to
+  `img-src`, Matomo to `img-src`). **PII:** Appeal `email`/`phone`/`message` now `encrypted` at rest
+  (columns widened to TEXT); `name`/`subject`/`reference` stay plaintext for the moderator search.
+  **Perf:** MapLibre (~1 MB) is now a `React.lazy` chunk (split out of the app bundle) on the home
+  widget + map page; `incidents.updated_at` indexed; incident archive page clamped and filters
+  whitelisted before the cache key to bound the DB cache-key space. **738 tests green** (+5). pint +
+  eslint + tsc clean.
+- **2026-07-14** — **Phase 22 launch-hardening (Tier-1 audit fixes).** After a 14-agent legacy
+  harvest + 8-dimension production audit (adversarially verified, 62/69 findings survived), shipped
+  the emergency-alert-path fixes and the media XSS lockdown. **Alert cache:** `Alert`/`AlertTranslation`
+  now `ClearsResponseCache`; new `alerts:refresh-cache` cron command surfaces scheduled `starts_at`/
+  `ends_at` transitions (active-set signature → bump shared-props version + clear Spatie cache) so a
+  timed alert can't serve a stale banner for up to 1h. **Priority queue:** alert job + mail on a
+  dedicated `alerts` queue; scheduler drains `--queue=alerts,default`. **Idempotency + journal:**
+  unique `notifications_log(alert_id,subscriber_id,channel)` + `RecordNotificationDelivery` listener
+  (`queued → sent/failed`). **Alert detail page:** `Public/AlertController` + `/{locale}/alerts/{alert}`
+  + `public/alerts/show.tsx`; banner/e-mail/push deep-link it; `SpecialAnnouncement` JSON-LD.
+  **Media XSS:** `SafeFileUpload` real-MIME + segment check blocks svg/html/xml + double extensions;
+  `StoreMediaRequest` `mimetypes:` allowlist. **Latent bug fixed:** `Subscriber` had no `notify()`
+  (web-push fan-out would have thrown) → added `RoutesNotifications`. **Ops:** `activitylog:clean
+  --force`, `queue:prune-failed`, `LOG_STACK=daily`+30d. Scheduler `[ ]`→`[x]`; Phase 22 added.
+  **733 tests green** (+18). pint + eslint + tsc clean.
 
 - **2026-07-07** — **Menu per-language visibility (§7.8, item 157).** `MenuFormatter` service hides
   items (and children) without a title for the active locale — primary + footer menus; no blank labels.

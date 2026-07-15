@@ -2,6 +2,7 @@
 
 namespace App\Services\Public;
 
+use App\Console\Commands\RefreshAlertCache;
 use App\Models\Alert;
 use App\Models\AlertTranslation;
 use App\Models\Menu;
@@ -99,6 +100,7 @@ class SharedPublicProps
                 ->values()
                 ->map(function (Alert $alert) use ($locale): array {
                     $translation = $alert->translation($locale);
+                    $publishedAt = $alert->starts_at ?? $alert->created_at;
 
                     return [
                         'id' => $alert->id,
@@ -108,10 +110,27 @@ class SharedPublicProps
                         'title' => $translation?->title,
                         'body' => $translation?->body,
                         'dismissible' => $alert->is_dismissible,
+                        'published_at' => $publishedAt?->toIso8601String(),
+                        'expires_at' => $alert->ends_at?->toIso8601String(),
+                        'url' => route('alerts.show', ['locale' => $locale, 'alert' => $alert->id]),
                     ];
                 })
                 ->all();
         });
+    }
+
+    /**
+     * Signature of the currently-active alert set (published IDs within their time window),
+     * ordered for stability. The scheduled {@see RefreshAlertCache} command
+     * compares it minute-to-minute so a scheduled `starts_at`/`ends_at` transition — which fires no
+     * model event — still invalidates the banner cache within one cron tick (ТЗ §6.4.1).
+     */
+    public function activeSignature(): string
+    {
+        return Alert::active()
+            ->orderBy('id')
+            ->pluck('id')
+            ->implode(',');
     }
 
     public function version(string $group): int

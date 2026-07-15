@@ -28,6 +28,24 @@ it('sends a content security policy with safe defaults', function () {
         ->toContain("base-uri 'self'");
 });
 
+it('does not allow inline scripts or a wildcard image host', function () {
+    // Unset the tile + analytics origins so the only sources are the hardened defaults.
+    config()->set('map.tiles.url', '');
+    config()->set('map.tiles.glyphs', '');
+    config()->set('matomo.url', null);
+
+    $csp = $this->get(route('welcome', ['locale' => 'tj']))
+        ->headers
+        ->get('Content-Security-Policy');
+
+    // script-src is exactly 'self' (no 'unsafe-inline'; style-src keeps it by design), img-src has
+    // no https: wildcard, and with no external origins configured the whole policy is https:-free.
+    expect($csp)
+        ->toContain("script-src 'self';")
+        ->toContain("img-src 'self' data: blob:;")
+        ->not->toContain('https:');
+});
+
 it('allows configured map tile hosts in the content security policy', function () {
     config()->set('map.tiles.url', 'https://tiles.example.test/{z}/{x}/{y}.png');
     config()->set('map.tiles.glyphs', 'https://glyphs.example.test/font/{fontstack}/{range}.pbf');
@@ -50,7 +68,7 @@ it('allows the configured Matomo host in the content security policy', function 
         ->get('Content-Security-Policy');
 
     expect($csp)
-        ->toContain("script-src 'self' 'unsafe-inline' https://analytics.example.test")
+        ->toContain("script-src 'self' https://analytics.example.test")
         ->toContain('https://analytics.example.test');
 });
 

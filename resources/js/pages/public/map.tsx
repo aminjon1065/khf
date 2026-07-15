@@ -1,6 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { useCallback, useMemo, useState } from 'react';
-import { MapView } from '@/components/map-view';
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import type {
     MapLayerVisibility,
     MapMarker,
@@ -10,6 +9,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from '@/hooks/use-translations';
 import { index as mapIndex } from '@/routes/map';
 import type { SharedData } from '@/types';
+
+// MapLibre GL is ~1 MB; code-split it so the map page shell paints before the engine downloads.
+const MapView = lazy(() =>
+    import('@/components/map-view').then((m) => ({ default: m.MapView })),
+);
 
 type Option = { value: string; label: string };
 
@@ -325,12 +329,18 @@ export default function PublicMap({
                     </div>
                 </div>
 
-                <MapView
-                    markers={markers}
-                    unitMarkers={units}
-                    riskZones={riskZones}
-                    layerVisibility={layerVisibility}
-                />
+                <Suspense
+                    fallback={
+                        <div className="h-full w-full animate-pulse bg-muted" />
+                    }
+                >
+                    <MapView
+                        markers={markers}
+                        unitMarkers={units}
+                        riskZones={riskZones}
+                        layerVisibility={layerVisibility}
+                    />
+                </Suspense>
             </div>
         </>
     );

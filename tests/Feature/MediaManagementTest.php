@@ -73,6 +73,36 @@ it('uploads a file to the media library', function () {
         ->and(MediaFile::first()->getFirstMedia('default'))->not->toBeNull();
 });
 
+it('rejects an SVG upload (stored-XSS vector on the public disk)', function () {
+    $this->actingAs($this->editor)
+        ->post(route('admin.media.store'), [
+            'file' => UploadedFile::fake()->create('logo.svg', 4, 'image/svg+xml'),
+        ])
+        ->assertSessionHasErrors('file');
+
+    expect(MediaFile::count())->toBe(0);
+});
+
+it('rejects an HTML upload', function () {
+    $this->actingAs($this->editor)
+        ->post(route('admin.media.store'), [
+            'file' => UploadedFile::fake()->create('page.html', 4, 'text/html'),
+        ])
+        ->assertSessionHasErrors('file');
+
+    expect(MediaFile::count())->toBe(0);
+});
+
+it('rejects a double-extension payload disguised as an image', function () {
+    $this->actingAs($this->editor)
+        ->post(route('admin.media.store'), [
+            'file' => UploadedFile::fake()->create('shell.php.jpg', 4, 'image/jpeg'),
+        ])
+        ->assertSessionHasErrors('file');
+
+    expect(MediaFile::count())->toBe(0);
+});
+
 it('searches media files by name and alt text', function () {
     createLibraryImage($this->editor, 'mountain.jpg', 'Snow peak');
     createLibraryImage($this->editor, 'river.jpg', 'Water flow');

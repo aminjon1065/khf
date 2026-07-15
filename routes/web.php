@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedHomeController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\Public\AlertController;
 use App\Http\Controllers\Public\AppealController;
 use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Public\DocumentController;
@@ -57,6 +58,8 @@ Route::prefix('{locale}')
         Route::get('news/rss', [FeedController::class, 'news'])->middleware(CacheResponse::class)->name('news.rss');
         Route::get('news/{slug}', [PostController::class, 'show'])->middleware(CacheResponse::class)->name('news.show');
         Route::get('incidents', [IncidentController::class, 'index'])->middleware(CacheResponse::class)->name('incidents.index');
+        // Emergency-alert detail page — deep-linked from the banner, e-mail and web-push (ТЗ §6.4.1).
+        Route::get('alerts/{alert}', [AlertController::class, 'show'])->middleware(CacheResponse::class)->name('alerts.show');
         Route::get('map', [MapController::class, 'index'])->middleware(CacheResponse::class)->name('map.index');
         Route::get('documents', [DocumentController::class, 'index'])->middleware(CacheResponse::class)->name('documents.index');
         Route::get('documents/{document}/files/{media}', [DocumentController::class, 'download'])->name('documents.download');

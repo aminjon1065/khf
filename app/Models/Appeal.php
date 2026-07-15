@@ -65,6 +65,12 @@ class Appeal extends Model implements HasMedia
             'category' => AppealCategory::class,
             'status' => AppealStatus::class,
             'deadline_at' => 'date',
+            // Personal data encrypted at rest (ТЗ §12.5). `name`/`subject`/`reference` stay
+            // plaintext because the moderator queue searches them with LIKE; the free-text fields
+            // most likely to carry sensitive detail are protected. No query filters these columns.
+            'email' => 'encrypted',
+            'phone' => 'encrypted',
+            'message' => 'encrypted',
         ];
     }
 

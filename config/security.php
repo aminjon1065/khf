@@ -8,8 +8,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | Tunable security-header policy applied by App\Http\Middleware\SecurityHeaders.
-    | Kept in config (not code) so it can be adjusted per environment. CSP is
-    | hardened with nonces later in Phase 16.
+    | Kept in config (not code) so it can be adjusted per environment. script-src is
+    | 'self'-only: the few bootstrap scripts (theme, Matomo) are served from static
+    | files under /js so no 'unsafe-inline' is needed — nonces would be defeated by
+    | the full-page response cache anyway (a baked nonce ≠ the per-request header).
     |
     */
 
@@ -33,9 +35,14 @@ return [
 
         'directives' => [
             'default-src' => ["'self'"],
-            'script-src' => ["'self'", "'unsafe-inline'"],
+            'script-src' => ["'self'"],
+            // style-src keeps 'unsafe-inline': React/Tailwind emit inline style attributes and the
+            // no-flash background <style> block; hashing those is impractical and style injection is
+            // far lower risk than script injection (the §12.2 concern is script execution).
             'style-src' => ["'self'", "'unsafe-inline'"],
-            'img-src' => ["'self'", 'data:', 'blob:', 'https:'],
+            // No 'https:' wildcard — that is an open exfiltration channel. Tile + Matomo image hosts
+            // are merged at runtime (see SecurityHeaders::withAnalyticsSources / MapTiles).
+            'img-src' => ["'self'", 'data:', 'blob:'],
             'font-src' => ["'self'", 'data:'],
             // Map tile / glyph hosts are merged at runtime from config/map.php (see MapTiles + SecurityHeaders).
             'connect-src' => ["'self'"],

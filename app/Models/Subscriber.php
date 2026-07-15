@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Notifications\RoutesNotifications;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use NotificationChannels\WebPush\HasPushSubscriptions;
@@ -32,6 +33,10 @@ class Subscriber extends Model
     use HasFactory;
 
     use HasPushSubscriptions;
+
+    // Provides notify()/notifyNow() for the web-push channel without the database-notifications
+    // baggage of the full Notifiable trait (ТЗ §6.4.2).
+    use RoutesNotifications;
 
     /** @var list<string> */
     protected $fillable = [

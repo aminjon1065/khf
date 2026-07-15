@@ -1,0 +1,551 @@
+{
+  "officialName": {
+    "tj": "Кумитаи ҳолатҳои фавқулодда ва мудофиаи граждании назди Ҳукумати Ҷумҳурии Тоҷикистон",
+    "ru": "Комитет по чрезвычайным ситуациям и гражданской обороне при Правительстве Республики Таджикистан",
+    "en": ""
+  },
+  "officialNameNotes": {
+    "tj_source": "https://khf.tj/ page <title> + repeated in news body text. Short forms used on-site: «КҲФ», «Кумита».",
+    "ru_source": "https://kchs.tj/ page <title> + node/1230 heading. Short forms used on-site: «КЧС», «Комитет по ЧС и ГО».",
+    "en_source": "NOT PRESENT on either legacy site. Neither site has an English UI or an English org name anywhere. Only /react-new is in English and it never names the Committee. Must be supplied by the client — do not guess."
+  },
+  "address": {
+    "tj": "734013, шаҳри Душанбе, кӯчаи Лоҳутӣ 26",
+    "ru": "734013, г. Душанбе, ул. Лохути, 26",
+    "en": ""
+  },
+  "addressVariants": {
+    "tj_contacts_page": "Шаҳри Душанбе, ноҳияи Шоҳмансур, кӯчаи Лоҳутӣ, 26 — Индекс 734013",
+    "ru_header_banner": "Республика Таджикистан: г. Душанбе, ул. Лохути, 26",
+    "ru_contacts_page": "город Душанбе, улица Лохути, 26 — Индекс 734013",
+    "note": "Both sites agree on street + number + postal index 734013. The Tajik contacts page additionally names the city district (ноҳияи Шоҳмансур). No English address published."
+  },
+  "phones": [
+    {
+      "label": {
+        "tj": "Телефон барои иртибот",
+        "ru": "тел."
+      },
+      "number": "+992 37 223-13-11",
+      "kind": "reception",
+      "source": "site-wide header line on BOTH khf.tj and kchs.tj; also listed as central-apparatus phone on both contacts pages and in the sidebar phone image",
+      "note": "The single most consistently published number across both legacy sites."
+    },
+    {
+      "label": {
+        "tj": "",
+        "ru": "тел."
+      },
+      "number": "+992 37 221-13-11",
+      "kind": "reception",
+      "source": "kchs.tj site-wide header line",
+      "note": "Russian header only. No Tajik-language label published."
+    },
+    {
+      "label": {
+        "tj": "",
+        "ru": "тел."
+      },
+      "number": "+992 37 221-13-31",
+      "kind": "reception",
+      "source": "kchs.tj site-wide header line; also central-apparatus phone on kchs.tj/node/197",
+      "note": "Russian header only."
+    },
+    {
+      "label": {
+        "tj": "",
+        "ru": "тел."
+      },
+      "number": "+992 37 223-33-59",
+      "kind": "reception",
+      "source": "kchs.tj site-wide header line; also central-apparatus phone on kchs.tj/node/197",
+      "note": "Russian header only."
+    },
+    {
+      "label": {
+        "tj": "факс",
+        "ru": "факс"
+      },
+      "number": "+992 37 221-91-19",
+      "kind": "fax",
+      "source": "site-wide header line on BOTH khf.tj (\"(992 37) 221-91-19 (факс)\") and kchs.tj (\"факс: (+992 37) 221-91-19\")",
+      "note": "IMPORTANT: khf.tj/node/116 (ТАМОС) mistakenly lists this same number as a central-apparatus voice phone. Both site headers explicitly label it as the FAX. Trust the header."
+    },
+    {
+      "label": {
+        "tj": "",
+        "ru": ""
+      },
+      "number": "+992 37 227-95-09",
+      "kind": "reception",
+      "source": "sidebar phone image /sites/default/files/phone_mchs_0.png, present on EVERY page of BOTH sites",
+      "note": "UNLABELLED. The image is the most prominent phone display on the legacy sites (large phone-handset icon) but carries NO caption, so its purpose (hotline vs duty vs reception) is NOT stated anywhere. Kind is a placeholder — MUST be confirmed with the client."
+    },
+    {
+      "label": {
+        "tj": "",
+        "ru": ""
+      },
+      "number": "+992 37 236-94-74",
+      "kind": "reception",
+      "source": "sidebar phone image /sites/default/files/phone_mchs_0.png, present on EVERY page of BOTH sites",
+      "note": "UNLABELLED — same caveat as 227-95-09. Kind is a placeholder, MUST be confirmed with the client."
+    },
+    {
+      "label": {
+        "tj": "Шуъбаи кор бо ҷомеа (сардор)",
+        "ru": "Отдел по работе с общественностью (начальник)"
+      },
+      "number": "+992 20 474-37-37",
+      "kind": "press",
+      "source": "khf.tj/node/1750 and kchs.tj/node/1230 (structure page), head: полковник Нозимиён Ориф Ислом",
+      "note": "Closest thing to a press contact on the legacy sites. It is a DEPARTMENT HEAD'S personal number, not a published пресс-служба hotline. Neither site publishes a dedicated press-service phone. The Tajik label here is the department name as printed on khf.tj/node/1750."
+    },
+    {
+      "label": {
+        "tj": "Маркази идораи вазъиятҳои бӯҳронӣ",
+        "ru": "Центр управления кризисными ситуациями"
+      },
+      "number": "",
+      "kind": "duty",
+      "source": "khf.tj/node/1750, kchs.tj/node/1230 — head: генерал-майор Камолзода Джамшед Джамол",
+      "note": "This is the unit that would host a дежурная часть / duty desk. Its phone field on the legacy structure pages is TRUNCATED — it literally renders as \"(+99237)\" with no digits. No duty-officer number is recoverable."
+    }
+  ],
+  "emergencyHotline": {
+    "number": "",
+    "found": false,
+    "note": "NO emergency hotline (112, 101, единый телефон доверия, хати боварӣ, горячая линия) appears ANYWHERE on khf.tj or kchs.tj. Exhaustive grep for '112', 'телефон доверия', 'горячая линия', 'hotline', 'боварӣ', 'дежурн' across every fetched page returned zero hits. The three numbers in the sidebar phone image are the only 'call us' messaging the legacy sites have, and they are uncaptioned. The project's config/cms.php already defaults FOOTER_HOTLINE to '112' — that value is NOT sourced from the legacy sites and must be confirmed with the Committee."
+  },
+  "emails": [
+    {
+      "address": "info@khf.tj",
+      "for": {
+        "tj": "почтаи электронии мо",
+        "ru": "e-mail"
+      },
+      "source": "site-wide header on both sites; central apparatus on both contacts pages; Аппарат Раиса/Председателя on both structure pages",
+      "note": "PRIMARY official address. Note both the Tajik AND Russian site use the @khf.tj domain."
+    },
+    {
+      "address": "centrupravleniya@mail.ru",
+      "for": {
+        "tj": "Дастгоҳи марказӣ",
+        "ru": ""
+      },
+      "source": "khf.tj/node/116 (ТАМОС) — central apparatus",
+      "note": "CONFLICT: the Russian contacts page gives cupravleniya@rs.tj for the same unit. Different mailbox, different domain. Needs clarification."
+    },
+    {
+      "address": "cupravleniya@rs.tj",
+      "for": {
+        "tj": "",
+        "ru": "Центральный аппарат"
+      },
+      "source": "kchs.tj/node/197 (КОНТАКТЫ) — central apparatus",
+      "note": "CONFLICT with centrupravleniya@mail.ru above."
+    },
+    {
+      "address": "najot@rs.tj",
+      "for": {
+        "tj": "",
+        "ru": "Аппарат Председателя КЧС"
+      },
+      "source": "kchs.tj/node/1230"
+    },
+    {
+      "address": "sitodi_dushanbe@mail.ru",
+      "for": {
+        "tj": "Раёсати Кумита дар шаҳри Душанбе",
+        "ru": ""
+      },
+      "source": "khf.tj/node/116"
+    },
+    {
+      "address": "mchsdushanbe@rs.tj",
+      "for": {
+        "tj": "",
+        "ru": "Штаб КЧС города Душанбе"
+      },
+      "source": "kchs.tj/node/197"
+    },
+    {
+      "address": "sitodihatlon2017@yandex.ru",
+      "for": {
+        "tj": "Раёсати Кумита дар вилояти Хатлон",
+        "ru": ""
+      },
+      "source": "khf.tj/node/116"
+    },
+    {
+      "address": "mchskhatlon@rs.tj",
+      "for": {
+        "tj": "",
+        "ru": "Штаб КЧС по Хатлонской области"
+      },
+      "source": "kchs.tj/node/197"
+    },
+    {
+      "address": "sitodikulob@mail.ru",
+      "for": {
+        "tj": "Шуъбаи минтақавии Кумита дар шаҳри Кӯлоб",
+        "ru": ""
+      },
+      "source": "khf.tj/node/116"
+    },
+    {
+      "address": "mchskulob@rs.tj",
+      "for": {
+        "tj": "",
+        "ru": "Штаб КЧС в городе Куляб"
+      },
+      "source": "kchs.tj/node/197"
+    },
+    {
+      "address": "najot_04@mail.ru",
+      "for": {
+        "tj": "Раёсати Кумита дар ВМКБ",
+        "ru": ""
+      },
+      "source": "khf.tj/node/116"
+    },
+    {
+      "address": "mchsbadakhshon@rs.tj",
+      "for": {
+        "tj": "",
+        "ru": "Штаб КЧС по ГБАО"
+      },
+      "source": "kchs.tj/node/197"
+    },
+    {
+      "address": "shtabpochs94@mail.ru",
+      "for": {
+        "tj": "Раёсати Кумита дар вилояти Суғд",
+        "ru": ""
+      },
+      "source": "khf.tj/node/116"
+    },
+    {
+      "address": "mchssughd@rs.tj",
+      "for": {
+        "tj": "",
+        "ru": "Штаб КЧС по Согдийской области"
+      },
+      "source": "kchs.tj/node/197"
+    },
+    {
+      "address": "mchshisor@rs.tj",
+      "for": {
+        "tj": "",
+        "ru": "Штаб КЧС города Гиссара"
+      },
+      "source": "kchs.tj/node/197",
+      "note": "Гиссар/Ҳисор appears ONLY on the Russian contacts page — the Tajik ТАМОС page omits this office entirely."
+    },
+    {
+      "address": "kchstj@mail.ru",
+      "for": {
+        "tj": "Раёсати кадрҳо",
+        "ru": "Управление кадров и по работе с личным составом"
+      },
+      "source": "structure pages"
+    },
+    {
+      "address": "valizoda102@mail.ru",
+      "for": {
+        "tj": "",
+        "ru": "Главное управление гражданской обороны (начальник)"
+      },
+      "source": "structure pages"
+    },
+    {
+      "address": "iactj@mail.ru",
+      "for": {
+        "tj": "",
+        "ru": "Управление по материально-техническому, продовольственному и транспортному обеспечениям"
+      },
+      "source": "structure pages"
+    },
+    {
+      "address": "sadullo.sharipov1977@mail.ru",
+      "for": {
+        "tj": "",
+        "ru": "Медицинское управление (начальник)"
+      },
+      "source": "structure pages",
+      "note": "Personal mailbox of a named officer. Probably should NOT be republished on the new portal."
+    },
+    {
+      "address": "vgsch-ragun@mail.ru",
+      "for": {
+        "tj": "",
+        "ru": ""
+      },
+      "source": "structure pages",
+      "note": "Unit label not cleanly recoverable from the legacy table markup."
+    },
+    {
+      "address": "tj.react@humanitarianresponse.info",
+      "for": {
+        "tj": "",
+        "ru": "",
+        "en": "REACT Secretariat"
+      },
+      "source": "khf.tj/react-new (mailto link, subject=REACT)"
+    }
+  ],
+  "workingHours": {
+    "tj": "",
+    "ru": ""
+  },
+  "workingHoursNote": "NOT PUBLISHED on either legacy site. Grep for 'соати корӣ', 'график работы', 'режим работы', 'время работы' and any HH:MM–HH:MM pattern across all fetched pages returned zero hits. Must be supplied by the client.",
+  "socialLinks": [
+    {
+      "platform": "facebook",
+      "url": "https://www.facebook.com/khf.tj",
+      "source": "sidebar social_icons block (block-block-9), every page of both sites"
+    },
+    {
+      "platform": "youtube",
+      "url": "https://www.youtube.com/channel/UC2CorI3Cv_eRlQ6JL1LcBJQ",
+      "source": "sidebar social_icons block, every page of both sites"
+    },
+    {
+      "platform": "telegram",
+      "url": "https://t.me/khftj",
+      "source": "appended to node bodies on kchs.tj: «Моро дар Телеграмма пайгирӣ кунед»",
+      "note": "This is the canonical public channel handle."
+    },
+    {
+      "platform": "telegram",
+      "url": "https://t.me/joinchat/AAAAAFYS-kB8t1NMv1t4QA",
+      "source": "sidebar social_icons block (the icon link)",
+      "note": "LEGACY joinchat invite link — this format was deprecated by Telegram. Use https://t.me/khftj instead. Listed only for completeness."
+    }
+  ],
+  "socialGaps": "NO Instagram, NO X/Twitter, NO OK/VK on either legacy site. config/cms.php 'social' global has instagram + x fields — leave them empty unless the client provides accounts.",
+  "staticPages": [
+    {
+      "key": "contacts",
+      "legacyUrl": "https://khf.tj/node/116",
+      "legacyUrlTj": "https://khf.tj/node/116",
+      "legacyUrlRu": "https://kchs.tj/node/197",
+      "menuLabel": {
+        "tj": "ТАМОС",
+        "ru": "КОНТАКТЫ"
+      },
+      "translations": {
+        "tj": {
+          "title": "Суроға ва телефонҳо",
+          "body": "Дастгоҳи марказӣ\nШаҳри Душанбе, ноҳияи Шоҳмансур, кӯчаи Лоҳутӣ, 26\nИндекс 734013\n221-91-19, 223-13-11\ninfo@khf.tj\ncentrupravleniya@mail.ru\nРаёсати Кумита дар шаҳри Душанбе\nшаҳри Душанбе, ноҳияи Шоҳмансур, кӯчаи Айнӣ, 127\nИндекс 734029\n225-44-73, 225-44-76, 225-44-90\nsitodi_dushanbe@mail.ru\nРаёсати Кумита дар вилояти Хатлон\nшаҳри Бохтар, хиёбони Ваҳдат, 178\nИндекс 735140\n(83222) 2-35-05, 2-78-28\nsitodihatlon2017@yandex.ru\nШуъбаи минтақавии Кумита дар шаҳри Кӯлоб\nВилояти Хатлон, шаҳри Кӯлоб, маҳаллаи Борбад, 17\nИндекс 735360\n(83322) 2-16-56, 2-15-57\nsitodikulob@mail.ru\nРаёсати Кумита дар ВМКБ\nшаҳри Хоруғ, кӯчаи Саидамир Абдураҳмонов, 222\nИндекс 736000\n(83522) 2-27-44, 2-53-47\nnajot_04@mail.ru\nРаёсати Кумита дар вилояти Суғд\nВилояти Суғд, шаҳри Хуҷанд, мкрн 32\nИндекс 735700\n(83422) 5-79-95, 5-15-55\nshtabpochs94@mail.ru"
+        },
+        "ru": {
+          "title": "Адреса и телефоны областных и территориальных подразделений КЧС",
+          "body": "Центральный аппарат\nгород Душанбе, улица Лохути, 26\nИндекс 734013\n221-13-31, 223-33-59\ninfo@khf.tj\ncupravleniya@rs.tj\nШтаб КЧС города Душанбе\nгород Душанбе, улица Айни, 127\nИндекс 734029\n225-44-73, 225-44-76, 225-44-90\nmchsdushanbe@rs.tj\nШтаб КЧС города Гиссара\nгород Гиссар, улица Исмоили Сомони, 10\nИндекс 735020\n(83139) 2-60-74, 2-60-45\nmchshisor@rs.tj\nШтаб КЧС по Хатлонской области\nгород Кургантюбе, проспект Вахдат, 178\nИндекс 735140\n(83222) 2-35-05, 2-78-28\nmchskhatlon@rs.tj\nШтаб КЧС в городе Куляб\nгород Куляб, улица Борбад 17\nИндекс 735360\n(83322) 2-36-60, 2-34-73\nmchskulob@rs.tj\nШтаб КЧС по ГБАО\nгород Хорог, улица Саидамир Абдурахмонова, 28\nИндекс 736001\n(83522) 2-40-57, 2-53-47\nmchsbadakhshon@rs.tj\nШтаб КЧС по Согдийской области\nСогдийская область, город Ходжент, 32 мкр\nИндекс 735700\n(83422) 6-58-72, 5-15-55\nmchssughd@rs.tj"
+        }
+      },
+      "note": "The two language versions are NOT translations of each other — they list DIFFERENT phone numbers and DIFFERENT emails for the same offices, and the RU version has a Гиссар office the TJ version lacks. Do not assume parity; reconcile with the client."
+    },
+    {
+      "key": "structure",
+      "legacyUrl": "https://khf.tj/node/1750",
+      "legacyUrlTj": "https://khf.tj/node/1750",
+      "legacyUrlRu": "https://kchs.tj/node/1230",
+      "menuLabel": {
+        "tj": "СОХТОР",
+        "ru": "СТРУКТУРА"
+      },
+      "translations": {
+        "tj": {
+          "title": "СОХТОРИ дастгоҳи марказии Кумитаи ҳолатҳои фавқулодда ва мудофиаи граждании назди Ҳукумати Ҷумҳурии Тоҷикистон",
+          "body": "Роҳбарияти Кумита\n| Акс |\n| Вазифа |\n| Телефонҳо |\n| Муовини якуми Раис\nгенерал-майор\nЛатифзода Ҳотамшо Латиф |\n| (+99237)2231024 |\n| Муовини Раис\nгенерал-майор\nИсозода Сулаймон Умар |\n| (+99237)2213129 |\n| Муовини Раис\nгенерал-майор\nИброҳимзода Имомалӣ Набибулло |\n| (+99237)2231446 |\nДастгоҳи Раис\n| Акс |\n| Вазифа |\n| Телефонҳо |\n| Роҳбар\nполковник\nДавлатзода Абдусамад Ҳаким |\n| (+99237)2278844\ninfo@khf.tj |\nСарраёсати мудофиаи гражданӣ\n| Акс |\n| Вазифа |\n| Телефонҳо |\n| Сардор\nполковник\nВализода Хуршед Вали |\n| (+99237)2217717\n(+992)938802805 |\nСарраёсати ҳифзи аҳолӣ ва ҳудуд\n| Акс |\n| Вазифа |\n| Телефонҳо |\n| Сардор\nгенерал-майор\nИброҳимзода Муҳаббат Саидвалӣ |\nРаёсати қӯшунҳо\n| Акс |\n| Вазифа |\n| Телефонҳо |\n| Сардор\nполковник\nДавлатзода Саидҷон Давлат |\n| (+99237)2279082 |\nРаёсати сохтмон, истифодабарии биноҳо ва иншоот\n| Акс |\n| Вазифа |\n| Телефонҳо |\nРаёсати кадрҳо ва кор бо ҳайати шахсӣ\n| Акс |\n| Вазифа |\n| Телефонҳо |\nСардор\nПолковник\nШокирзода Баҳром\n| (+99237)2272836\nkchstj@mail.ru |\nРаёсати ҳамкориҳои байналмилалӣ\n| Акс |\n| Вазифа |\n| Телефонҳо |\nСардор\nполковник\nСаидиён Насриддин Табарӣ\n| (+992)938808002 |\nРаёсати молия ва иқтисод\n| Акс |\n| Вазифа |\n| Телефонҳо |"
+        },
+        "ru": {
+          "title": "СТРУКТУРА центрального аппарата Комитета по чрезвычайным ситуациям и гражданской обороне при Правительстве Республики Таджикистан",
+          "body": "Руководство\n| Фото |\n| Должность |\n| Телефоны |\n| Первый заместитель Председателя\nгенерал-майор\nЛатифзода Хотамшо Латиф |\n| (+99237)2231024 |\nЗаместитель Председателя\nгенерал-майор\nИсозода Сулаймон Умар\n| (+99237)2213129 |\nЗаместитель Председателя\nгенерал-майор\nИброхимзода Имомали Набибулло\n| (+99237)2231446 |\nАппарат Председателя КЧС\n| Фото |\n| Должность |\n| Телефоны |\nРуководитель\nполковник\nДавлатзода Абдусамад Хаким\n| (+99237)2278844 info@khf.tj\nnajot@rs.tj |\nГлавное управление гражданской обороны\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nВализода Хуршед Вали\n(+99237)2217717\n(+992)938802805\nvalizoda102@mail.ru\nГлавное управление защиты населения и территории\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nгенерал-майор\nИброхимзода Мухаббат Мирзовали\nУправление войск\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nДавлатзода Саиджон Давлат\n| (+99237)2279082 |\nУправление строительства, эксплуатации зданий и сооружений\n| Фото |\n| Должность |\n| Телефоны |\nУправление кадров и по работе с личным составом\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nШокирзода Бахром\n| (+99237)2272836\nkchstj@mail.ru |\nУправление международного сотрудничества\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nСаидиён Насриддин Табари\n(+992)938808002\nФинансово-экономическое управление\n| Фото |\n| Должность |\n| Телефоны |\nМедицинское управление\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nШарипов Саъдулло Рахматуллоевич\n(+992)935753092\n(+992)501021577\n(+99237)2231023\nsadullo.sharipov1977@mail.ru\nЦентр управления кризисными ситуациями (на правах управления)\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nгенерал-майор\nКамолзода Джамшед Джамол\n(+99237)\nПравовой отдел\n| Фото |\n| Должность |\n| Телефоны |\nОтдел по работе с общественностью\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nНозимиён Ориф Ислом\n| +992204743737 |\nУправление специализированных поисково - спасательных служб\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nКурбонзода Изатулло Акмал\n| (+99237)2246762 |\nУправление по материально - техническому,\nпродовольственному и транспортному обеспечениям\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nНазарзода Зоиршо Хоркаш\n(+99237)2366343\n(+992)938802828 (+992)884002828\niactj@mail.ru\nУправление по вопросам Сарезского озера\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nАюбзода Эроншо Гулаёз\n| (+99237)2216977 |\nУправления Комитета по чрезвычайным ситуациям и гражданской обороне в\nГорно-Бадахшанской автономной области,\nХатлонской и Согдийской областях и по городу Душанбе\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nМираков Наим\n| (+9923522)24057\n(+992)938802877 |\nУКЧС по Согдийской области\n| Фото |\n| Должность |\n| Телефоны |\nУКЧС по Хатлонской области\n| Фото |\n| Должность |\n| Телефоны |\nУКЧС по г. Душанбе\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nШамсизода Сулаймон Шамси\n| (+99237)2254476\n(+992)938802849 |\nОтдел Комитета по чрезвычайным ситуациям и\nгражданской обороне по Кулябской группе районов\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nРахмонзода Содикджон Шариф\n| (+9923322)21656\n(+992)938802906 |\nПротивоградовая служба\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nкапитан\nАламшозода Манучехр Аламшо\nРеспубликанский учебно-методический центр\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nМахмадзода Тоджиддин Файзиддин\n(+992)907729768\nРеспубликанская химико-радиометрическая лаборатория\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nСтоцкий Дмитрий Францевич\n| (+992)938802833 |\nВоенный госпиталь (войсковая часть 45010)\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nполковник\nКаримов Асомиддин\n| (+99237)2274840\n(+992)938802824 |\nРеспубликанская военизированная горноспасательная\nслужба в городе Худжанд\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nМуродкулов Т.М\n(+9923422)57362\nРеспубликанская военизированная горноспасательная\nслужба в городе Нурек\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nШарипов Мирзошариф Хушвахтович\n(+992)938360139\nvgsch-ragun@mail.ru\nРеспубликанская военизированная горноспасательная\nслужба в городе Рагун\n| Фото |\n| Должность |\n| Телефоны |\nНачальник\nХайруллозода Наҷиб Холмирзо\n(+9923138)22472\n(+992)938802977"
+        }
+      },
+      "note": "Full org chart: unit -> post -> rank -> name -> phones -> email. Rendered as an HTML table; ' | ' in the body marks original table-cell boundaries. This is the source for the Subdivision + Leader models, not for a static page. ASYMMETRY: the Tajik page is INCOMPLETE — it stops after «Раёсати молия ва иқтисод» (~10 units), while the Russian page continues through ~15 more units (Медицинское управление, ЦУКС, Правовой отдел, Отдел по работе с общественностью, региональные УКЧС, Противоградовая служба, РУМЦ, химико-радиометрическая лаборатория, военный госпиталь...). Use the RUSSIAN page as the authoritative org chart; the Tajik unit names for the missing units are NOT available and must be translated by the client."
+    },
+    {
+      "key": "react",
+      "legacyUrl": "https://khf.tj/react-new",
+      "legacyUrlTj": "https://khf.tj/react-new",
+      "legacyUrlRu": null,
+      "menuLabel": {
+        "tj": "REACT",
+        "ru": ""
+      },
+      "translations": {
+        "tj": {
+          "title": "Rapid Emergency Assessment and Coordination Team is a partnership for disaster management in Tajikistan aiming to reduce the impact of disasters on the population of Tajikistan.",
+          "body": "REACT Meeting Minutes\nDisaster Reports\nInter-Agency Contingency Plans\nCOVID – 19 Response\nSectoral Coordination\nResources\nREACT Secretariat: EMAIL\n2020 год апрель\nПолевые учения\nThe specific objectives of REACT\nPromoting effective risk reduction, disaster preparedness, disaster response and recovery.\nSupporting the coordination and collaboration of humanitarian actors, international organizations and the Government of Tajikistan.\nProviding a platform for collaborative planning of risk reduction, preparedness, response and recovery activities.\nProviding a platform for the transparent exchange of information, joint planning of operations on disaster risk reduction, preparedness, responseand recovery.\nProviding a forum for open discussion of policy and practical issues related to the purpose of REACT.\nПоложение РЕАКТ, Процедуры и технические задания"
+        },
+        "ru": {
+          "title": "",
+          "body": ""
+        }
+      },
+      "note": "Exists ONLY on khf.tj. Content is ENGLISH prose with a few Russian sub-links (\"Полевые учения\", \"Положение РЕАКТ, Процедуры и технические задания\"). There is NO Tajik and NO Russian version of this page. Sub-pages: node/3242 Meeting Minutes, node/3241 Disaster Reports, node/3243 Inter-Agency Contingency Plans, node/3239 COVID-19 Response. 'Sectoral Coordination' and 'Resources' are dead (href=#). An external link points to http://67.20.73.40/?page_id=673 (bare IP, likely dead)."
+    },
+    {
+      "key": "national-strategy",
+      "legacyUrl": "https://khf.tj/node/705",
+      "legacyUrlTj": "https://khf.tj/node/705",
+      "legacyUrlRu": null,
+      "menuLabel": {
+        "tj": "СТРАТЕГИЯИ МИЛЛӢ",
+        "ru": ""
+      },
+      "translations": {
+        "tj": {
+          "title": "Стратегияи миллии рушди Ҷумҳурии Тоҷикистон барои давраи то соли 2030",
+          "body": "Маълумоти мухтасар оид ба Стратегияи миллии рушди Ҷумҳурии Тоҷикистон барои давраи то соли 2030\nСтратегияи миллии Ҷумҳурии Тоҷикистон оид ба паст кардани хавфи офатҳои табиӣ барои солҳои 2019-2030"
+        },
+        "ru": {
+          "title": "",
+          "body": ""
+        }
+      },
+      "note": "Tajik site only. Page is just a list of links to strategy documents, no prose."
+    },
+    {
+      "key": "info-materials",
+      "legacyUrl": "https://kchs.tj/node/154",
+      "legacyUrlTj": null,
+      "legacyUrlRu": "https://kchs.tj/node/154",
+      "menuLabel": {
+        "tj": "",
+        "ru": "Информационные материалы"
+      },
+      "translations": {
+        "tj": {
+          "title": "",
+          "body": ""
+        },
+        "ru": {
+          "title": "Информационные Материалы",
+          "body": "Краткий терминологический словарь по чрезвычайным ситуациям.\nПрограмма по подготовке руководящего состава (тадж-рус)\nИнтерактивные методы обучения взрослой аудитории\nОрганизация оповещения и связи при ЧС\nОсновы организации управления на местах при ЧС\nОсновы планирования мероприятий при ЧС\nОценка местных угроз уязвимости и потенциала в Таджикистане\nУправление и координация ответных действий во время и после ЧС\nУчебно-методическая работа в учебно-методическом центре и на курсах\nЧС природного характера возможные на территории РТ и их последствия\nПрограмма обучения рабочих 15 часов Таджикский и Русский вариант\nПрограмма «Обучения учащихся 2-х и 6-х классов»"
+        }
+      },
+      "note": "Russian site only. A list of downloadable training/methodological materials. This is the CLOSEST thing either legacy site has to public-safety guidance, but it is aimed at officials/instructors, NOT the general public — it is not a set of «памятки»."
+    },
+    {
+      "key": "history",
+      "legacyUrl": "https://khf.tj/node/102",
+      "legacyUrlTj": "https://khf.tj/node/102",
+      "legacyUrlRu": "https://kchs.tj/node/102",
+      "menuLabel": {
+        "tj": "Таърих",
+        "ru": "История"
+      },
+      "translations": {
+        "tj": {
+          "title": "КҲФ аз оғоз то ба имрӯз. Руҷуъе ба таърихи ҳудудан садсола",
+          "body": ""
+        },
+        "ru": {
+          "title": "",
+          "body": ""
+        }
+      },
+      "note": "BROKEN ON BOTH SITES. khf.tj/node/102 returns 200 but the article body is EMPTY — only the headline and 'Чоп шуд: 25/06/2016 | admin' render. kchs.tj/node/102 returns HTTP 403 (and /ru/node/102 returns 404), so the Russian history text is unreachable. No history prose can be salvaged; it must be re-authored."
+    },
+    {
+      "key": "leadership",
+      "legacyUrl": "https://kchs.tj/node/100",
+      "legacyUrlTj": null,
+      "legacyUrlRu": "https://kchs.tj/node/100",
+      "menuLabel": {
+        "tj": "Роҳбарият",
+        "ru": "Руководство"
+      },
+      "translations": {
+        "tj": {
+          "title": "",
+          "body": ""
+        },
+        "ru": {
+          "title": "Руководство",
+          "body": "Председатель Комитета по чрезвычайным ситуациям и гражданской обороне\nПервый заместитель Председателя Комитета по ЧС и ГО при Правительстве Республики Таджикистан\nЗаместитель Председателя Комитета по ЧС и ГО при Правительстве Республики Таджикистан"
+        }
+      },
+      "note": "Russian site only, and nearly empty — it lists only three POST TITLES (Председатель / Первый заместитель / Заместитель) with no names, photos or bios; the names live on the structure page instead. The Tajik footer link for «Роҳбарият» is href='#' (dead)."
+    }
+  ],
+  "deadOrMissingPages": [
+    {
+      "menuLabel": "ФОРУМ",
+      "site": "khf.tj",
+      "href": "/",
+      "status": "DEAD LINK — the ФОРУМ top-menu item points at the homepage. There is NO forum page and no forum content anywhere on the site."
+    },
+    {
+      "menuLabel": "Обращения граждан",
+      "site": "kchs.tj",
+      "href": "/",
+      "status": "DEAD LINK — points at the homepage. No citizen-appeals form exists on the legacy site (the TZ requires building one from scratch)."
+    },
+    {
+      "menuLabel": "Роҳбарият",
+      "site": "khf.tj",
+      "href": "#",
+      "status": "DEAD LINK in footer."
+    },
+    {
+      "menuLabel": "Международное сотрудничество / Координация / Мужество / Прогноз погоды / Пресс-релизы",
+      "site": "kchs.tj",
+      "href": "#",
+      "status": "DEAD footer links (href='#'). The equivalents on khf.tj DO resolve, to taxonomy terms 57 / 66 / 65 / 67."
+    },
+    {
+      "menuLabel": "Sectoral Coordination, Resources",
+      "site": "khf.tj/react-new",
+      "href": "#",
+      "status": "DEAD LINKS on the REACT page."
+    }
+  ],
+  "publicSafetyGuidance": {
+    "found": false,
+    "note": "NO «памятки» / public-safety guidance section exists on either legacy site. Grep for 'памятк', 'тавсия', 'чӣ бояд кард', 'правила поведения' across all fetched pages returned ZERO hits ('меры безопасности' matched only once, inside a news headline: «Уважаемые туристы, соблюдайте меры безопасности»). The Guide model / «Памятки» content type in this project has NO legacy content to migrate — all guides must be authored from scratch."
+  },
+  "emergencyMessaging": {
+    "note": "The legacy sites carry essentially no standing emergency messaging. There is no alert banner, no 'what to do in an emergency' block, and no persistent hotline strip. The only recurring 'call us' element is the uncaptioned sidebar phone image. Emergency/ЧС content appears only as ordinary news items under taxonomy term 71 (RU «Чрезвычайные ситуации»)."
+  },
+  "globalsMapping": {
+    "note": "Mapped against config/cms.php 'globals' + resources/blueprints/*. There is currently NO 'contacts' global and no phone/address/email/working-hours fields anywhere in the globals blueprints — the only contact-ish field in the whole globals config is footer.hotline (a single text field). To store the data above you will need a NEW 'contacts' global (blueprint + config entry + seeder fallback), or these fields must live on a Page.",
+    "footer.hotline": "Legacy sites publish NO hotline. config/cms.php currently defaults FOOTER_HOTLINE='112' — unverified against the legacy sites.",
+    "social.facebook": "https://www.facebook.com/khf.tj",
+    "social.youtube": "https://www.youtube.com/channel/UC2CorI3Cv_eRlQ6JL1LcBJQ",
+    "social.telegram": "https://t.me/khftj",
+    "social.instagram": "NOT FOUND on legacy sites — leave null",
+    "social.x": "NOT FOUND on legacy sites — leave null",
+    "president.url": "http://www.president.tj/ — linked from the footer 'useful links' strip on BOTH sites, consistent with the existing PRESIDENT_URL default (https://president.tj)",
+    "footer.resource_links": "Legacy footer link strip (identical on both sites): http://www.president.tj/, http://khovar.tj/, http://news.tj/ (khf only), https://asiaplustj.info (kchs only), http://avesta.tj/, http://www.mvd.tj, http://taj.akn.tj/, http://www.jumhuriyat.tj/, http://mfa.tj/tj/, http://www.mchs.gov.ru/",
+    "footer.government_url": "NOT linked on either legacy site (no government.tj link found) — the existing FOOTER_GOVERNMENT_URL default is not legacy-sourced",
+    "footer.egov_url": "NOT linked on either legacy site — the existing FOOTER_EGOV_URL default is not legacy-sourced",
+    "footer.copyright": "Both sites render literally: «Copyright © 2026, КЧС»"
+  },
+  "provenance": {
+    "harvestedAt": "2026-07-14",
+    "method": "direct HTTP GET of each page, raw HTML parsed locally; all Tajik/Russian strings are verbatim extractions, none re-typed or translated",
+    "pagesFetched": [
+      "https://khf.tj/ (200)",
+      "https://kchs.tj/ (200)",
+      "https://khf.tj/node/116 (200)",
+      "https://kchs.tj/node/197 (200)",
+      "https://khf.tj/node/1750 (200)",
+      "https://kchs.tj/node/1230 (200)",
+      "https://khf.tj/react-new (200)",
+      "https://khf.tj/node/705 (200)",
+      "https://kchs.tj/node/154 (200)",
+      "https://kchs.tj/node/100 (200)",
+      "https://khf.tj/node/102 (200, empty body)",
+      "https://kchs.tj/node/102 (403)",
+      "https://kchs.tj/ru/node/100 (404)",
+      "https://kchs.tj/ru/node/102 (404)",
+      "https://khf.tj/sites/default/files/phone_mchs_0.png (200, OCR'd visually)"
+    ],
+    "platform": "Both legacy sites are Drupal 7 (meta generator). Neither serves /sitemap.xml (404), so page discovery was done from the nav + footer menus."
+  }
+}

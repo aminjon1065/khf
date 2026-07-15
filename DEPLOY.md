@@ -29,10 +29,16 @@
    ```
 3. Выполните миграции и сборку фронтенда:
    ```bash
+   # Демо-набор для QA (все модули заполнены тестовым контентом):
    ./vendor/bin/sail artisan migrate --seed
+   # ИЛИ реальные данные с khf.tj/kchs.tj (руководство, структура, НПА, новости, соцсети):
+   ./vendor/bin/sail artisan migrate --seed --seeder=ProductionSeeder
    ./vendor/bin/sail npm install
    ./vendor/bin/sail npm run dev
    ```
+   > `ProductionSeeder` — это набор для реального запуска (данные из `database/data/legacy/*.json`,
+   > только tj/ru; английский, номер экстренной службы и звание председателя не выдумываются и ждут
+   > подтверждения Комитета). `DatabaseSeeder` остаётся демо-фикстурой для тестов.
 
 ---
 

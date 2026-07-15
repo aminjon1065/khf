@@ -11,6 +11,7 @@ return [
     'alert' => [
         'subject_prefix' => 'CoES',
         'level' => 'Hazard level',
+        'view' => 'View details on the portal',
         'auto_notice' => 'This is an automated alert from the Committee of Emergency Situations and Civil Defense of the Republic of Tajikistan.',
         'unsubscribe' => 'To unsubscribe from notifications, follow this [link](:url).',
     ],

@@ -51,9 +51,18 @@ class SecurityHeaders
         /** @var array<string, list<string>> $directives */
         $directives = config('security.csp.directives');
 
+        // Raster map tiles are loaded by MapLibre as images (img-src) and vector tiles/glyphs are
+        // fetched (connect-src), so the tile + glyph origins must appear in both.
+        $tileSources = MapTiles::cspConnectSources();
+
         $directives['connect-src'] = [
             ...($directives['connect-src'] ?? ["'self'"]),
-            ...MapTiles::cspConnectSources(),
+            ...$tileSources,
+        ];
+
+        $directives['img-src'] = [
+            ...($directives['img-src'] ?? ["'self'"]),
+            ...$tileSources,
         ];
 
         $directives = $this->withAnalyticsSources($directives);
@@ -81,8 +90,11 @@ class SecurityHeaders
             return $directives;
         }
 
+        // Matomo needs script-src (matomo.js), connect-src (tracking XHR) and img-src (the
+        // no-JS tracking pixel fallback).
         $directives['script-src'] = [...($directives['script-src'] ?? ["'self'"]), $origin];
         $directives['connect-src'] = [...($directives['connect-src'] ?? ["'self'"]), $origin];
+        $directives['img-src'] = [...($directives['img-src'] ?? ["'self'"]), $origin];
 
         return $directives;
     }

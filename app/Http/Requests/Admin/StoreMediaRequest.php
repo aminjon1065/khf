@@ -19,7 +19,18 @@ class StoreMediaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => ['required', 'file', 'max:10240', new SafeFileUpload],
+            // Positive allowlist (images + office documents) validated against the file's real
+            // content type, then the SafeFileUpload denylist as a second gate (ТЗ §12.4). SVG is
+            // deliberately excluded — it is an XSS vector on the public media disk.
+            'file' => [
+                'required',
+                'file',
+                'max:10240',
+                'mimetypes:image/jpeg,image/png,image/webp,image/gif,image/avif,application/pdf,'
+                    .'application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,'
+                    .'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                new SafeFileUpload,
+            ],
             'folder_id' => ['nullable', 'integer', 'exists:media_folders,id'],
         ];
     }

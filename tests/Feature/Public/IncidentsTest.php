@@ -22,6 +22,37 @@ it('exposes the hazard level value so the accessible HazardBadge can render', fu
             ->where('incidents.data.0.hazard_label', 'Омодабоши баланд'));
 });
 
+it('drops unknown filter values so the cache-key space stays bounded', function () {
+    Incident::factory()->create(['hazard_level' => HazardLevel::Danger])
+        ->upsertTranslations(['tj' => ['title' => 'Ҳодиса', 'description' => 'd']]);
+
+    $this->get(route('incidents.index', ['locale' => 'tj', 'level' => 'not-a-level', 'type' => 'bogus']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters', [])
+            ->has('incidents.data', 1));
+});
+
+it('clamps an out-of-range page without erroring', function () {
+    Incident::factory()->create()->upsertTranslations(['tj' => ['title' => 'Ҳодиса', 'description' => 'd']]);
+
+    $this->get(route('incidents.index', ['locale' => 'tj', 'page' => '999999999']))
+        ->assertOk();
+});
+
+it('keeps a valid filter value', function () {
+    Incident::factory()->create(['hazard_level' => HazardLevel::Critical])
+        ->upsertTranslations(['tj' => ['title' => 'Ҳодиса', 'description' => 'd']]);
+    Incident::factory()->create(['hazard_level' => HazardLevel::Normal])
+        ->upsertTranslations(['tj' => ['title' => 'Оддӣ', 'description' => 'd']]);
+
+    $this->get(route('incidents.index', ['locale' => 'tj', 'level' => 'critical']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.level', 'critical')
+            ->has('incidents.data', 1));
+});
+
 it('exposes an operational-situation summary by status', function () {
     Incident::factory()->count(2)->create(['status' => IncidentStatus::Active])
         ->each->upsertTranslations(['tj' => ['title' => 'Фаъол', 'description' => 'd']]);

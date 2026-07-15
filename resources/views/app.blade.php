@@ -14,7 +14,7 @@
     $isPreview = ($page['props']['isPreview'] ?? false) || ($seo['noindex'] ?? false);
 @endphp
 <!DOCTYPE html>
-<html lang="{{ $localeUrls->hreflang($locale) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html lang="{{ $localeUrls->hreflang($locale) }}" data-appearance="{{ $appearance ?? 'system' }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -47,22 +47,11 @@
             <link rel="alternate" type="application/rss+xml" title="{{ trans('ui.news.heading') }}" href="{{ route('news.rss', ['locale' => $locale]) }}">
         @endif
 
-        {{-- Matomo Analytics --}}
+        {{-- Matomo Analytics — config via meta tags so the bootstrap stays an external 'self' file (no inline script). --}}
         @if (! $isPreview && config('matomo.url') && config('matomo.site_id'))
-            <script>
-                var _paq = window._paq = window._paq || [];
-                /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-                _paq.push(['trackPageView']);
-                _paq.push(['enableLinkTracking']);
-                (function() {
-                    var u="{{ config('matomo.url') }}";
-                    if (!u.endsWith('/')) { u += '/'; }
-                    _paq.push(['setTrackerUrl', u+'matomo.php']);
-                    _paq.push(['setSiteId', '{{ config('matomo.site_id') }}']);
-                    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-                    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
-                })();
-            </script>
+            <meta name="matomo-url" content="{{ config('matomo.url') }}">
+            <meta name="matomo-site-id" content="{{ config('matomo.site_id') }}">
+            <script src="/js/matomo.js" defer></script>
         @endif
 
         {{-- Schema.org JSON-LD --}}
@@ -72,20 +61,26 @@
             </script>
         @endif
 
-        {{-- Inline script to detect system dark mode preference and apply it immediately --}}
-        <script>
-            (function() {
-                const appearance = '{{ $appearance ?? "system" }}';
+        {{-- schema.org SpecialAnnouncement per active alert — makes live emergency warnings
+             machine-readable for search engines and voice assistants (ТЗ §2, §15.1). --}}
+        @foreach ($page['props']['activeAlerts'] ?? [] as $activeAlert)
+            <script type="application/ld+json">
+                {!! json_encode(array_filter([
+                    '@context' => 'https://schema.org',
+                    '@type' => 'SpecialAnnouncement',
+                    'name' => $activeAlert['title'] ?? $activeAlert['level_label'] ?? '',
+                    'text' => $activeAlert['body'] ?? $activeAlert['title'] ?? '',
+                    'category' => 'https://www.wikidata.org/wiki/Q3241045',
+                    'datePosted' => $activeAlert['published_at'] ?? null,
+                    'expires' => $activeAlert['expires_at'] ?? null,
+                    'url' => $activeAlert['url'] ?? null,
+                    'spatialCoverage' => ['@type' => 'AdministrativeArea', 'name' => 'Tajikistan'],
+                ], fn ($value) => $value !== null && $value !== ''), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+            </script>
+        @endforeach
 
-                if (appearance === 'system') {
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-                    if (prefersDark) {
-                        document.documentElement.classList.add('dark');
-                    }
-                }
-            })();
-        </script>
+        {{-- No-flash theme bootstrap — external 'self' file (reads data-appearance on <html>). --}}
+        <script src="/js/theme.js"></script>
 
         {{-- Inline style to set the HTML background color based on our theme in app.css --}}
         <style>
