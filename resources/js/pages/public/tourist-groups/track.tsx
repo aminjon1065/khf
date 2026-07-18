@@ -12,7 +12,6 @@ type TrackResult =
     | {
           found: true;
           reference: string;
-          route: string;
           status: string;
           start_date: string | null;
           end_date: string | null;
@@ -77,9 +76,6 @@ export default function TouristGroupTrack({ reference, result }: PageProps) {
                             </span>
                             <Badge>{result.status}</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                            {t('tourism.track.route', { route: result.route })}
-                        </p>
                         <p className="text-sm text-muted-foreground">
                             {result.start_date} — {result.end_date}
                         </p>

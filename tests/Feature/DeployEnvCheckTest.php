@@ -36,8 +36,15 @@ it('passes production checks when secrets are configured', function () {
         'webpush.vapid.subject' => 'https://khf.tj',
         'webpush.vapid.public_key' => str_repeat('A', 88),
         'webpush.vapid.private_key' => str_repeat('B', 44),
+        'deployment.health_check_token' => str_repeat('H', 64),
+        'mail.default' => 'smtp',
         'mail.from.address' => 'noreply@khf.tj',
         'mail.mailers.smtp.host' => 'smtp.khf.tj',
+        'session.driver' => 'database',
+        'session.encrypt' => true,
+        'session.secure' => true,
+        'queue.default' => 'database',
+        'cache.default' => 'database',
     ]);
 
     $this->artisan('deploy:env-check', ['--env' => 'production'])
@@ -49,5 +56,16 @@ it('fails when APP_DEBUG is true on staging', function () {
     config(['app.debug' => true]);
 
     $this->artisan('deploy:env-check', ['--env' => 'staging'])
+        ->assertFailed();
+});
+
+it('fails when production uses non-delivery mail or unencrypted sessions', function () {
+    config([
+        'app.debug' => false,
+        'mail.default' => 'log',
+        'session.encrypt' => false,
+    ]);
+
+    $this->artisan('deploy:env-check', ['--env' => 'production'])
         ->assertFailed();
 });

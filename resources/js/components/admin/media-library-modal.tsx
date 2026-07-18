@@ -8,6 +8,8 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
+import { index as mediaApiIndex } from '@/routes/admin/api/media';
+import { store as mediaStore } from '@/routes/admin/media';
 
 type MediaFile = {
     id: number;
@@ -34,6 +36,7 @@ export function MediaLibraryModal({
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -44,12 +47,42 @@ export function MediaLibraryModal({
         // Intentional: show the spinner immediately while the library loads on open.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(true);
+        setError(null);
 
-        fetch('/admin/api/media')
-            .then((res) => res.json())
-            .then((data) => setMediaFiles(data.data || []))
-            .catch((err) => console.error('Failed to fetch media', err))
-            .finally(() => setLoading(false));
+        const controller = new AbortController();
+
+        fetch(mediaApiIndex().url, {
+            headers: { Accept: 'application/json' },
+            signal: controller.signal,
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch media');
+                }
+
+                return response.json();
+            })
+            .then((data) => {
+                setMediaFiles(data.data || []);
+                setError(null);
+            })
+            .catch((requestError: unknown) => {
+                if (
+                    requestError instanceof DOMException &&
+                    requestError.name === 'AbortError'
+                ) {
+                    return;
+                }
+
+                setError('Не удалось загрузить медиабиблиотеку.');
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
+            });
+
+        return () => controller.abort();
     }, [isOpen]);
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,7 +98,7 @@ export function MediaLibraryModal({
         setUploading(true);
 
         try {
-            const res = await fetch('/admin/media', {
+            const res = await fetch(mediaStore().url, {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
@@ -78,10 +111,16 @@ export function MediaLibraryModal({
                 },
                 body: formData,
             });
+
+            if (!res.ok) {
+                throw new Error('Upload failed');
+            }
+
             const newMedia = await res.json();
             setMediaFiles((prev) => [newMedia, ...prev]);
-        } catch (err) {
-            console.error('Upload failed', err);
+            setError(null);
+        } catch {
+            setError('Не удалось загрузить файл.');
         } finally {
             setUploading(false);
 
@@ -135,7 +174,14 @@ export function MediaLibraryModal({
                 </div>
 
                 <div className="flex-1 overflow-y-auto py-4">
-                    {loading ? (
+                    {error ? (
+                        <div
+                            role="alert"
+                            className="flex h-full items-center justify-center text-sm text-destructive"
+                        >
+                            {error}
+                        </div>
+                    ) : loading ? (
                         <div className="flex h-full items-center justify-center">
                             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                         </div>

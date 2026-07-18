@@ -10,6 +10,7 @@ use App\Services\Public\SharedPublicProps;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +38,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureTrustedProxies();
+
         if ($this->app->environment(['production', 'staging'])) {
             URL::forceScheme('https');
         }
@@ -60,6 +63,15 @@ class AppServiceProvider extends ServiceProvider
         Event::subscribe(RecordNotificationDelivery::class);
 
         $this->app->make(SharedPublicProps::class)->registerInvalidation();
+    }
+
+    protected function configureTrustedProxies(): void
+    {
+        $trustedProxies = config('proxies.trusted');
+
+        if ((is_string($trustedProxies) && $trustedProxies !== '') || (is_array($trustedProxies) && $trustedProxies !== [])) {
+            TrustProxies::at($trustedProxies);
+        }
     }
 
     /**

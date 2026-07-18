@@ -104,9 +104,9 @@ class TenderController extends Controller
         $data = $request->validated();
         unset($data['website'], $data['document']);
 
-        $bid = $tender->bids()->create([
+        $bid = TenderBid::createWithUniqueReference([
             ...$data,
-            'reference' => TenderBid::generateReference(),
+            'tender_id' => $tender->id,
         ]);
         $bid->addMediaFromRequest('document')->toMediaCollection(TenderBid::DOCUMENT_COLLECTION);
 

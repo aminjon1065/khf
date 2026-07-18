@@ -52,8 +52,8 @@ Route::prefix('{locale}')
     ->whereIn('locale', config('app.locales'))
     ->group(function () {
         Route::get('/', [HomeController::class, 'index'])->middleware(CacheResponse::class)->name('welcome');
-        Route::get('search', [SearchController::class, 'index'])->name('search.index');
-        Route::get('search/api', [SearchController::class, 'api'])->name('search.api');
+        Route::get('search', [SearchController::class, 'index'])->middleware('throttle:30,1')->name('search.index');
+        Route::get('search/api', [SearchController::class, 'api'])->middleware('throttle:30,1')->name('search.api');
         Route::get('news', [PostController::class, 'index'])->middleware(CacheResponse::class)->name('news.index');
         Route::get('news/rss', [FeedController::class, 'news'])->middleware(CacheResponse::class)->name('news.rss');
         Route::get('news/{slug}', [PostController::class, 'show'])->middleware(CacheResponse::class)->name('news.show');

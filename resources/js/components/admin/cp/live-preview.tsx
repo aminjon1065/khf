@@ -1,5 +1,5 @@
 import { Eye } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
@@ -36,12 +36,6 @@ export function CpLivePreview({
     const availableLocales = locales.filter((item) => previewUrls[item.code]);
     const src =
         previewUrls[locale] ?? previewUrls[availableLocales[0]?.code ?? ''];
-
-    useEffect(() => {
-        if (open) {
-            setLocale(activeLocale);
-        }
-    }, [activeLocale, open]);
 
     if (!src || availableLocales.length === 0) {
         return null;

@@ -46,8 +46,8 @@ trait SeedsTrilingualContent
     protected function attachPublicImage(
         Model $model,
         string $collection,
-        string $filename = 'emblem-tj.webp',
-        bool $preserveOriginal = false,
+        string $filename = 'pwa-512.png',
+        bool $preserveOriginal = true,
     ): void {
         $path = public_path('images/'.$filename);
 

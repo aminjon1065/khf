@@ -25,6 +25,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property Carbon|null $ends_at
  * @property bool $show_results
  * @property int $sort_order
+ * @property int $votes_count
  */
 class Poll extends Model
 {

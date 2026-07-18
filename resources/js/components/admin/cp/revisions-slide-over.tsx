@@ -9,6 +9,11 @@ import {
     SheetHeader,
     SheetTitle,
 } from '@/components/ui/sheet';
+import {
+    index as revisionsIndex,
+    restore as restoreRevision,
+    show as showRevision,
+} from '@/routes/admin/revisions';
 
 interface Revision {
     id: number;
@@ -43,7 +48,7 @@ export function RevisionsSlideOver({
     modelId: number | null;
 }) {
     const [revisions, setRevisions] = useState<Revision[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [detail, setDetail] = useState<RevisionDetail | null>(null);
     const [detailLoading, setDetailLoading] = useState(false);
@@ -54,31 +59,75 @@ export function RevisionsSlideOver({
             return;
         }
 
-        setLoading(true);
-        setSelectedId(null);
-        setDetail(null);
+        const controller = new AbortController();
 
-        fetch(`/admin/revisions/${modelType}/${modelId}`)
-            .then((res) => res.json())
+        fetch(revisionsIndex({ type: modelType, id: modelId }).url, {
+            headers: { Accept: 'application/json' },
+            signal: controller.signal,
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Revision history request failed');
+                }
+
+                return response.json();
+            })
             .then((data) => setRevisions(data))
-            .catch(() => setRevisions([]))
-            .finally(() => setLoading(false));
+            .catch((error: unknown) => {
+                if (
+                    error instanceof DOMException &&
+                    error.name === 'AbortError'
+                ) {
+                    return;
+                }
+
+                setRevisions([]);
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
+            });
+
+        return () => controller.abort();
     }, [open, modelType, modelId]);
 
     useEffect(() => {
         if (!selectedId) {
-            setDetail(null);
-
             return;
         }
 
-        setDetailLoading(true);
+        const controller = new AbortController();
 
-        fetch(`/admin/revisions/detail/${selectedId}`)
-            .then((res) => res.json())
+        fetch(showRevision(selectedId).url, {
+            headers: { Accept: 'application/json' },
+            signal: controller.signal,
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Revision detail request failed');
+                }
+
+                return response.json();
+            })
             .then((data) => setDetail(data))
-            .catch(() => setDetail(null))
-            .finally(() => setDetailLoading(false));
+            .catch((error: unknown) => {
+                if (
+                    error instanceof DOMException &&
+                    error.name === 'AbortError'
+                ) {
+                    return;
+                }
+
+                setDetail(null);
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    setDetailLoading(false);
+                }
+            });
+
+        return () => controller.abort();
     }, [selectedId]);
 
     const restore = (id: number) => {
@@ -90,13 +139,23 @@ export function RevisionsSlideOver({
             return;
         }
 
-        post(`/admin/revisions/${id}/restore`, {
+        post(restoreRevision(id).url, {
             onSuccess: () => onOpenChange(false),
         });
     };
 
     const toggleDetail = (id: number) => {
-        setSelectedId((current) => (current === id ? null : id));
+        if (selectedId === id) {
+            setSelectedId(null);
+            setDetail(null);
+            setDetailLoading(false);
+
+            return;
+        }
+
+        setSelectedId(id);
+        setDetail(null);
+        setDetailLoading(true);
     };
 
     return (

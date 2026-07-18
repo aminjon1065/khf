@@ -82,6 +82,16 @@ it('returns short results if query is less than 2 characters', function () {
     $response->assertOk()->assertJsonCount(0, 'data');
 });
 
+it('rate limits public search requests', function () {
+    $url = route('search.api', ['locale' => 'tj', 'q' => 'earthquake']);
+
+    for ($attempt = 0; $attempt < 30; $attempt++) {
+        $this->getJson($url)->assertOk();
+    }
+
+    $this->getJson($url)->assertTooManyRequests();
+});
+
 it('renders the search page with inertia', function () {
     $response = $this->get('/tj/search?q=test');
 
@@ -112,7 +122,11 @@ it('filters search results by content type', function () {
         'content' => 'Текст',
     ]);
 
-    $this->get('/ru/search?q=пожар&type=post')
+    $this->get(route('search.index', [
+        'locale' => 'ru',
+        'q' => 'пожар',
+        'type' => 'post',
+    ]))
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $inertia) => $inertia
             ->has('results', 1)
@@ -130,7 +144,10 @@ it('finds cyrillic queries in the current locale', function () {
         'body' => 'Оперативная сводка',
     ]);
 
-    $this->getJson('/ru/search/api?q=Землетрясение')
+    $this->getJson(route('search.api', [
+        'locale' => 'ru',
+        'q' => 'Землетрясение',
+    ]))
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonFragment(['title' => 'Землетрясение в Гиссаре']);
@@ -145,7 +162,10 @@ it('highlights matches in api search results', function () {
         'body' => 'Маълумот',
     ]);
 
-    $this->getJson('/tj/search/api?q=Замин')
+    $this->getJson(route('search.api', [
+        'locale' => 'tj',
+        'q' => 'Замин',
+    ]))
         ->assertOk()
         ->assertJsonPath('data.0.highlighted_title', fn ($value) => str_contains($value, '<mark'));
 });

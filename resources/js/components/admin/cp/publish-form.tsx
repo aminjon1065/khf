@@ -80,12 +80,15 @@ export function CpPublishForm({
                             >
                                 <History className="size-4" />
                             </Button>
-                            <RevisionsSlideOver
-                                open={historyOpen}
-                                onOpenChange={setHistoryOpen}
-                                modelType={modelInfo.type}
-                                modelId={modelInfo.id}
-                            />
+                            {historyOpen ? (
+                                <RevisionsSlideOver
+                                    key={`${modelInfo.type}-${modelInfo.id}`}
+                                    open
+                                    onOpenChange={setHistoryOpen}
+                                    modelType={modelInfo.type}
+                                    modelId={modelInfo.id}
+                                />
+                            ) : null}
                         </>
                     )}
                     <Button type="button" variant="outline" asChild>

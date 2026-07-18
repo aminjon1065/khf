@@ -325,6 +325,7 @@ export default function EditorialEntryForm({
                     <>
                         {hasPreview ? (
                             <CpLivePreview
+                                key={`${activeLocale}-${previewOpen ? 'open' : 'closed'}`}
                                 previewUrls={previewUrls}
                                 locales={locales}
                                 activeLocale={activeLocale}

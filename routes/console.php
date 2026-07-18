@@ -1,7 +1,9 @@
 <?php
 
+use App\Support\HealthReporter;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -18,6 +20,12 @@ Artisan::command('inspire', function () {
  * `--queue=alerts,default` makes emergency-alert delivery (ТЗ §6.4, §13) strictly preempt bulk
  * digests and image conversions: the worker empties the `alerts` queue before touching `default`.
  */
+Schedule::call(
+    fn () => Cache::forever(HealthReporter::SCHEDULER_HEARTBEAT_CACHE_KEY, now()->timestamp),
+)->name('health:scheduler-heartbeat')
+    ->everyMinute()
+    ->evenInMaintenanceMode();
+
 Schedule::command('queue:work --queue=alerts,default --stop-when-empty --tries=3 --max-time=55')
     ->everyMinute()
     ->withoutOverlapping();

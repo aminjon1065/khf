@@ -32,28 +32,28 @@ export default defineConfig({
         }),
         VitePWA({
             registerType: 'autoUpdate',
-            outDir: 'public/build',
+            injectRegister: null,
+            outDir: 'public',
+            filename: 'sw.js',
+            scope: '/',
+            base: '/',
             buildBase: '/build/',
-            manifest: {
-                name: 'КЧС',
-                short_name: 'КЧС',
-                description: 'Портал Комитета по чрезвычайным ситуациям',
-                theme_color: '#ffffff',
-                icons: [
-                    {
-                        src: '/build/icon-192.png',
-                        sizes: '192x192',
-                        type: 'image/png',
-                    },
-                    {
-                        src: '/build/icon-512.png',
-                        sizes: '512x512',
-                        type: 'image/png',
-                    },
-                ],
-            },
+            includeAssets: [
+                'images/pwa-192.png',
+                'images/pwa-512.png',
+                'images/apple-touch-icon.png',
+                'images/favicon-32.png',
+            ],
+            manifest: false,
             workbox: {
-                globPatterns: ['**/*.{js,css,woff2,png,svg}'],
+                globPatterns: [
+                    'build/assets/**/*.{js,css,woff2,woff}',
+                    'images/pwa-*.png',
+                    'images/apple-touch-icon.png',
+                    'images/favicon-32.png',
+                    'manifest.webmanifest',
+                ],
+                importScripts: ['/push-sw.js'],
                 navigateFallback: null,
             },
         }),

@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import { create as createAlert } from '@/routes/admin/alerts';
+import { search as contentSearch } from '@/routes/admin/api';
 import { create as createCategory } from '@/routes/admin/categories';
 import { create as createDocument } from '@/routes/admin/documents';
 import { create as createGuide } from '@/routes/admin/guides';
@@ -186,36 +187,63 @@ function CommandPaletteBody({ onClose }: { onClose: () => void }) {
         const q = query.trim();
 
         if (q.length < 2) {
-            setContentResults([]);
-
             return;
         }
 
+        const controller = new AbortController();
         const timer = window.setTimeout(() => {
             setContentLoading(true);
 
-            fetch(`/admin/api/search?q=${encodeURIComponent(q)}`)
-                .then((response) => response.json())
+            fetch(contentSearch({ query: { q } }).url, {
+                headers: { Accept: 'application/json' },
+                signal: controller.signal,
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Content search failed');
+                    }
+
+                    return response.json();
+                })
                 .then((data: { results?: ContentResult[] }) =>
                     setContentResults(data.results ?? []),
                 )
-                .catch(() => setContentResults([]))
-                .finally(() => setContentLoading(false));
+                .catch((error: unknown) => {
+                    if (
+                        error instanceof DOMException &&
+                        error.name === 'AbortError'
+                    ) {
+                        return;
+                    }
+
+                    setContentResults([]);
+                })
+                .finally(() => {
+                    if (!controller.signal.aborted) {
+                        setContentLoading(false);
+                    }
+                });
         }, 250);
 
-        return () => window.clearTimeout(timer);
+        return () => {
+            window.clearTimeout(timer);
+            controller.abort();
+        };
     }, [query]);
 
     const items = useMemo<PaletteItem[]>(() => {
-        const content = contentResults.map(
-            (result): PaletteItem => ({ kind: 'content', result }),
-        );
+        const content =
+            query.trim().length >= 2
+                ? contentResults.map(
+                      (result): PaletteItem => ({ kind: 'content', result }),
+                  )
+                : [];
         const nav = filtered.map(
             (command): PaletteItem => ({ kind: 'command', command }),
         );
 
         return [...content, ...nav];
-    }, [contentResults, filtered]);
+    }, [contentResults, filtered, query]);
 
     const run = (item: PaletteItem | undefined) => {
         if (!item) {
@@ -260,8 +288,15 @@ function CommandPaletteBody({ onClose }: { onClose: () => void }) {
                     autoFocus
                     value={query}
                     onChange={(event) => {
-                        setQuery(event.target.value);
+                        const value = event.target.value;
+
+                        setQuery(value);
                         setActive(0);
+
+                        if (value.trim().length < 2) {
+                            setContentResults([]);
+                            setContentLoading(false);
+                        }
                     }}
                     onKeyDown={onKeyDown}
                     placeholder="Поиск по материалам и разделам…"

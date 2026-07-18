@@ -125,12 +125,12 @@ export default function NewsShow({ post, related }: PageProps) {
                                         key={i}
                                         href={img.url}
                                         target="_blank"
-                                        rel="noreferrer"
+                                        rel="noopener noreferrer"
                                         className="block aspect-video overflow-hidden rounded-lg border bg-muted transition-colors hover:border-primary"
                                     >
                                         <img
                                             src={img.thumb || img.url}
-                                            alt=""
+                                            alt={img.name ?? post.title}
                                             className="h-full w-full object-cover transition-transform hover:scale-105"
                                         />
                                     </a>

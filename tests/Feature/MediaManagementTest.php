@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Permission;
 use App\Enums\Role;
 use App\Models\MediaFile;
 use App\Models\MediaFolder;
@@ -10,6 +11,8 @@ use Database\Seeders\LanguageSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Http\UploadedFile;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Role as PermissionRole;
+use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
     $this->seed([RolePermissionSeeder::class, LanguageSeeder::class]);
@@ -60,6 +63,25 @@ it('renders the media library index for CMS users', function () {
             ->where('filters.type', '')
             ->where('filters.folder_id', 'all')
             ->where('filters.tag', ''));
+});
+
+it('requires the media permission for CMS users', function () {
+    $editor = User::factory()->withTwoFactor()->create();
+    $editor->assignRole(Role::Editor->value);
+
+    PermissionRole::findByName(Role::Editor->value)
+        ->revokePermissionTo(Permission::ManageMedia->value);
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->actingAs($editor)
+        ->get(route('admin.media.index'))
+        ->assertForbidden();
+
+    $this->actingAs($editor)
+        ->post(route('admin.media.store'), [
+            'file' => UploadedFile::fake()->image('unauthorized.jpg'),
+        ])
+        ->assertForbidden();
 });
 
 it('uploads a file to the media library', function () {

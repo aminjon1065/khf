@@ -71,7 +71,7 @@ class BlockSanitizer
             'news_list' => [
                 'count' => $this->plainText($data['count'] ?? null),
             ],
-            default => $data,
+            default => [],
         };
 
         return [

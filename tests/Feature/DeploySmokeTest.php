@@ -2,6 +2,7 @@
 
 use App\Support\StagingSmokeChecker;
 use Database\Seeders\LanguageSeeder;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(fn () => $this->seed(LanguageSeeder::class));
@@ -29,7 +30,10 @@ it('fails when a smoke path returns an unexpected status', function () {
 it('runs live HTTP smoke checks against a base url', function () {
     Http::fake([
         'https://staging.example.test/up' => Http::response('OK', 200),
-        'https://staging.example.test/health' => Http::response(['status' => 'ok'], 200),
+        'https://staging.example.test/health' => Http::response([
+            'status' => 'ok',
+            'checks' => [],
+        ], 200),
         'https://staging.example.test/sitemap.xml' => Http::response('<urlset></urlset>', 200),
         'https://staging.example.test/tj' => Http::response(
             '<html><head><meta name="csrf-token" content="x"></head></html>',
@@ -47,7 +51,7 @@ it('runs live HTTP smoke checks against a base url', function () {
             ['path' => '/sitemap.xml', 'expect' => [200]],
         ],
         'deployment.smoke.locale_paths' => ['/'],
-        'deployment.health_check_token' => '',
+        'deployment.health_check_token' => 'ops-token',
     ]);
 
     $this->artisan('deploy:smoke', [
@@ -56,6 +60,9 @@ it('runs live HTTP smoke checks against a base url', function () {
     ])
         ->expectsOutputToContain('Smoke checks passed')
         ->assertSuccessful();
+
+    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://staging.example.test/health'
+        && $request->hasHeader('Authorization', 'Bearer ops-token'));
 });
 
 it('detects missing csrf meta on the homepage', function () {

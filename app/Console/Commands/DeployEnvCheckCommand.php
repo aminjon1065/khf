@@ -26,6 +26,8 @@ class DeployEnvCheckCommand extends Command
         'VAPID_SUBJECT' => 'webpush.vapid.subject',
         'VAPID_PUBLIC_KEY' => 'webpush.vapid.public_key',
         'VAPID_PRIVATE_KEY' => 'webpush.vapid.private_key',
+        'HEALTH_CHECK_TOKEN' => 'deployment.health_check_token',
+        'MAIL_MAILER' => 'mail.default',
         'MAIL_FROM_ADDRESS' => 'mail.from.address',
         'MAIL_HOST' => 'mail.mailers.smtp.host',
     ];
@@ -54,8 +56,32 @@ class DeployEnvCheckCommand extends Command
                 }
             }
 
-            if ($environment === 'production' && ! str_starts_with((string) config('app.url'), 'https://')) {
-                $warnings[] = 'APP_URL should use https:// in production (TLS, §16.3).';
+            if (! str_starts_with((string) config('app.url'), 'https://')) {
+                $errors[] = 'APP_URL must use https:// on staging and production (TLS, §16.3).';
+            }
+
+            if (in_array((string) config('mail.default'), ['array', 'log'], true)) {
+                $errors[] = 'MAIL_MAILER must deliver externally on staging and production.';
+            }
+
+            if (! config('session.encrypt')) {
+                $errors[] = 'SESSION_ENCRYPT must be true on staging and production.';
+            }
+
+            if (! config('session.secure')) {
+                $errors[] = 'SESSION_SECURE_COOKIE must be true on staging and production.';
+            }
+
+            if (config('session.driver') === 'array') {
+                $errors[] = 'SESSION_DRIVER must persist sessions on staging and production.';
+            }
+
+            if (config('queue.default') === 'sync') {
+                $errors[] = 'QUEUE_CONNECTION must not be sync on staging and production.';
+            }
+
+            if (config('cache.default') === 'array') {
+                $errors[] = 'CACHE_STORE must not be array on staging and production.';
             }
 
             $publicKey = (string) config('webpush.vapid.public_key', '');

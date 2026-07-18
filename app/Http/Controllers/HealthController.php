@@ -11,33 +11,33 @@ class HealthController extends Controller
     public function __construct(private HealthReporter $reporter) {}
 
     /**
-     * Public health endpoint for uptime monitors (ТЗ §16.3).
-     * Returns a minimal payload. Pass `HEALTH_CHECK_TOKEN` via Bearer header or `?token=`
-     * for detailed DB/cache/queue diagnostics.
+     * Readiness endpoint for uptime monitors (ТЗ §16.3).
+     * Public responses expose check statuses only. A valid Bearer token includes diagnostics.
      */
     public function __invoke(Request $request): JsonResponse
     {
-        if ($this->authorizedForDetails($request)) {
-            $payload = $this->reporter->detailed();
-            $status = $payload['status'] === 'ok' ? 200 : 503;
+        $providedToken = $request->bearerToken();
 
-            return response()->json($payload, $status);
+        if ($providedToken !== null && ! $this->authorizedForDetails($providedToken)) {
+            return response()->json(['message' => 'Invalid health check token.'], 401);
         }
 
-        return response()->json($this->reporter->summary());
+        $payload = $providedToken === null
+            ? $this->reporter->summary()
+            : $this->reporter->detailed();
+        $status = $payload['status'] === 'ok' ? 200 : 503;
+
+        return response()->json($payload, $status);
     }
 
-    private function authorizedForDetails(Request $request): bool
+    private function authorizedForDetails(string $providedToken): bool
     {
         $token = (string) config('deployment.health_check_token');
 
         if ($token === '') {
-            return app()->environment('local', 'testing');
+            return false;
         }
 
-        $provided = $request->bearerToken()
-            ?? $request->query('token');
-
-        return is_string($provided) && hash_equals($token, $provided);
+        return hash_equals($token, $providedToken);
     }
 }

@@ -40,15 +40,16 @@ jobs:
 
       # Fails the build on any known advisory against the locked PHP dependencies.
       - name: Composer Audit
-        run: composer audit
+        run: composer audit --locked
 
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: '22'
+          cache: npm
 
       - name: Install Node Dependencies
-        run: npm i
+        run: npm ci
 
       # Blocking: production dependencies must carry no known advisories.
       # concurrently (which pins the vulnerable shell-quote, GHSA-w7jw-789q-3m8p) is a dev-only

@@ -103,7 +103,7 @@ class HomeController extends Controller
                 'name' => trans('ui.site.full_name'),
                 'alternateName' => trans('ui.site.short_name'),
                 'url' => url('/'),
-                'logo' => url('/images/emblem-tj.webp'),
+                'logo' => url('/images/pwa-512.png'),
                 'contactPoint' => [
                     '@type' => 'ContactPoint',
                     'telephone' => '112',

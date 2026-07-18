@@ -74,18 +74,19 @@ Route::middleware(['auth', 'verified', 'twofactor.enforce', 'role:'.Role::adminM
             ->middleware('signed')
             ->name('preview.show');
 
-        // Media Library (accessible to all CMS users)
-        Route::get('media', [MediaController::class, 'index'])->name('media.index');
-        Route::get('api/media', [MediaController::class, 'apiIndex'])->name('api.media.index');
-        Route::get('api/media/folders', [MediaFolderController::class, 'index'])->name('api.media.folders.index');
-        Route::post('media/folders', [MediaFolderController::class, 'store'])->name('media.folders.store');
-        Route::put('media/folders/{mediaFolder}', [MediaFolderController::class, 'update'])->name('media.folders.update');
-        Route::delete('media/folders/{mediaFolder}', [MediaFolderController::class, 'destroy'])->name('media.folders.destroy');
-        Route::post('media', [MediaController::class, 'store'])->name('media.store');
-        Route::post('media/bulk-destroy', [MediaController::class, 'bulkDestroy'])->name('media.bulk-destroy');
-        Route::post('media/bulk-move', [MediaController::class, 'bulkMove'])->name('media.bulk-move');
-        Route::put('media/{mediaFile}', [MediaController::class, 'update'])->name('media.update');
-        Route::delete('media/{mediaFile}', [MediaController::class, 'destroy'])->name('media.destroy');
+        Route::middleware('can:'.Permission::ManageMedia->value)->group(function () {
+            Route::get('media', [MediaController::class, 'index'])->name('media.index');
+            Route::get('api/media', [MediaController::class, 'apiIndex'])->name('api.media.index');
+            Route::get('api/media/folders', [MediaFolderController::class, 'index'])->name('api.media.folders.index');
+            Route::post('media/folders', [MediaFolderController::class, 'store'])->name('media.folders.store');
+            Route::put('media/folders/{mediaFolder}', [MediaFolderController::class, 'update'])->name('media.folders.update');
+            Route::delete('media/folders/{mediaFolder}', [MediaFolderController::class, 'destroy'])->name('media.folders.destroy');
+            Route::post('media', [MediaController::class, 'store'])->name('media.store');
+            Route::post('media/bulk-destroy', [MediaController::class, 'bulkDestroy'])->name('media.bulk-destroy');
+            Route::post('media/bulk-move', [MediaController::class, 'bulkMove'])->name('media.bulk-move');
+            Route::put('media/{mediaFile}', [MediaController::class, 'update'])->name('media.update');
+            Route::delete('media/{mediaFile}', [MediaController::class, 'destroy'])->name('media.destroy');
+        });
 
         Route::get('api/taxonomies', [TaxonomyController::class, 'index'])->name('api.taxonomies.index');
         Route::get('api/taxonomies/{handle}', [TaxonomyController::class, 'show'])->name('api.taxonomies.show');

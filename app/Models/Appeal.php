@@ -4,13 +4,13 @@ namespace App\Models;
 
 use App\Enums\AppealCategory;
 use App\Enums\AppealStatus;
+use App\Models\Concerns\GeneratesUniqueReference;
 use Database\Factories\AppealFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -33,6 +33,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  */
 class Appeal extends Model implements HasMedia
 {
+    use GeneratesUniqueReference;
+
     /** @use HasFactory<AppealFactory> */
     use HasFactory;
 
@@ -71,6 +73,7 @@ class Appeal extends Model implements HasMedia
             'email' => 'encrypted',
             'phone' => 'encrypted',
             'message' => 'encrypted',
+            'internal_note' => 'encrypted',
         ];
     }
 
@@ -80,16 +83,9 @@ class Appeal extends Model implements HasMedia
             ->useDisk('local');
     }
 
-    /**
-     * Generate a unique public tracking reference, e.g. OBR-2026-AB12CD.
-     */
-    public static function generateReference(): string
+    protected static function referencePrefix(): string
     {
-        do {
-            $reference = 'OBR-'.now()->year.'-'.Str::upper(Str::random(6));
-        } while (static::where('reference', $reference)->exists());
-
-        return $reference;
+        return 'OBR';
     }
 
     /**

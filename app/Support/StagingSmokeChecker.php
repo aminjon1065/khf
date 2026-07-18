@@ -45,10 +45,11 @@ class StagingSmokeChecker
         $token = (string) config('deployment.health_check_token', '');
 
         if ($token !== '') {
-            $results[] = $this->probe('/health?token='.urlencode($token), [
-                'path' => '/health?token=***',
-                'expect' => [200, 503],
+            $results[] = $this->probe('/health', [
+                'path' => '/health (authenticated)',
+                'expect' => [200],
                 'json_has' => 'checks',
+                'request_headers' => ['Authorization' => 'Bearer '.$token],
             ], $inProcess, $baseUrl, $insecure);
         }
 
@@ -91,7 +92,7 @@ class StagingSmokeChecker
     }
 
     /**
-     * @param  array{path: string, expect: list<int>, json_status?: string|null, require_csrf?: bool, require_csp?: bool, json_has?: string}  $check
+     * @param  array{path: string, expect: list<int>, json_status?: string|null, require_csrf?: bool, require_csp?: bool, json_has?: string, request_headers?: array<string, string>}  $check
      * @return array{path: string, ok: bool, status: int|null, message: string}
      */
     private function probe(string $path, array $check, bool $inProcess, ?string $baseUrl, bool $insecure): array
@@ -99,9 +100,10 @@ class StagingSmokeChecker
         $label = $check['path'];
 
         try {
+            $requestHeaders = $check['request_headers'] ?? [];
             [$status, $body, $headers] = $inProcess
-                ? $this->inProcess($path)
-                : $this->viaHttp($path, $baseUrl, $insecure);
+                ? $this->inProcess($path, $requestHeaders)
+                : $this->viaHttp($path, $baseUrl, $insecure, $requestHeaders);
 
             if (! in_array($status, $check['expect'], true)) {
                 return [
@@ -181,10 +183,15 @@ class StagingSmokeChecker
     /**
      * @return array{0: int, 1: string, 2: array<string, list<string|null>>}
      */
-    private function inProcess(string $path): array
+    private function inProcess(string $path, array $requestHeaders = []): array
     {
         $kernel = app(HttpKernel::class);
         $request = Request::create($path, 'GET');
+
+        foreach ($requestHeaders as $name => $value) {
+            $request->headers->set($name, $value);
+        }
+
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
 
@@ -198,7 +205,7 @@ class StagingSmokeChecker
     /**
      * @return array{0: int, 1: string, 2: array<string, list<string|null>>}
      */
-    private function viaHttp(string $path, ?string $baseUrl, bool $insecure): array
+    private function viaHttp(string $path, ?string $baseUrl, bool $insecure, array $requestHeaders = []): array
     {
         $base = rtrim($baseUrl ?: (string) config('app.url'), '/');
 
@@ -207,7 +214,10 @@ class StagingSmokeChecker
         }
 
         $request = Http::timeout((int) config('deployment.smoke.timeout', 15))
-            ->withHeaders(['Accept' => 'text/html,application/json,*/*']);
+            ->withHeaders([
+                'Accept' => 'text/html,application/json,*/*',
+                ...$requestHeaders,
+            ]);
 
         if ($insecure || $this->isLocalDevHost($base)) {
             $request = $request->withoutVerifying();

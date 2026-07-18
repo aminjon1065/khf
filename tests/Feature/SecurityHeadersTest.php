@@ -78,6 +78,18 @@ it('exposes a csrf token meta tag for fetch-based clients', function () {
         ->assertSee('<meta name="csrf-token"', false);
 });
 
+it('advertises the PWA manifest and branded icons', function () {
+    $this->get(route('welcome', ['locale' => 'tj']))
+        ->assertOk()
+        ->assertSee('href="/manifest.webmanifest"', false)
+        ->assertSee('href="/images/favicon-32.png"', false)
+        ->assertSee('href="/images/apple-touch-icon.png"', false);
+
+    expect(public_path('push-sw.js'))->toBeFile()
+        ->and(public_path('images/pwa-192.png'))->toBeFile()
+        ->and(public_path('images/pwa-512.png'))->toBeFile();
+});
+
 it('does not send HSTS over plain http', function () {
     $this->get('http://khf.test/tj')
         ->assertHeaderMissing('Strict-Transport-Security');

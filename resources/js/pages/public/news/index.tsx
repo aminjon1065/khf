@@ -86,6 +86,7 @@ export default function NewsIndex({ posts, categories, filters }: PageProps) {
                         >
                             <NewsCover
                                 src={post.cover_url}
+                                alt={post.title ?? ''}
                                 locale={locale}
                                 aspect="aspect-video"
                                 imgClassName="transition-transform group-hover:scale-105"

@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use App\Enums\AppealStatus;
+use App\Models\Concerns\GeneratesUniqueReference;
 use Database\Factories\VacancyApplicationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -31,6 +31,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  */
 class VacancyApplication extends Model implements HasMedia
 {
+    use GeneratesUniqueReference;
+
     /** @use HasFactory<VacancyApplicationFactory> */
     use HasFactory;
 
@@ -59,19 +61,16 @@ class VacancyApplication extends Model implements HasMedia
     {
         return [
             'status' => AppealStatus::class,
+            'email' => 'encrypted',
+            'phone' => 'encrypted',
+            'cover_letter' => 'encrypted',
+            'internal_note' => 'encrypted',
         ];
     }
 
-    /**
-     * Generate a unique public tracking reference, e.g. VAC-2026-AB12CD.
-     */
-    public static function generateReference(): string
+    protected static function referencePrefix(): string
     {
-        do {
-            $reference = 'VAC-'.now()->year.'-'.Str::upper(Str::random(6));
-        } while (static::where('reference', $reference)->exists());
-
-        return $reference;
+        return 'VAC';
     }
 
     /**

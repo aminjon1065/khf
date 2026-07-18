@@ -329,7 +329,7 @@ return [
             'fallback' => [
                 'title' => env('SEO_DEFAULT_TITLE'),
                 'description' => env('SEO_DEFAULT_DESCRIPTION'),
-                'image' => env('SEO_DEFAULT_IMAGE', '/images/emblem-tj.webp'),
+                'image' => env('SEO_DEFAULT_IMAGE', '/images/pwa-512.png'),
             ],
         ],
 

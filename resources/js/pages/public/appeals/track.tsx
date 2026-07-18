@@ -12,7 +12,6 @@ type TrackResult =
     | {
           found: true;
           reference: string;
-          subject: string;
           category: string;
           status: string;
           created_at: string | null;
@@ -78,7 +77,6 @@ export default function AppealTrack({ reference, result }: PageProps) {
                             </span>
                             <Badge>{result.status}</Badge>
                         </div>
-                        <p className="font-medium">{result.subject}</p>
                         <p className="text-sm text-muted-foreground">
                             {t('appeals.track.category_label', {
                                 category: result.category,

@@ -184,6 +184,8 @@ export function MapView({
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<maplibregl.Map | null>(null);
     const pickMarkerRef = useRef<maplibregl.Marker | null>(null);
+    const initialPickedLatitude = initialPickedCoords?.lat;
+    const initialPickedLongitude = initialPickedCoords?.lng;
     const [failure, setFailure] = useState<'unsupported' | 'error' | null>(
         null,
     );
@@ -196,9 +198,11 @@ export function MapView({
         }
 
         if (!isWebGlAvailable()) {
-            setFailure('unsupported');
+            const frame = window.requestAnimationFrame(() =>
+                setFailure('unsupported'),
+            );
 
-            return;
+            return () => window.cancelAnimationFrame(frame);
         }
 
         const initialCenter: [number, number] =
@@ -228,9 +232,11 @@ export function MapView({
                         : zoom,
             });
         } catch {
-            setFailure('error');
+            const frame = window.requestAnimationFrame(() =>
+                setFailure('error'),
+            );
 
-            return;
+            return () => window.cancelAnimationFrame(frame);
         }
 
         let loaded = false;
@@ -288,32 +294,29 @@ export function MapView({
     useEffect(() => {
         const map = mapRef.current;
 
-        if (
-            !map ||
-            !initialPickedCoords ||
-            !initialPickedCoords.lat ||
-            !initialPickedCoords.lng
-        ) {
+        if (!map || !initialPickedLatitude || !initialPickedLongitude) {
             return;
         }
 
-        const { lat, lng } = initialPickedCoords;
         map.flyTo({
-            center: [lng, lat],
+            center: [initialPickedLongitude, initialPickedLatitude],
             zoom: map.getZoom() < 8 ? 8 : map.getZoom(),
             essential: true,
         });
 
         if (pickMarkerRef.current) {
-            pickMarkerRef.current.setLngLat([lng, lat]);
+            pickMarkerRef.current.setLngLat([
+                initialPickedLongitude,
+                initialPickedLatitude,
+            ]);
         } else {
             pickMarkerRef.current = new maplibregl.Marker({
                 color: '#1f4e8c',
             })
-                .setLngLat([lng, lat])
+                .setLngLat([initialPickedLongitude, initialPickedLatitude])
                 .addTo(map);
         }
-    }, [initialPickedCoords?.lat, initialPickedCoords?.lng]);
+    }, [initialPickedLatitude, initialPickedLongitude]);
 
     // Handle incoming markers via GeoJSON and Clustering
     useEffect(() => {

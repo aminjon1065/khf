@@ -29,10 +29,7 @@ class AppealController extends Controller
         $data = $request->validated();
         unset($data['website'], $data['attachments']);
 
-        $appeal = Appeal::create([
-            ...$data,
-            'reference' => Appeal::generateReference(),
-        ]);
+        $appeal = Appeal::createWithUniqueReference($data);
 
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {
@@ -60,7 +57,6 @@ class AppealController extends Controller
                 : [
                     'found' => true,
                     'reference' => $appeal->reference,
-                    'subject' => $appeal->subject,
                     'category' => $appeal->category->label(),
                     'status' => $appeal->status->label(),
                     'created_at' => $appeal->created_at?->format('d.m.Y'),

@@ -72,6 +72,8 @@
         ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
+            "@php artisan route:clear --ansi",
+            "npm run build",
             "npm run lint:check",
             "npm run format:check",
             "npm run types:check",
@@ -80,7 +82,7 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@lint:check",
-            "@php artisan test"
+            "@php artisan test --compact"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

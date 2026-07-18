@@ -36,6 +36,8 @@ return [
             'VAPID_SUBJECT',
             'VAPID_PUBLIC_KEY',
             'VAPID_PRIVATE_KEY',
+            'HEALTH_CHECK_TOKEN',
+            'MAIL_MAILER',
             'MAIL_FROM_ADDRESS',
         ],
         'production' => [
@@ -47,6 +49,8 @@ return [
             'VAPID_SUBJECT',
             'VAPID_PUBLIC_KEY',
             'VAPID_PRIVATE_KEY',
+            'HEALTH_CHECK_TOKEN',
+            'MAIL_MAILER',
             'MAIL_FROM_ADDRESS',
             'MAIL_HOST',
         ],
@@ -74,8 +78,8 @@ return [
     | Detailed health endpoint token (§16.3 monitoring)
     |--------------------------------------------------------------------------
     |
-    | GET /health returns a minimal public payload. Pass this token as
-    | `Authorization: Bearer …` or `?token=` for the detailed JSON (DB, cache, queue).
+    | GET /health returns public dependency statuses. Pass this token as
+    | `Authorization: Bearer …` for detailed DB, cache, queue, and scheduler diagnostics.
     |
     */
 
@@ -88,6 +92,8 @@ return [
     */
 
     'failed_jobs_alert_threshold' => (int) env('HEALTH_FAILED_JOBS_THRESHOLD', 10),
+    'pending_jobs_alert_threshold' => (int) env('HEALTH_PENDING_JOBS_THRESHOLD', 1000),
+    'scheduler_heartbeat_max_age' => (int) env('HEALTH_SCHEDULER_MAX_AGE', 180),
 
     /*
     |--------------------------------------------------------------------------

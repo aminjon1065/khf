@@ -199,6 +199,7 @@ export default function Home({
                                     >
                                         <NewsCover
                                             src={post.cover_url}
+                                            alt={post.title ?? ''}
                                             locale={locale}
                                             loading="lazy"
                                             imgClassName="transition-transform duration-500 group-hover:scale-105"

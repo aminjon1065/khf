@@ -23,20 +23,23 @@ class PollController extends Controller
 
         $polls = Poll::published()
             ->with(['translations', 'options.translations'])
+            ->withCount('votes')
             ->orderByDesc('starts_at')
             ->orderBy('sort_order')
-            ->get()
-            ->map(function (Poll $poll) use ($locale, $voterHash): ?array {
+            ->get();
+        $votedPollIds = PollVote::query()
+            ->whereIn('poll_id', $polls->pluck('id'))
+            ->where('voter_hash', $voterHash)
+            ->pluck('poll_id')
+            ->flip();
+
+        $polls = $polls
+            ->map(function (Poll $poll) use ($locale, $votedPollIds): ?array {
                 $translation = $poll->translation($locale);
 
                 if ($translation === null || blank($translation->title)) {
                     return null;
                 }
-
-                $hasVoted = PollVote::query()
-                    ->where('poll_id', $poll->id)
-                    ->where('voter_hash', $voterHash)
-                    ->exists();
 
                 return [
                     'id' => $poll->id,
@@ -47,10 +50,10 @@ class PollController extends Controller
                     'type_label' => $poll->type->label(),
                     'is_active' => $poll->isAcceptingVotes(),
                     'has_ended' => $poll->hasEnded(),
-                    'has_voted' => $hasVoted,
+                    'has_voted' => $votedPollIds->has($poll->id),
                     'starts_at' => $poll->starts_at?->toIso8601String(),
                     'ends_at' => $poll->ends_at?->toIso8601String(),
-                    'total_votes' => $poll->totalVotes(),
+                    'total_votes' => $poll->votes_count,
                 ];
             })
             ->filter()
@@ -140,25 +143,28 @@ class PollController extends Controller
         }
 
         $voterHash = $this->voterHash($request);
-
-        if (PollVote::query()->where('poll_id', $poll->id)->where('voter_hash', $voterHash)->exists()) {
-            Inertia::flash('toast', ['type' => 'error', 'message' => __('ui.polls.already_voted')]);
-
-            return back();
-        }
-
         $optionId = (int) $request->validated('poll_option_id');
 
         if (! $poll->options->contains('id', $optionId)) {
             abort(422);
         }
 
-        PollVote::create([
-            'poll_id' => $poll->id,
-            'poll_option_id' => $optionId,
-            'voter_hash' => $voterHash,
-            'created_at' => now(),
-        ]);
+        $vote = PollVote::query()->firstOrCreate(
+            [
+                'poll_id' => $poll->id,
+                'voter_hash' => $voterHash,
+            ],
+            [
+                'poll_option_id' => $optionId,
+                'created_at' => now(),
+            ],
+        );
+
+        if (! $vote->wasRecentlyCreated) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('ui.polls.already_voted')]);
+
+            return back();
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('ui.polls.vote_recorded')]);
 

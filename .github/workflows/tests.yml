@@ -35,18 +35,19 @@ jobs:
         with:
           php-version: ${{ matrix.php-version }}
           tools: composer:v2
-          coverage: xdebug
+          coverage: none
 
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: '22'
-
-      - name: Install Node Dependencies
-        run: npm i
+          cache: npm
 
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Node Dependencies
+        run: npm ci
 
       - name: Copy Environment File
         run: cp .env.example .env
@@ -55,12 +56,9 @@ jobs:
         run: php artisan key:generate
 
       - name: Build Assets
-        run: npm run build
-
-      # Type-check once (build first so the Wayfinder-generated route/action types exist).
-      - name: Type Check
-        if: matrix.php-version == '8.4'
-        run: npm run types:check
+        run: |
+          php artisan route:clear
+          npm run build
 
       - name: Tests
-        run: ./vendor/bin/pest
+        run: php artisan test --compact

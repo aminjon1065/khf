@@ -1,6 +1,6 @@
 import { router, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -132,7 +132,7 @@ export default function MenuItemModal({
     );
     const [entryId, setEntryId] = useState(initialEntry.id);
 
-    const { data, setData, processing, errors, reset, clearErrors } = useForm({
+    const { data, setData, processing, errors, reset } = useForm({
         parent_id: parentId || item?.parent_id || null,
         url: '',
         route: '',
@@ -159,29 +159,6 @@ export default function MenuItemModal({
             ),
         [entryCollection, linkCollectionEntries],
     );
-
-    useEffect(() => {
-        if (isOpen) {
-            clearErrors();
-            setLinkType(resolveLinkType(item));
-            setSectionRoute(
-                item?.route &&
-                    !item.route.startsWith('page.') &&
-                    !item.route.startsWith('entry.')
-                    ? item.route
-                    : 'welcome',
-            );
-            setPageId(resolvePageId(item));
-            const entry = resolveEntryLink(item);
-            setEntryCollection(
-                entry.handle || linkCollectionEntries[0]?.handle || '',
-            );
-            setEntryId(entry.id);
-            setExternalUrl(
-                item?.url && /^https?:\/\//i.test(item.url) ? item.url : '',
-            );
-        }
-    }, [isOpen, item, clearErrors, linkCollectionEntries]);
 
     const applyLinkToForm = (): { url: string; route: string } => {
         if (linkType === 'external') {

@@ -6,28 +6,26 @@ beforeEach(function () {
     $this->seed(LanguageSeeder::class);
 });
 
-it('loads all critical public routes without 500 errors', function (string $url) {
-    // We expect a 200 or 302, but never 500
-    $response = $this->get($url);
-
-    expect($response->status())->toBeLessThan(500);
+it('renders critical public routes successfully', function (string $routeName, array $parameters) {
+    $this->get(route($routeName, $parameters))
+        ->assertOk();
 })->with([
-    'Homepage (tj)' => ['/tj'],
-    'Homepage (ru)' => ['/ru'],
-    'Incidents Archive' => ['/tj/incidents'],
-    'Map' => ['/tj/map'],
-    'Search' => ['/tj/search?q=test'],
-    'Guides Index' => ['/tj/guides'],
-    'News Index' => ['/tj/news'],
-    'Tourism Form' => ['/tj/tourism/create'],
-    'Appeals Form' => ['/tj/appeals/create'],
-    'Regional Offices' => ['/tj/regional-offices'],
+    'Homepage (tj)' => ['welcome', ['locale' => 'tj']],
+    'Homepage (ru)' => ['welcome', ['locale' => 'ru']],
+    'Incidents Archive' => ['incidents.index', ['locale' => 'tj']],
+    'Map' => ['map.index', ['locale' => 'tj']],
+    'Search' => ['search.index', ['locale' => 'tj', 'q' => 'test']],
+    'Guides Index' => ['guides.index', ['locale' => 'tj']],
+    'News Index' => ['news.index', ['locale' => 'tj']],
+    'Tourism Form' => ['tourist-groups.create', ['locale' => 'tj']],
+    'Appeals Form' => ['appeals.create', ['locale' => 'tj']],
+    'Contacts' => ['contacts.index', ['locale' => 'tj']],
 ]);
 
-it('loads all CMS auth routes', function (string $url) {
-    $response = $this->get($url);
-    expect($response->status())->toBeLessThan(500);
+it('renders CMS authentication routes successfully', function (string $routeName) {
+    $this->get(route($routeName))
+        ->assertOk();
 })->with([
-    'Login' => ['/admin/login'],
-    'Forgot Password' => ['/admin/forgot-password'],
+    'Login' => ['login'],
+    'Forgot Password' => ['password.request'],
 ]);

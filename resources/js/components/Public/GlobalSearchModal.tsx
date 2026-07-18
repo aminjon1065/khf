@@ -36,6 +36,11 @@ type SearchResultItem = {
     date: string | null;
 };
 
+type SearchResponse = {
+    data?: SearchResultItem[];
+    error?: string;
+};
+
 export function GlobalSearchModal({
     isOpen,
     setIsOpen,
@@ -49,6 +54,8 @@ export function GlobalSearchModal({
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<SearchResultItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const unavailableMessage = t('search.unavailable');
 
     // Clear state when the dialog closes so the next open starts fresh — handled here rather than in
     // an effect to avoid a setState-in-effect render cascade.
@@ -56,6 +63,8 @@ export function GlobalSearchModal({
         if (!open) {
             setQuery('');
             setResults([]);
+            setError(null);
+            setIsLoading(false);
         }
 
         setIsOpen(open);
@@ -80,24 +89,53 @@ export function GlobalSearchModal({
             return;
         }
 
+        const controller = new AbortController();
         const timer = setTimeout(async () => {
             setIsLoading(true);
+            setError(null);
 
             try {
                 const response = await fetch(
-                    `${searchApi({ locale }).url}?q=${encodeURIComponent(query)}`,
+                    searchApi({ locale }, { query: { q: query.trim() } }).url,
+                    {
+                        headers: { Accept: 'application/json' },
+                        signal: controller.signal,
+                    },
                 );
-                const data = await response.json();
-                setResults(data.data || []);
+                const data = (await response
+                    .json()
+                    .catch(() => ({}))) as SearchResponse;
+
+                if (!response.ok) {
+                    setResults([]);
+                    setError(data.error ?? unavailableMessage);
+
+                    return;
+                }
+
+                setResults(data.data ?? []);
             } catch (error) {
-                console.error('Search error', error);
+                if (
+                    error instanceof DOMException &&
+                    error.name === 'AbortError'
+                ) {
+                    return;
+                }
+
+                setResults([]);
+                setError(unavailableMessage);
             } finally {
-                setIsLoading(false);
+                if (!controller.signal.aborted) {
+                    setIsLoading(false);
+                }
             }
         }, 300);
 
-        return () => clearTimeout(timer);
-    }, [query, isOpen, locale]);
+        return () => {
+            clearTimeout(timer);
+            controller.abort();
+        };
+    }, [query, isOpen, locale, unavailableMessage]);
 
     // Stale results from a longer query stay hidden once the query drops below the 2-char threshold.
     const visibleResults = query.length >= 2 ? results : [];
@@ -255,11 +293,21 @@ export function GlobalSearchModal({
 
                     {query.length >= 2 &&
                         results.length === 0 &&
+                        !error &&
                         !isLoading && (
                             <div className="py-8 text-center text-sm text-muted-foreground">
                                 {t('table.empty')}
                             </div>
                         )}
+
+                    {query.length >= 2 && error && !isLoading && (
+                        <div
+                            role="alert"
+                            className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-6 text-center text-sm text-destructive"
+                        >
+                            {error}
+                        </div>
+                    )}
 
                     {query.length < 2 && (
                         <div className="py-8 text-center text-sm text-muted-foreground/60">
@@ -289,25 +337,30 @@ export function GlobalSearchModal({
                                             </span>
                                         )}
                                     </div>
-                                    <h4
-                                        className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary"
-                                        dangerouslySetInnerHTML={{
-                                            __html:
-                                                result.highlighted_title ??
-                                                result.title,
-                                        }}
-                                    />
+                                    <h4 className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary">
+                                        {result.highlighted_title ? (
+                                            <span
+                                                dangerouslySetInnerHTML={{
+                                                    __html: result.highlighted_title,
+                                                }}
+                                            />
+                                        ) : (
+                                            result.title
+                                        )}
+                                    </h4>
                                     {(result.excerpt ||
                                         result.highlighted_excerpt) && (
-                                        <p
-                                            className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground"
-                                            dangerouslySetInnerHTML={{
-                                                __html:
-                                                    result.highlighted_excerpt ??
-                                                    result.excerpt ??
-                                                    '',
-                                            }}
-                                        />
+                                        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                                            {result.highlighted_excerpt ? (
+                                                <span
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: result.highlighted_excerpt,
+                                                    }}
+                                                />
+                                            ) : (
+                                                result.excerpt
+                                            )}
+                                        </p>
                                     )}
                                 </div>
                             </Link>

@@ -196,7 +196,7 @@ class GlobalResolver
     private function absoluteAssetUrl(string $path): string
     {
         if ($path === '') {
-            return url('/images/emblem-tj.webp');
+            return url('/images/pwa-512.png');
         }
 
         if (filter_var($path, FILTER_VALIDATE_URL) !== false) {

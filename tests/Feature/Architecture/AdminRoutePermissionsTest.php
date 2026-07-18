@@ -2,20 +2,10 @@
 
 /**
  * Guardrail: mutating admin routes must declare `can:` middleware, unless they are
- * intentionally role-scoped (media) or authorize inside a Form Request / controller
- * against the content-type manage permission.
+ * authorized inside a Form Request / controller against the content-type manage permission.
  */
 it('requires can: middleware on mutating admin routes outside the documented allowlist', function () {
     $allowWithoutCanMiddleware = [
-        // Media library is available to every CMS-role user (parent role: middleware).
-        'admin.media.store',
-        'admin.media.update',
-        'admin.media.destroy',
-        'admin.media.bulk-destroy',
-        'admin.media.bulk-move',
-        'admin.media.folders.store',
-        'admin.media.folders.update',
-        'admin.media.folders.destroy',
         // Unified content browser authorizes via managePermission in Form Request / controller.
         'admin.content.import',
         'admin.content.bulk-destroy',
@@ -51,14 +41,6 @@ it('requires can: middleware on mutating admin routes outside the documented all
 
 it('keeps the no-can allowlist limited to known exceptions', function () {
     $allowWithoutCanMiddleware = [
-        'admin.media.store',
-        'admin.media.update',
-        'admin.media.destroy',
-        'admin.media.bulk-destroy',
-        'admin.media.bulk-move',
-        'admin.media.folders.store',
-        'admin.media.folders.update',
-        'admin.media.folders.destroy',
         'admin.content.import',
         'admin.content.bulk-destroy',
         'admin.revisions.restore',

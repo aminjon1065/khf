@@ -42,7 +42,10 @@ export default function AlertShow({ alert }: { alert: AlertDetail }) {
                 </Link>
 
                 <div className="mt-4 flex flex-wrap items-center gap-3">
-                    <HazardBadge level={alert.level} label={alert.level_label} />
+                    <HazardBadge
+                        level={alert.level}
+                        label={alert.level_label}
+                    />
                     <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                             alert.is_active
@@ -50,7 +53,9 @@ export default function AlertShow({ alert }: { alert: AlertDetail }) {
                                 : 'bg-muted text-muted-foreground'
                         }`}
                     >
-                        {alert.is_active ? t('alerts.active') : t('alerts.expired')}
+                        {alert.is_active
+                            ? t('alerts.active')
+                            : t('alerts.expired')}
                     </span>
                 </div>
 

@@ -169,6 +169,26 @@ it('sanitizes html and unsafe urls inside blocks on save', function () {
         ->and($blocks[2]['data']['items'][0]['content'])->not->toContain('<script>');
 });
 
+it('discards data from unknown block types', function () {
+    $payload = pageBlocksPayload();
+    $payload['translations']['tj']['blocks'] = [
+        [
+            'id' => 'unknown-block',
+            'type' => 'future_block',
+            'data' => [
+                'content' => '<script>alert(1)</script>',
+                'url' => 'javascript:alert(1)',
+            ],
+        ],
+    ];
+
+    $this->actingAs($this->editor)
+        ->post(route('admin.pages.store'), $payload)
+        ->assertRedirect(route('admin.content.index', 'page'));
+
+    expect(Page::first()->translation('tj')->blocks[0]['data'])->toBe([]);
+});
+
 it('renders a published page with all block types on the public site', function () {
     $page = Page::factory()->create(['status' => ContentStatus::Published]);
     $page->upsertTranslations([

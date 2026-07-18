@@ -7,6 +7,7 @@ use App\Models\User;
 use Database\Seeders\LanguageSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -45,6 +46,29 @@ it('accepts a citizen appeal and assigns a reference', function () {
         ->and($appeal->reference)->toStartWith('OBR-');
 });
 
+it('retries creation when a generated reference collides', function () {
+    $year = now()->year;
+    Appeal::factory()->create(['reference' => "OBR-{$year}-ABC123"]);
+
+    Str::createRandomStringsUsingSequence(['ABC123', 'DEF456']);
+
+    try {
+        $appeal = Appeal::createWithUniqueReference([
+            'category' => 'general',
+            'name' => 'Collision Test',
+            'email' => 'collision@example.tj',
+            'phone' => null,
+            'subject' => 'Reference collision',
+            'message' => 'The second generated reference must be used.',
+        ]);
+    } finally {
+        Str::createRandomStringsNormally();
+    }
+
+    expect($appeal->reference)->toBe("OBR-{$year}-DEF456")
+        ->and(Appeal::query()->count())->toBe(2);
+});
+
 it('rejects a submission with the honeypot filled', function () {
     $this->post(route('appeals.store', ['locale' => 'tj']), appealForm(['website' => 'http://spam']))
         ->assertSessionHasErrors('website');
@@ -65,7 +89,7 @@ it('tracks an appeal by reference', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('public/appeals/track')
             ->where('result.found', true)
-            ->where('result.subject', 'Моё обращение')
+            ->missing('result.subject')
         );
 
     $this->get(route('appeals.track', ['locale' => 'tj', 'reference' => 'OBR-2026-NOPE00']))

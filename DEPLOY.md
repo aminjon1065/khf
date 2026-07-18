@@ -126,7 +126,9 @@ php artisan webpush:vapid
 
 Добавятся `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`; задайте `VAPID_SUBJECT` = `https://khf.tj` (или `mailto:admin@khf.tj`).
 
-**Мониторинг** — uptime-проверка: `GET /up` (Laravel) и `GET /health` (минимальный JSON). Для диагностики БД/кеша/очереди задайте `HEALTH_CHECK_TOKEN` и вызывайте `GET /health?token=…`.
+**Мониторинг** — `/up` проверяет запуск Laravel, а `/health` — готовность БД, кеша,
+очереди и scheduler heartbeat. Публичный ответ содержит только статусы. Для подробной
+диагностики задайте `HEALTH_CHECK_TOKEN` и передавайте его только в Bearer-заголовке.
 
 Выполните генерацию ключа приложения (если ещё не задан):
 
@@ -141,12 +143,18 @@ php artisan key:generate
 ```
 
 ### Шаг 3.5: Миграции и Кеширование
-Настройте базу данных и закешируйте конфигурации для производительности:
+Сначала сделайте backup БД. Миграции персональных данных выполняйте в maintenance mode,
+чтобы старая версия приложения не читала уже зашифрованные значения:
 ```bash
+php artisan down --retry=60
 php artisan migrate --force
+php artisan optimize:clear
 php artisan optimize
 php artisan view:cache
 php artisan storage:link
+php artisan cms:cache-warm
+php artisan responsecache:clear
+php artisan up
 ```
 
 ---
@@ -218,9 +226,10 @@ Workflow `.github/workflows/deploy.yml` (ручной запуск **Actions →
 - Сертификат покрывает `khf.tj` и `www.khf.tj`
 - `APP_URL` использует `https://`
 - Редирект HTTP→HTTPS включён на уровне хостинга
-- `TRUSTED_PROXIES=*` (или IP edge-прокси) — иначе Laravel видит HTTP за TLS-терминатором,
-  и secure cookies / HSTS / `URL::forceScheme` работают некорректно
+- `TRUSTED_PROXIES=none` при прямом TLS; за reverse proxy укажите точные IP/CIDR.
+  `*` допустим только когда PHP недоступен напрямую из интернета
 - `SESSION_SECURE_COOKIE=true` на HTTPS-окружениях
+- `SESSION_ENCRYPT=true` на staging и production
 
 ---
 
@@ -258,8 +267,8 @@ php artisan deploy:env-check --env=staging
 php artisan deploy:smoke --http --base-url="$APP_URL"
 # локальный Laragon/Herd (.test self-signed):
 php artisan deploy:smoke --http --base-url="https://khf.test"
-# подробный health (БД/кеш/очередь):
-curl -fsS "$APP_URL/health?token=$HEALTH_CHECK_TOKEN" | jq .
+# подробный health (БД/кеш/очередь/scheduler):
+curl -fsS -H "Authorization: Bearer $HEALTH_CHECK_TOKEN" "$APP_URL/health" | jq .
 ```
 
 Для `.test` / localhost TLS verification отключается автоматически; на боевом HTTPS
@@ -295,7 +304,7 @@ php artisan storage:link   # если ещё не сделано
 ```bash
 curl -fsS "$APP_URL/up"
 curl -fsS "$APP_URL/health"
-curl -fsS "$APP_URL/health?token=$HEALTH_CHECK_TOKEN"
+curl -fsS -H "Authorization: Bearer $HEALTH_CHECK_TOKEN" "$APP_URL/health"
 ```
 
 **Контент / i18n**

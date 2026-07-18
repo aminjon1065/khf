@@ -7,9 +7,9 @@ import { usePage } from '@inertiajs/react';
  * it (design system §4 / brand assets).
  */
 const EMBLEMS: Record<string, string> = {
-    tj: '/images/emblem-tj.webp',
-    ru: '/images/emblem-ru.webp',
-    en: '/images/emblem-en.webp',
+    tj: '/images/pwa-512.png',
+    ru: '/images/pwa-512.png',
+    en: '/images/pwa-512.png',
 };
 
 export function AppEmblem({

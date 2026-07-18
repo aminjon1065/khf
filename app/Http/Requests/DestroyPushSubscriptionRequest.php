@@ -19,7 +19,7 @@ class DestroyPushSubscriptionRequest extends FormRequest
     {
         return [
             'endpoint' => ['required', 'url'],
-            'subscriber_token' => ['required', 'string', 'max:255'],
+            'subscriber_token' => ['required', 'string', 'min:32', 'max:64'],
         ];
     }
 }

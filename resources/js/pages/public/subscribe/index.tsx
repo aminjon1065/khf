@@ -65,7 +65,6 @@ export default function Subscribe({
         if ('serviceWorker' in navigator && 'PushManager' in window) {
             // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional client-only feature detection
             setIsPushSupported(true);
-            navigator.serviceWorker.register('/sw.js');
         }
     }, []);
 
@@ -112,7 +111,7 @@ export default function Subscribe({
 
     const handlePushSubscribe = async () => {
         if (!vapidPublicKey) {
-            console.error('VAPID public key not found');
+            setPushStatus('error');
 
             return;
         }
@@ -135,12 +134,7 @@ export default function Subscribe({
                 });
             }
 
-            let token = localStorage.getItem('push_subscriber_token');
-
-            if (!token) {
-                token = crypto.randomUUID();
-                localStorage.setItem('push_subscriber_token', token);
-            }
+            const token = localStorage.getItem('push_subscriber_token');
 
             const key = subscription.getKey
                 ? subscription.getKey('p256dh')
@@ -193,9 +187,20 @@ export default function Subscribe({
                 throw new Error('Failed to save subscription on server');
             }
 
+            const payload = (await response.json()) as {
+                subscriber_token?: string;
+            };
+
+            if (!payload.subscriber_token) {
+                throw new Error('Push subscriber token was not returned');
+            }
+
+            localStorage.setItem(
+                'push_subscriber_token',
+                payload.subscriber_token,
+            );
             setPushStatus('success');
-        } catch (error) {
-            console.error(error);
+        } catch {
             setPushStatus('error');
         }
     };

@@ -69,7 +69,9 @@ it('tracks a tourist group by reference', function () {
 
     $this->get(route('tourist-groups.track', ['locale' => 'tj', 'reference' => $group->reference]))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->where('result.found', true));
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('result.found', true)
+            ->missing('result.route'));
 
     $this->get(route('tourist-groups.track', ['locale' => 'tj', 'reference' => 'TUR-2026-NONE00']))
         ->assertInertia(fn (Assert $page) => $page->where('result.found', false));

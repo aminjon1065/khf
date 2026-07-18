@@ -18,8 +18,9 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
  * tokenized link. `token` also powers one-click unsubscribe.
  *
  * @property int $id
- * @property string $email
+ * @property string|null $email
  * @property string $token
+ * @property string|null $push_token_hash
  * @property string $locale
  * @property SubscriptionStatus $status
  * @property list<string>|null $topics
@@ -42,12 +43,19 @@ class Subscriber extends Model
     protected $fillable = [
         'email',
         'token',
+        'push_token_hash',
         'locale',
         'status',
         'topics',
         'region_id',
         'confirmed_at',
         'consented_at',
+    ];
+
+    /** @var list<string> */
+    protected $hidden = [
+        'token',
+        'push_token_hash',
     ];
 
     /**
@@ -66,6 +74,26 @@ class Subscriber extends Model
     public static function generateToken(): string
     {
         return Str::random(64);
+    }
+
+    /**
+     * @return array{plainText: string, hash: string}
+     */
+    public static function generatePushToken(): array
+    {
+        $plainText = Str::random(64);
+
+        return [
+            'plainText' => $plainText,
+            'hash' => hash('sha256', $plainText),
+        ];
+    }
+
+    public static function findByPushToken(string $plainText): ?self
+    {
+        return static::query()
+            ->where('push_token_hash', hash('sha256', $plainText))
+            ->first();
     }
 
     /**

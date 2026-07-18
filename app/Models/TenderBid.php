@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use App\Enums\AppealStatus;
+use App\Models\Concerns\GeneratesUniqueReference;
 use Database\Factories\TenderBidFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -32,6 +32,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  */
 class TenderBid extends Model implements HasMedia
 {
+    use GeneratesUniqueReference;
+
     /** @use HasFactory<TenderBidFactory> */
     use HasFactory;
 
@@ -61,19 +63,17 @@ class TenderBid extends Model implements HasMedia
     {
         return [
             'status' => AppealStatus::class,
+            'contact_name' => 'encrypted',
+            'email' => 'encrypted',
+            'phone' => 'encrypted',
+            'proposal' => 'encrypted',
+            'internal_note' => 'encrypted',
         ];
     }
 
-    /**
-     * Generate a unique public tracking reference, e.g. TND-2026-AB12CD.
-     */
-    public static function generateReference(): string
+    protected static function referencePrefix(): string
     {
-        do {
-            $reference = 'TND-'.now()->year.'-'.Str::upper(Str::random(6));
-        } while (static::where('reference', $reference)->exists());
-
-        return $reference;
+        return 'TND';
     }
 
     /**

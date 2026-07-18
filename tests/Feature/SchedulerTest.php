@@ -1,5 +1,11 @@
 <?php
 
+it('records a scheduler heartbeat every minute', function () {
+    $this->artisan('schedule:list')
+        ->expectsOutputToContain('health:scheduler-heartbeat')
+        ->assertSuccessful();
+});
+
 it('drains the alerts queue before the default queue every minute', function () {
     $this->artisan('schedule:list')
         ->expectsOutputToContain('queue:work --queue=alerts,default --stop-when-empty')

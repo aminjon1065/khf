@@ -1,6 +1,6 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { FolderInput, Scissors, Trash2, UploadCloud } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { MediaLibraryHelp } from '@/components/admin/cp/content-help-topics';
 import { CpLocaleTabs } from '@/components/admin/cp/publish-form';
@@ -102,10 +102,6 @@ export default function MediaLibraryIndex({
         url: string;
     } | null>(null);
 
-    useEffect(() => {
-        setFolders(initialFolders);
-    }, [initialFolders]);
-
     const selectedItem = useMemo(() => {
         if (selected === null) {
             return null;
@@ -125,20 +121,17 @@ export default function MediaLibraryIndex({
         focal_y: selectedItem?.focal_y ?? 50,
     });
 
-    useEffect(() => {
-        if (selectedItem === null) {
-            return;
-        }
-
+    const selectMedia = (item: MediaLibraryItem) => {
+        setSelected(item);
         detailForm.setData({
-            name: selectedItem.name,
-            translations: buildTranslations(selectedItem, locales),
-            tags: selectedItem.tags,
-            media_folder_id: selectedItem.media_folder_id,
-            focal_x: selectedItem.focal_x,
-            focal_y: selectedItem.focal_y,
+            name: item.name,
+            translations: buildTranslations(item, locales),
+            tags: item.tags,
+            media_folder_id: item.media_folder_id,
+            focal_x: item.focal_x,
+            focal_y: item.focal_y,
         });
-    }, [selectedItem?.id, locales]);
+    };
 
     const folderOptions = useMemo(() => flatFolderOptions(folders), [folders]);
 
@@ -431,9 +424,7 @@ export default function MediaLibraryIndex({
                         selectedId={selectedItem?.id ?? null}
                         selectedIds={bulkSelected}
                         onToggleSelect={toggleBulkSelect}
-                        onSelect={(item) => {
-                            setSelected(item);
-                        }}
+                        onSelect={selectMedia}
                         emptyMessage={
                             filters.search || filters.type
                                 ? 'По вашему запросу ничего не найдено'

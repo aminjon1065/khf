@@ -105,7 +105,10 @@ export function AlertBanner() {
                                 className={`mt-1 inline-flex items-center gap-1 text-xs font-medium ${accentFor(alert.level)} hover:underline`}
                             >
                                 {t('alerts.more')}
-                                <ArrowRight className="size-3.5" aria-hidden="true" />
+                                <ArrowRight
+                                    className="size-3.5"
+                                    aria-hidden="true"
+                                />
                             </Link>
                         </div>
                         {alert.dismissible && (

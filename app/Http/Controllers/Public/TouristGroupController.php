@@ -36,10 +36,7 @@ class TouristGroupController extends Controller
         $data = $request->validated();
         unset($data['website']);
 
-        $group = TouristGroup::create([
-            ...$data,
-            'reference' => TouristGroup::generateReference(),
-        ]);
+        $group = TouristGroup::createWithUniqueReference($data);
 
         return to_route('tourist-groups.create', ['locale' => app()->getLocale()])
             ->with('tourist_group_reference', $group->reference);
@@ -61,7 +58,6 @@ class TouristGroupController extends Controller
                 : [
                     'found' => true,
                     'reference' => $group->reference,
-                    'route' => $group->route,
                     'status' => $group->status->label(),
                     'start_date' => $group->start_date?->format('d.m.Y'),
                     'end_date' => $group->end_date?->format('d.m.Y'),

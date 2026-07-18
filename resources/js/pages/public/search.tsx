@@ -16,6 +16,7 @@ import {
     ChevronRight,
 } from 'lucide-react';
 import { useTranslations } from '@/hooks/use-translations';
+import { index as searchIndex } from '@/routes/search';
 import type { SharedData } from '@/types';
 
 interface SearchResult {
@@ -57,27 +58,25 @@ export default function Search({
         type?: string | null;
         page?: number;
     }) => {
-        const params = new URLSearchParams();
+        const searchQuery: Record<string, string | number> = {};
 
         if (query) {
-            params.set('q', query);
+            searchQuery.q = query;
         }
 
         const type = overrides.type !== undefined ? overrides.type : activeType;
 
         if (type) {
-            params.set('type', type);
+            searchQuery.type = type;
         }
 
         const page = overrides.page ?? 1;
 
         if (page > 1) {
-            params.set('page', String(page));
+            searchQuery.page = page;
         }
 
-        const qs = params.toString();
-
-        return `/${locale}/search${qs ? `?${qs}` : ''}`;
+        return searchIndex({ locale }, { query: searchQuery }).url;
     };
 
     const getIcon = (type: string) => {

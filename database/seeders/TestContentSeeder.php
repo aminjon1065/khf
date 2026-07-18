@@ -519,7 +519,7 @@ class TestContentSeeder extends Seeder
                 ];
             }));
 
-            foreach (['emblem-tj.webp', 'president.webp'] as $file) {
+            foreach (['pwa-512.png', 'president.webp'] as $file) {
                 $this->attachPublicImage($gallery, Gallery::PHOTOS_COLLECTION, $file, preserveOriginal: true);
             }
         }

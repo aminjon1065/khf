@@ -93,9 +93,10 @@
             }
         </style>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.ico" type="image/x-icon">
-        <link rel="apple-touch-icon" href="/favicon.ico">
+        <meta name="theme-color" content="#ffffff">
+        <link rel="manifest" href="/manifest.webmanifest">
+        <link rel="icon" href="/images/favicon-32.png" sizes="32x32" type="image/png">
+        <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" sizes="180x180">
 
         @fonts
 

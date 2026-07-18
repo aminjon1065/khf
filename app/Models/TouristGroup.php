@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
+use App\Casts\EncryptedFloat;
 use App\Enums\AppealStatus;
+use App\Models\Concerns\GeneratesUniqueReference;
 use Database\Factories\TouristGroupFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 
 /**
  * Tourist-group / route registration (ТЗ §6.6). Contains personal data: access is restricted to the
@@ -35,6 +36,8 @@ use Illuminate\Support\Str;
  */
 class TouristGroup extends Model
 {
+    use GeneratesUniqueReference;
+
     /** @use HasFactory<TouristGroupFactory> */
     use HasFactory;
 
@@ -68,22 +71,20 @@ class TouristGroup extends Model
             'participants_count' => 'integer',
             'start_date' => 'date',
             'end_date' => 'date',
-            'start_latitude' => 'float',
-            'start_longitude' => 'float',
+            'leader_phone' => 'encrypted',
+            'leader_email' => 'encrypted',
+            'route' => 'encrypted',
+            'equipment' => 'encrypted',
+            'start_latitude' => EncryptedFloat::class,
+            'start_longitude' => EncryptedFloat::class,
+            'internal_note' => 'encrypted',
             'status' => AppealStatus::class,
         ];
     }
 
-    /**
-     * Generate a unique public tracking reference, e.g. TUR-2026-AB12CD.
-     */
-    public static function generateReference(): string
+    protected static function referencePrefix(): string
     {
-        do {
-            $reference = 'TUR-'.now()->year.'-'.Str::upper(Str::random(6));
-        } while (static::where('reference', $reference)->exists());
-
-        return $reference;
+        return 'TUR';
     }
 
     /**

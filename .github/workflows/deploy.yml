@@ -28,22 +28,34 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           tools: composer:v2
+          coverage: none
 
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: '22'
+          cache: npm
 
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Install Node dependencies
         run: npm ci
 
-      - name: Build frontend assets
-        run: npm run build
+      - name: Prepare application environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run quality gate
+        run: composer ci:check
+
+      - name: Audit dependencies
+        run: |
+          composer audit --locked
+          npm audit --omit=dev
 
       - name: Validate environment secrets
         env:
@@ -57,9 +69,19 @@ jobs:
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
           VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          HEALTH_CHECK_TOKEN: ${{ secrets.HEALTH_CHECK_TOKEN }}
+          MAIL_MAILER: smtp
           MAIL_FROM_ADDRESS: ${{ secrets.MAIL_FROM_ADDRESS }}
           MAIL_HOST: ${{ secrets.MAIL_HOST }}
+          SESSION_DRIVER: database
+          SESSION_ENCRYPT: 'true'
+          SESSION_SECURE_COOKIE: 'true'
+          QUEUE_CONNECTION: database
+          CACHE_STORE: database
         run: php artisan deploy:env-check --env=${{ inputs.environment }}
+
+      - name: Remove development dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
       - name: Package release artifact
         run: |

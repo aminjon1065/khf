@@ -117,9 +117,9 @@ class VacancyController extends Controller
         $data = $request->validated();
         unset($data['website'], $data['resume']);
 
-        $application = $vacancy->applications()->create([
+        $application = VacancyApplication::createWithUniqueReference([
             ...$data,
-            'reference' => VacancyApplication::generateReference(),
+            'vacancy_id' => $vacancy->id,
         ]);
         $application->addMediaFromRequest('resume')->toMediaCollection(VacancyApplication::RESUME_COLLECTION);
 

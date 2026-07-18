@@ -69,6 +69,7 @@ class PostShowPresenter
                     ->all(),
                 'cover_url' => $this->publishedVersions->publicCoverUrl($post) ?: null,
                 'gallery' => $post->getMedia(Post::GALLERY_COLLECTION)->map(fn ($media) => [
+                    'name' => $media->name ?: $media->file_name,
                     'url' => $media->getUrl(),
                     'thumb' => $media->getUrl('thumb'),
                 ])->all(),
@@ -99,7 +100,7 @@ class PostShowPresenter
                 '@context' => 'https://schema.org',
                 '@type' => 'NewsArticle',
                 'headline' => $resolved->title,
-                'image' => $this->publishedVersions->publicCoverUrl($post) ?: url('/images/emblem-tj.webp'),
+                'image' => $this->publishedVersions->publicCoverUrl($post) ?: url('/images/pwa-512.png'),
                 'datePublished' => $post->published_at?->toIso8601String(),
                 'dateModified' => $post->updated_at?->toIso8601String(),
                 'author' => [
@@ -111,7 +112,7 @@ class PostShowPresenter
                     'name' => trans('ui.site.full_name'),
                     'logo' => [
                         '@type' => 'ImageObject',
-                        'url' => url('/images/emblem-tj.webp'),
+                        'url' => url('/images/pwa-512.png'),
                     ],
                 ],
                 'description' => $resolved->excerpt,

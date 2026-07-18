@@ -14,4 +14,4 @@ sections:
             - handle: image
               type: text
               display: Изображение Open Graph
-              instructions: Путь на сайте (например /images/emblem-tj.webp) или полный URL
+              instructions: Путь на сайте (например /images/pwa-512.png) или полный URL

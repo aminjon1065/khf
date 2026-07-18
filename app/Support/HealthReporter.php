@@ -12,15 +12,21 @@ use Throwable;
  */
 class HealthReporter
 {
+    public const SCHEDULER_HEARTBEAT_CACHE_KEY = 'health:scheduler-heartbeat';
+
     /**
-     * @return array{status: string, environment: string, timestamp: string}
+     * @return array{status: string, timestamp: string, checks: array<string, array{status: string}>}
      */
     public function summary(): array
     {
+        $report = $this->detailed();
+
         return [
-            'status' => 'ok',
-            'environment' => (string) config('app.env'),
-            'timestamp' => now()->toIso8601String(),
+            'status' => $report['status'],
+            'timestamp' => $report['timestamp'],
+            'checks' => collect($report['checks'])
+                ->map(fn (array $check): array => ['status' => $check['status']])
+                ->all(),
         ];
     }
 
@@ -33,6 +39,7 @@ class HealthReporter
             'database' => $this->checkDatabase(),
             'cache' => $this->checkCache(),
             'queue' => $this->checkQueue(),
+            'scheduler' => $this->checkScheduler(),
         ];
 
         $hasFailure = collect($checks)->contains(fn (array $check): bool => $check['status'] === 'fail');
@@ -89,13 +96,22 @@ class HealthReporter
             $connection = (string) config('queue.default');
             $size = Queue::connection($connection)->size();
             $failed = (int) DB::table('failed_jobs')->count();
-            $threshold = (int) config('deployment.failed_jobs_alert_threshold', 10);
+            $failedThreshold = (int) config('deployment.failed_jobs_alert_threshold', 10);
+            $pendingThreshold = (int) config('deployment.pending_jobs_alert_threshold', 1000);
 
-            if ($failed >= $threshold) {
+            if ($failed >= $failedThreshold) {
                 return [
                     'status' => 'fail',
                     'value' => $failed,
-                    'message' => "Failed jobs ({$failed}) exceed threshold ({$threshold})",
+                    'message' => "Failed jobs ({$failed}) exceed threshold ({$failedThreshold})",
+                ];
+            }
+
+            if ($size >= $pendingThreshold) {
+                return [
+                    'status' => 'fail',
+                    'value' => $size,
+                    'message' => "Pending jobs ({$size}) exceed threshold ({$pendingThreshold})",
                 ];
             }
 
@@ -106,6 +122,43 @@ class HealthReporter
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Queue check failed'];
+        }
+    }
+
+    /**
+     * @return array{status: string, value?: int, message?: string}
+     */
+    private function checkScheduler(): array
+    {
+        try {
+            $heartbeat = Cache::get(self::SCHEDULER_HEARTBEAT_CACHE_KEY);
+
+            if (! is_numeric($heartbeat)) {
+                if (! app()->environment('staging', 'production')) {
+                    return ['status' => 'ok', 'message' => 'Heartbeat is only required outside local/testing'];
+                }
+
+                return ['status' => 'fail', 'message' => 'Scheduler heartbeat is missing'];
+            }
+
+            $age = max(0, now()->timestamp - (int) $heartbeat);
+            $maxAge = (int) config('deployment.scheduler_heartbeat_max_age', 180);
+
+            if ($age > $maxAge) {
+                return [
+                    'status' => 'fail',
+                    'value' => $age,
+                    'message' => "Scheduler heartbeat is {$age}s old (maximum {$maxAge}s)",
+                ];
+            }
+
+            return [
+                'status' => 'ok',
+                'value' => $age,
+                'message' => "Heartbeat age: {$age}s",
+            ];
+        } catch (Throwable) {
+            return ['status' => 'fail', 'message' => 'Scheduler heartbeat check failed'];
         }
     }
 }
